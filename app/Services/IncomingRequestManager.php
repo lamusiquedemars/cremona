@@ -271,6 +271,15 @@ class IncomingRequestManager
     {
         $this->assertOwned($request);
         $this->assertRelatedOrganization($company->organization_id);
+
+        if ($request->company_id === $company->getKey()) {
+            return;
+        }
+
+        if ($request->company_id !== null) {
+            throw new LogicException('The incoming request is already linked to a company.');
+        }
+
         $request->update(['company_id' => $company->getKey()]);
         $this->activity($request, 'company_linked', $actor, relatedCompany: $company);
     }

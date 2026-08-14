@@ -6,13 +6,20 @@ use App\Enums\ContactMethodType;
 use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\Companies\Pages\EditCompany;
 use App\Filament\Resources\Companies\Pages\ListCompanies;
+use App\Filament\Resources\Companies\Pages\ViewCompany;
+use App\Filament\Resources\Companies\RelationManagers\IncomingRequestsRelationManager;
+use App\Filament\Resources\Companies\RelationManagers\PeopleRelationManager;
 use App\Models\Company;
 use BackedEnum;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -103,6 +110,73 @@ class CompanyResource extends Resource
             ]);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->columns(3)
+            ->components([
+                Section::make('Entreprise')
+                    ->columnSpan(2)
+                    ->schema([
+                        TextEntry::make('name')
+                            ->label('Nom courant')
+                            ->weight('semibold')
+                            ->size('lg'),
+                        TextEntry::make('legal_name')
+                            ->label('Raison sociale')
+                            ->placeholder('—'),
+                        TextEntry::make('website')
+                            ->label('Site internet')
+                            ->url(fn (?string $state): ?string => $state)
+                            ->openUrlInNewTab()
+                            ->placeholder('—'),
+                    ]),
+                Section::make('Repères')
+                    ->columnSpan(1)
+                    ->schema([
+                        TextEntry::make('status')
+                            ->label('Statut')
+                            ->badge()
+                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Active' : 'Archivée')
+                            ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
+                    ]),
+                Section::make('Coordonnées')
+                    ->columnSpan(2)
+                    ->schema([
+                        RepeatableEntry::make('contactMethods')
+                            ->label('')
+                            ->schema([
+                                TextEntry::make('type')->label('Type')->badge(),
+                                TextEntry::make('value')->label('Coordonnée')->copyable()->weight('medium'),
+                                TextEntry::make('label')->label('Libellé')->placeholder('—'),
+                                IconEntry::make('is_primary')->label('Principale')->boolean(),
+                            ])
+                            ->columns(4),
+                    ]),
+                Section::make('Vue d’ensemble')
+                    ->columnSpan(1)
+                    ->schema([
+                        TextEntry::make('people_count')
+                            ->label('Contacts liés')
+                            ->state(fn (Company $record): int => $record->people()->count())
+                            ->badge()
+                            ->color('gray'),
+                        TextEntry::make('incoming_requests_count')
+                            ->label('Demandes liées')
+                            ->state(fn (Company $record): int => $record->incomingRequests()->count())
+                            ->badge()
+                            ->color('info'),
+                        TextEntry::make('last_activity_at')
+                            ->label('Dernière activité')
+                            ->since()
+                            ->placeholder('Aucune activité'),
+                        TextEntry::make('created_at')
+                            ->label('Créée le')
+                            ->dateTime('d/m/Y H:i'),
+                    ]),
+            ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -143,8 +217,17 @@ class CompanyResource extends Resource
                     ]),
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            'contacts' => PeopleRelationManager::class,
+            'requests' => IncomingRequestsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
@@ -152,6 +235,7 @@ class CompanyResource extends Resource
         return [
             'index' => ListCompanies::route('/'),
             'create' => CreateCompany::route('/create'),
+            'view' => ViewCompany::route('/{record}'),
             'edit' => EditCompany::route('/{record}/edit'),
         ];
     }

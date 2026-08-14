@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\ContactMethodType;
 use App\Enums\IncomingRequestOutcome;
 use App\Enums\IncomingRequestStatus;
+use App\Models\Company;
 use App\Models\IncomingRequest;
 use App\Models\Organization;
 use App\Models\Person;
@@ -262,6 +263,29 @@ class IncomingRequestWorkflowTest extends TestCase
 
             $this->expectException(LogicException::class);
             $manager->createPersonFromRequest($request, ['display_name' => 'Contact en double']);
+        });
+    }
+
+    public function test_a_request_cannot_be_silently_relinked_to_another_company(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $manager = app(IncomingRequestManager::class);
+            $request = $manager->receive(['message' => 'Une demande professionnelle.']);
+            $firstCompany = Company::query()->create(['name' => 'Première entreprise']);
+            $otherCompany = Company::query()->create(['name' => 'Autre entreprise']);
+
+            $manager->linkCompany($request, $firstCompany);
+
+            try {
+                $manager->linkCompany($request, $otherCompany);
+                $this->fail('An already linked request should not be silently relinked.');
+            } catch (LogicException) {
+                $this->assertSame($firstCompany->id, $request->refresh()->company_id);
+                $this->assertNotNull($firstCompany->refresh()->last_activity_at);
+                $this->assertNull($otherCompany->refresh()->last_activity_at);
+            }
         });
     }
 

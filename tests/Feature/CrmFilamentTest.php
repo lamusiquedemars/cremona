@@ -192,6 +192,65 @@ class CrmFilamentTest extends TestCase
         $this->assertSame($person->id, $request->person_id);
     }
 
+    public function test_the_company_page_combines_identity_coordinates_contacts_and_requests(): void
+    {
+        $organization = Organization::factory()->create();
+        $viewer = User::factory()->create();
+        $viewer->organizations()->attach($organization, [
+            'role' => OrganizationRole::Viewer->value,
+        ]);
+
+        [$company, $request] = app(OrganizationContext::class)->run($organization, function (): array {
+            $company = Company::query()->create([
+                'name' => 'Atelier Dupont',
+                'legal_name' => 'Atelier Dupont SARL',
+                'website' => 'https://atelier-dupont.example.test',
+            ]);
+            $company->contactMethods()->create([
+                'type' => 'email',
+                'label' => 'Accueil',
+                'value' => 'bonjour@atelier-dupont.example.test',
+                'is_primary' => true,
+            ]);
+            $person = Person::query()->create([
+                'display_name' => 'Jeanne Dupont',
+            ]);
+            $company->people()->attach($person, [
+                'organization_id' => $company->organization_id,
+                'job_title' => 'Gérante',
+                'is_primary' => true,
+            ]);
+
+            $manager = app(IncomingRequestManager::class);
+            $request = $manager->receive([
+                'subject' => 'Nouvelle vitrine',
+                'message' => 'Une demande déjà rattachée à l’entreprise.',
+            ]);
+            $manager->linkCompany($request, $company);
+
+            return [$company, $request];
+        });
+
+        $this->actingAs($viewer)
+            ->get(CompanyResource::getUrl('view', ['record' => $company], tenant: $organization))
+            ->assertOk()
+            ->assertSee('Atelier Dupont SARL')
+            ->assertSee('bonjour@atelier-dupont.example.test')
+            ->assertSee('Jeanne Dupont')
+            ->assertDontSee('Modifier l’entreprise');
+
+        $this->actingAs($viewer)
+            ->get(CompanyResource::getUrl('view', [
+                'record' => $company,
+                'relation' => 'requests',
+            ], tenant: $organization))
+            ->assertOk()
+            ->assertSee('Nouvelle vitrine');
+
+        $this->assertSame($company->id, $request->company_id);
+        $this->assertNotNull($company->refresh()->last_activity_at);
+    }
+
     public function test_only_integration_managers_can_see_inbound_channels(): void
     {
         $organization = Organization::factory()->create();
