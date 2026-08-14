@@ -6,6 +6,7 @@ use App\Enums\ConsentStatus;
 use App\Enums\ContactMethodType;
 use App\Enums\IncomingRequestOutcome;
 use App\Enums\IncomingRequestStatus;
+use App\Exceptions\IdempotencyConflictException;
 use App\Models\Company;
 use App\Models\IncomingRequest;
 use App\Models\Person;
@@ -78,6 +79,7 @@ class IncomingRequestManager
                     ->all(),
                 'consent' => $attributes['consent'] ?? null,
             ], JSON_THROW_ON_ERROR));
+            $values['received_at'] = now();
 
             $request = $idempotencyKey === null
                 ? IncomingRequest::query()->create($values)
@@ -88,7 +90,9 @@ class IncomingRequestManager
 
             if (! $request->wasRecentlyCreated) {
                 if (! hash_equals($request->payload_fingerprint, $values['payload_fingerprint'])) {
-                    throw new LogicException('The idempotency key was already used for a different request payload.');
+                    throw new IdempotencyConflictException(
+                        'The idempotency key was already used for a different request payload.',
+                    );
                 }
 
                 return $request;

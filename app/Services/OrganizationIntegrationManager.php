@@ -6,6 +6,7 @@ use App\Models\OrganizationIntegration;
 use App\Models\User;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use LogicException;
 
 class OrganizationIntegrationManager
@@ -40,6 +41,30 @@ class OrganizationIntegrationManager
             );
 
             return $integration;
+        });
+    }
+
+    /**
+     * @return array{integration: OrganizationIntegration, token: string}
+     */
+    public function createApiToken(
+        string $provider,
+        string $name,
+        ?User $actor = null,
+    ): array {
+        return DB::transaction(function () use ($provider, $name, $actor): array {
+            $keyId = (string) Str::ulid();
+            $secret = Str::random(64);
+            $integration = $this->create($provider, $name, [], $actor);
+            $integration->update([
+                'key_id' => $keyId,
+                'token_hash' => hash('sha256', $secret),
+            ]);
+
+            return [
+                'integration' => $integration,
+                'token' => "{$keyId}.{$secret}",
+            ];
         });
     }
 
