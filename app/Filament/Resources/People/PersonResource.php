@@ -6,13 +6,20 @@ use App\Enums\ContactMethodType;
 use App\Filament\Resources\People\Pages\CreatePerson;
 use App\Filament\Resources\People\Pages\EditPerson;
 use App\Filament\Resources\People\Pages\ListPeople;
+use App\Filament\Resources\People\Pages\ViewPerson;
+use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
+use App\Filament\Resources\People\RelationManagers\IncomingRequestsRelationManager;
 use App\Models\Person;
 use BackedEnum;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -109,6 +116,73 @@ class PersonResource extends Resource
             ]);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->columns(3)
+            ->components([
+                Section::make('Contact')
+                    ->columnSpan(2)
+                    ->schema([
+                        TextEntry::make('display_name')
+                            ->label('Nom affiché')
+                            ->weight('semibold')
+                            ->size('lg'),
+                        Grid::make(2)->schema([
+                            TextEntry::make('first_name')->label('Prénom')->placeholder('—'),
+                            TextEntry::make('last_name')->label('Nom')->placeholder('—'),
+                        ]),
+                    ]),
+                Section::make('Repères')
+                    ->columnSpan(1)
+                    ->schema([
+                        TextEntry::make('status')
+                            ->label('Statut')
+                            ->badge()
+                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Actif' : 'Archivé')
+                            ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
+                        TextEntry::make('source')->label('Origine')->placeholder('—'),
+                        TextEntry::make('locale')->label('Langue')->placeholder('—'),
+                        TextEntry::make('country_code')->label('Pays')->placeholder('—'),
+                        TextEntry::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
+                    ]),
+                Section::make('Coordonnées')
+                    ->columnSpan(2)
+                    ->schema([
+                        RepeatableEntry::make('contactMethods')
+                            ->label('')
+                            ->schema([
+                                TextEntry::make('type')->label('Type')->badge(),
+                                TextEntry::make('value')->label('Coordonnée')->copyable()->weight('medium'),
+                                TextEntry::make('label')->label('Libellé')->placeholder('—'),
+                                IconEntry::make('is_primary')->label('Principal')->boolean(),
+                            ])
+                            ->columns(4),
+                    ]),
+                Section::make('Vue d’ensemble')
+                    ->columnSpan(1)
+                    ->schema([
+                        TextEntry::make('companies_count')
+                            ->label('Entreprises liées')
+                            ->state(fn (Person $record): int => $record->companies()->count())
+                            ->badge()
+                            ->color('gray'),
+                        TextEntry::make('incoming_requests_count')
+                            ->label('Demandes liées')
+                            ->state(fn (Person $record): int => $record->incomingRequests()->count())
+                            ->badge()
+                            ->color('info'),
+                        TextEntry::make('last_activity_at')
+                            ->label('Dernière activité')
+                            ->since()
+                            ->placeholder('Aucune activité'),
+                        TextEntry::make('created_at')
+                            ->label('Créé le')
+                            ->dateTime('d/m/Y H:i'),
+                    ]),
+            ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -149,8 +223,17 @@ class PersonResource extends Resource
                     ]),
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            'requests' => IncomingRequestsRelationManager::class,
+            'companies' => CompaniesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
@@ -158,6 +241,7 @@ class PersonResource extends Resource
         return [
             'index' => ListPeople::route('/'),
             'create' => CreatePerson::route('/create'),
+            'view' => ViewPerson::route('/{record}'),
             'edit' => EditPerson::route('/{record}/edit'),
         ];
     }

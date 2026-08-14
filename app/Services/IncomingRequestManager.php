@@ -238,6 +238,8 @@ class IncomingRequestManager
             }
         }
 
+        $recordedAt = now();
+
         $request->activities()->create([
             'actor_user_id' => $actor?->getKey(),
             'related_user_id' => $relatedUser?->getKey(),
@@ -247,7 +249,20 @@ class IncomingRequestManager
             'from_status' => $from,
             'to_status' => $to,
             'body' => $body,
+            'recorded_at' => $recordedAt,
         ]);
+
+        if ($request->person_id !== null) {
+            Person::query()
+                ->whereKey($request->person_id)
+                ->update(['last_activity_at' => $recordedAt]);
+        }
+
+        if ($request->company_id !== null) {
+            Company::query()
+                ->whereKey($request->company_id)
+                ->update(['last_activity_at' => $recordedAt]);
+        }
     }
 
     private function assertOwned(IncomingRequest $request): void

@@ -200,6 +200,7 @@ class IncomingRequestWorkflowTest extends TestCase
                 $person->id,
                 $request->activities()->where('event', 'person_linked')->value('related_person_id'),
             );
+            $this->assertNotNull($person->refresh()->last_activity_at);
         });
     }
 

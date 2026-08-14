@@ -7,7 +7,9 @@ use App\Enums\OrganizationRole;
 use App\Filament\Resources\Companies\CompanyResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use App\Filament\Resources\People\PersonResource;
+use App\Models\Company;
 use App\Models\Organization;
+use App\Models\Person;
 use App\Models\User;
 use App\Services\IncomingRequestManager;
 use App\Tenancy\OrganizationContext;
@@ -123,5 +125,67 @@ class CrmFilamentTest extends TestCase
             ->assertOk()
             ->assertSee('Demande non attribuée')
             ->assertDontSee('Demande attribuée');
+    }
+
+    public function test_the_contact_page_combines_identity_coordinates_companies_and_requests(): void
+    {
+        $organization = Organization::factory()->create();
+        $viewer = User::factory()->create();
+        $viewer->organizations()->attach($organization, [
+            'role' => OrganizationRole::Viewer->value,
+        ]);
+
+        [$person, $request] = app(OrganizationContext::class)->run($organization, function (): array {
+            $person = Person::query()->create([
+                'first_name' => 'Camille',
+                'last_name' => 'Martin',
+                'display_name' => 'Camille Martin',
+                'locale' => 'fr',
+                'country_code' => 'FR',
+            ]);
+            $person->contactMethods()->create([
+                'type' => 'email',
+                'label' => 'Professionnel',
+                'value' => 'camille@example.test',
+                'is_primary' => true,
+            ]);
+            $company = Company::query()->create([
+                'name' => 'Atelier Martin',
+                'industry' => 'Artisanat',
+            ]);
+            $person->companies()->attach($company, [
+                'organization_id' => $person->organization_id,
+                'job_title' => 'Fondatrice',
+                'is_primary' => true,
+            ]);
+
+            $manager = app(IncomingRequestManager::class);
+            $request = $manager->receive([
+                'subject' => 'Projet sur mesure',
+                'message' => 'Une demande déjà rattachée au contact.',
+            ]);
+            $manager->linkPerson($request, $person);
+
+            return [$person, $request];
+        });
+
+        $this->actingAs($viewer)
+            ->get(PersonResource::getUrl('view', ['record' => $person], tenant: $organization))
+            ->assertOk()
+            ->assertSee('Camille Martin')
+            ->assertSee('camille@example.test')
+            ->assertSee('Projet sur mesure')
+            ->assertDontSee('Modifier le contact');
+
+        $this->actingAs($viewer)
+            ->get(PersonResource::getUrl('view', [
+                'record' => $person,
+                'relation' => 'companies',
+            ], tenant: $organization))
+            ->assertOk()
+            ->assertSee('Atelier Martin')
+            ->assertSee('Fondatrice');
+
+        $this->assertSame($person->id, $request->person_id);
     }
 }
