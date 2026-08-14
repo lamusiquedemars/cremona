@@ -2,13 +2,38 @@
 
 namespace App\Enums;
 
-enum IncomingRequestStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum IncomingRequestStatus: string implements HasColor, HasLabel
 {
     case New = 'new';
     case InProgress = 'in_progress';
     case WaitingCustomer = 'waiting_customer';
     case Qualified = 'qualified';
     case Closed = 'closed';
+
+    public function getLabel(): string
+    {
+        return match ($this) {
+            self::New => 'Nouvelle',
+            self::InProgress => 'En cours',
+            self::WaitingCustomer => 'En attente du contact',
+            self::Qualified => 'Qualifiée',
+            self::Closed => 'Clôturée',
+        };
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::New => 'info',
+            self::InProgress => 'warning',
+            self::WaitingCustomer => 'gray',
+            self::Qualified => 'success',
+            self::Closed => 'gray',
+        };
+    }
 
     /**
      * @return array<self>
