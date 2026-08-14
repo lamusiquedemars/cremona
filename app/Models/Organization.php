@@ -39,6 +39,16 @@ class Organization extends Model
         return $this->hasMany(OrganizationModule::class);
     }
 
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(OrganizationAuditLog::class);
+    }
+
+    public function integrations(): HasMany
+    {
+        return $this->hasMany(OrganizationIntegration::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

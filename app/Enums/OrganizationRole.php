@@ -21,6 +21,29 @@ enum OrganizationRole: string
 
     public function canManageMembers(): bool
     {
-        return in_array($this, [self::Owner, self::Administrator], true);
+        return $this->grants(OrganizationPermission::ManageMembers);
+    }
+
+    /**
+     * @return array<OrganizationPermission>
+     */
+    public function permissions(): array
+    {
+        return match ($this) {
+            self::Owner => OrganizationPermission::cases(),
+            self::Administrator => [
+                OrganizationPermission::ManageMembers,
+                OrganizationPermission::ManageModules,
+                OrganizationPermission::ManageIntegrations,
+                OrganizationPermission::ViewAuditLog,
+            ],
+            self::Collaborator => [],
+            self::Viewer => [],
+        };
+    }
+
+    public function grants(OrganizationPermission $permission): bool
+    {
+        return in_array($permission, $this->permissions(), true);
     }
 }

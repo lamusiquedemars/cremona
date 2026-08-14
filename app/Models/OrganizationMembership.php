@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrganizationPermission;
 use App\Enums\OrganizationRole;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -35,5 +36,16 @@ class OrganizationMembership extends Pivot
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function grants(OrganizationPermission $permission): bool
+    {
+        $overrides = $this->permissions ?? [];
+
+        if (array_key_exists($permission->value, $overrides)) {
+            return (bool) $overrides[$permission->value];
+        }
+
+        return $this->role->grants($permission);
     }
 }
