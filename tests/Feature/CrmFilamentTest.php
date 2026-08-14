@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Companies\CompanyResource;
+use App\Filament\Resources\InboundChannels\InboundChannelResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use App\Filament\Resources\People\PersonResource;
 use App\Models\Company;
@@ -12,6 +13,7 @@ use App\Models\Organization;
 use App\Models\Person;
 use App\Models\User;
 use App\Services\IncomingRequestManager;
+use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -188,5 +190,35 @@ class CrmFilamentTest extends TestCase
             ->assertSee('Fondatrice');
 
         $this->assertSame($person->id, $request->person_id);
+    }
+
+    public function test_only_integration_managers_can_see_inbound_channels(): void
+    {
+        $organization = Organization::factory()->create();
+        $administrator = User::factory()->create();
+        $collaborator = User::factory()->create();
+        $administrator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Administrator->value,
+        ]);
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $manager = app(OrganizationIntegrationManager::class);
+            $manager->createApiToken('maracuja_cms', 'site-principal');
+            $manager->create('brevo', 'transactionnel', ['api_key' => 'secret']);
+        });
+
+        $this->actingAs($administrator)
+            ->get(InboundChannelResource::getUrl('index', tenant: $organization))
+            ->assertOk()
+            ->assertSee('site-principal')
+            ->assertSee('Nouveau canal')
+            ->assertDontSee('transactionnel');
+
+        $this->actingAs($collaborator)
+            ->get(InboundChannelResource::getUrl('index', tenant: $organization))
+            ->assertForbidden();
     }
 }
