@@ -49,6 +49,21 @@ class Organization extends Model
         return $this->hasMany(OrganizationIntegration::class);
     }
 
+    public function people(): HasMany
+    {
+        return $this->hasMany(Person::class);
+    }
+
+    public function companies(): HasMany
+    {
+        return $this->hasMany(Company::class);
+    }
+
+    public function incomingRequests(): HasMany
+    {
+        return $this->hasMany(IncomingRequest::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

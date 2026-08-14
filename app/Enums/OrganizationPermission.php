@@ -8,6 +8,8 @@ enum OrganizationPermission: string
     case ManageModules = 'manage_modules';
     case ManageIntegrations = 'manage_integrations';
     case ViewAuditLog = 'view_audit_log';
+    case ViewCrm = 'view_crm';
+    case ManageCrm = 'manage_crm';
 
     public function label(): string
     {
@@ -16,6 +18,8 @@ enum OrganizationPermission: string
             self::ManageModules => 'Gérer les modules',
             self::ManageIntegrations => 'Gérer les intégrations',
             self::ViewAuditLog => 'Consulter le journal d’audit',
+            self::ViewCrm => 'Consulter la relation client',
+            self::ManageCrm => 'Gérer la relation client',
         };
     }
 }

@@ -36,9 +36,14 @@ enum OrganizationRole: string
                 OrganizationPermission::ManageModules,
                 OrganizationPermission::ManageIntegrations,
                 OrganizationPermission::ViewAuditLog,
+                OrganizationPermission::ViewCrm,
+                OrganizationPermission::ManageCrm,
             ],
-            self::Collaborator => [],
-            self::Viewer => [],
+            self::Collaborator => [
+                OrganizationPermission::ViewCrm,
+                OrganizationPermission::ManageCrm,
+            ],
+            self::Viewer => [OrganizationPermission::ViewCrm],
         };
     }
 

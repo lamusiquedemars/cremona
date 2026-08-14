@@ -34,6 +34,14 @@ class OrganizationPermissionTest extends TestCase
             OrganizationPermission::ManageIntegrations,
             $organization,
         ));
+        $this->assertTrue($viewer->hasOrganizationPermission(
+            OrganizationPermission::ViewCrm,
+            $organization,
+        ));
+        $this->assertFalse($viewer->hasOrganizationPermission(
+            OrganizationPermission::ManageCrm,
+            $organization,
+        ));
     }
 
     public function test_explicit_overrides_can_grant_and_deny_permissions(): void
