@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Companies\CompanyResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
@@ -10,6 +11,7 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Services\IncomingRequestManager;
 use App\Tenancy\OrganizationContext;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -82,5 +84,44 @@ class CrmFilamentTest extends TestCase
             ->assertSee('Camille Martin')
             ->assertSee('Demande de rendez-vous')
             ->assertSee('Changer le statut');
+    }
+
+    public function test_the_dashboard_and_work_queues_reflect_active_requests(): void
+    {
+        $organization = Organization::factory()->create();
+        $collaborator = User::factory()->create();
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+
+        app(OrganizationContext::class)->run($organization, function () use ($collaborator): void {
+            $manager = app(IncomingRequestManager::class);
+            $manager->receive([
+                'name_snapshot' => 'Sans responsable',
+                'subject' => 'Demande non attribuée',
+                'message' => 'Cette demande doit apparaître dans la file non attribuée.',
+            ]);
+            $assigned = $manager->receive([
+                'name_snapshot' => 'Contact attribué',
+                'subject' => 'Demande attribuée',
+                'message' => 'Cette demande appartient au collaborateur.',
+            ]);
+            $manager->assign($assigned, $collaborator, $collaborator);
+            $manager->transition($assigned, IncomingRequestStatus::InProgress, actor: $collaborator);
+        });
+
+        $this->actingAs($collaborator)
+            ->get(Filament::getPanel('admin')->getUrl($organization))
+            ->assertOk()
+            ->assertSee('Relation client')
+            ->assertSee('Demandes à traiter')
+            ->assertSee('Demande non attribuée')
+            ->assertSee('Demande attribuée');
+
+        $this->actingAs($collaborator)
+            ->get(IncomingRequestResource::getUrl('index', ['tab' => 'unassigned'], tenant: $organization))
+            ->assertOk()
+            ->assertSee('Demande non attribuée')
+            ->assertDontSee('Demande attribuée');
     }
 }
