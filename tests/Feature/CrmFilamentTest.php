@@ -85,7 +85,8 @@ class CrmFilamentTest extends TestCase
             ->assertOk()
             ->assertSee('Camille Martin')
             ->assertSee('Demande de rendez-vous')
-            ->assertSee('Changer le statut');
+            ->assertSee('Changer le statut')
+            ->assertSee('Créer ou rattacher le contact');
     }
 
     public function test_the_dashboard_and_work_queues_reflect_active_requests(): void

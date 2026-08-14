@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ConsentStatus;
+use App\Enums\ContactMethodType;
 use App\Enums\IncomingRequestOutcome;
 use App\Enums\IncomingRequestStatus;
 use App\Models\Company;
@@ -195,8 +196,71 @@ class IncomingRequestManager
     {
         $this->assertOwned($request);
         $this->assertRelatedOrganization($person->organization_id);
+
+        if ($request->person_id === $person->getKey()) {
+            return;
+        }
+
+        if ($request->person_id !== null) {
+            throw new LogicException('The incoming request is already linked to a person.');
+        }
+
         $request->update(['person_id' => $person->getKey()]);
         $this->activity($request, 'person_linked', $actor, relatedPerson: $person);
+    }
+
+    /**
+     * @param  array{display_name: string, first_name?: ?string, last_name?: ?string, email?: ?string, phone?: ?string}  $attributes
+     */
+    public function createPersonFromRequest(
+        IncomingRequest $request,
+        array $attributes,
+        ?User $actor = null,
+    ): Person {
+        $this->assertOwned($request);
+
+        return DB::transaction(function () use ($request, $attributes, $actor): Person {
+            $lockedRequest = IncomingRequest::query()
+                ->whereKey($request->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedRequest->person_id !== null) {
+                throw new LogicException('The incoming request is already linked to a person.');
+            }
+
+            $person = Person::query()->create([
+                'display_name' => $this->clean($attributes['display_name'])
+                    ?? throw new LogicException('A person requires a display name.'),
+                'first_name' => $this->clean($attributes['first_name'] ?? null),
+                'last_name' => $this->clean($attributes['last_name'] ?? null),
+                'source' => str($lockedRequest->source ?? $lockedRequest->source_channel)
+                    ->limit(40, '')
+                    ->toString(),
+            ]);
+
+            foreach ([
+                ContactMethodType::Email->value => $this->clean($attributes['email'] ?? null),
+                ContactMethodType::Phone->value => $this->clean($attributes['phone'] ?? null),
+            ] as $type => $value) {
+                if ($value === null) {
+                    continue;
+                }
+
+                $person->contactMethods()->create([
+                    'type' => $type,
+                    'label' => 'Demande initiale',
+                    'value' => $value,
+                    'is_primary' => true,
+                ]);
+            }
+
+            $lockedRequest->update(['person_id' => $person->getKey()]);
+            $this->activity($lockedRequest, 'person_created_and_linked', $actor, relatedPerson: $person);
+            $request->setRawAttributes($lockedRequest->getAttributes(), true);
+
+            return $person->load('contactMethods');
+        });
     }
 
     public function linkCompany(IncomingRequest $request, Company $company, ?User $actor = null): void

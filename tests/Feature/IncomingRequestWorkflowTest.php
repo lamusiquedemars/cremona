@@ -204,6 +204,67 @@ class IncomingRequestWorkflowTest extends TestCase
         });
     }
 
+    public function test_a_person_can_be_created_from_a_request_without_changing_its_snapshot(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $manager = app(IncomingRequestManager::class);
+            $request = $manager->receive([
+                'source_channel' => 'website',
+                'source' => 'maracuja-site',
+                'name_snapshot' => 'Nom saisi initialement',
+                'email_snapshot' => 'initial@example.test',
+                'phone_snapshot' => '+33 6 12 34 56 78',
+                'message' => 'Une demande à qualifier.',
+            ]);
+
+            $person = $manager->createPersonFromRequest($request, [
+                'display_name' => 'Camille Martin',
+                'first_name' => 'Camille',
+                'last_name' => 'Martin',
+                'email' => 'camille@example.test',
+                'phone' => '+33 6 12 34 56 78',
+            ]);
+
+            $request->refresh();
+            $this->assertSame($person->id, $request->person_id);
+            $this->assertSame('Nom saisi initialement', $request->name_snapshot);
+            $this->assertSame('initial@example.test', $request->email_snapshot);
+            $this->assertSame('maracuja-site', $person->source);
+            $this->assertSame(
+                ['camille@example.test', '+33 6 12 34 56 78'],
+                $person->contactMethods()->orderBy('id')->pluck('value')->all(),
+            );
+            $this->assertSame(
+                'person_created_and_linked',
+                $request->activities()->latest('id')->value('event'),
+            );
+        });
+    }
+
+    public function test_a_second_person_cannot_be_created_or_linked_to_an_already_qualified_request(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $manager = app(IncomingRequestManager::class);
+            $request = $manager->receive(['message' => 'Une demande à qualifier.']);
+            $manager->createPersonFromRequest($request, ['display_name' => 'Premier contact']);
+            $otherPerson = Person::query()->create(['display_name' => 'Autre contact']);
+
+            try {
+                $manager->linkPerson($request, $otherPerson);
+                $this->fail('An already qualified request should not be silently relinked.');
+            } catch (LogicException) {
+                $this->assertSame('Premier contact', $request->person->display_name);
+            }
+
+            $this->expectException(LogicException::class);
+            $manager->createPersonFromRequest($request, ['display_name' => 'Contact en double']);
+        });
+    }
+
     public function test_an_incoming_request_cannot_be_deleted_directly(): void
     {
         $organization = Organization::factory()->create();

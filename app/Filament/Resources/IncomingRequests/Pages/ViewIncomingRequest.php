@@ -8,12 +8,15 @@ use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use App\Models\Company;
 use App\Models\Person;
 use App\Models\User;
+use App\Services\ContactMatcher;
 use App\Services\IncomingRequestManager;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Utilities\Get;
@@ -88,23 +91,76 @@ class ViewIncomingRequest extends ViewRecord
                     $this->reloadRecord();
                     $this->success('Responsable attribué.');
                 }),
+            Action::make('qualifyContact')
+                ->label('Créer ou rattacher le contact')
+                ->icon(Heroicon::OutlinedUserPlus)
+                ->color('success')
+                ->visible(fn (): bool => $this->canManage() && $this->record->person_id === null)
+                ->modalHeading('Qualifier le contact')
+                ->modalDescription(fn (): string => $this->candidateCount() > 0
+                    ? $this->candidateCount().' correspondance(s) possible(s) détectée(s). Vérifiez avant de créer une nouvelle fiche.'
+                    : 'Aucune correspondance exacte détectée. Vous pouvez rechercher un contact ou créer une nouvelle fiche.')
+                ->schema([
+                    Radio::make('strategy')
+                        ->label('Action')
+                        ->options([
+                            'existing' => 'Rattacher un contact existant',
+                            'create' => 'Créer un nouveau contact',
+                        ])
+                        ->default(fn (): string => $this->candidateCount() > 0 ? 'existing' : 'create')
+                        ->required()
+                        ->live(),
+                    Select::make('person_id')
+                        ->label('Contact existant')
+                        ->options(fn (): array => $this->personOptions())
+                        ->searchable()
+                        ->required(fn (Get $get): bool => $get('strategy') === 'existing')
+                        ->visible(fn (Get $get): bool => $get('strategy') === 'existing'),
+                    TextInput::make('display_name')
+                        ->label('Nom affiché')
+                        ->default(fn (): ?string => $this->record->name_snapshot)
+                        ->required(fn (Get $get): bool => $get('strategy') === 'create')
+                        ->visible(fn (Get $get): bool => $get('strategy') === 'create')
+                        ->maxLength(255),
+                    TextInput::make('first_name')
+                        ->label('Prénom')
+                        ->visible(fn (Get $get): bool => $get('strategy') === 'create')
+                        ->maxLength(255),
+                    TextInput::make('last_name')
+                        ->label('Nom')
+                        ->visible(fn (Get $get): bool => $get('strategy') === 'create')
+                        ->maxLength(255),
+                    TextInput::make('email')
+                        ->label('E-mail')
+                        ->default(fn (): ?string => $this->record->email_snapshot)
+                        ->email()
+                        ->visible(fn (Get $get): bool => $get('strategy') === 'create')
+                        ->maxLength(255),
+                    TextInput::make('phone')
+                        ->label('Téléphone')
+                        ->default(fn (): ?string => $this->record->phone_snapshot)
+                        ->visible(fn (Get $get): bool => $get('strategy') === 'create')
+                        ->maxLength(255),
+                ])
+                ->action(function (array $data, IncomingRequestManager $manager): void {
+                    Gate::authorize('update', $this->record);
+
+                    if ($data['strategy'] === 'existing') {
+                        $manager->linkPerson(
+                            $this->record,
+                            Person::query()->findOrFail($data['person_id']),
+                            auth()->user(),
+                        );
+                        $message = 'Contact existant rattaché.';
+                    } else {
+                        $manager->createPersonFromRequest($this->record, $data, auth()->user());
+                        $message = 'Contact créé et rattaché.';
+                    }
+
+                    $this->reloadRecord();
+                    $this->success($message);
+                }),
             ActionGroup::make([
-                Action::make('linkPerson')
-                    ->label('Rattacher un contact')
-                    ->icon(Heroicon::OutlinedUser)
-                    ->schema([
-                        Select::make('person_id')
-                            ->label('Contact')
-                            ->options(fn (): array => Person::query()->orderBy('display_name')->pluck('display_name', 'id')->all())
-                            ->searchable()
-                            ->required(),
-                    ])
-                    ->action(function (array $data, IncomingRequestManager $manager): void {
-                        Gate::authorize('update', $this->record);
-                        $manager->linkPerson($this->record, Person::query()->findOrFail($data['person_id']), auth()->user());
-                        $this->reloadRecord();
-                        $this->success('Contact rattaché.');
-                    }),
                 Action::make('linkCompany')
                     ->label('Rattacher une entreprise')
                     ->icon(Heroicon::OutlinedBuildingOffice2)
@@ -146,6 +202,30 @@ class ViewIncomingRequest extends ViewRecord
     private function canManage(): bool
     {
         return Gate::allows('update', $this->record);
+    }
+
+    private function candidateCount(): int
+    {
+        return app(ContactMatcher::class)
+            ->suggestPeople($this->record->email_snapshot, $this->record->phone_snapshot)
+            ->count();
+    }
+
+    private function personOptions(): array
+    {
+        $suggestions = app(ContactMatcher::class)
+            ->suggestPeople($this->record->email_snapshot, $this->record->phone_snapshot);
+        $suggestionIds = $suggestions->modelKeys();
+        $others = Person::query()
+            ->when($suggestionIds !== [], fn ($query) => $query->whereNotIn('id', $suggestionIds))
+            ->orderBy('display_name')
+            ->pluck('display_name', 'id')
+            ->all();
+
+        return array_filter([
+            'Correspondances possibles' => $suggestions->pluck('display_name', 'id')->all(),
+            'Autres contacts' => $others,
+        ]);
     }
 
     private function reloadRecord(): void

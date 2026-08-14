@@ -157,6 +157,7 @@ class IncomingRequestResource extends Resource
                                         'status_changed' => 'Statut modifié',
                                         'assigned' => 'Responsable attribué',
                                         'person_linked' => 'Contact rattaché',
+                                        'person_created_and_linked' => 'Contact créé et rattaché',
                                         'company_linked' => 'Entreprise rattachée',
                                         'note_added' => 'Note ajoutée',
                                         default => $state,
