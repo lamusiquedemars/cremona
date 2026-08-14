@@ -30,6 +30,8 @@ class AdminPanelProvider extends PanelProvider
             ->path('app')
             ->login()
             ->brandName('Cremona')
+            ->globalSearchResourceOptIn()
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->tenant(Organization::class, slugAttribute: 'slug')
             ->tenantMiddleware([
                 SetActiveOrganization::class,

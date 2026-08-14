@@ -21,6 +21,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class IncomingRequestResource extends Resource
@@ -40,6 +41,38 @@ class IncomingRequestResource extends Resource
     protected static ?string $recordTitleAttribute = 'subject';
 
     protected static ?int $navigationSort = 10;
+
+    protected static bool $isGloballySearchable = true;
+
+    protected static int $globalSearchResultsLimit = 10;
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return [
+            'subject',
+            'message',
+            'name_snapshot',
+            'email_snapshot',
+            'phone_snapshot',
+        ];
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        /** @var IncomingRequest $record */
+        return $record->subject
+            ?? ($record->name_snapshot ? "Demande de {$record->name_snapshot}" : 'Demande sans objet');
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var IncomingRequest $record */
+        return array_filter([
+            'Contact' => $record->name_snapshot ?? $record->email_snapshot ?? $record->phone_snapshot,
+            'Statut' => $record->status->getLabel(),
+            'Reçue' => $record->received_at?->format('d/m/Y H:i'),
+        ]);
+    }
 
     public static function getNavigationBadge(): ?string
     {

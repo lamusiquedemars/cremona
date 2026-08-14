@@ -251,6 +251,62 @@ class CrmFilamentTest extends TestCase
         $this->assertNotNull($company->refresh()->last_activity_at);
     }
 
+    public function test_global_search_finds_crm_records_and_keeps_tenants_isolated(): void
+    {
+        $organization = Organization::factory()->create();
+        $otherOrganization = Organization::factory()->create();
+        $viewer = User::factory()->create();
+        $viewer->organizations()->attach($organization, [
+            'role' => OrganizationRole::Viewer->value,
+        ]);
+
+        app(OrganizationContext::class)->run($otherOrganization, function (): void {
+            Person::query()->create(['display_name' => 'Intrus Recherche']);
+        });
+
+        [$person, $company, $request] = app(OrganizationContext::class)->run($organization, function (): array {
+            $person = Person::query()->create(['display_name' => 'Camille Recherche']);
+            $person->contactMethods()->create([
+                'type' => 'email',
+                'value' => 'camille.unique@example.test',
+            ]);
+            $company = Company::query()->create([
+                'name' => 'Studio Recherche',
+                'legal_name' => 'Studio Recherche SARL',
+            ]);
+            $company->contactMethods()->create([
+                'type' => 'phone',
+                'value' => '+33 1 44 55 66 77',
+            ]);
+            $request = app(IncomingRequestManager::class)->receive([
+                'name_snapshot' => 'Camille Recherche',
+                'subject' => 'Projet Recherche',
+                'message' => 'Mot distinctif quartz-bleu.',
+            ]);
+
+            return [$person, $company, $request];
+        });
+
+        $this->actingAs($viewer);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        app(OrganizationContext::class)->run($organization, function () use ($person, $company, $request): void {
+            $personResult = PersonResource::getGlobalSearchResults('camille.unique')->sole();
+            $companyResult = CompanyResource::getGlobalSearchResults('44 55 66')->sole();
+            $requestResult = IncomingRequestResource::getGlobalSearchResults('quartz-bleu')->sole();
+
+            $this->assertSame($person->display_name, $personResult->title);
+            $this->assertStringContainsString((string) $person->getRouteKey(), $personResult->url);
+            $this->assertSame('camille.unique@example.test', $personResult->details['Coordonnées']);
+            $this->assertSame($company->name, $companyResult->title);
+            $this->assertStringContainsString((string) $company->getRouteKey(), $companyResult->url);
+            $this->assertSame('Projet Recherche', $requestResult->title);
+            $this->assertStringContainsString((string) $request->getRouteKey(), $requestResult->url);
+            $this->assertCount(1, PersonResource::getGlobalSearchResults('Recherche'));
+        });
+    }
+
     public function test_only_integration_managers_can_see_inbound_channels(): void
     {
         $organization = Organization::factory()->create();

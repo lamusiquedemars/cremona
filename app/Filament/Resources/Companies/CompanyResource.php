@@ -28,6 +28,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class CompanyResource extends Resource
@@ -47,6 +49,36 @@ class CompanyResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?int $navigationSort = 30;
+
+    protected static bool $isGloballySearchable = true;
+
+    protected static int $globalSearchResultsLimit = 10;
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return [
+            'name',
+            'legal_name',
+            'website',
+            'contactMethods.value',
+            'people.display_name',
+        ];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()
+            ->with(['contactMethods', 'people']);
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var Company $record */
+        return array_filter([
+            'Raison sociale' => $record->legal_name,
+            'Coordonnées' => $record->contactMethods->pluck('value')->take(2)->implode(' · '),
+        ]);
+    }
 
     public static function form(Schema $schema): Schema
     {
