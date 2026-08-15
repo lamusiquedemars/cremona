@@ -307,6 +307,46 @@ class CrmFilamentTest extends TestCase
         });
     }
 
+    public function test_contact_notes_are_visible_to_viewers_but_only_managers_can_add_them(): void
+    {
+        $organization = Organization::factory()->create();
+        $viewer = User::factory()->create();
+        $collaborator = User::factory()->create();
+        $viewer->organizations()->attach($organization, [
+            'role' => OrganizationRole::Viewer->value,
+        ]);
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+
+        $person = app(OrganizationContext::class)->run($organization, function () use ($collaborator): Person {
+            $person = Person::query()->create(['display_name' => 'Contact avec note']);
+            $person->notes()->create([
+                'author_user_id' => $collaborator->id,
+                'body' => 'Souhaite être rappelé mardi matin.',
+            ]);
+
+            return $person;
+        });
+
+        $url = PersonResource::getUrl('view', [
+            'record' => $person,
+            'relation' => 'notes',
+        ], tenant: $organization);
+
+        $this->actingAs($viewer)
+            ->get($url)
+            ->assertOk()
+            ->assertSee('Souhaite être rappelé mardi matin.')
+            ->assertDontSee('Ajouter une note');
+
+        $this->actingAs($collaborator)
+            ->get($url)
+            ->assertOk()
+            ->assertSee('Souhaite être rappelé mardi matin.')
+            ->assertSee('Ajouter une note');
+    }
+
     public function test_only_integration_managers_can_see_inbound_channels(): void
     {
         $organization = Organization::factory()->create();

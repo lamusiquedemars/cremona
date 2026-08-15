@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Companies;
 
 use App\Enums\ContactMethodType;
+use App\Filament\RelationManagers\NotesRelationManager;
 use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\Companies\Pages\EditCompany;
 use App\Filament\Resources\Companies\Pages\ListCompanies;
@@ -259,6 +260,7 @@ class CompanyResource extends Resource
         return [
             'contacts' => PeopleRelationManager::class,
             'requests' => IncomingRequestsRelationManager::class,
+            'notes' => NotesRelationManager::class,
         ];
     }
 

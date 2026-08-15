@@ -60,4 +60,9 @@ class Company extends Model
     {
         return $this->hasMany(IncomingRequest::class);
     }
+
+    public function notes(): MorphMany
+    {
+        return $this->morphMany(CrmNote::class, 'notable');
+    }
 }

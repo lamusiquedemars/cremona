@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\People;
 
 use App\Enums\ContactMethodType;
+use App\Filament\RelationManagers\NotesRelationManager;
 use App\Filament\Resources\People\Pages\CreatePerson;
 use App\Filament\Resources\People\Pages\EditPerson;
 use App\Filament\Resources\People\Pages\ListPeople;
@@ -265,6 +266,7 @@ class PersonResource extends Resource
         return [
             'requests' => IncomingRequestsRelationManager::class,
             'companies' => CompaniesRelationManager::class,
+            'notes' => NotesRelationManager::class,
         ];
     }
 
