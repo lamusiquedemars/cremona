@@ -61,6 +61,11 @@ class Company extends Model
         return $this->hasMany(IncomingRequest::class);
     }
 
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
     public function notes(): MorphMany
     {
         return $this->morphMany(CrmNote::class, 'notable');

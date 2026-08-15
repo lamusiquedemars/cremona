@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\ContactMethodType;
+use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\CompanyPerson;
 use App\Models\ContactMethod;
@@ -142,7 +143,7 @@ class CrmIsolationTest extends TestCase
                 'value' => $email,
             ]);
 
-            app(IncomingRequestManager::class)->receive([
+            $request = app(IncomingRequestManager::class)->receive([
                 'idempotency_key' => "submission-{$organization->id}",
                 'email_snapshot' => $email,
                 'message' => 'A request',
@@ -157,6 +158,15 @@ class CrmIsolationTest extends TestCase
                     'status' => 'granted',
                     'statement_snapshot' => 'I agree to be contacted about this request.',
                 ],
+            ]);
+
+            Appointment::query()->create([
+                'person_id' => $person->id,
+                'company_id' => $company->id,
+                'incoming_request_id' => $request->id,
+                'title' => 'A meeting',
+                'starts_at' => '2026-09-01 10:00:00',
+                'ends_at' => '2026-09-01 10:30:00',
             ]);
         });
     }
@@ -175,6 +185,7 @@ class CrmIsolationTest extends TestCase
             IncomingRequestAnswer::class,
             IncomingRequestConsent::class,
             IncomingRequestActivity::class,
+            Appointment::class,
         ];
     }
 }

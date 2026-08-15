@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\ContactMethod;
 use App\Models\IncomingRequest;
@@ -32,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Relation::enforceMorphMap([
+            'appointment' => Appointment::class,
             'person' => Person::class,
             'company' => Company::class,
             'contact_method' => ContactMethod::class,

@@ -115,6 +115,11 @@ class IncomingRequest extends Model
         return $this->hasMany(IncomingRequestActivity::class);
     }
 
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'public_id';
