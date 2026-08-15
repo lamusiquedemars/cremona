@@ -14,6 +14,7 @@ use App\Models\Company;
 use App\Models\Organization;
 use App\Models\Person;
 use App\Models\User;
+use App\Services\CrmRecordManager;
 use App\Services\IncomingRequestManager;
 use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
@@ -432,6 +433,51 @@ class CrmFilamentTest extends TestCase
             $this->assertNotNull($person->refresh()->last_activity_at);
             $this->assertNotNull($company->refresh()->last_activity_at);
         });
+    }
+
+    public function test_archived_crm_records_are_read_only_until_reactivated(): void
+    {
+        $organization = Organization::factory()->create();
+        $viewer = User::factory()->create();
+        $collaborator = User::factory()->create();
+        $viewer->organizations()->attach($organization, [
+            'role' => OrganizationRole::Viewer->value,
+        ]);
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+
+        $person = app(OrganizationContext::class)->run(
+            $organization,
+            fn () => Person::query()->create(['display_name' => 'Contact à archiver']),
+        );
+        $viewUrl = PersonResource::getUrl('view', ['record' => $person], tenant: $organization);
+
+        $this->actingAs($viewer)
+            ->get($viewUrl)
+            ->assertOk()
+            ->assertDontSee('Archiver');
+
+        $this->actingAs($collaborator)
+            ->get($viewUrl)
+            ->assertOk()
+            ->assertSee('Archiver')
+            ->assertDontSee('Réactiver');
+
+        app(OrganizationContext::class)->run(
+            $organization,
+            fn () => app(CrmRecordManager::class)->archive($person),
+        );
+
+        $this->actingAs($collaborator)
+            ->get($viewUrl)
+            ->assertOk()
+            ->assertSee('Réactiver')
+            ->assertDontSee('Modifier le contact')
+            ->assertDontSee('Archiver');
+        $this->actingAs($collaborator)
+            ->get(PersonResource::getUrl('edit', ['record' => $person], tenant: $organization))
+            ->assertForbidden();
     }
 
     public function test_only_integration_managers_can_see_inbound_channels(): void

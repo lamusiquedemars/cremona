@@ -33,7 +33,16 @@ abstract class CrmPolicy
 
     public function update(User $user, Model $record): bool
     {
-        return $this->view($user, $record) && $this->canManage($user);
+        return $this->view($user, $record)
+            && $record->getAttribute('status') !== 'archived'
+            && $this->canManage($user);
+    }
+
+    public function reactivate(User $user, Model $record): bool
+    {
+        return $this->view($user, $record)
+            && $record->getAttribute('status') === 'archived'
+            && $this->canManage($user);
     }
 
     public function delete(User $user, Model $record): bool
