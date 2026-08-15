@@ -7,7 +7,9 @@ use App\Enums\OrganizationRole;
 use App\Filament\Resources\Companies\CompanyResource;
 use App\Filament\Resources\InboundChannels\InboundChannelResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
+use App\Filament\Resources\People\Pages\ViewPerson;
 use App\Filament\Resources\People\PersonResource;
+use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
 use App\Models\Company;
 use App\Models\Organization;
 use App\Models\Person;
@@ -17,6 +19,7 @@ use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class CrmFilamentTest extends TestCase
@@ -345,6 +348,90 @@ class CrmFilamentTest extends TestCase
             ->assertOk()
             ->assertSee('Souhaite être rappelé mardi matin.')
             ->assertSee('Ajouter une note');
+    }
+
+    public function test_contact_company_links_can_only_be_managed_by_collaborators(): void
+    {
+        $organization = Organization::factory()->create();
+        $viewer = User::factory()->create();
+        $collaborator = User::factory()->create();
+        $viewer->organizations()->attach($organization, [
+            'role' => OrganizationRole::Viewer->value,
+        ]);
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+
+        [$person, $company] = app(OrganizationContext::class)->run($organization, fn (): array => [
+            Person::query()->create(['display_name' => 'Contact à rattacher']),
+            Company::query()->create(['name' => 'Entreprise à rattacher']),
+        ]);
+
+        $personCompaniesUrl = PersonResource::getUrl('view', [
+            'record' => $person,
+            'relation' => 'companies',
+        ], tenant: $organization);
+        $companyContactsUrl = CompanyResource::getUrl('view', [
+            'record' => $company,
+            'relation' => 'contacts',
+        ], tenant: $organization);
+
+        $this->actingAs($viewer)
+            ->get($personCompaniesUrl)
+            ->assertOk()
+            ->assertDontSee('Rattacher une entreprise');
+        $this->actingAs($viewer)
+            ->get($companyContactsUrl)
+            ->assertOk()
+            ->assertDontSee('Rattacher un contact');
+
+        $this->actingAs($collaborator)
+            ->get($personCompaniesUrl)
+            ->assertOk()
+            ->assertSee('Rattacher une entreprise');
+        $this->actingAs($collaborator)
+            ->get($companyContactsUrl)
+            ->assertOk()
+            ->assertSee('Rattacher un contact');
+    }
+
+    public function test_a_collaborator_can_link_an_existing_company_to_a_contact(): void
+    {
+        $organization = Organization::factory()->create();
+        $collaborator = User::factory()->create();
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+
+        [$person, $company] = app(OrganizationContext::class)->run($organization, fn (): array => [
+            Person::query()->create(['display_name' => 'Camille Relation']),
+            Company::query()->create(['name' => 'Atelier Relation']),
+        ]);
+
+        $this->actingAs($collaborator);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        app(OrganizationContext::class)->run($organization, function () use ($person, $company): void {
+            Livewire::test(CompaniesRelationManager::class, [
+                'ownerRecord' => $person,
+                'pageClass' => ViewPerson::class,
+            ])->callTableAction('attach', data: [
+                'recordId' => $company->id,
+                'job_title' => 'Responsable atelier',
+                'is_primary' => true,
+            ])->assertHasNoTableActionErrors();
+
+            $this->assertDatabaseHas('company_person', [
+                'organization_id' => $person->organization_id,
+                'person_id' => $person->id,
+                'company_id' => $company->id,
+                'job_title' => 'Responsable atelier',
+                'is_primary' => true,
+            ]);
+            $this->assertNotNull($person->refresh()->last_activity_at);
+            $this->assertNotNull($company->refresh()->last_activity_at);
+        });
     }
 
     public function test_only_integration_managers_can_see_inbound_channels(): void
