@@ -12,7 +12,7 @@ class AuthenticateOrganizationIntegration
 {
     public function __construct(private readonly OrganizationContext $context) {}
 
-    public function handle(Request $request, Closure $next): mixed
+    public function handle(Request $request, Closure $next, ?string $provider = null): mixed
     {
         $parts = explode('.', (string) $request->bearerToken(), 2);
 
@@ -29,6 +29,7 @@ class AuthenticateOrganizationIntegration
             ->first();
 
         if ($integration === null
+            || ($provider !== null && $integration->provider !== $provider)
             || $integration->token_hash === null
             || ! hash_equals($integration->token_hash, hash('sha256', $secret))) {
             return $this->unauthorized();

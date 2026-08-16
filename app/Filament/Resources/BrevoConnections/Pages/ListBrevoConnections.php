@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Js;
 
 class ListBrevoConnections extends ListRecords
 {
@@ -84,6 +85,38 @@ class ListBrevoConnections extends ListRecords
                         ->title('Brevo Meetings est connecté')
                         ->body('La clé a été vérifiée puis enregistrée de manière chiffrée.')
                         ->success()
+                        ->send();
+                }),
+            Action::make('webhook')
+                ->label(fn (): string => $this->integration()?->key_id
+                    ? 'Régénérer le webhook'
+                    : 'Configurer le webhook')
+                ->icon(Heroicon::OutlinedArrowPathRoundedSquare)
+                ->requiresConfirmation()
+                ->modalDescription('Le précédent jeton cessera immédiatement de fonctionner. La nouvelle configuration ne sera affichée qu’une fois.')
+                ->visible(fn (): bool => $this->integration()?->status === 'active')
+                ->action(function (): void {
+                    $integration = $this->integration();
+                    Gate::authorize('update', $integration);
+                    $token = app(OrganizationIntegrationManager::class)
+                        ->rotateApiToken($integration, auth()->user());
+                    $configuration = [
+                        'authorization' => "Bearer {$token}",
+                        'urls' => [
+                            'booked' => route('api.v1.integrations.brevo.meetings.store', ['event' => 'booked']),
+                            'started' => route('api.v1.integrations.brevo.meetings.store', ['event' => 'started']),
+                            'cancelled' => route('api.v1.integrations.brevo.meetings.store', ['event' => 'cancelled']),
+                        ],
+                    ];
+                    $json = json_encode($configuration, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+                    $this->js('navigator.clipboard.writeText('.Js::from($json).')');
+
+                    Notification::make()
+                        ->title('Configuration webhook copiée')
+                        ->body("Conservez-la maintenant, elle ne sera plus affichée :\n{$json}")
+                        ->success()
+                        ->persistent()
                         ->send();
                 }),
         ];

@@ -101,6 +101,34 @@ class OrganizationIntegrationManager
         });
     }
 
+    public function rotateApiToken(
+        OrganizationIntegration $integration,
+        ?User $actor = null,
+    ): string {
+        if ($integration->organization_id !== $this->context->require()->getKey()
+            || $integration->status !== 'active') {
+            throw new LogicException('The integration is not active in the current organization.');
+        }
+
+        return DB::transaction(function () use ($integration, $actor): string {
+            $keyId = (string) Str::ulid();
+            $secret = Str::random(64);
+            $integration->update([
+                'key_id' => $keyId,
+                'token_hash' => hash('sha256', $secret),
+            ]);
+
+            $this->auditLogger->record(
+                event: 'integration.token_rotated',
+                subject: $integration,
+                actor: $actor,
+                metadata: ['provider' => $integration->provider, 'name' => $integration->name],
+            );
+
+            return "{$keyId}.{$secret}";
+        });
+    }
+
     public function revoke(OrganizationIntegration $integration, ?User $actor = null): void
     {
         if ($integration->organization_id !== $this->context->require()->getKey()) {
