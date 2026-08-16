@@ -86,7 +86,7 @@ class AppointmentTest extends TestCase
         });
     }
 
-    public function test_viewers_can_consult_appointments_but_only_collaborators_can_create_them(): void
+    public function test_appointments_are_read_only_projections_for_crm_users(): void
     {
         $organization = Organization::factory()->create();
         $viewer = User::factory()->create();
@@ -111,12 +111,12 @@ class AppointmentTest extends TestCase
             ->get(AppointmentResource::getUrl('view', ['record' => $appointment], tenant: $organization))
             ->assertOk()
             ->assertDontSee('Modifier le rendez-vous');
-        $this->actingAs($viewer)
-            ->get(AppointmentResource::getUrl('create', tenant: $organization))
-            ->assertForbidden();
         $this->actingAs($collaborator)
-            ->get(AppointmentResource::getUrl('create', tenant: $organization))
-            ->assertOk();
+            ->get(AppointmentResource::getUrl('view', ['record' => $appointment], tenant: $organization))
+            ->assertOk()
+            ->assertDontSee('Modifier le rendez-vous');
+        $this->assertFalse(AppointmentResource::hasPage('create'));
+        $this->assertFalse(AppointmentResource::hasPage('edit'));
     }
 
     public function test_an_appointment_is_visible_from_its_contact_page(): void

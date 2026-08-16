@@ -4,8 +4,6 @@ namespace App\Filament\Resources\Appointments;
 
 use App\Enums\AppointmentModality;
 use App\Enums\AppointmentStatus;
-use App\Filament\Resources\Appointments\Pages\CreateAppointment;
-use App\Filament\Resources\Appointments\Pages\EditAppointment;
 use App\Filament\Resources\Appointments\Pages\ListAppointments;
 use App\Filament\Resources\Appointments\Pages\ViewAppointment;
 use App\Filament\Resources\Companies\CompanyResource;
@@ -14,7 +12,6 @@ use App\Filament\Resources\People\PersonResource;
 use App\Models\Appointment;
 use App\Tenancy\OrganizationContext;
 use BackedEnum;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -230,8 +227,9 @@ class AppointmentResource extends Resource
                     TextEntry::make('modality')->label('Modalité')->badge(),
                     TextEntry::make('location')->label('Lieu')->placeholder('—'),
                     TextEntry::make('meeting_url')->label('Connexion')->url(fn (?string $state): ?string => $state)->openUrlInNewTab()->placeholder('—'),
-                    TextEntry::make('provider')->label('Fournisseur')->formatStateUsing(fn (string $state): string => $state === 'brevo' ? 'Brevo Meetings' : 'Saisie manuelle'),
-                    TextEntry::make('external_reference')->label('Référence externe')->placeholder('—'),
+                    TextEntry::make('provider')
+                        ->label('Origine')
+                        ->formatStateUsing(fn (string $state): string => $state === 'brevo' ? 'Synchronisé par Brevo' : 'Importé'),
                 ]),
             ]);
     }
@@ -252,16 +250,14 @@ class AppointmentResource extends Resource
                 SelectFilter::make('status')->label('Statut')->options(AppointmentStatus::class),
                 SelectFilter::make('modality')->label('Modalité')->options(AppointmentModality::class),
             ])
-            ->recordActions([ViewAction::make(), EditAction::make()]);
+            ->recordActions([ViewAction::make()]);
     }
 
     public static function getPages(): array
     {
         return [
             'index' => ListAppointments::route('/'),
-            'create' => CreateAppointment::route('/create'),
             'view' => ViewAppointment::route('/{record}'),
-            'edit' => EditAppointment::route('/{record}/edit'),
         ];
     }
 }

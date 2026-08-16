@@ -45,6 +45,39 @@ class OrganizationIntegrationManager
     }
 
     /**
+     * @param  array<string, mixed>  $credentials
+     */
+    public function configure(
+        string $provider,
+        string $name,
+        array $credentials,
+        ?User $actor = null,
+    ): OrganizationIntegration {
+        return DB::transaction(function () use ($provider, $name, $credentials, $actor): OrganizationIntegration {
+            $integration = OrganizationIntegration::query()->firstOrNew([
+                'provider' => $provider,
+                'name' => $name,
+            ]);
+            $event = $integration->exists ? 'integration.updated' : 'integration.created';
+
+            $integration->fill([
+                'credentials' => $credentials,
+                'status' => 'active',
+                'revoked_at' => null,
+            ])->save();
+
+            $this->auditLogger->record(
+                event: $event,
+                subject: $integration,
+                actor: $actor,
+                metadata: ['provider' => $provider, 'name' => $name],
+            );
+
+            return $integration;
+        });
+    }
+
+    /**
      * @return array{integration: OrganizationIntegration, token: string}
      */
     public function createApiToken(
