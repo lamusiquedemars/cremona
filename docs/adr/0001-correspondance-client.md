@@ -1,10 +1,10 @@
 # ADR 0001 — Domaine de correspondance client
 
-- Statut : proposé, en attente de validation
-- Date : 18 août 2026
+- Statut : accepté
+- Date : 19 août 2026
 - Portée : Cremona canonique, puis adaptation mono-site dans Maracuja CMS Starter
-- Décision préalable : aucune implémentation des lots 2 à 7 avant validation des
-  points listés en fin de document
+- Décision préalable : les décisions de modèle ci-dessous sont validées ; le lot
+  2 peut désormais être planifié séparément
 
 ## Contexte vérifié
 
@@ -273,8 +273,10 @@ La politique est configurable par organisation dans des bornes imposées par la
 plateforme. Les valeurs par défaut proposées sont :
 
 - conversation ouverte ou en attente : aucune purge automatique ;
-- conversation close et liée au CRM : archivage après 24 mois d'inactivité,
-  effacement 5 ans après la dernière activité ;
+- conversation liée à une relation client ou un dossier traité : archivage après
+  24 mois d'inactivité, effacement 5 ans après la dernière activité ;
+- prospect non converti ou demande sans suite : effacement 3 ans après le
+  dernier contact ;
 - message non rattaché ou ambigu : 180 jours pour permettre la correction ;
 - brouillon abandonné ou message définitivement échoué : 90 jours ;
 - exécutions de synchronisation et détails d'erreur : 90 jours ;
@@ -283,14 +285,15 @@ plateforme. Les valeurs par défaut proposées sont :
 - pièces jointes : même durée que leur message ;
 - après déclenchement de l'effacement : archive logique pendant 30 jours, puis
   suppression physique du corps, HTML, participants et fichiers privés ;
-- journal d'audit minimal d'un effacement : 6 ans, sans corps, adresse complète,
+- journal d'audit minimal d'un effacement : 5 ans, sans corps, adresse complète,
   nom de fichier ni secret.
 
 Une obligation de conservation ou un litige place la conversation en
 `legal_hold` et suspend la purge. Une demande d'accès, d'export ou d'effacement
 utilise un processus dédié et audité ; elle ne dépend pas de la purge planifiée.
-Ces durées sont des valeurs produit proposées, pas une conclusion juridique, et
-doivent être validées avant implémentation.
+Ces durées sont des valeurs produit validées, pas une conclusion juridique ;
+elles devront être revues avec le responsable de traitement et, si nécessaire,
+un conseil compétent avant une mise en production.
 
 ### 10. Propriété des données
 
@@ -348,23 +351,12 @@ supprime une colonne existante dans le même déploiement.
 - Extraire immédiatement un package Laravel complet : les règles de tenancy et
   permissions diffèrent entre Cremona et les installations autonomes.
 
-## Décisions à valider avant le lot 2
+## Validation du 19 août 2026
 
-1. Valider les noms de modèles et tables, notamment `ConversationMessage` avec
-   table `conversation_messages`.
-2. Valider la relation un-à-zéro/un entre `IncomingRequest` et sa conversation
-   principale, au lieu d'autoriser plusieurs conversations par demande.
-3. Valider qu'un message ambigu peut exister temporairement sans conversation,
-   avec des candidats explicites et un rattachement audité.
-4. Valider les trois statuts de conversation (`open`, `waiting_customer`,
-   `closed`) et l'archivage séparé.
-5. Valider les statuts de transport, en particulier le mot `accepted` qui ne
-   promet pas une livraison.
-6. Valider les permissions proposées et le droit de rattachement accordé par
-   défaut au rôle `collaborator`.
-7. Valider les durées de rétention proposées, en particulier 5 ans pour une
-   correspondance CRM close et 6 ans pour l'audit minimal.
-8. Valider l'absence de conservation durable du MIME brut après parsing réussi.
+Les huit décisions ont été validées : noms, relation demande-conversation,
+rattachement ambigu, états de conversation, états de transport, permissions,
+rétention et absence de conservation durable du MIME brut. La politique de
+rétention distingue désormais les relations client (5 ans), les prospects non
+convertis (3 ans) et la trace minimale d'effacement (5 ans).
 
-Tant que ces huit points ne sont pas validés, cet ADR reste « proposé » et aucun
-élément du lot 2 ne doit être créé.
+Le lot 2 peut commencer seulement sur la base de cet ADR accepté.
