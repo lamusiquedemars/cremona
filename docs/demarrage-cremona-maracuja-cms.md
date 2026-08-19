@@ -170,7 +170,7 @@ Chemin : `/Users/ivocorreiademelo/Sites/cremona`
 État constaté :
 
 - Laravel `^13.17` ;
-- PHP `^8.3` ;
+- PHP `^8.4.1` ;
 - Filament `^4.0` ;
 - MySQL uniquement ;
 - branche `main` propre ;

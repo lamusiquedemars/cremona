@@ -92,7 +92,7 @@ transmission API, mais pas une deuxième source de vérité CRM.
 - Chemin : `/Users/ivocorreiademelo/Sites/cremona`
 - Branche : `main`
 - État de référence : commit `abff2a4 Synchronize Brevo meeting webhooks`
-- Laravel `^13.17`, Filament `^4.0`, PHP `^8.3`
+- Laravel `^13.17`, Filament `^4.0`, PHP `^8.4.1`
 - Rôle : CRM SaaS multi-organisation et modèle canonique de la correspondance
   client.
 
@@ -125,7 +125,7 @@ accident dans un commit.
 - Branche : `main`
 - État de référence : commit `5f5b824 Add reusable social links`
 - Branche locale en avance de quatre commits sur `origin/main`
-- Laravel `^13.8`, Filament `^4.0`, PHP `^8.3`
+- Laravel `^13.8`, Filament `^4.0`, PHP `^8.4.1`
 - Worktree propre au moment de l'audit
 - Rôle : source versionnée des sites autonomes et implémentation générique
   mono-site de la correspondance.
@@ -203,7 +203,7 @@ Ne pas les modifier, supprimer, ajouter ou committer sans demande explicite.
 - Branche : `main`
 - État de référence :
   `8bb9a18 Initialize Maracuja CMS multi-site foundation`
-- Laravel `^13.17`, Filament `^4.0`, PHP `^8.3`
+- Laravel `^13.17`, Filament `^4.0`, PHP `^8.4.1`
 - Worktree propre au moment de l'audit
 - Rôle : application publique multi-site future.
 
