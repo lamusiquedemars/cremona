@@ -58,6 +58,16 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         return $this->hasMany(Appointment::class, 'assigned_user_id');
     }
 
+    public function assignedConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'assigned_user_id');
+    }
+
+    public function authoredConversationMessages(): HasMany
+    {
+        return $this->hasMany(ConversationMessage::class, 'author_user_id');
+    }
+
     public function hasOrganizationPermission(
         OrganizationPermission $permission,
         Organization $organization,

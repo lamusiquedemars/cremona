@@ -38,12 +38,23 @@ enum OrganizationRole: string
                 OrganizationPermission::ViewAuditLog,
                 OrganizationPermission::ViewCrm,
                 OrganizationPermission::ManageCrm,
+                OrganizationPermission::ViewCorrespondence,
+                OrganizationPermission::ReplyCorrespondence,
+                OrganizationPermission::ManageCorrespondenceLinks,
+                OrganizationPermission::EraseCorrespondence,
+                OrganizationPermission::ManageEmailMailboxes,
             ],
             self::Collaborator => [
                 OrganizationPermission::ViewCrm,
                 OrganizationPermission::ManageCrm,
+                OrganizationPermission::ViewCorrespondence,
+                OrganizationPermission::ReplyCorrespondence,
+                OrganizationPermission::ManageCorrespondenceLinks,
             ],
-            self::Viewer => [OrganizationPermission::ViewCrm],
+            self::Viewer => [
+                OrganizationPermission::ViewCrm,
+                OrganizationPermission::ViewCorrespondence,
+            ],
         };
     }
 

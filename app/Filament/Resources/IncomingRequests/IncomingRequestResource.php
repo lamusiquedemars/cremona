@@ -4,6 +4,7 @@ namespace App\Filament\Resources\IncomingRequests;
 
 use App\Enums\IncomingRequestStatus;
 use App\Enums\IncomingRequestUrgency;
+use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\IncomingRequests\Pages\ListIncomingRequests;
 use App\Filament\Resources\IncomingRequests\Pages\ViewIncomingRequest;
 use App\Models\IncomingRequest;
@@ -147,6 +148,13 @@ class IncomingRequestResource extends Resource
                         TextEntry::make('source_channel')
                             ->label('Canal')
                             ->badge(),
+                        TextEntry::make('conversation.public_id')
+                            ->label('Correspondance')
+                            ->formatStateUsing(fn (): string => 'Ouvrir le fil')
+                            ->url(fn (IncomingRequest $record): ?string => $record->conversation
+                                ? ConversationResource::getUrl('view', ['record' => $record->conversation])
+                                : null)
+                            ->placeholder('Aucune'),
                     ]),
                 Section::make('Réponses complémentaires')
                     ->columnSpanFull()

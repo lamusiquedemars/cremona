@@ -125,8 +125,9 @@ class IncomingRequestManager
             }
 
             $this->activity($request, 'received');
+            app(CorrespondenceManager::class)->createForIncomingRequest($request);
 
-            return $request->load(['answers', 'consents', 'activities']);
+            return $request->load(['answers', 'consents', 'activities', 'conversation']);
         });
     }
 
@@ -193,6 +194,7 @@ class IncomingRequestManager
         }
 
         $request->update(['assigned_user_id' => $user->getKey()]);
+        $request->conversation()->update(['assigned_user_id' => $user->getKey()]);
         $this->activity($request, 'assigned', $actor, relatedUser: $user);
     }
 
@@ -210,6 +212,7 @@ class IncomingRequestManager
         }
 
         $request->update(['person_id' => $person->getKey()]);
+        $request->conversation()->update(['person_id' => $person->getKey()]);
         $this->activity($request, 'person_linked', $actor, relatedPerson: $person);
     }
 
@@ -260,6 +263,7 @@ class IncomingRequestManager
             }
 
             $lockedRequest->update(['person_id' => $person->getKey()]);
+            $lockedRequest->conversation()->update(['person_id' => $person->getKey()]);
             $this->activity($lockedRequest, 'person_created_and_linked', $actor, relatedPerson: $person);
             $request->setRawAttributes($lockedRequest->getAttributes(), true);
 
@@ -281,6 +285,7 @@ class IncomingRequestManager
         }
 
         $request->update(['company_id' => $company->getKey()]);
+        $request->conversation()->update(['company_id' => $company->getKey()]);
         $this->activity($request, 'company_linked', $actor, relatedCompany: $company);
     }
 

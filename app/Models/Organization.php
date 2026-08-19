@@ -69,6 +69,16 @@ class Organization extends Model
         return $this->hasMany(Appointment::class);
     }
 
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
+    public function conversationMessages(): HasMany
+    {
+        return $this->hasMany(ConversationMessage::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

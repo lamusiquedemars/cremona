@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Companies;
 
 use App\Enums\ContactMethodType;
 use App\Filament\RelationManagers\AppointmentsRelationManager;
+use App\Filament\RelationManagers\ConversationsRelationManager;
 use App\Filament\RelationManagers\NotesRelationManager;
 use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\Companies\Pages\EditCompany;
@@ -262,6 +263,7 @@ class CompanyResource extends Resource
             'contacts' => PeopleRelationManager::class,
             'requests' => IncomingRequestsRelationManager::class,
             'appointments' => AppointmentsRelationManager::class,
+            'conversations' => ConversationsRelationManager::class,
             'notes' => NotesRelationManager::class,
         ];
     }
