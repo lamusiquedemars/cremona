@@ -18,6 +18,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Schema as DatabaseSchema;
 use UnitEnum;
 
 class ConversationResource extends Resource
@@ -40,6 +41,10 @@ class ConversationResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
+        if (! DatabaseSchema::hasTable('conversations')) {
+            return null;
+        }
+
         $count = Conversation::query()->where('status', ConversationStatus::Open)->count();
 
         return $count > 0 ? (string) $count : null;
