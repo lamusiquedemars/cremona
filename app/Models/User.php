@@ -23,6 +23,8 @@ use Illuminate\Support\Collection;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants
 {
+    public const SUPER_ADMIN_EMAILS = ['ivo@maracujadigital.fr'];
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
@@ -38,6 +40,11 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
             'password' => 'hashed',
             'is_platform_admin' => 'boolean',
         ];
+    }
+
+    public function getIsPlatformAdminAttribute(mixed $value): bool
+    {
+        return (bool) $value || in_array(strtolower($this->email), self::SUPER_ADMIN_EMAILS, true);
     }
 
     public function organizations(): BelongsToMany
