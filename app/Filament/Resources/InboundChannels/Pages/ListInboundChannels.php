@@ -12,7 +12,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Js;
 use Illuminate\Validation\Rule;
 
 class ListInboundChannels extends ListRecords
@@ -44,10 +43,8 @@ class ListInboundChannels extends ListRecords
                         ->createApiToken('maracuja_cms', $data['name'], auth()->user());
                     $token = $issued['token'];
 
-                    $this->js('navigator.clipboard.writeText('.Js::from($token).')');
-
                     Notification::make()
-                        ->title('Canal créé — jeton copié')
+                        ->title('Canal créé — copie le jeton maintenant')
                         ->body("Conservez-le maintenant, il ne sera plus affiché : {$token}")
                         ->success()
                         ->persistent()
