@@ -11,10 +11,6 @@ Route::middleware('auth')->get('/dashboard', function () {
     return redirect('/platform/organizations');
 });
 
-Route::get('/dashboard/login', function () {
-    return redirect('/platform/login');
-});
-
 Route::middleware('auth')->group(function (): void {
     Route::get('/integrations/google-ads/{integration}/authorize', [GoogleAdsOAuthController::class, 'authorize'])
         ->name('google-ads.oauth.authorize');
