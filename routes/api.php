@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AcquisitionSummaryController;
 use App\Http\Controllers\Api\BrevoMeetingWebhookController;
 use App\Http\Controllers\Api\IncomingRequestController;
 use App\Http\Middleware\AuthenticateOrganizationIntegration;
@@ -11,6 +12,13 @@ Route::post('/v1/incoming-requests', [IncomingRequestController::class, 'store']
         AuthenticateOrganizationIntegration::class.':maracuja_cms',
     ])
     ->name('api.v1.incoming-requests.store');
+
+Route::get('/v1/acquisition/summary', AcquisitionSummaryController::class)
+    ->middleware([
+        'throttle:60,1',
+        AuthenticateOrganizationIntegration::class.':maracuja_cms',
+    ])
+    ->name('api.v1.acquisition.summary');
 
 Route::post('/v1/integrations/brevo/meetings/{event}', BrevoMeetingWebhookController::class)
     ->whereIn('event', ['booked', 'started', 'cancelled'])

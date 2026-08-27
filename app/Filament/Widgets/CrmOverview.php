@@ -15,13 +15,13 @@ class CrmOverview extends StatsOverviewWidget
 {
     protected static bool $isLazy = false;
 
+    protected ?string $pollingInterval = null;
+
     protected static ?int $sort = 10;
 
     protected ?string $heading = 'Relation client';
 
     protected ?string $description = 'Les demandes qui nécessitent votre attention.';
-
-    protected ?string $pollingInterval = '60s';
 
     public static function canView(): bool
     {

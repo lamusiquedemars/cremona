@@ -43,6 +43,13 @@ class IncomingRequestApiTest extends TestCase
         );
         $this->assertSame('Camille Martin', $request->name_snapshot);
         $this->assertSame('site-42', $request->source_site_reference);
+        $this->assertSame('google', $request->attribution_source);
+        $this->assertSame('search', $request->attribution_medium);
+        $this->assertSame('criminal-cuiaba', $request->attribution_campaign);
+        $this->assertSame('first-click', $request->attribution_first_touch['gclid']);
+        $this->assertSame('/contact?utm_source=google', $request->attribution_last_touch['landing_page']);
+        $this->assertSame('first_party', $request->attribution_method);
+        $this->assertSame('1.00', $request->attribution_confidence);
         $this->assertCount(1, $request->answers);
         $this->assertCount(1, $request->consents);
     }
@@ -124,6 +131,28 @@ class IncomingRequestApiTest extends TestCase
             'contact' => [
                 'name' => 'Camille Martin',
                 'email' => 'camille@example.test',
+            ],
+            'attribution' => [
+                'method' => 'first_party',
+                'confidence' => 1,
+                'first_touch' => [
+                    'utm_source' => 'google',
+                    'utm_medium' => 'search',
+                    'utm_campaign' => 'criminal-cuiaba',
+                    'gclid' => 'first-click',
+                    'landing_page' => '/criminal',
+                    'captured_at' => '2026-08-22T10:00:00-04:00',
+                ],
+                'last_touch' => [
+                    'utm_source' => 'google',
+                    'utm_medium' => 'search',
+                    'utm_campaign' => 'criminal-cuiaba',
+                    'utm_term' => 'advogado criminalista cuiaba',
+                    'gclid' => 'last-click',
+                    'landing_page' => '/contact?utm_source=google',
+                    'referrer' => 'https://www.google.com/',
+                    'captured_at' => '2026-08-22T10:15:00-04:00',
+                ],
             ],
             'request' => [
                 'subject' => 'Projet sur mesure',

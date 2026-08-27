@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\CorrespondenceTransport;
 use App\Models\Appointment;
+use App\Models\Campaign;
 use App\Models\Company;
 use App\Models\ContactMethod;
 use App\Models\Conversation;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Relation::enforceMorphMap([
             'appointment' => Appointment::class,
+            'campaign' => Campaign::class,
             'person' => Person::class,
             'company' => Company::class,
             'conversation' => Conversation::class,

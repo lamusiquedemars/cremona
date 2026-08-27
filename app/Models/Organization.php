@@ -49,6 +49,11 @@ class Organization extends Model
         return $this->hasMany(OrganizationIntegration::class);
     }
 
+    public function sites(): HasMany
+    {
+        return $this->hasMany(OrganizationSite::class);
+    }
+
     public function people(): HasMany
     {
         return $this->hasMany(Person::class);
@@ -62,6 +67,11 @@ class Organization extends Model
     public function incomingRequests(): HasMany
     {
         return $this->hasMany(IncomingRequest::class);
+    }
+
+    public function campaigns(): HasMany
+    {
+        return $this->hasMany(Campaign::class);
     }
 
     public function appointments(): HasMany

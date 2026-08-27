@@ -92,6 +92,10 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function canAccessPanel(Panel $panel): bool
     {
+        if ($panel->getId() === 'platform') {
+            return $this->is_platform_admin;
+        }
+
         return $this->is_platform_admin || $this->organizations()->where('status', 'active')->exists();
     }
 
@@ -115,6 +119,10 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function getDefaultTenant(Panel $panel): ?Model
     {
+        if ($this->is_platform_admin) {
+            return null;
+        }
+
         return $this->getTenants($panel)->first();
     }
 }

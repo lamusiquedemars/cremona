@@ -156,6 +156,47 @@ class IncomingRequestResource extends Resource
                                 : null)
                             ->placeholder('Aucune'),
                     ]),
+                Section::make('Acquisition')
+                    ->description('Provenance technique attachée à la demande. Elle ne contient pas le message ni les données personnelles du contact.')
+                    ->columnSpanFull()
+                    ->columns(3)
+                    ->schema([
+                        TextEntry::make('attribution_source')->label('Source')->placeholder('Inconnue'),
+                        TextEntry::make('attribution_medium')->label('Support')->placeholder('—'),
+                        TextEntry::make('attribution_campaign')->label('Campagne')->placeholder('—'),
+                        TextEntry::make('attribution_first_touch.landing_page')
+                            ->label("Première page d'entrée")
+                            ->placeholder('—'),
+                        TextEntry::make('attribution_last_touch.landing_page')
+                            ->label("Dernière page d'entrée")
+                            ->placeholder('—'),
+                        TextEntry::make('attribution_last_touch.utm_term')
+                            ->label('Terme déclaré')
+                            ->placeholder('—'),
+                        TextEntry::make('attribution_method')->label("Méthode d'attribution")->placeholder('—'),
+                        TextEntry::make('attribution_confidence')
+                            ->label('Confiance')
+                            ->formatStateUsing(fn (?string $state): string => $state !== null
+                                ? round((float) $state * 100).'%'
+                                : '—'),
+                        TextEntry::make('attribution_last_touch.gclid')
+                            ->label('Identifiant de clic Google')
+                            ->limit(32)
+                            ->copyable()
+                            ->placeholder('—'),
+                    ]),
+                Section::make('Résultat commercial')
+                    ->columnSpanFull()
+                    ->columns(4)
+                    ->schema([
+                        TextEntry::make('outcome')->label('Résultat')->badge()->placeholder('—'),
+                        TextEntry::make('commercial_value')
+                            ->label('Valeur attribuée')
+                            ->money(fn (IncomingRequest $record): string => $record->commercial_currency ?? 'EUR')
+                            ->placeholder('Non renseignée'),
+                        TextEntry::make('converted_at')->label('Conversion')->dateTime('d/m/Y H:i')->placeholder('—'),
+                        TextEntry::make('lost_reason')->label('Motif de perte')->placeholder('—'),
+                    ]),
                 Section::make('Réponses complémentaires')
                     ->columnSpanFull()
                     ->collapsible()

@@ -29,6 +29,10 @@ class IncomingRequestManager
      *     attribution_source?: ?string,
      *     attribution_medium?: ?string,
      *     attribution_campaign?: ?string,
+     *     attribution_first_touch?: ?array<string, mixed>,
+     *     attribution_last_touch?: ?array<string, mixed>,
+     *     attribution_method?: ?string,
+     *     attribution_confidence?: int|float|string|null,
      *     name_snapshot?: ?string,
      *     email_snapshot?: ?string,
      *     phone_snapshot?: ?string,
@@ -45,14 +49,26 @@ class IncomingRequestManager
     {
         return DB::transaction(function () use ($attributes): IncomingRequest {
             $idempotencyKey = $this->clean($attributes['idempotency_key'] ?? null);
+            $firstTouch = $this->cleanAttributionTouch($attributes['attribution_first_touch'] ?? null);
+            $lastTouch = $this->cleanAttributionTouch($attributes['attribution_last_touch'] ?? null);
             $values = [
                 'source_channel' => $attributes['source_channel'] ?? 'website',
                 'source' => $this->clean($attributes['source'] ?? null),
                 'source_site_reference' => $this->clean($attributes['source_site_reference'] ?? null),
                 'source_form_reference' => $this->clean($attributes['source_form_reference'] ?? null),
-                'attribution_source' => $this->clean($attributes['attribution_source'] ?? null),
-                'attribution_medium' => $this->clean($attributes['attribution_medium'] ?? null),
-                'attribution_campaign' => $this->clean($attributes['attribution_campaign'] ?? null),
+                'attribution_source' => $this->clean(
+                    $attributes['attribution_source'] ?? $lastTouch['utm_source'] ?? null,
+                ),
+                'attribution_medium' => $this->clean(
+                    $attributes['attribution_medium'] ?? $lastTouch['utm_medium'] ?? null,
+                ),
+                'attribution_campaign' => $this->clean(
+                    $attributes['attribution_campaign'] ?? $lastTouch['utm_campaign'] ?? null,
+                ),
+                'attribution_first_touch' => $firstTouch,
+                'attribution_last_touch' => $lastTouch,
+                'attribution_method' => $this->clean($attributes['attribution_method'] ?? null),
+                'attribution_confidence' => $attributes['attribution_confidence'] ?? null,
                 'name_snapshot' => $this->clean($attributes['name_snapshot'] ?? null),
                 'email_snapshot' => $this->clean($attributes['email_snapshot'] ?? null),
                 'phone_snapshot' => $this->clean($attributes['phone_snapshot'] ?? null),
@@ -148,6 +164,7 @@ class IncomingRequestManager
         IncomingRequestStatus $status,
         ?IncomingRequestOutcome $outcome = null,
         ?User $actor = null,
+        array $commercial = [],
     ): void {
         $this->assertOwned($request);
         $from = $request->status;
@@ -176,6 +193,29 @@ class IncomingRequestManager
 
         if ($status === IncomingRequestStatus::Closed) {
             $updates['closed_at'] = now();
+
+            if ($outcome === IncomingRequestOutcome::Converted) {
+                $value = $commercial['value'] ?? null;
+                $currency = strtoupper(trim((string) ($commercial['currency'] ?? '')));
+
+                if ($value !== null && (! is_numeric($value) || (float) $value < 0)) {
+                    throw new LogicException('A commercial value must be a positive monetary amount.');
+                }
+
+                if ($value !== null && ! preg_match('/^[A-Z]{3}$/', $currency)) {
+                    throw new LogicException('A commercial value requires a three-letter ISO currency code.');
+                }
+
+                $updates['converted_at'] = now();
+                $updates['commercial_value'] = $value;
+                $updates['commercial_currency'] = $value !== null ? $currency : null;
+                $updates['lost_reason'] = null;
+            } else {
+                $updates['converted_at'] = null;
+                $updates['commercial_value'] = null;
+                $updates['commercial_currency'] = null;
+                $updates['lost_reason'] = $this->clean($commercial['lost_reason'] ?? null);
+            }
         }
 
         DB::transaction(function () use ($request, $updates, $from, $status, $actor): void {
@@ -364,5 +404,38 @@ class IncomingRequestManager
         $value = trim((string) $value);
 
         return $value !== '' ? $value : null;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $touch
+     * @return array<string, string>|null
+     */
+    private function cleanAttributionTouch(?array $touch): ?array
+    {
+        if ($touch === null) {
+            return null;
+        }
+
+        $allowed = [
+            'utm_source',
+            'utm_medium',
+            'utm_campaign',
+            'utm_term',
+            'utm_content',
+            'gclid',
+            'gbraid',
+            'wbraid',
+            'landing_page',
+            'referrer',
+            'captured_at',
+        ];
+
+        $cleaned = collect($touch)
+            ->only($allowed)
+            ->map(fn (mixed $value): ?string => is_scalar($value) ? $this->clean((string) $value) : null)
+            ->filter(fn (?string $value): bool => $value !== null)
+            ->all();
+
+        return $cleaned !== [] ? $cleaned : null;
     }
 }

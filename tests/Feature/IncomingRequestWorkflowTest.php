@@ -131,6 +131,7 @@ class IncomingRequestWorkflowTest extends TestCase
                 IncomingRequestStatus::Closed,
                 IncomingRequestOutcome::Converted,
                 $member,
+                ['value' => '5000.00', 'currency' => 'brl'],
             );
 
             $request->refresh();
@@ -140,6 +141,9 @@ class IncomingRequestWorkflowTest extends TestCase
             $this->assertNotNull($request->started_at);
             $this->assertNotNull($request->qualified_at);
             $this->assertNotNull($request->closed_at);
+            $this->assertNotNull($request->converted_at);
+            $this->assertSame('5000.00', $request->commercial_value);
+            $this->assertSame('BRL', $request->commercial_currency);
             $this->assertSame(
                 $member->id,
                 $request->activities()->where('event', 'assigned')->value('related_user_id'),

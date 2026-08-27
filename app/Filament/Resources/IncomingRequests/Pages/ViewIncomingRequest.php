@@ -58,6 +58,25 @@ class ViewIncomingRequest extends ViewRecord
                         ->options(IncomingRequestOutcome::class)
                         ->visible(fn (Get $get): bool => $get('status') === IncomingRequestStatus::Closed->value)
                         ->required(fn (Get $get): bool => $get('status') === IncomingRequestStatus::Closed->value),
+                    TextInput::make('commercial_value')
+                        ->label('Valeur commerciale attribuée')
+                        ->numeric()
+                        ->minValue(0)
+                        ->visible(fn (Get $get): bool => $get('status') === IncomingRequestStatus::Closed->value
+                            && $get('outcome') === IncomingRequestOutcome::Converted->value),
+                    TextInput::make('commercial_currency')
+                        ->label('Devise')
+                        ->default('EUR')
+                        ->length(3)
+                        ->visible(fn (Get $get): bool => $get('status') === IncomingRequestStatus::Closed->value
+                            && $get('outcome') === IncomingRequestOutcome::Converted->value)
+                        ->required(fn (Get $get): bool => filled($get('commercial_value'))),
+                    TextInput::make('lost_reason')
+                        ->label('Motif de perte ou de clôture')
+                        ->maxLength(255)
+                        ->visible(fn (Get $get): bool => $get('status') === IncomingRequestStatus::Closed->value
+                            && filled($get('outcome'))
+                            && $get('outcome') !== IncomingRequestOutcome::Converted->value),
                 ])
                 ->action(function (array $data, IncomingRequestManager $manager): void {
                     Gate::authorize('update', $this->record);
@@ -65,7 +84,11 @@ class ViewIncomingRequest extends ViewRecord
                     $outcome = filled($data['outcome'] ?? null)
                         ? IncomingRequestOutcome::from($data['outcome'])
                         : null;
-                    $manager->transition($this->record, $status, $outcome, auth()->user());
+                    $manager->transition($this->record, $status, $outcome, auth()->user(), [
+                        'value' => $data['commercial_value'] ?? null,
+                        'currency' => $data['commercial_currency'] ?? null,
+                        'lost_reason' => $data['lost_reason'] ?? null,
+                    ]);
                     $this->reloadRecord();
                     $this->success('Statut mis à jour.');
                 }),
