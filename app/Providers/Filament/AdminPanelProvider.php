@@ -11,7 +11,9 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -33,6 +35,15 @@ class AdminPanelProvider extends PanelProvider
             ->globalSearchResourceOptIn()
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->tenant(Organization::class, slugAttribute: 'slug')
+            ->tenantMenu()
+            ->tenantSwitcher()
+            ->searchableTenantMenu()
+            ->tenantMenuItems([
+                MenuItem::make()
+                    ->label('Toutes les organisations')
+                    ->icon(Heroicon::OutlinedBuildingOffice2)
+                    ->url('/platform/organizations'),
+            ])
             ->tenantMiddleware([
                 SetActiveOrganization::class,
             ], isPersistent: true)
