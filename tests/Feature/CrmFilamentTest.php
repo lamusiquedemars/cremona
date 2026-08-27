@@ -6,12 +6,14 @@ use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Companies\CompanyResource;
 use App\Filament\Resources\InboundChannels\InboundChannelResource;
+use App\Filament\Resources\InboundChannels\Pages\ListInboundChannels;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use App\Filament\Resources\People\Pages\ViewPerson;
 use App\Filament\Resources\People\PersonResource;
 use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
 use App\Models\Company;
 use App\Models\Organization;
+use App\Models\OrganizationIntegration;
 use App\Models\Person;
 use App\Models\User;
 use App\Services\CrmRecordManager;
@@ -508,5 +510,29 @@ class CrmFilamentTest extends TestCase
         $this->actingAs($collaborator)
             ->get(InboundChannelResource::getUrl('index', tenant: $organization))
             ->assertForbidden();
+    }
+
+    public function test_an_integration_manager_can_create_an_inbound_channel(): void
+    {
+        $organization = Organization::factory()->create();
+        $administrator = User::factory()->create();
+        $administrator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Administrator->value,
+        ]);
+
+        $this->actingAs($administrator);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        Livewire::test(ListInboundChannels::class)
+            ->callAction('createChannel', data: ['name' => 'atelierivoincidit-contact'])
+            ->assertHasNoActionErrors();
+
+        $this->assertDatabaseHas('organization_integrations', [
+            'organization_id' => $organization->getKey(),
+            'provider' => 'maracuja_cms',
+            'name' => 'atelierivoincidit-contact',
+            'status' => 'active',
+        ]);
     }
 }
