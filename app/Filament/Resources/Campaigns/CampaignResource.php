@@ -69,8 +69,8 @@ class CampaignResource extends Resource
                     Select::make('status')->label('Statut')->options(CampaignStatus::class)->default(CampaignStatus::Draft)->required(),
                     DatePicker::make('starts_on')->label('Début')->native(false),
                     DatePicker::make('ends_on')->label('Fin')->native(false),
-                    TextInput::make('planned_budget')->label('Budget prévu')->numeric()->prefix('R$'),
-                    TextInput::make('currency')->label('Devise')->default('BRL')->required()->length(3),
+                    TextInput::make('planned_budget')->label('Budget prévu')->numeric(),
+                    TextInput::make('currency')->label('Devise (ISO)')->placeholder('EUR')->required()->length(3),
                     Textarea::make('notes')->label('Notes')->rows(3)->columnSpanFull(),
                 ])->columns(2),
             Section::make('Coûts et résultats par jour')
@@ -80,7 +80,7 @@ class CampaignResource extends Resource
                         ->relationship()
                         ->schema([
                             DatePicker::make('metric_date')->label('Jour')->required()->native(false),
-                            TextInput::make('spend')->label('Dépense')->numeric()->default(0)->prefix('R$')->required(),
+                            TextInput::make('spend')->label('Dépense')->numeric()->default(0)->required(),
                             TextInput::make('impressions')->label('Impressions')->numeric()->default(0)->required(),
                             TextInput::make('clicks')->label('Clics')->numeric()->default(0)->required(),
                             TextInput::make('platform_conversions')->label('Conversions plateforme')->numeric()->default(0)->required(),
@@ -89,7 +89,7 @@ class CampaignResource extends Resource
                                 'google_ads' => 'Google Ads',
                                 'meta_ads' => 'Meta Ads',
                             ])->default('manual')->required(),
-                            TextInput::make('currency')->label('Devise')->default('BRL')->required()->length(3),
+                            TextInput::make('currency')->label('Devise (ISO)')->required()->length(3),
                         ])->columns(4)->defaultItems(0)->addActionLabel('Ajouter une journée'),
                 ]),
             Section::make('Préparation Google Ads')
@@ -105,8 +105,7 @@ class CampaignResource extends Resource
                         ->maxLength(2048),
                     TextInput::make('configuration.daily_budget')
                         ->label('Budget quotidien prévu')
-                        ->numeric()
-                        ->prefix('€'),
+                        ->numeric(),
                     TextInput::make('configuration.target_locations')
                         ->label('Zones ciblées')
                         ->helperText('Exemple : France, Paris, Île-de-France.'),
