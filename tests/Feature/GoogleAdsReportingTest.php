@@ -119,7 +119,8 @@ class GoogleAdsReportingTest extends TestCase
         Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/adGroupCriteria:mutate')
             && $request['operations'][0]['create']['keyword'] === ['text' => 'archet violon', 'matchType' => 'PHRASE']);
         Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/campaigns:mutate')
-            && array_key_exists('targetSpend', $request['operations'][0]['create']));
+            && array_key_exists('targetSpend', $request['operations'][0]['create'])
+            && $request['operations'][0]['create']['containsEuPoliticalAdvertising'] === 'DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING');
     }
 
     public function test_google_ads_publisher_removes_the_budget_when_campaign_creation_fails(): void

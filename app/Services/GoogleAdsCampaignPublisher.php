@@ -54,6 +54,7 @@ class GoogleAdsCampaignPublisher
                     'status' => 'PAUSED',
                     'advertisingChannelType' => 'SEARCH',
                     'campaignBudget' => $budgetResource,
+                    'containsEuPoliticalAdvertising' => 'DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING',
                     // Google Ads API calls its standard "Maximize clicks" strategy TargetSpend.
                     'targetSpend' => (object) [],
                     'geoTargetTypeSetting' => [
