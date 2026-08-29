@@ -19,6 +19,8 @@ class GoogleAdsCampaignDraft
         $this->requireValue($configuration, 'conversion_goal');
         $this->requireValue($configuration, 'final_url');
         $this->requireValue($configuration, 'daily_budget');
+        $this->requireValue($configuration, 'target_locations');
+        $this->requireValue($configuration, 'languages');
 
         $adGroups = Arr::wrap($configuration['ad_groups'] ?? []);
         if ($adGroups === []) {
@@ -33,9 +35,9 @@ class GoogleAdsCampaignDraft
                 'daily_budget' => (float) $configuration['daily_budget'],
                 'currency' => $campaign->currency,
                 'conversion_goal' => $configuration['conversion_goal'],
-                'final_url' => $configuration['final_url'],
-                'target_locations' => $configuration['target_locations'] ?? null,
-                'languages' => $configuration['languages'] ?? null,
+                'final_url' => $this->trackingUrl($configuration['final_url'], $campaign->tracking_key),
+                'target_locations' => $this->lines($configuration['target_locations']),
+                'languages' => $this->lines($configuration['languages']),
                 'tracking_key' => $campaign->tracking_key,
             ],
             'ad_groups' => collect($adGroups)->map(function (array $group): array {
@@ -43,12 +45,16 @@ class GoogleAdsCampaignDraft
                     $this->requireValue($group, $field, 'configuration.ad_groups');
                 }
 
+                $headlines = $this->lines($group['headlines']);
+                $descriptions = $this->lines($group['descriptions']);
+                $this->validateAssets($headlines, $descriptions);
+
                 return [
                     'name' => $group['name'],
                     'keywords' => $this->lines($group['keywords']),
                     'negative_keywords' => $this->lines($group['negative_keywords'] ?? ''),
-                    'headlines' => $this->lines($group['headlines']),
-                    'descriptions' => $this->lines($group['descriptions']),
+                    'headlines' => $headlines,
+                    'descriptions' => $descriptions,
                 ];
             })->all(),
         ];
@@ -70,5 +76,37 @@ class GoogleAdsCampaignDraft
             ->filter()
             ->values()
             ->all();
+    }
+
+    private function trackingUrl(string $url, string $trackingKey): string
+    {
+        $separator = str_contains($url, '?') ? '&' : '?';
+
+        return $url.$separator.http_build_query([
+            'utm_source' => 'google',
+            'utm_medium' => 'cpc',
+            'utm_campaign' => $trackingKey,
+        ]);
+    }
+
+    /** @param array<int, string> $headlines @param array<int, string> $descriptions */
+    private function validateAssets(array $headlines, array $descriptions): void
+    {
+        if (count($headlines) < 3 || count($headlines) > 15) {
+            throw ValidationException::withMessages(['configuration.ad_groups.headlines' => 'Une annonce responsive requiert entre 3 et 15 titres.']);
+        }
+        if (count($descriptions) < 2 || count($descriptions) > 4) {
+            throw ValidationException::withMessages(['configuration.ad_groups.descriptions' => 'Une annonce responsive requiert entre 2 et 4 descriptions.']);
+        }
+        foreach ($headlines as $headline) {
+            if (mb_strlen($headline) > 30) {
+                throw ValidationException::withMessages(['configuration.ad_groups.headlines' => "Le titre « {$headline} » dépasse 30 caractères."]);
+            }
+        }
+        foreach ($descriptions as $description) {
+            if (mb_strlen($description) > 90) {
+                throw ValidationException::withMessages(['configuration.ad_groups.descriptions' => 'Une description dépasse 90 caractères.']);
+            }
+        }
     }
 }

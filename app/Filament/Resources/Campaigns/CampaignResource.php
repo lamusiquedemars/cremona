@@ -106,17 +106,19 @@ class CampaignResource extends Resource
                     TextInput::make('configuration.daily_budget')
                         ->label('Budget quotidien prévu')
                         ->numeric(),
-                    TextInput::make('configuration.target_locations')
+                    Textarea::make('configuration.target_locations')
                         ->label('Zones ciblées')
-                        ->helperText('Exemple : France, Paris, Île-de-France.'),
-                    TextInput::make('configuration.languages')
+                        ->helperText('Une zone française par ligne. Cremona vérifie chaque zone auprès de Google Ads avant publication.')
+                        ->rows(3),
+                    Textarea::make('configuration.languages')
                         ->label('Langues')
-                        ->helperText('Exemple : fr.'),
+                        ->helperText('Une langue ISO par ligne, par exemple : fr.')
+                        ->rows(2),
                     Repeater::make('configuration.ad_groups')
                         ->label('Groupes d’annonces')
                         ->schema([
                             TextInput::make('name')->label('Nom')->required()->maxLength(255),
-                            Textarea::make('keywords')->label('Mots-clés, un par ligne')->rows(4)->required(),
+                            Textarea::make('keywords')->label('Mots-clés, un par ligne')->helperText('"guillemets" = expression ; [crochets] = exact ; sans syntaxe = large.')->rows(4)->required(),
                             Textarea::make('negative_keywords')->label('Exclusions, une par ligne')->rows(3),
                             Textarea::make('headlines')->label('Titres, un par ligne')->rows(4)->required(),
                             Textarea::make('descriptions')->label('Descriptions, une par ligne')->rows(3)->required(),

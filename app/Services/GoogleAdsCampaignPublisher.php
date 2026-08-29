@@ -46,7 +46,10 @@ class GoogleAdsCampaignPublisher
                 'status' => 'PAUSED',
                 'advertisingChannelType' => 'SEARCH',
                 'campaignBudget' => $budgetResource,
-                'manualCpc' => (object) [],
+                'maximizeClicks' => (object) [],
+                'geoTargetTypeSetting' => [
+                    'positiveGeoTargetType' => 'PRESENCE',
+                ],
                 'networkSettings' => [
                     'targetGoogleSearch' => true,
                     'targetSearchNetwork' => true,
@@ -60,6 +63,8 @@ class GoogleAdsCampaignPublisher
             throw new LogicException('Google Ads n’a pas renvoyé l’identifiant de campagne.');
         }
 
+        $this->applyCampaignTargeting($client, $resource, $preview['campaign']);
+
         foreach ($preview['ad_groups'] as $group) {
             $adGroup = $client->mutate('adGroups', [[
                 'create' => [
@@ -67,7 +72,6 @@ class GoogleAdsCampaignPublisher
                     'campaign' => $resource,
                     'status' => 'PAUSED',
                     'type' => 'SEARCH_STANDARD',
-                    'cpcBidMicros' => 1_000_000,
                 ],
             ]]);
             $adGroupResource = $adGroup['results'][0]['resourceName'] ?? null;
@@ -80,7 +84,7 @@ class GoogleAdsCampaignPublisher
                 $criteria[] = ['create' => [
                     'adGroup' => $adGroupResource,
                     'status' => 'ENABLED',
-                    'keyword' => ['text' => $keyword, 'matchType' => 'BROAD'],
+                    'keyword' => $this->keyword($keyword),
                 ]];
             }
             foreach ($group['negative_keywords'] as $keyword) {
@@ -156,5 +160,88 @@ class GoogleAdsCampaignPublisher
 
             return $campaign->refresh();
         });
+    }
+
+    /** @param array<string, mixed> $campaign */
+    private function applyCampaignTargeting(GoogleAdsApiClient $client, string $campaignResource, array $campaign): void
+    {
+        $operations = [];
+
+        foreach ($this->resolveLocations($client, $campaign['target_locations']) as $location) {
+            $operations[] = ['create' => [
+                'campaign' => $campaignResource,
+                'location' => ['geoTargetConstant' => $location],
+            ]];
+        }
+
+        foreach ($campaign['languages'] as $language) {
+            $id = match (strtolower($language)) {
+                'fr' => 1002,
+                default => throw new LogicException("Langue Google Ads non prise en charge : {$language}."),
+            };
+            $operations[] = ['create' => [
+                'campaign' => $campaignResource,
+                'language' => ['languageConstant' => "languageConstants/{$id}"],
+            ]];
+        }
+
+        $client->mutate('campaignCriteria', $operations);
+    }
+
+    /** @param array<int, string> $names @return array<int, string> */
+    private function resolveLocations(GoogleAdsApiClient $client, array $names): array
+    {
+        $resolved = [];
+
+        foreach ($names as $name) {
+            $escaped = str_replace("'", "\\\\'", $name);
+            $query = <<<GAQL
+                SELECT geo_target_constant.resource_name, geo_target_constant.name,
+                    geo_target_constant.country_code, geo_target_constant.status
+                FROM geo_target_constant
+                WHERE geo_target_constant.name = '{$escaped}'
+                    AND geo_target_constant.country_code = 'FR'
+                    AND geo_target_constant.status = 'ENABLED'
+                GAQL;
+            $matches = collect($client->searchStream($query))
+                ->pluck('results')
+                ->flatten(1)
+                ->pluck('geoTargetConstant')
+                ->filter(fn (mixed $location): bool => is_array($location)
+                    && ($location['name'] ?? null) === $name
+                    && ($location['countryCode'] ?? null) === 'FR'
+                    && filled($location['resourceName'] ?? null))
+                ->unique('resourceName')
+                ->values();
+
+            if ($matches->count() !== 1) {
+                throw new LogicException("Zone Google Ads introuvable ou ambiguë : {$name}.");
+            }
+
+            $resolved[] = $matches->sole()['resourceName'];
+        }
+
+        return $resolved;
+    }
+
+    /** @return array{text: string, matchType: string} */
+    private function keyword(string $keyword): array
+    {
+        $keyword = trim($keyword);
+        $matchType = 'BROAD';
+
+        if (preg_match('/^\[(.+)]$/u', $keyword, $matches)) {
+            $keyword = trim($matches[1]);
+            $matchType = 'EXACT';
+        } elseif (preg_match('/^"(.+)"$/u', $keyword, $matches)) {
+            $keyword = trim($matches[1]);
+            $matchType = 'PHRASE';
+        }
+
+        if ($keyword === '') {
+            throw new LogicException('Un mot-clé ne peut pas être vide.');
+        }
+
+        return ['text' => $keyword, 'matchType' => $matchType];
     }
 }

@@ -82,6 +82,13 @@ class GoogleAdsReportingTest extends TestCase
             'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
             '*/campaignBudgets:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/campaignBudgets/1']]]),
             '*/campaigns:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/campaigns/42']]]),
+            '*/googleAds:searchStream' => Http::response([['results' => [[
+                'geoTargetConstant' => [
+                    'resourceName' => 'geoTargetConstants/123', 'name' => 'Rhône',
+                    'countryCode' => 'FR', 'status' => 'ENABLED',
+                ],
+            ]]]]),
+            '*/campaignCriteria:mutate' => Http::response(['results' => []]),
             '*/adGroups:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/adGroups/7']]]),
             '*/adGroupCriteria:mutate' => Http::response(['results' => []]),
             '*/adGroupAds:mutate' => Http::response(['results' => []]),
@@ -95,7 +102,7 @@ class GoogleAdsReportingTest extends TestCase
             ]);
             $campaign = Campaign::query()->create([
                 'name' => 'Atelier Ivo — Recherche', 'channel' => 'google_ads', 'tracking_key' => 'atelier-archets', 'status' => CampaignStatus::Draft, 'currency' => 'EUR',
-                'configuration' => ['conversion_goal' => 'generate_lead', 'final_url' => 'https://atelierivoincidit.fr/contact', 'daily_budget' => 15, 'ad_groups' => [['name' => 'Archets', 'keywords' => 'archet violon', 'negative_keywords' => 'occasion', 'headlines' => "Archets artisanaux\nEssayer un archet", 'descriptions' => 'Découvrez les archets de l’atelier.']]],
+                'configuration' => ['conversion_goal' => 'generate_lead', 'final_url' => 'https://atelierivoincidit.fr/contact', 'daily_budget' => 15, 'target_locations' => 'Rhône', 'languages' => 'fr', 'ad_groups' => [['name' => 'Archets', 'keywords' => '"archet violon"', 'negative_keywords' => 'occasion', 'headlines' => "Archets artisanaux\nEssayer un archet\nConseil d’archetier", 'descriptions' => "Découvrez les archets de l’atelier.\nEssayez-les avec votre instrument."]]],
             ]);
 
             app(GoogleAdsCampaignPublisher::class)->publishPaused($campaign, $integration);
@@ -105,7 +112,9 @@ class GoogleAdsReportingTest extends TestCase
             $this->assertSame(CampaignStatus::Paused, $campaign->status);
         });
 
-        Http::assertSentCount(6);
+        Http::assertSentCount(8);
+        Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/adGroupCriteria:mutate')
+            && $request['operations'][0]['create']['keyword'] === ['text' => 'archet violon', 'matchType' => 'PHRASE']);
     }
 
     public function test_google_ads_publisher_activates_only_a_campaign_created_paused(): void

@@ -146,6 +146,8 @@ class CampaignTest extends TestCase
                     'conversion_goal' => 'generate_lead',
                     'final_url' => 'https://atelierivoincidit.fr/contact',
                     'daily_budget' => 15,
+                    'target_locations' => 'Rhône',
+                    'languages' => 'fr',
                     'ad_groups' => [['name' => 'Archets', 'keywords' => 'archet violon']],
                 ],
             ]);
@@ -170,12 +172,14 @@ class CampaignTest extends TestCase
                     'conversion_goal' => 'generate_lead',
                     'final_url' => 'https://atelierivoincidit.fr/contact',
                     'daily_budget' => 15,
+                    'target_locations' => 'Rhône',
+                    'languages' => 'fr',
                     'ad_groups' => [[
                         'name' => 'Archets',
                         'keywords' => "archet violon\narchet artisanal",
                         'negative_keywords' => 'occasion',
-                        'headlines' => "Archets artisanaux\nEssayer un archet",
-                        'descriptions' => "Découvrez les archets de l’atelier.",
+                        'headlines' => "Archets artisanaux\nEssayer un archet\nConseil d’archetier",
+                        'descriptions' => "Découvrez les archets de l’atelier.\nChoisissez avec votre instrument.",
                     ]],
                 ],
             ]);
@@ -183,6 +187,7 @@ class CampaignTest extends TestCase
             $preview = app(GoogleAdsCampaignDraft::class)->preview($campaign);
 
             $this->assertSame('PAUSED', $preview['campaign']['status']);
+            $this->assertSame('https://atelierivoincidit.fr/contact?utm_source=google&utm_medium=cpc&utm_campaign=atelier-archets', $preview['campaign']['final_url']);
             $this->assertSame(['archet violon', 'archet artisanal'], $preview['ad_groups'][0]['keywords']);
             $this->assertSame(['occasion'], $preview['ad_groups'][0]['negative_keywords']);
         });
