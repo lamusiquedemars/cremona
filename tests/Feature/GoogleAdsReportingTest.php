@@ -82,12 +82,13 @@ class GoogleAdsReportingTest extends TestCase
             'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
             '*/campaignBudgets:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/campaignBudgets/1']]]),
             '*/campaigns:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/campaigns/42']]]),
-            '*/googleAds:searchStream' => Http::response([['results' => [[
+            '*/geoTargetConstants:suggest' => Http::response(['geoTargetConstantSuggestions' => [[
+                'searchTerm' => 'Rhône',
                 'geoTargetConstant' => [
                     'resourceName' => 'geoTargetConstants/123', 'name' => 'Rhône',
                     'countryCode' => 'FR', 'status' => 'ENABLED',
                 ],
-            ]]]]),
+            ]]]),
             '*/campaignCriteria:mutate' => Http::response(['results' => []]),
             '*/adGroups:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/adGroups/7']]]),
             '*/adGroupCriteria:mutate' => Http::response(['results' => []]),

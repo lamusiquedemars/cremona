@@ -195,25 +195,16 @@ class GoogleAdsCampaignPublisher
     private function resolveLocations(GoogleAdsApiClient $client, array $names): array
     {
         $resolved = [];
+        $suggestions = collect($client->suggestGeoTargets($names));
 
         foreach ($names as $name) {
-            $escaped = str_replace("'", "\\\\'", $name);
-            $query = <<<GAQL
-                SELECT geo_target_constant.resource_name, geo_target_constant.name,
-                    geo_target_constant.country_code, geo_target_constant.status
-                FROM geo_target_constant
-                WHERE geo_target_constant.name = '{$escaped}'
-                    AND geo_target_constant.country_code = 'FR'
-                    AND geo_target_constant.status = 'ENABLED'
-                GAQL;
-            $matches = collect($client->searchStream($query))
-                ->pluck('results')
-                ->flatten(1)
+            $matches = $suggestions
+                ->filter(fn (mixed $suggestion): bool => is_array($suggestion)
+                    && $this->normaliseLocationName((string) ($suggestion['searchTerm'] ?? '')) === $this->normaliseLocationName($name)
+                    && ($suggestion['geoTargetConstant']['countryCode'] ?? null) === 'FR'
+                    && ($suggestion['geoTargetConstant']['status'] ?? null) === 'ENABLED'
+                    && filled($suggestion['geoTargetConstant']['resourceName'] ?? null))
                 ->pluck('geoTargetConstant')
-                ->filter(fn (mixed $location): bool => is_array($location)
-                    && ($location['name'] ?? null) === $name
-                    && ($location['countryCode'] ?? null) === 'FR'
-                    && filled($location['resourceName'] ?? null))
                 ->unique('resourceName')
                 ->values();
 
@@ -225,6 +216,11 @@ class GoogleAdsCampaignPublisher
         }
 
         return $resolved;
+    }
+
+    private function normaliseLocationName(string $name): string
+    {
+        return mb_strtolower(trim(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name));
     }
 
     /** @return array{text: string, matchType: string} */
