@@ -7,6 +7,7 @@ use App\Models\Campaign;
 use App\Models\OrganizationIntegration;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use LogicException;
 
 class GoogleAdsCampaignPublisher
@@ -195,19 +196,25 @@ class GoogleAdsCampaignPublisher
     private function resolveLocations(GoogleAdsApiClient $client, array $names): array
     {
         $resolved = [];
-        $suggestions = collect($client->suggestGeoTargets(array_map(
-            fn (string $name): string => $this->googleLocationQuery($name),
-            $names,
-        )));
 
         foreach ($names as $name) {
-            $matches = $suggestions
-                ->filter(fn (mixed $suggestion): bool => is_array($suggestion)
-                    && $this->normaliseLocationName((string) ($suggestion['searchTerm'] ?? $suggestion['geoTargetConstant']['name'] ?? '')) === $this->normaliseLocationName($name)
-                    && ($suggestion['geoTargetConstant']['countryCode'] ?? null) === 'FR'
-                    && ($suggestion['geoTargetConstant']['status'] ?? null) === 'ENABLED'
-                    && filled($suggestion['geoTargetConstant']['resourceName'] ?? null))
+            $queryName = str_replace("'", "\\\\'", $this->googleLocationQuery($name));
+            $query = <<<GAQL
+                SELECT geo_target_constant.resource_name, geo_target_constant.name,
+                    geo_target_constant.country_code, geo_target_constant.status
+                FROM geo_target_constant
+                WHERE geo_target_constant.name = '{$queryName}'
+                    AND geo_target_constant.country_code = 'FR'
+                    AND geo_target_constant.status = 'ENABLED'
+                GAQL;
+            $matches = collect($client->searchStream($query))
+                ->pluck('results')
+                ->flatten(1)
                 ->pluck('geoTargetConstant')
+                ->filter(fn (mixed $location): bool => is_array($location)
+                    && $this->normaliseLocationName((string) ($location['name'] ?? '')) === $this->normaliseLocationName($name)
+                    && ($location['countryCode'] ?? null) === 'FR'
+                    && filled($location['resourceName'] ?? null))
                 ->unique('resourceName')
                 ->values();
 
@@ -223,12 +230,12 @@ class GoogleAdsCampaignPublisher
 
     private function normaliseLocationName(string $name): string
     {
-        return mb_strtolower(trim(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name));
+        return Str::lower($this->googleLocationQuery($name));
     }
 
     private function googleLocationQuery(string $name): string
     {
-        return trim(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name);
+        return trim(Str::ascii($name));
     }
 
     /** @return array{text: string, matchType: string} */
