@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use LogicException;
+use Throwable;
 
 class GoogleAdsCampaignPublisher
 {
@@ -29,6 +30,7 @@ class GoogleAdsCampaignPublisher
         $preview = $this->draft->preview($campaign);
         $client = new GoogleAdsApiClient($integration->credentials);
         $targetLocations = $this->resolveLocations($client, $preview['campaign']['target_locations']);
+        $this->removeUnusedBudgetsNamed($client, $campaign->name.' — budget');
 
         $budget = $client->mutate('campaignBudgets', [[
             'create' => [
@@ -43,77 +45,86 @@ class GoogleAdsCampaignPublisher
             throw new LogicException('Google Ads n’a pas renvoyé l’identifiant du budget.');
         }
 
-        $created = $client->mutate('campaigns', [[
-            'create' => [
-                'name' => $campaign->name,
-                'status' => 'PAUSED',
-                'advertisingChannelType' => 'SEARCH',
-                'campaignBudget' => $budgetResource,
-                'maximizeClicks' => (object) [],
-                'geoTargetTypeSetting' => [
-                    'positiveGeoTargetType' => 'PRESENCE',
-                ],
-                'networkSettings' => [
-                    'targetGoogleSearch' => true,
-                    'targetSearchNetwork' => true,
-                    'targetContentNetwork' => false,
-                    'targetPartnerSearchNetwork' => false,
-                ],
-            ],
-        ]]);
-        $resource = $created['results'][0]['resourceName'] ?? null;
-        if (! is_string($resource) || ! preg_match('#/campaigns/(\d+)$#', $resource, $matches)) {
-            throw new LogicException('Google Ads n’a pas renvoyé l’identifiant de campagne.');
-        }
+        $campaignResource = null;
 
-        $this->applyCampaignTargeting($client, $resource, $preview['campaign'], $targetLocations);
-
-        foreach ($preview['ad_groups'] as $group) {
-            $adGroup = $client->mutate('adGroups', [[
+        try {
+            $created = $client->mutate('campaigns', [[
                 'create' => [
-                    'name' => $group['name'],
-                    'campaign' => $resource,
+                    'name' => $campaign->name,
                     'status' => 'PAUSED',
-                    'type' => 'SEARCH_STANDARD',
-                ],
-            ]]);
-            $adGroupResource = $adGroup['results'][0]['resourceName'] ?? null;
-            if (! is_string($adGroupResource) || $adGroupResource === '') {
-                throw new LogicException('Google Ads n’a pas renvoyé l’identifiant du groupe d’annonces.');
-            }
-
-            $criteria = [];
-            foreach ($group['keywords'] as $keyword) {
-                $criteria[] = ['create' => [
-                    'adGroup' => $adGroupResource,
-                    'status' => 'ENABLED',
-                    'keyword' => $this->keyword($keyword),
-                ]];
-            }
-            foreach ($group['negative_keywords'] as $keyword) {
-                $criteria[] = ['create' => [
-                    'adGroup' => $adGroupResource,
-                    'negative' => true,
-                    'keyword' => ['text' => $keyword, 'matchType' => 'BROAD'],
-                ]];
-            }
-            if ($criteria !== []) {
-                $client->mutate('adGroupCriteria', $criteria);
-            }
-
-            $client->mutate('adGroupAds', [[
-                'create' => [
-                    'adGroup' => $adGroupResource,
-                    'status' => 'PAUSED',
-                    'ad' => [
-                        'finalUrls' => [$preview['campaign']['final_url']],
-                        'responsiveSearchAd' => [
-                            'headlines' => collect($group['headlines'])->map(fn (string $text): array => ['text' => $text])->all(),
-                            'descriptions' => collect($group['descriptions'])->map(fn (string $text): array => ['text' => $text])->all(),
-                        ],
+                    'advertisingChannelType' => 'SEARCH',
+                    'campaignBudget' => $budgetResource,
+                    // Google Ads API calls its standard "Maximize clicks" strategy TargetSpend.
+                    'targetSpend' => (object) [],
+                    'geoTargetTypeSetting' => [
+                        'positiveGeoTargetType' => 'PRESENCE',
+                    ],
+                    'networkSettings' => [
+                        'targetGoogleSearch' => true,
+                        'targetSearchNetwork' => true,
+                        'targetContentNetwork' => false,
+                        'targetPartnerSearchNetwork' => false,
                     ],
                 ],
             ]]);
+            $campaignResource = $created['results'][0]['resourceName'] ?? null;
+            if (! is_string($campaignResource) || ! preg_match('#/campaigns/(\d+)$#', $campaignResource, $matches)) {
+                throw new LogicException('Google Ads n’a pas renvoyé l’identifiant de campagne.');
+            }
+
+            $this->applyCampaignTargeting($client, $campaignResource, $preview['campaign'], $targetLocations);
+
+            foreach ($preview['ad_groups'] as $group) {
+                $adGroup = $client->mutate('adGroups', [[
+                    'create' => [
+                        'name' => $group['name'],
+                        'campaign' => $campaignResource,
+                        'status' => 'PAUSED',
+                        'type' => 'SEARCH_STANDARD',
+                    ],
+                ]]);
+                $adGroupResource = $adGroup['results'][0]['resourceName'] ?? null;
+                if (! is_string($adGroupResource) || $adGroupResource === '') {
+                    throw new LogicException('Google Ads n’a pas renvoyé l’identifiant du groupe d’annonces.');
+                }
+
+                $criteria = [];
+                foreach ($group['keywords'] as $keyword) {
+                    $criteria[] = ['create' => [
+                        'adGroup' => $adGroupResource,
+                        'status' => 'ENABLED',
+                        'keyword' => $this->keyword($keyword),
+                    ]];
+                }
+                foreach ($group['negative_keywords'] as $keyword) {
+                    $criteria[] = ['create' => [
+                        'adGroup' => $adGroupResource,
+                        'negative' => true,
+                        'keyword' => ['text' => $keyword, 'matchType' => 'BROAD'],
+                    ]];
+                }
+                if ($criteria !== []) {
+                    $client->mutate('adGroupCriteria', $criteria);
+                }
+
+                $client->mutate('adGroupAds', [[
+                    'create' => [
+                        'adGroup' => $adGroupResource,
+                        'status' => 'PAUSED',
+                        'ad' => [
+                            'finalUrls' => [$preview['campaign']['final_url']],
+                            'responsiveSearchAd' => [
+                                'headlines' => collect($group['headlines'])->map(fn (string $text): array => ['text' => $text])->all(),
+                                'descriptions' => collect($group['descriptions'])->map(fn (string $text): array => ['text' => $text])->all(),
+                            ],
+                        ],
+                    ],
+                ]]);
+            }
+        } catch (Throwable $exception) {
+            $this->removePartiallyCreatedGoogleAdsResources($client, $campaignResource, $budgetResource);
+
+            throw $exception;
         }
 
         return DB::transaction(function () use ($campaign, $matches, $actor): Campaign {
@@ -127,6 +138,43 @@ class GoogleAdsCampaignPublisher
 
             return $campaign->refresh();
         });
+    }
+
+    private function removePartiallyCreatedGoogleAdsResources(GoogleAdsApiClient $client, ?string $campaignResource, string $budgetResource): void
+    {
+        foreach (array_filter([$campaignResource, $budgetResource]) as $resourceName) {
+            try {
+                $client->mutate(str_contains($resourceName, '/campaigns/') ? 'campaigns' : 'campaignBudgets', [[
+                    'remove' => $resourceName,
+                ]]);
+            } catch (Throwable $cleanupException) {
+                report($cleanupException);
+            }
+        }
+    }
+
+    private function removeUnusedBudgetsNamed(GoogleAdsApiClient $client, string $name): void
+    {
+        $escapedName = str_replace("'", "\\\\'", $name);
+        $query = <<<GAQL
+            SELECT campaign_budget.resource_name
+            FROM campaign_budget
+            WHERE campaign_budget.name = '{$escapedName}'
+                AND campaign_budget.reference_count = 0
+                AND campaign_budget.status = 'ENABLED'
+            GAQL;
+
+        $budgetResources = collect($client->searchStream($query))
+            ->pluck('results')
+            ->flatten(1)
+            ->pluck('campaignBudget.resourceName')
+            ->filter(fn (mixed $resourceName): bool => is_string($resourceName) && $resourceName !== '')
+            ->unique()
+            ->values();
+
+        foreach ($budgetResources as $budgetResource) {
+            $client->mutate('campaignBudgets', [['remove' => $budgetResource]]);
+        }
     }
 
     public function activate(Campaign $campaign, OrganizationIntegration $integration, ?User $actor = null): Campaign

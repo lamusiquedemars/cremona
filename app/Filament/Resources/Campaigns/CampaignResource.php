@@ -31,6 +31,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use LogicException;
+use Throwable;
 use UnitEnum;
 
 class CampaignResource extends Resource
@@ -196,6 +197,17 @@ class CampaignResource extends Resource
                             Notification::make()
                                 ->title('Création Google Ads arrêtée')
                                 ->body($exception->getMessage())
+                                ->danger()
+                                ->persistent()
+                                ->send();
+
+                            return;
+                        } catch (Throwable $exception) {
+                            report($exception);
+
+                            Notification::make()
+                                ->title('Création Google Ads interrompue')
+                                ->body('Google Ads a refusé une étape de création. Cremona a annulé les ressources créées pendant cette tentative ; la campagne locale reste en brouillon.')
                                 ->danger()
                                 ->persistent()
                                 ->send();

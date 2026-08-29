@@ -10,6 +10,7 @@ use App\Services\GoogleAdsReportingClient;
 use App\Services\GoogleAdsCampaignPublisher;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -112,11 +113,56 @@ class GoogleAdsReportingTest extends TestCase
             $this->assertSame(CampaignStatus::Paused, $campaign->status);
         });
 
-        Http::assertSentCount(8);
+        Http::assertSentCount(9);
         Http::assertSent(fn ($request): bool => str_contains($request->url(), '/googleAds:searchStream')
             && str_contains($request['query'], "geo_target_constant.name = 'Rhone'"));
         Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/adGroupCriteria:mutate')
             && $request['operations'][0]['create']['keyword'] === ['text' => 'archet violon', 'matchType' => 'PHRASE']);
+        Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/campaigns:mutate')
+            && array_key_exists('targetSpend', $request['operations'][0]['create']));
+    }
+
+    public function test_google_ads_publisher_removes_the_budget_when_campaign_creation_fails(): void
+    {
+        Http::fake(function (Request $request) {
+            if ($request->url() === 'https://oauth2.googleapis.com/token') {
+                return Http::response(['access_token' => 'short-lived-token']);
+            }
+            if (str_ends_with($request->url(), '/googleAds:searchStream')) {
+                return Http::response([['results' => [[
+                    'geoTargetConstant' => [
+                        'resourceName' => 'geoTargetConstants/123', 'name' => 'Rhone',
+                        'countryCode' => 'FR', 'status' => 'ENABLED',
+                    ],
+                ]]]]);
+            }
+            if (str_ends_with($request->url(), '/campaignBudgets:mutate')) {
+                return Http::response(['results' => [['resourceName' => 'customers/2005073692/campaignBudgets/1']]]);
+            }
+            if (str_ends_with($request->url(), '/campaigns:mutate') && isset($request['operations'][0]['create'])) {
+                return Http::response(['error' => ['message' => 'Invalid JSON payload']], 400);
+            }
+
+            return Http::response(['results' => []]);
+        });
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'google_ads', 'name' => 'reporting', 'status' => 'active',
+                'credentials' => ['customer_id' => '2005073692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
+            ]);
+            $campaign = Campaign::query()->create([
+                'name' => 'Atelier Ivo — Recherche', 'channel' => 'google_ads', 'tracking_key' => 'atelier-archets', 'status' => CampaignStatus::Draft, 'currency' => 'EUR',
+                'configuration' => ['conversion_goal' => 'generate_lead', 'final_url' => 'https://atelierivoincidit.fr/contact', 'daily_budget' => 15, 'target_locations' => 'Rhône', 'languages' => 'fr', 'ad_groups' => [['name' => 'Archets', 'keywords' => 'archet violon', 'negative_keywords' => 'occasion', 'headlines' => "Archets artisanaux\nEssayer un archet\nConseil d’archetier", 'descriptions' => "Découvrez les archets de l’atelier.\nEssayez-les avec votre instrument."]]],
+            ]);
+
+            $this->expectException(\Illuminate\Http\Client\RequestException::class);
+            app(GoogleAdsCampaignPublisher::class)->publishPaused($campaign, $integration);
+        });
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/campaignBudgets:mutate')
+            && $request['operations'] === [['remove' => 'customers/2005073692/campaignBudgets/1']]);
     }
 
     public function test_google_ads_publisher_activates_only_a_campaign_created_paused(): void
