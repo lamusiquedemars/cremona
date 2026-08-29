@@ -30,6 +30,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use LogicException;
 use UnitEnum;
 
 class CampaignResource extends Resource
@@ -189,7 +190,18 @@ class CampaignResource extends Resource
                             return;
                         }
 
-                        app(GoogleAdsCampaignPublisher::class)->publishPaused($record, $integration, auth()->user());
+                        try {
+                            app(GoogleAdsCampaignPublisher::class)->publishPaused($record, $integration, auth()->user());
+                        } catch (LogicException $exception) {
+                            Notification::make()
+                                ->title('Création Google Ads arrêtée')
+                                ->body($exception->getMessage())
+                                ->danger()
+                                ->persistent()
+                                ->send();
+
+                            return;
+                        }
 
                         Notification::make()->title('Campagne créée dans Google Ads')->body('Elle est en pause et ne diffuse aucune annonce.')->success()->send();
                     }),

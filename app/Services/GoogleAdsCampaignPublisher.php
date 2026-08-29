@@ -195,12 +195,15 @@ class GoogleAdsCampaignPublisher
     private function resolveLocations(GoogleAdsApiClient $client, array $names): array
     {
         $resolved = [];
-        $suggestions = collect($client->suggestGeoTargets($names));
+        $suggestions = collect($client->suggestGeoTargets(array_map(
+            fn (string $name): string => $this->googleLocationQuery($name),
+            $names,
+        )));
 
         foreach ($names as $name) {
             $matches = $suggestions
                 ->filter(fn (mixed $suggestion): bool => is_array($suggestion)
-                    && $this->normaliseLocationName((string) ($suggestion['searchTerm'] ?? '')) === $this->normaliseLocationName($name)
+                    && $this->normaliseLocationName((string) ($suggestion['searchTerm'] ?? $suggestion['geoTargetConstant']['name'] ?? '')) === $this->normaliseLocationName($name)
                     && ($suggestion['geoTargetConstant']['countryCode'] ?? null) === 'FR'
                     && ($suggestion['geoTargetConstant']['status'] ?? null) === 'ENABLED'
                     && filled($suggestion['geoTargetConstant']['resourceName'] ?? null))
@@ -221,6 +224,11 @@ class GoogleAdsCampaignPublisher
     private function normaliseLocationName(string $name): string
     {
         return mb_strtolower(trim(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name));
+    }
+
+    private function googleLocationQuery(string $name): string
+    {
+        return trim(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name);
     }
 
     /** @return array{text: string, matchType: string} */

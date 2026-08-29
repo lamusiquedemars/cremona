@@ -114,6 +114,7 @@ class GoogleAdsReportingTest extends TestCase
         });
 
         Http::assertSentCount(8);
+        Http::assertSent(fn ($request): bool => str_contains($request->url(), '/geoTargetConstants:suggest'));
         Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/adGroupCriteria:mutate')
             && $request['operations'][0]['create']['keyword'] === ['text' => 'archet violon', 'matchType' => 'PHRASE']);
     }
