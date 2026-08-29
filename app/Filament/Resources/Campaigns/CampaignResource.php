@@ -21,6 +21,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -119,11 +121,17 @@ class CampaignResource extends Resource
                         ->label('Groupes d’annonces')
                         ->columnSpanFull()
                         ->schema([
-                            TextInput::make('name')->label('Nom')->required()->maxLength(255),
-                            Textarea::make('keywords')->label('Mots-clés, un par ligne')->helperText('"guillemets" = expression ; [crochets] = exact ; sans syntaxe = large.')->rows(4)->required(),
-                            Textarea::make('negative_keywords')->label('Exclusions, une par ligne')->rows(3),
-                            Textarea::make('headlines')->label('Titres, un par ligne')->rows(4)->required(),
-                            Textarea::make('descriptions')->label('Descriptions, une par ligne')->rows(3)->required(),
+                            TextInput::make('name')->label('Nom')->required()->maxLength(255)->columnSpanFull(),
+                            Grid::make(['default' => 1, 'md' => 2])->schema([
+                                Group::make([
+                                    Textarea::make('keywords')->label('Mots-clés, un par ligne')->helperText('"guillemets" = expression ; [crochets] = exact ; sans syntaxe = large.')->rows(4)->required(),
+                                    Textarea::make('negative_keywords')->label('Exclusions, une par ligne')->rows(3),
+                                ]),
+                                Group::make([
+                                    Textarea::make('headlines')->label('Titres, un par ligne')->rows(4)->required(),
+                                    Textarea::make('descriptions')->label('Descriptions, une par ligne')->rows(3)->required(),
+                                ]),
+                            ]),
                         ])->columns(1)->defaultItems(0)->addActionLabel('Ajouter un groupe'),
                 ])->columns(2),
         ]);
