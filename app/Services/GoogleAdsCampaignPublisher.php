@@ -27,6 +27,8 @@ class GoogleAdsCampaignPublisher
 
         $preview = $this->draft->preview($campaign);
         $client = new GoogleAdsApiClient($integration->credentials);
+        $targetLocations = $this->resolveLocations($client, $preview['campaign']['target_locations']);
+
         $budget = $client->mutate('campaignBudgets', [[
             'create' => [
                 'name' => $campaign->name.' — budget',
@@ -63,7 +65,7 @@ class GoogleAdsCampaignPublisher
             throw new LogicException('Google Ads n’a pas renvoyé l’identifiant de campagne.');
         }
 
-        $this->applyCampaignTargeting($client, $resource, $preview['campaign']);
+        $this->applyCampaignTargeting($client, $resource, $preview['campaign'], $targetLocations);
 
         foreach ($preview['ad_groups'] as $group) {
             $adGroup = $client->mutate('adGroups', [[
@@ -163,11 +165,12 @@ class GoogleAdsCampaignPublisher
     }
 
     /** @param array<string, mixed> $campaign */
-    private function applyCampaignTargeting(GoogleAdsApiClient $client, string $campaignResource, array $campaign): void
+    /** @param array<int, string> $targetLocations */
+    private function applyCampaignTargeting(GoogleAdsApiClient $client, string $campaignResource, array $campaign, array $targetLocations): void
     {
         $operations = [];
 
-        foreach ($this->resolveLocations($client, $campaign['target_locations']) as $location) {
+        foreach ($targetLocations as $location) {
             $operations[] = ['create' => [
                 'campaign' => $campaignResource,
                 'location' => ['geoTargetConstant' => $location],
