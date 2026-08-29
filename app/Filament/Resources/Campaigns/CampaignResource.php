@@ -48,7 +48,7 @@ class CampaignResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->components([
+        return $schema->columns(2)->components([
             Section::make('Campagne')
                 ->description('La clé de suivi doit correspondre exactement au paramètre utm_campaign utilisé dans les liens publicitaires.')
                 ->schema([
@@ -94,6 +94,7 @@ class CampaignResource extends Resource
                 ]),
             Section::make('Préparation Google Ads')
                 ->description('Ce brouillon reste dans Cremona. Il servira à créer une campagne Google Search en pause, jamais à la diffuser automatiquement.')
+                ->columnSpanFull()
                 ->schema([
                     Select::make('configuration.conversion_goal')
                         ->label('Objectif de conversion')
@@ -116,13 +117,14 @@ class CampaignResource extends Resource
                         ->rows(2),
                     Repeater::make('configuration.ad_groups')
                         ->label('Groupes d’annonces')
+                        ->columnSpanFull()
                         ->schema([
                             TextInput::make('name')->label('Nom')->required()->maxLength(255),
                             Textarea::make('keywords')->label('Mots-clés, un par ligne')->helperText('"guillemets" = expression ; [crochets] = exact ; sans syntaxe = large.')->rows(4)->required(),
                             Textarea::make('negative_keywords')->label('Exclusions, une par ligne')->rows(3),
                             Textarea::make('headlines')->label('Titres, un par ligne')->rows(4)->required(),
                             Textarea::make('descriptions')->label('Descriptions, une par ligne')->rows(3)->required(),
-                        ])->columns(2)->defaultItems(0)->addActionLabel('Ajouter un groupe'),
+                        ])->columns(1)->defaultItems(0)->addActionLabel('Ajouter un groupe'),
                 ])->columns(2),
         ]);
     }
