@@ -111,13 +111,18 @@ class CampaignResource extends Resource
                     TextInput::make('configuration.daily_budget')
                         ->label('Budget quotidien prévu')
                         ->numeric(),
+                    Select::make('configuration.target_country')
+                        ->label('Pays ciblé')
+                        ->options(['BR' => 'Brésil', 'FR' => 'France'])
+                        ->default('BR')
+                        ->required(),
                     Textarea::make('configuration.target_locations')
                         ->label('Zones ciblées')
-                        ->helperText('Une zone française par ligne. Cremona vérifie chaque zone auprès de Google Ads avant publication.')
+                        ->helperText('Une zone par ligne. Cremona la vérifie auprès de Google Ads dans le pays choisi avant publication.')
                         ->rows(3),
                     Textarea::make('configuration.languages')
                         ->label('Langues')
-                        ->helperText('Une langue ISO par ligne, par exemple : fr.')
+                        ->helperText('Une langue ISO par ligne, par exemple : pt ou fr.')
                         ->rows(2),
                     Repeater::make('configuration.ad_groups')
                         ->label('Groupes d’annonces')

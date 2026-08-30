@@ -21,6 +21,10 @@ class GoogleAdsCampaignDraft
         $this->requireValue($configuration, 'daily_budget');
         $this->requireValue($configuration, 'target_locations');
         $this->requireValue($configuration, 'languages');
+        $targetCountry = strtoupper((string) ($configuration['target_country'] ?? 'FR'));
+        if (! in_array($targetCountry, ['BR', 'FR'], true)) {
+            throw ValidationException::withMessages(['configuration.target_country' => 'Le pays ciblé doit être BR ou FR.']);
+        }
 
         $adGroups = Arr::wrap($configuration['ad_groups'] ?? []);
         if ($adGroups === []) {
@@ -37,6 +41,7 @@ class GoogleAdsCampaignDraft
                 'conversion_goal' => $configuration['conversion_goal'],
                 'final_url' => $this->trackingUrl($configuration['final_url'], $campaign->tracking_key),
                 'target_locations' => $this->lines($configuration['target_locations']),
+                'target_country' => $targetCountry,
                 'languages' => $this->lines($configuration['languages']),
                 'tracking_key' => $campaign->tracking_key,
             ],

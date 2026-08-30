@@ -29,7 +29,7 @@ class GoogleAdsCampaignPublisher
 
         $preview = $this->draft->preview($campaign);
         $client = new GoogleAdsApiClient($integration->credentials);
-        $targetLocations = $this->resolveLocations($client, $preview['campaign']['target_locations']);
+        $targetLocations = $this->resolveLocations($client, $preview['campaign']['target_locations'], $preview['campaign']['target_country']);
         $this->removeUnusedBudgetsNamed($client, $campaign->name.' — budget');
 
         $budget = $client->mutate('campaignBudgets', [[
@@ -230,6 +230,7 @@ class GoogleAdsCampaignPublisher
         foreach ($campaign['languages'] as $language) {
             $id = match (strtolower($language)) {
                 'fr' => 1002,
+                'pt' => 1014,
                 default => throw new LogicException("Langue Google Ads non prise en charge : {$language}."),
             };
             $operations[] = ['create' => [
@@ -242,7 +243,7 @@ class GoogleAdsCampaignPublisher
     }
 
     /** @param array<int, string> $names @return array<int, string> */
-    private function resolveLocations(GoogleAdsApiClient $client, array $names): array
+    private function resolveLocations(GoogleAdsApiClient $client, array $names, string $countryCode): array
     {
         $resolved = [];
 
@@ -253,7 +254,7 @@ class GoogleAdsCampaignPublisher
                     geo_target_constant.country_code, geo_target_constant.status
                 FROM geo_target_constant
                 WHERE geo_target_constant.name = '{$queryName}'
-                    AND geo_target_constant.country_code = 'FR'
+                    AND geo_target_constant.country_code = '{$countryCode}'
                     AND geo_target_constant.status = 'ENABLED'
                 GAQL;
             $matches = collect($client->searchStream($query))
@@ -262,7 +263,7 @@ class GoogleAdsCampaignPublisher
                 ->pluck('geoTargetConstant')
                 ->filter(fn (mixed $location): bool => is_array($location)
                     && $this->normaliseLocationName((string) ($location['name'] ?? '')) === $this->normaliseLocationName($name)
-                    && ($location['countryCode'] ?? null) === 'FR'
+                    && ($location['countryCode'] ?? null) === $countryCode
                     && filled($location['resourceName'] ?? null))
                 ->unique('resourceName')
                 ->values();
