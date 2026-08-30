@@ -18,9 +18,13 @@ class GoogleAdsCampaignDraft
         $configuration = $campaign->configuration ?? [];
         $this->requireValue($configuration, 'conversion_goal');
         $this->requireValue($configuration, 'final_url');
-        $this->requireValue($configuration, 'daily_budget');
         $this->requireValue($configuration, 'target_locations');
         $this->requireValue($configuration, 'languages');
+        $budgetMode = $configuration['budget_mode'] ?? 'daily';
+        if (! in_array($budgetMode, ['daily', 'total'], true)) {
+            throw ValidationException::withMessages(['configuration.budget_mode' => 'Le mode de budget Google Ads est invalide.']);
+        }
+        $budget = $this->budget($campaign, $configuration, $budgetMode);
         $targetCountry = strtoupper((string) ($configuration['target_country'] ?? 'FR'));
         if (! in_array($targetCountry, ['BR', 'FR'], true)) {
             throw ValidationException::withMessages(['configuration.target_country' => 'Le pays ciblé doit être BR ou FR.']);
@@ -36,7 +40,7 @@ class GoogleAdsCampaignDraft
                 'name' => $campaign->name,
                 'status' => 'PAUSED',
                 'channel' => 'SEARCH',
-                'daily_budget' => (float) $configuration['daily_budget'],
+                ...$budget,
                 'currency' => $campaign->currency,
                 'conversion_goal' => $configuration['conversion_goal'],
                 'final_url' => $this->trackingUrl($configuration['final_url'], $campaign->tracking_key),
@@ -62,6 +66,38 @@ class GoogleAdsCampaignDraft
                     'descriptions' => $descriptions,
                 ];
             })->all(),
+        ];
+    }
+
+    /** @param array<string, mixed> $configuration @return array<string, mixed> */
+    private function budget(Campaign $campaign, array $configuration, string $budgetMode): array
+    {
+        if ($budgetMode === 'daily') {
+            $this->requireValue($configuration, 'daily_budget');
+
+            return [
+                'budget_mode' => 'daily',
+                'daily_budget' => (float) $configuration['daily_budget'],
+            ];
+        }
+
+        if ($campaign->starts_on === null || $campaign->ends_on === null || blank($campaign->planned_budget)) {
+            throw ValidationException::withMessages(['planned_budget' => 'Un test borné requiert un budget total, une date de début et une date de fin.']);
+        }
+        if ($campaign->ends_on->lessThan($campaign->starts_on)) {
+            throw ValidationException::withMessages(['ends_on' => 'La date de fin doit être postérieure ou égale à la date de début.']);
+        }
+
+        $duration = $campaign->starts_on->diffInDays($campaign->ends_on) + 1;
+        if ($duration < 3 || $duration > 90) {
+            throw ValidationException::withMessages(['ends_on' => 'Un budget total Google Ads requiert une période de 3 à 90 jours.']);
+        }
+
+        return [
+            'budget_mode' => 'total',
+            'total_budget' => (float) $campaign->planned_budget,
+            'starts_on' => $campaign->starts_on->toDateString(),
+            'ends_on' => $campaign->ends_on->toDateString(),
         ];
     }
 

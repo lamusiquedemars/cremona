@@ -32,14 +32,19 @@ class GoogleAdsCampaignPublisher
         $targetLocations = $this->resolveLocations($client, $preview['campaign']['target_locations'], $preview['campaign']['target_country']);
         $this->removeUnusedBudgetsNamed($client, $campaign->name.' — budget');
 
-        $budget = $client->mutate('campaignBudgets', [[
-            'create' => [
-                'name' => $campaign->name.' — budget',
-                'amountMicros' => (int) round($preview['campaign']['daily_budget'] * 1_000_000),
-                'deliveryMethod' => 'STANDARD',
-                'explicitlyShared' => false,
-            ],
-        ]]);
+        $budgetPayload = [
+            'name' => $campaign->name.' — budget',
+            'deliveryMethod' => 'STANDARD',
+            'explicitlyShared' => false,
+        ];
+        if ($preview['campaign']['budget_mode'] === 'total') {
+            $budgetPayload['period'] = 'CUSTOM_PERIOD';
+            $budgetPayload['totalAmountMicros'] = (int) round($preview['campaign']['total_budget'] * 1_000_000);
+        } else {
+            $budgetPayload['amountMicros'] = (int) round($preview['campaign']['daily_budget'] * 1_000_000);
+        }
+
+        $budget = $client->mutate('campaignBudgets', [['create' => $budgetPayload]]);
         $budgetResource = $budget['results'][0]['resourceName'] ?? null;
         if (! is_string($budgetResource) || $budgetResource === '') {
             throw new LogicException('Google Ads n’a pas renvoyé l’identifiant du budget.');
@@ -48,8 +53,7 @@ class GoogleAdsCampaignPublisher
         $campaignResource = null;
 
         try {
-            $created = $client->mutate('campaigns', [[
-                'create' => [
+            $campaignPayload = [
                     'name' => $campaign->name,
                     'status' => 'PAUSED',
                     'advertisingChannelType' => 'SEARCH',
@@ -66,8 +70,13 @@ class GoogleAdsCampaignPublisher
                         'targetContentNetwork' => false,
                         'targetPartnerSearchNetwork' => false,
                     ],
-                ],
-            ]]);
+            ];
+            if ($preview['campaign']['budget_mode'] === 'total') {
+                $campaignPayload['startDateTime'] = $this->googleAdsDateTime($preview['campaign']['starts_on'], false);
+                $campaignPayload['endDateTime'] = $this->googleAdsDateTime($preview['campaign']['ends_on'], true);
+            }
+
+            $created = $client->mutate('campaigns', [['create' => $campaignPayload]]);
             $campaignResource = $created['results'][0]['resourceName'] ?? null;
             if (! is_string($campaignResource) || ! preg_match('#/campaigns/(\d+)$#', $campaignResource, $matches)) {
                 throw new LogicException('Google Ads n’a pas renvoyé l’identifiant de campagne.');
@@ -154,6 +163,11 @@ class GoogleAdsCampaignPublisher
         }
     }
 
+    private function googleAdsDateTime(string $date, bool $endOfDay): string
+    {
+        return str_replace('-', '', $date).($endOfDay ? ' 23:59:59' : ' 00:00:00');
+    }
+
     private function removeUnusedBudgetsNamed(GoogleAdsApiClient $client, string $name): void
     {
         $escapedName = str_replace("'", "\\\\'", $name);
@@ -208,6 +222,44 @@ class GoogleAdsCampaignPublisher
             $campaign->update(['status' => CampaignStatus::Active]);
             $this->auditLogger->record('campaign.google_ads_activated', $campaign, $actor, [
                 'google_campaign_id' => $campaign->external_reference,
+            ]);
+
+            return $campaign->refresh();
+        });
+    }
+
+    public function discardPaused(Campaign $campaign, OrganizationIntegration $integration, ?User $actor = null): Campaign
+    {
+        if ($campaign->channel !== 'google_ads' || blank($campaign->external_reference)) {
+            throw new LogicException('Cette campagne Google Ads n’est pas liée à une campagne distante.');
+        }
+        if ($campaign->status !== CampaignStatus::Paused) {
+            throw new LogicException('Seule une campagne Google Ads en pause peut être retirée.');
+        }
+        if ($campaign->dailyMetrics()->exists()) {
+            throw new LogicException('Cette campagne possède déjà des données ; elle ne peut pas être retirée depuis Cremona.');
+        }
+        if ($integration->provider !== 'google_ads' || $integration->name !== 'reporting') {
+            throw new LogicException('La connexion Google Ads de l’organisation est introuvable.');
+        }
+
+        $customerId = preg_replace('/\D/', '', (string) ($integration->credentials['customer_id'] ?? ''));
+        if ($customerId === '' || ! ctype_digit((string) $campaign->external_reference)) {
+            throw new LogicException('L’identifiant Google Ads de la campagne est invalide.');
+        }
+
+        $googleCampaignId = $campaign->external_reference;
+        (new GoogleAdsApiClient($integration->credentials))->mutate('campaigns', [[
+            'remove' => "customers/{$customerId}/campaigns/{$googleCampaignId}",
+        ]]);
+
+        return DB::transaction(function () use ($campaign, $actor, $googleCampaignId): Campaign {
+            $campaign->update([
+                'external_reference' => null,
+                'status' => CampaignStatus::Draft,
+            ]);
+            $this->auditLogger->record('campaign.google_ads_removed_before_launch', $campaign, $actor, [
+                'google_campaign_id' => $googleCampaignId,
             ]);
 
             return $campaign->refresh();

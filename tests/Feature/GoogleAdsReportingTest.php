@@ -103,7 +103,8 @@ class GoogleAdsReportingTest extends TestCase
             ]);
             $campaign = Campaign::query()->create([
                 'name' => 'Atelier Ivo — Recherche', 'channel' => 'google_ads', 'tracking_key' => 'atelier-archets', 'status' => CampaignStatus::Draft, 'currency' => 'EUR',
-                'configuration' => ['conversion_goal' => 'generate_lead', 'final_url' => 'https://atelierivoincidit.fr/contact', 'daily_budget' => 15, 'target_locations' => 'Rhône', 'languages' => 'fr', 'ad_groups' => [['name' => 'Archets', 'keywords' => '"archet violon"', 'negative_keywords' => 'occasion', 'headlines' => "Archets artisanaux\nEssayer un archet\nConseil d’archetier", 'descriptions' => "Découvrez les archets de l’atelier.\nEssayez-les avec votre instrument."]]],
+                'starts_on' => '2026-09-01', 'ends_on' => '2026-09-30', 'planned_budget' => 100,
+                'configuration' => ['budget_mode' => 'total', 'conversion_goal' => 'generate_lead', 'final_url' => 'https://atelierivoincidit.fr/contact', 'target_locations' => 'Rhône', 'languages' => 'fr', 'ad_groups' => [['name' => 'Archets', 'keywords' => '"archet violon"', 'negative_keywords' => 'occasion', 'headlines' => "Archets artisanaux\nEssayer un archet\nConseil d’archetier", 'descriptions' => "Découvrez les archets de l’atelier.\nEssayez-les avec votre instrument."]]],
             ]);
 
             app(GoogleAdsCampaignPublisher::class)->publishPaused($campaign, $integration);
@@ -120,7 +121,12 @@ class GoogleAdsReportingTest extends TestCase
             && $request['operations'][0]['create']['keyword'] === ['text' => 'archet violon', 'matchType' => 'PHRASE']);
         Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/campaigns:mutate')
             && array_key_exists('targetSpend', $request['operations'][0]['create'])
-            && $request['operations'][0]['create']['containsEuPoliticalAdvertising'] === 'DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING');
+            && $request['operations'][0]['create']['containsEuPoliticalAdvertising'] === 'DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING'
+            && $request['operations'][0]['create']['startDateTime'] === '20260901 00:00:00'
+            && $request['operations'][0]['create']['endDateTime'] === '20260930 23:59:59');
+        Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/campaignBudgets:mutate')
+            && $request['operations'][0]['create']['period'] === 'CUSTOM_PERIOD'
+            && $request['operations'][0]['create']['totalAmountMicros'] === 100000000);
     }
 
     public function test_google_ads_publisher_removes_the_budget_when_campaign_creation_fails(): void
@@ -201,5 +207,35 @@ class GoogleAdsReportingTest extends TestCase
                 ],
             ];
         });
+    }
+
+    public function test_google_ads_publisher_removes_an_unlaunched_paused_campaign_and_keeps_the_local_draft(): void
+    {
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
+            '*/campaigns:mutate' => Http::response(['results' => []]),
+        ]);
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'google_ads', 'name' => 'reporting', 'status' => 'active',
+                'credentials' => ['customer_id' => '200-507-3692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
+            ]);
+            $campaign = Campaign::query()->create([
+                'name' => 'Atelier Ivo — Recherche', 'channel' => 'google_ads', 'tracking_key' => 'atelier-archets', 'external_reference' => '42', 'status' => CampaignStatus::Paused, 'currency' => 'EUR',
+                'configuration' => ['ad_groups' => [['name' => 'Archets']]],
+            ]);
+
+            app(GoogleAdsCampaignPublisher::class)->discardPaused($campaign, $integration);
+
+            $campaign->refresh();
+            $this->assertNull($campaign->external_reference);
+            $this->assertSame(CampaignStatus::Draft, $campaign->status);
+            $this->assertSame('Archets', $campaign->configuration['ad_groups'][0]['name']);
+        });
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/campaigns:mutate')
+            && $request['operations'] === [['remove' => 'customers/2005073692/campaigns/42']]);
     }
 }

@@ -25,6 +25,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -71,9 +72,6 @@ class CampaignResource extends Resource
                     TextInput::make('external_reference')->label('Identifiant externe')->maxLength(255),
                     TextInput::make('site_reference')->label('Référence du site')->maxLength(255),
                     Select::make('status')->label('Statut')->options(CampaignStatus::class)->default(CampaignStatus::Draft)->required(),
-                    DatePicker::make('starts_on')->label('Début')->native(false),
-                    DatePicker::make('ends_on')->label('Fin')->native(false),
-                    TextInput::make('planned_budget')->label('Budget prévu')->numeric(),
                     TextInput::make('currency')->label('Devise (ISO)')->placeholder('EUR')->required()->length(3),
                     Textarea::make('notes')->label('Notes')->rows(3)->columnSpanFull(),
                 ])->columns(2),
@@ -108,9 +106,39 @@ class CampaignResource extends Resource
                         ->label('URL finale')
                         ->url()
                         ->maxLength(2048),
+                    Select::make('configuration.budget_mode')
+                        ->label('Mode de budget')
+                        ->options([
+                            'daily' => 'Budget quotidien continu',
+                            'total' => 'Test borné : budget total et dates fixes',
+                        ])
+                        ->default('daily')
+                        ->live()
+                        ->required()
+                        ->helperText('Le budget total crée une campagne Google Ads limitée dans le temps ; il ne peut pas être ajouté après création.'),
                     TextInput::make('configuration.daily_budget')
                         ->label('Budget quotidien prévu')
-                        ->numeric(),
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->visible(fn (Get $get): bool => in_array($get('configuration.budget_mode'), [null, 'daily'], true))
+                        ->required(fn (Get $get): bool => in_array($get('configuration.budget_mode'), [null, 'daily'], true)),
+                    TextInput::make('planned_budget')
+                        ->label('Budget total maximal')
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->visible(fn (Get $get): bool => $get('configuration.budget_mode') === 'total')
+                        ->required(fn (Get $get): bool => $get('configuration.budget_mode') === 'total'),
+                    DatePicker::make('starts_on')
+                        ->label('Début de diffusion')
+                        ->native(false)
+                        ->visible(fn (Get $get): bool => $get('configuration.budget_mode') === 'total')
+                        ->required(fn (Get $get): bool => $get('configuration.budget_mode') === 'total'),
+                    DatePicker::make('ends_on')
+                        ->label('Fin de diffusion')
+                        ->native(false)
+                        ->visible(fn (Get $get): bool => $get('configuration.budget_mode') === 'total')
+                        ->required(fn (Get $get): bool => $get('configuration.budget_mode') === 'total')
+                        ->after('starts_on'),
                     Select::make('configuration.target_country')
                         ->label('Pays ciblé')
                         ->options(['BR' => 'Brésil', 'FR' => 'France'])
@@ -249,6 +277,46 @@ class CampaignResource extends Resource
                         app(GoogleAdsCampaignPublisher::class)->activate($record, $integration, auth()->user());
 
                         Notification::make()->title('Campagne activée dans Google Ads')->success()->send();
+                    }),
+                Action::make('discard_google_ads_paused')
+                    ->label('Retirer de Google Ads')
+                    ->icon(Heroicon::OutlinedTrash)
+                    ->color('danger')
+                    ->authorize('update')
+                    ->visible(fn (Campaign $record): bool => $record->channel === 'google_ads'
+                        && filled($record->external_reference)
+                        && $record->status === CampaignStatus::Paused
+                        && ! $record->dailyMetrics()->exists())
+                    ->requiresConfirmation()
+                    ->modalHeading('Retirer cette campagne Google Ads ?')
+                    ->modalDescription('La campagne distante en pause sera retirée de Google Ads. Le brouillon, les mots-clés, annonces, budget et dates restent conservés dans Cremona afin de pouvoir la recréer.')
+                    ->modalSubmitActionLabel('Retirer de Google Ads')
+                    ->action(function (Campaign $record): void {
+                        $integration = OrganizationIntegration::query()
+                            ->where('provider', 'google_ads')
+                            ->where('name', 'reporting')
+                            ->first();
+
+                        if ($integration === null) {
+                            Notification::make()->title('Connexion Google Ads à préparer')->body('Renseigne d’abord le compte Google Ads dans l’écran « Google Ads ».')->warning()->send();
+
+                            return;
+                        }
+
+                        try {
+                            app(GoogleAdsCampaignPublisher::class)->discardPaused($record, $integration, auth()->user());
+                        } catch (LogicException $exception) {
+                            Notification::make()->title('Retrait Google Ads arrêté')->body($exception->getMessage())->danger()->persistent()->send();
+
+                            return;
+                        } catch (Throwable $exception) {
+                            report($exception);
+                            Notification::make()->title('Retrait Google Ads interrompu')->body('Google Ads a refusé le retrait ; la campagne locale n’a pas été modifiée.')->danger()->persistent()->send();
+
+                            return;
+                        }
+
+                        Notification::make()->title('Campagne retirée de Google Ads')->body('Le brouillon Cremona est conservé et prêt à être recréé.')->success()->send();
                     }),
                 EditAction::make(),
             ])

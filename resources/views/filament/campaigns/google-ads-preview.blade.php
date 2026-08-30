@@ -19,10 +19,21 @@
     </section>
 
     <dl class="grid gap-3 sm:grid-cols-2">
-        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <dt class="text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Budget quotidien</dt>
-            <dd class="mt-2 text-lg font-semibold">{{ $preview['campaign']['daily_budget'] }} {{ $preview['campaign']['currency'] }}</dd>
-        </div>
+        @if ($preview['campaign']['budget_mode'] === 'total')
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-300/20 dark:bg-emerald-400/[0.08]">
+                <dt class="text-xs font-semibold tracking-wider text-emerald-800 uppercase dark:text-emerald-200">Budget total maximal</dt>
+                <dd class="mt-2 text-lg font-semibold text-emerald-950 dark:text-emerald-100">{{ $preview['campaign']['total_budget'] }} {{ $preview['campaign']['currency'] }}</dd>
+            </div>
+            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                <dt class="text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Diffusion</dt>
+                <dd class="mt-2 font-semibold">{{ \Carbon\CarbonImmutable::parse($preview['campaign']['starts_on'])->format('d/m/Y') }} → {{ \Carbon\CarbonImmutable::parse($preview['campaign']['ends_on'])->format('d/m/Y') }}</dd>
+            </div>
+        @else
+            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                <dt class="text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Budget quotidien</dt>
+                <dd class="mt-2 text-lg font-semibold">{{ $preview['campaign']['daily_budget'] }} {{ $preview['campaign']['currency'] }}</dd>
+            </div>
+        @endif
         <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <dt class="text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Conversion</dt>
             <dd class="mt-2 font-semibold">{{ $preview['campaign']['conversion_goal'] }}</dd>

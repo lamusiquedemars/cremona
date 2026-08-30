@@ -192,4 +192,41 @@ class CampaignTest extends TestCase
             $this->assertSame(['occasion'], $preview['ad_groups'][0]['negative_keywords']);
         });
     }
+
+    public function test_google_ads_bounded_test_requires_dates_and_returns_a_total_budget_preview(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $campaign = Campaign::query()->create([
+                'name' => 'Atelier Ivo — Essai',
+                'channel' => 'google_ads',
+                'tracking_key' => 'atelier-essai',
+                'status' => CampaignStatus::Draft,
+                'currency' => 'EUR',
+                'starts_on' => '2026-09-01',
+                'ends_on' => '2026-09-30',
+                'planned_budget' => 100,
+                'configuration' => [
+                    'budget_mode' => 'total',
+                    'conversion_goal' => 'generate_lead',
+                    'final_url' => 'https://atelierivoincidit.fr/essai',
+                    'target_locations' => 'Rhône',
+                    'languages' => 'fr',
+                    'ad_groups' => [[
+                        'name' => 'Archets',
+                        'keywords' => 'archet violon',
+                        'headlines' => "Archets artisanaux\nEssayer un archet\nConseil d’archetier",
+                        'descriptions' => "Découvrez les archets de l’atelier.\nChoisissez avec votre instrument.",
+                    ]],
+                ],
+            ]);
+
+            $preview = app(GoogleAdsCampaignDraft::class)->preview($campaign);
+
+            $this->assertSame('total', $preview['campaign']['budget_mode']);
+            $this->assertSame(100.0, $preview['campaign']['total_budget']);
+            $this->assertSame('2026-09-30', $preview['campaign']['ends_on']);
+        });
+    }
 }
