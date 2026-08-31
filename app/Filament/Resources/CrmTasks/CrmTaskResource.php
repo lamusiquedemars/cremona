@@ -29,6 +29,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class CrmTaskResource extends Resource
@@ -83,8 +84,12 @@ class CrmTaskResource extends Resource
                     ->preload(),
                 Select::make('conversation_id')
                     ->label('Correspondance')
-                    ->relationship('conversation', 'subject')
-                    ->getOptionLabelFromRecordUsing(fn (Conversation $conversation): string => $conversation->subject ?: 'Sans objet')
+                    ->relationship('conversation', 'subject', modifyQueryUsing: fn (Builder $query): Builder => $query->with([
+                        'person',
+                        'incomingRequest',
+                        'latestMessage.participants',
+                    ]))
+                    ->getOptionLabelFromRecordUsing(fn (Conversation $conversation): string => static::conversationLabel($conversation))
                     ->searchable()
                     ->preload(),
             ]),
@@ -136,5 +141,20 @@ class CrmTaskResource extends Resource
             'view' => ViewCrmTask::route('/{record}'),
             'edit' => EditCrmTask::route('/{record}/edit'),
         ];
+    }
+
+    private static function conversationLabel(Conversation $conversation): string
+    {
+        $from = $conversation->latestMessage?->participants
+            ->first(fn ($participant): bool => $participant->role->value === 'from');
+        $correspondent = $conversation->person?->display_name
+            ?: $conversation->incomingRequest?->name_snapshot
+            ?: $from?->name
+            ?: $from?->address
+            ?: 'Correspondant non identifié';
+        $subject = $conversation->subject ?: 'Sans objet';
+        $date = $conversation->last_message_at?->setTimezone(static::organizationTimezone())->format('d/m/Y H:i');
+
+        return implode(' — ', array_filter([$correspondent, $subject, $date]));
     }
 }
