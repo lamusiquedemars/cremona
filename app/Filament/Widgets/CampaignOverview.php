@@ -13,6 +13,7 @@ use App\Tenancy\OrganizationContext;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Number;
 
 class CampaignOverview extends StatsOverviewWidget
 {
@@ -38,15 +39,24 @@ class CampaignOverview extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $since = now()->subDays(30)->toDateString();
+        $organization = app(OrganizationContext::class)->require();
+        $since = now()->setTimezone($organization->timezone())->subDays(30)->toDateString();
         $active = Campaign::query()->where('status', CampaignStatus::Active)->count();
-        $spend = (float) CampaignDailyMetric::query()->where('metric_date', '>=', $since)->sum('spend');
+        $spendByCurrency = CampaignDailyMetric::query()
+            ->where('metric_date', '>=', $since)
+            ->selectRaw('currency, SUM(spend) as total')
+            ->groupBy('currency')
+            ->pluck('total', 'currency');
+        $spend = $spendByCurrency
+            ->map(fn (mixed $total, string $currency): string => Number::currency((float) $total, $currency, 'fr'))
+            ->implode(' · ');
+        $windowStart = now()->setTimezone($organization->timezone())->subDays(30);
         $leads = IncomingRequest::query()
-            ->where('received_at', '>=', now()->subDays(30))
+            ->where('received_at', '>=', $windowStart)
             ->whereNotNull('attribution_campaign')
             ->count();
         $converted = IncomingRequest::query()
-            ->where('received_at', '>=', now()->subDays(30))
+            ->where('received_at', '>=', $windowStart)
             ->whereNotNull('attribution_campaign')
             ->where('outcome', IncomingRequestOutcome::Converted)
             ->count();
@@ -57,10 +67,12 @@ class CampaignOverview extends StatsOverviewWidget
                 ->icon(Heroicon::OutlinedMegaphone)
                 ->color($active > 0 ? 'success' : 'gray')
                 ->url(CampaignResource::getUrl('index')),
-            Stat::make('Dépense renseignée', 'R$ '.number_format($spend, 2, ',', '.'))
-                ->description('Somme des coûts journaliers saisis')
+            Stat::make('Dépense renseignée', $spend !== '' ? $spend : '—')
+                ->description($spendByCurrency->count() > 1
+                    ? 'Totaux séparés par devise : aucune conversion artificielle.'
+                    : 'Somme des coûts journaliers observés.')
                 ->icon(Heroicon::OutlinedBanknotes)
-                ->color($spend > 0 ? 'warning' : 'gray')
+                ->color($spend !== '' ? 'warning' : 'gray')
                 ->url(CampaignResource::getUrl('index')),
             Stat::make('Demandes attribuées', $leads)
                 ->description('Avec une clé de campagne reconnue')
