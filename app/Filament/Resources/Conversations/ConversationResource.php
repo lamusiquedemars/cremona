@@ -70,14 +70,15 @@ class ConversationResource extends Resource
                 RepeatableEntry::make('messages')->label('')->schema([
                     Grid::make(2)->schema([
                         TextEntry::make('direction')
-                            ->label('')
+                            ->hiddenLabel()
                             ->formatStateUsing(fn ($state): string => $state->value === 'inbound' ? 'Message reçu' : 'Réponse envoyée')
+                            ->color(fn ($state): string => $state->value === 'inbound' ? 'info' : 'success')
                             ->badge(),
-                        TextEntry::make('authored_at')->label('')->dateTime('d/m/Y H:i'),
+                        TextEntry::make('authored_at')->hiddenLabel()->dateTime('d/m/Y H:i'),
                     ]),
-                    TextEntry::make('subject')->label('Objet')->placeholder('Sans objet')->weight('semibold'),
+                    TextEntry::make('subject')->hiddenLabel()->placeholder('Sans objet')->weight('semibold'),
                     TextEntry::make('body_text')
-                        ->label('')
+                        ->hiddenLabel()
                         ->formatStateUsing(function (string $state): HtmlString {
                             $parts = EmailReplyExcerpt::split($state);
                             $html = '<div class="whitespace-pre-wrap">'.e($parts['reply']).'</div>';
@@ -93,7 +94,7 @@ class ConversationResource extends Resource
                         })
                         ->html()
                         ->columnSpanFull(),
-                ])->contained(false),
+                ])->contained(),
             ]),
         ]);
     }
