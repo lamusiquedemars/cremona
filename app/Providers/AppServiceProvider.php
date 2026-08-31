@@ -10,6 +10,7 @@ use App\Models\ContactMethod;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\ConversationUserState;
+use App\Models\CrmTask;
 use App\Models\IncomingRequest;
 use App\Models\MessageAttachment;
 use App\Models\MessageParticipant;
@@ -55,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
             'conversation' => Conversation::class,
             'conversation_message' => ConversationMessage::class,
             'conversation_user_state' => ConversationUserState::class,
+            'crm_task' => CrmTask::class,
             'contact_method' => ContactMethod::class,
             'incoming_request' => IncomingRequest::class,
             'organization' => Organization::class,
