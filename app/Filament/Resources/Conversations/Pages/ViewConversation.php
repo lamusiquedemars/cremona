@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Conversations\Pages;
 
+use App\Enums\MessageDirection;
 use App\Enums\MessageParticipantRole;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Conversation;
@@ -27,7 +28,13 @@ class ViewConversation extends ViewRecord
                 ->color('primary')
                 ->visible(fn (): bool => Gate::allows('update', $this->record))
                 ->schema([
-                    TextInput::make('to')->label('Destinataire')->email()->required()->maxLength(255),
+                    TextInput::make('to')
+                        ->label('Destinataire')
+                        ->email()
+                        ->default(fn (): ?string => $this->lastInboundAddress())
+                        ->helperText('Adresse préremplie depuis le dernier message reçu ; modifiable si nécessaire.')
+                        ->required()
+                        ->maxLength(255),
                     TextInput::make('subject')->label('Objet')->default(fn (): ?string => $this->record->subject)->maxLength(255),
                     Textarea::make('body')->label('Message')->required()->rows(8)->maxLength(10000),
                 ])
@@ -77,5 +84,18 @@ class ViewConversation extends ViewRecord
         $this->record->refresh()->load([
             'person', 'company', 'incomingRequest', 'assignedUser', 'messages' => fn ($query) => $query->orderBy('authored_at'),
         ]);
+    }
+
+    private function lastInboundAddress(): ?string
+    {
+        $message = $this->record->messages()
+            ->where('direction', MessageDirection::Inbound)
+            ->latest('authored_at')
+            ->first();
+
+        return $message?->participants()
+            ->where('role', MessageParticipantRole::From)
+            ->orderBy('position')
+            ->value('address');
     }
 }
