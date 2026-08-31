@@ -13,6 +13,7 @@ use App\Models\ConversationMessage;
 use App\Models\EmailFolder;
 use App\Models\EmailMailbox;
 use App\Models\EmailMessageCopy;
+use App\Support\TechnicalEmailNotification;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -127,6 +128,10 @@ class EmailMailboxSynchronizer
     /** @return array{0: int, 1: int} */
     private function import(EmailMailbox $mailbox, EmailFolder $folder, ImapMessage $source, string $role): array
     {
+        if (TechnicalEmailNotification::isSource($mailbox, $source, $role)) {
+            return [0, 1];
+        }
+
         $uid = (int) $source->getUid();
         if (EmailMessageCopy::query()->where('email_folder_id', $folder->getKey())->where('uid', $uid)->exists()) {
             return [0, 1];

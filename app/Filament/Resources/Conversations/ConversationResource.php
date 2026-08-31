@@ -6,6 +6,7 @@ use App\Enums\ConversationStatus;
 use App\Filament\Resources\Conversations\Pages\ListConversations;
 use App\Filament\Resources\Conversations\Pages\ViewConversation;
 use App\Models\Conversation;
+use App\Support\TechnicalEmailNotification;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
@@ -52,7 +53,7 @@ class ConversationResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make('Conversation')->columnSpan(2)->schema([
+            Section::make('Contexte CRM')->columnSpan(2)->schema([
                 TextEntry::make('subject')->label('Objet')->placeholder('Sans objet')->weight('semibold'),
                 TextEntry::make('person.display_name')->label('Contact')->placeholder('Non rattaché'),
                 TextEntry::make('company.name')->label('Entreprise')->placeholder('—'),
@@ -66,7 +67,12 @@ class ConversationResource extends Resource
             Section::make('Fil de discussion')->columnSpanFull()->schema([
                 ViewEntry::make('conversation_timeline')
                     ->hiddenLabel()
-                    ->state(fn (Conversation $record) => $record->messages()->with('participants')->orderBy('authored_at')->get())
+                    ->state(fn (Conversation $record) => $record->messages()
+                        ->with(['participants', 'mailbox'])
+                        ->orderBy('authored_at')
+                        ->get()
+                        ->reject(fn ($message): bool => TechnicalEmailNotification::isStored($message))
+                        ->values())
                     ->view('filament.infolists.conversation-timeline')
                     ->columnSpanFull(),
             ]),

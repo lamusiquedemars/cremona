@@ -28,4 +28,11 @@ class EmailReplyExcerpt
 
         return ['reply' => $body, 'quoted' => null];
     }
+
+    public static function quotedForDisplay(string $quoted): string
+    {
+        $quoted = preg_replace('/\h+>\h+>\h*/u', "\n>\n> ", $quoted) ?? $quoted;
+
+        return preg_replace('/\h+>\h?/u', "\n> ", $quoted) ?? $quoted;
+    }
 }
