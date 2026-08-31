@@ -5,30 +5,58 @@ namespace App\Services;
 use App\Models\Campaign;
 use App\Models\OrganizationIntegration;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Str;
 use LogicException;
+use Throwable;
 
 class GoogleAdsReportingClient
 {
-    public function __construct(private readonly GoogleAdsCredentials $credentials) {}
+    public function __construct(
+        private readonly GoogleAdsCredentials $credentials,
+        private readonly AuditLogger $auditLogger,
+    ) {}
 
     public function sync(OrganizationIntegration $integration): int
     {
         $organizationCredentials = $integration->credentials;
 
-        if (! $this->credentials->isReady($organizationCredentials)) {
-            throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
-        }
-
         try {
-            return $this->syncFromGoogle($integration, $organizationCredentials);
+            if (! $this->credentials->isReady($organizationCredentials)) {
+                throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
+            }
+
+            $updated = $this->syncFromGoogle($integration, $organizationCredentials);
         } catch (RequestException $exception) {
             $message = $exception->response->json('error.message');
             $message = is_string($message) && $message !== ''
                 ? $message
                 : 'la requête a été refusée.';
 
-            throw new LogicException("Google Ads a refusé la synchronisation : {$message}", previous: $exception);
+            $exception = new LogicException("Google Ads a refusé la synchronisation : {$message}", previous: $exception);
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
+        } catch (Throwable $exception) {
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
         }
+
+        $integration->update([
+            'credentials' => [
+                ...$organizationCredentials,
+                'last_synced_at' => now()->toIso8601String(),
+                'last_sync_failed_at' => null,
+                'last_sync_error' => null,
+            ],
+        ]);
+        $this->auditLogger->record(
+            event: 'google_ads.reporting_synchronized',
+            subject: $integration,
+            metadata: ['updated_daily_metrics' => $updated],
+        );
+
+        return $updated;
     }
 
     /** @param array<string, mixed> $organizationCredentials */
@@ -99,10 +127,6 @@ class GoogleAdsReportingClient
             $updated++;
         }
 
-        $integration->update([
-            'credentials' => [...$organizationCredentials, 'last_synced_at' => now()->toIso8601String()],
-        ]);
-
         return $updated;
     }
 
@@ -123,5 +147,24 @@ class GoogleAdsReportingClient
             'google_ads_bidding_status' => $observation['biddingStrategySystemStatus'] ?? null,
             'google_ads_synced_at' => now(),
         ]);
+    }
+
+    private function markFailure(OrganizationIntegration $integration, Throwable $exception): void
+    {
+        $message = Str::limit($exception->getMessage(), 500, '…');
+        $credentials = $integration->credentials;
+
+        $integration->update([
+            'credentials' => [
+                ...$credentials,
+                'last_sync_failed_at' => now()->toIso8601String(),
+                'last_sync_error' => $message,
+            ],
+        ]);
+        $this->auditLogger->record(
+            event: 'google_ads.reporting_failed',
+            subject: $integration,
+            metadata: ['reason' => $message],
+        );
     }
 }

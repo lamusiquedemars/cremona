@@ -70,6 +70,13 @@ class GoogleAdsConnectionResource extends Resource
                 ->dateTime('d/m/Y H:i')
                 ->timezone(fn (): string => static::getOrganizationTimezone())
                 ->placeholder('Jamais'),
+            TextColumn::make('last_sync_error')
+                ->label('Dernier incident')
+                ->state(fn (OrganizationIntegration $record): ?string => $record->credentials['last_sync_error'] ?? null)
+                ->limit(90)
+                ->tooltip(fn (OrganizationIntegration $record): ?string => $record->credentials['last_sync_error'] ?? null)
+                ->color('danger')
+                ->placeholder('Aucun'),
         ])->recordActions([
             Action::make('sync')
                 ->label('Synchroniser les résultats')

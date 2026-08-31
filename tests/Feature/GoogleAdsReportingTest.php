@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\CampaignStatus;
 use App\Models\Campaign;
 use App\Models\Organization;
+use App\Models\OrganizationAuditLog;
 use App\Models\OrganizationIntegration;
 use App\Services\GoogleAdsReportingClient;
 use App\Services\GoogleAdsCampaignPublisher;
@@ -179,10 +180,56 @@ class GoogleAdsReportingTest extends TestCase
                 'credentials' => ['customer_id' => '2005073692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
             ]);
 
-            $this->expectException(\LogicException::class);
-            $this->expectExceptionMessage('Google Ads a refusé la synchronisation : The customer account cannot be accessed.');
+            try {
+                app(GoogleAdsReportingClient::class)->sync($integration);
+                $this->fail('Google Ads refusal should stop the synchronization.');
+            } catch (\LogicException $exception) {
+                $this->assertSame('Google Ads a refusé la synchronisation : The customer account cannot be accessed.', $exception->getMessage());
+            }
 
-            app(GoogleAdsReportingClient::class)->sync($integration);
+            $this->assertSame(
+                'Google Ads a refusé la synchronisation : The customer account cannot be accessed.',
+                $integration->fresh()->credentials['last_sync_error'],
+            );
+            $this->assertNotNull($integration->fresh()->credentials['last_sync_failed_at']);
+        });
+    }
+
+    public function test_scheduled_google_ads_sync_runs_for_each_active_organization_and_records_an_audit_event(): void
+    {
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
+            'googleads.googleapis.com/*' => Http::sequence()
+                ->push([['results' => [[
+                    'campaign' => ['id' => '123', 'status' => 'ENABLED', 'primaryStatus' => 'ELIGIBLE'],
+                ]]]])
+                ->push([['results' => [[
+                    'campaign' => ['id' => '123', 'status' => 'ENABLED'],
+                    'segments' => ['date' => '2026-08-31'],
+                    'metrics' => ['costMicros' => '1000000', 'impressions' => '10', 'clicks' => '2', 'conversions' => 1],
+                ]]]]),
+        ]);
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            Campaign::query()->create([
+                'name' => 'Campagne planifiée', 'channel' => 'google_ads', 'tracking_key' => 'scheduled-campaign',
+                'external_reference' => '123', 'status' => CampaignStatus::Active, 'currency' => 'EUR',
+            ]);
+            OrganizationIntegration::query()->create([
+                'provider' => 'google_ads', 'name' => 'reporting', 'status' => 'active',
+                'credentials' => ['customer_id' => '2005073692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
+            ]);
+        });
+
+        $this->artisan('cremona:sync-google-ads')
+            ->expectsOutput("{$organization->name}: 1 journée(s) actualisée(s).")
+            ->assertExitCode(0);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $this->assertNotNull(OrganizationIntegration::query()->sole()->credentials['last_synced_at']);
+            $this->assertNull(OrganizationIntegration::query()->sole()->credentials['last_sync_error']);
+            $this->assertSame('google_ads.reporting_synchronized', OrganizationAuditLog::query()->sole()->event);
         });
     }
 

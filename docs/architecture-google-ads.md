@@ -19,6 +19,18 @@ Les credentials partagés de l’application Maracuja peuvent être centralisés
 
 Ils ont priorité à l’exécution et ne sont jamais copiés vers l’organisation lors d’une nouvelle autorisation OAuth.
 
+## Relevé automatique des résultats
+
+La commande `cremona:sync-google-ads` relève les résultats en lecture seule pour
+chaque organisation active disposant d'une connexion Google Ads. Elle est
+planifiée toutes les heures par Laravel et protégée contre les exécutions qui se
+chevauchent. Le cron LWS existant doit continuer à appeler `php artisan
+schedule:run` chaque minute.
+
+Chaque succès ou échec est journalisé dans l'audit de l'organisation. Le dernier
+incident est aussi visible dans `Configuration de l’organisation > Publicité` ;
+les secrets et jetons n'y sont jamais affichés.
+
 ## Compatibilité et migration restante
 
 Aucune donnée existante n’est supprimée ou déplacée par ce chantier. Si les variables centrales ne sont pas encore configurées, Cremona continue d’utiliser les credentials historiques chiffrés dans chaque organisation. L’écran organisationnel ne permet plus de les lire ni de les modifier.

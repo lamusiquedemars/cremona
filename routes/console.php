@@ -1,8 +1,10 @@
 <?php
 
+use App\Console\Commands\SyncGoogleAdsReporting;
 use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -29,3 +31,7 @@ Artisan::command('cremona:create-admin {email} {name?}', function (string $email
 
     return self::SUCCESS;
 })->purpose('Crée ou met à jour un compte administrateur Cremona');
+
+Schedule::command(SyncGoogleAdsReporting::class)
+    ->hourly()
+    ->withoutOverlapping();
