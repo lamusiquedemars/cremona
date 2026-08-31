@@ -59,6 +59,16 @@ class EmailMailboxResource extends Resource
                         ->success()
                         ->send();
                 }),
+            Action::make('test_smtp')
+                ->label('Tester SMTP')
+                ->action(function (EmailMailbox $record): void {
+                    app(EmailMailboxConnectionTester::class)->testSmtp($record);
+                    Notification::make()
+                        ->title('Connexion SMTP réussie')
+                        ->body('L’envoi est authentifié. Aucun email n’a été envoyé.')
+                        ->success()
+                        ->send();
+                }),
         ]);
     }
 
