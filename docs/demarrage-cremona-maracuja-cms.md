@@ -413,6 +413,12 @@ les points suivants :
 - Ne pas utiliser un champ JSON universel à la place de vrais modèles métier.
 - Ne pas créer un module `Products` générique pour absorber tous les catalogues.
 - Conserver le vocabulaire réel de chaque métier dans son module métier.
+- Les capacités communes peuvent recevoir, par pack actif, des intitulés, une
+  navigation, des raccourcis et des écrans adaptés ; ces adaptations ne changent
+  ni leur modèle canonique ni leurs règles d'isolation.
+- Ne jamais coder le nom d'un métier, d'un client ou d'un objet métier comme
+  condition dans le noyau. Les exemples de vocabulaire servent au cadrage, pas
+  de valeurs applicatives.
 - Préserver les changements existants dans tous les worktrees.
 - Ne pas déployer, migrer un site existant ou modifier Marcos Túlio sans demande
   explicite.

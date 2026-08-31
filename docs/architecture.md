@@ -42,6 +42,23 @@ Les premiers packs prévus sont :
 
 Le noyau commun ne doit pas adopter le vocabulaire d’un métier particulier.
 
+### Adaptation de présentation par pack
+
+Chaque capacité commune conserve un modèle et des règles métier stables, mais sa
+présentation est résolue par le pack actif de l'organisation : intitulés, groupes
+de navigation, écrans visibles, raccourcis et champs propres au métier.
+
+Par exemple, un pack Luthier peut présenter la relation client comme « Clients
+et atelier » et une tâche comme « À faire à l'atelier » ou « Relance client ».
+Un pack Avocat peut présenter les mêmes capacités sous « Dossiers et échéances ».
+Ces exemples illustrent le mécanisme : ils ne constituent ni des noms réservés,
+ni des valeurs à coder dans le noyau.
+
+Les objets propres à une profession sont définis dans son module métier, avec
+son vocabulaire réel. Le noyau ne crée pas de table catalogue universelle pour
+les absorber. Un objet destiné à être publié peut avoir une projection contrôlée
+vers Maracuja CMS, sans devenir la source de vérité du site public.
+
 ## Règles avant import des modules du CMS
 
 Un module du starter ne peut entrer dans Cremona qu’après :
