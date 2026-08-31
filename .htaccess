@@ -1,0 +1,17 @@
+RewriteEngine On
+RewriteBase /
+
+# LWS exposes the project root for a subdomain. Never expose Laravel internals.
+RewriteRule ^(?:app|bootstrap|config|database|docs|resources|routes|tests|vendor)(?:/|$) - [F,L,NC]
+RewriteRule ^(?:\.env|artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml|vite\.config\.js)$ - [F,L,NC]
+
+# Public assets retain their normal Laravel paths.
+RewriteRule ^(build|css|fonts|images|js|storage)/(.*)$ public/$1/$2 [L,NC]
+
+# The application dashboard is the public entry point.
+RewriteRule ^$ dashboard [R=302,L]
+
+# Send all application requests through Laravel.
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]
