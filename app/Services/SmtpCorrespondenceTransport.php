@@ -6,6 +6,7 @@ use App\Contracts\CorrespondenceTransport;
 use App\Enums\MessageParticipantRole;
 use App\Models\ConversationMessage;
 use App\Models\EmailMailbox;
+use App\Support\EmailReplyComposer;
 use LogicException;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 use Symfony\Component\Mime\Address;
@@ -14,6 +15,8 @@ use Throwable;
 
 class SmtpCorrespondenceTransport implements CorrespondenceTransport
 {
+    public function __construct(private readonly EmailReplyComposer $replyComposer) {}
+
     public function send(ConversationMessage $message): string
     {
         $mailbox = $message->mailbox ?? EmailMailbox::query()->where('status', 'active')->first();
@@ -28,18 +31,26 @@ class SmtpCorrespondenceTransport implements CorrespondenceTransport
             }
         }
 
+        $content = $this->replyContent($message);
         $email = (new Email)
             ->from(new Address($mailbox->address, $mailbox->display_name ?: $mailbox->address))
             ->subject($message->subject ?? '')
-            ->text($message->body_text);
+            ->text($content['text'])
+            ->html($content['html']);
         $this->addRecipients($email, $message);
 
-        if ($message->in_reply_to !== null) {
-            $email->getHeaders()->addTextHeader('In-Reply-To', $message->in_reply_to);
+        $inReplyTo = ConversationMessage::canonicalHeaderId($message->in_reply_to);
+        if ($inReplyTo !== null) {
+            $email->getHeaders()->addIdHeader('In-Reply-To', $inReplyTo);
         }
-        $references = $message->references()->orderBy('position')->pluck('reference')->all();
+        $references = $message->references()
+            ->orderBy('position')
+            ->pluck('reference')
+            ->map(fn (string $reference): ?string => ConversationMessage::canonicalHeaderId($reference))
+            ->filter()
+            ->all();
         if ($references !== []) {
-            $email->getHeaders()->addTextHeader('References', implode(' ', $references));
+            $email->getHeaders()->addIdHeader('References', $references);
         }
 
         $transport = new EsmtpTransport(
@@ -59,6 +70,24 @@ class SmtpCorrespondenceTransport implements CorrespondenceTransport
                 // The SMTP server may already have closed the connection after accepting the message.
             }
         }
+    }
+
+    /** @return array{text: string, html: string} */
+    private function replyContent(ConversationMessage $message): array
+    {
+        $previous = $message->in_reply_to === null ? null : ConversationMessage::query()
+            ->where('message_id_hash', ConversationMessage::headerHash(ConversationMessage::canonicalHeaderId($message->in_reply_to)))
+            ->with('participants')
+            ->first();
+        $author = $previous?->participants->firstWhere('role', MessageParticipantRole::From);
+
+        return $this->replyComposer->compose(
+            $message->body_text,
+            $previous?->body_text,
+            $author?->name ?: $author?->address,
+            $previous?->authored_at,
+            $message->organization->timezone(),
+        );
     }
 
     private function addRecipients(Email $email, ConversationMessage $message): void

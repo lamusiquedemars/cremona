@@ -35,7 +35,10 @@ class ViewConversation extends ViewRecord
                         ->helperText('Adresse préremplie depuis le dernier message reçu ; modifiable si nécessaire.')
                         ->required()
                         ->maxLength(255),
-                    TextInput::make('subject')->label('Objet')->default(fn (): ?string => $this->record->subject)->maxLength(255),
+                    TextInput::make('subject')
+                        ->label('Objet')
+                        ->default(fn (): string => $this->replySubject())
+                        ->maxLength(255),
                     Textarea::make('body')->label('Message')->required()->rows(8)->maxLength(10000),
                 ])
                 ->action(function (array $data, CorrespondenceManager $manager): void {
@@ -97,5 +100,14 @@ class ViewConversation extends ViewRecord
             ->where('role', MessageParticipantRole::From)
             ->orderBy('position')
             ->value('address');
+    }
+
+    private function replySubject(): string
+    {
+        $subject = trim((string) $this->record->subject);
+
+        return preg_match('/^(?:re|r[eé]p)\s*:/ui', $subject) === 1
+            ? $subject
+            : 'Re: '.$subject;
     }
 }

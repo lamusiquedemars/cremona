@@ -161,7 +161,7 @@ class CorrespondenceManager
                 'author_user_id' => $author->getKey(),
                 'direction' => MessageDirection::Outbound,
                 'channel' => MessageChannel::Email,
-                'subject' => $subject ?? $conversation->subject,
+                'subject' => $this->replySubject($subject ?? $conversation->subject),
                 'body_text' => $body,
                 'in_reply_to' => $previous?->message_id,
                 'transport_status' => MessageTransportStatus::Draft,
@@ -197,6 +197,15 @@ class CorrespondenceManager
 
             return $message->load('participants');
         });
+    }
+
+    private function replySubject(?string $subject): string
+    {
+        $subject = trim((string) $subject);
+
+        return preg_match('/^(?:re|r[eé]p)\s*:/ui', $subject) === 1
+            ? $subject
+            : 'Re: '.$subject;
     }
 
     public function sendDraft(ConversationMessage $message, User $actor): ConversationMessage

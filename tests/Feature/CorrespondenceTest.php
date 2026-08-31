@@ -81,6 +81,7 @@ class CorrespondenceTest extends TestCase
             ]], $author, 'Votre demande');
 
             $this->assertSame(MessageTransportStatus::Draft, $draft->transport_status);
+            $this->assertSame('Re: Votre demande', $draft->subject);
 
             $manager->sendDraft($draft, $author);
 
