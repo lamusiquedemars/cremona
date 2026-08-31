@@ -13,7 +13,13 @@ class GoogleAdsApiClient
     private ?string $accessToken = null;
 
     /** @param array<string, mixed> $credentials */
-    public function __construct(private readonly array $credentials) {}
+    public function __construct(array $credentials)
+    {
+        $this->credentials = app(GoogleAdsCredentials::class)->resolve($credentials);
+    }
+
+    /** @var array<string, mixed> */
+    private readonly array $credentials;
 
     /** @param array<int, array<string, mixed>> $operations */
     public function mutate(string $resource, array $operations): array

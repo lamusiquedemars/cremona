@@ -22,7 +22,7 @@ class InboundChannelResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Configuration';
+    protected static string|UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?string $navigationLabel = 'Canaux entrants';
 

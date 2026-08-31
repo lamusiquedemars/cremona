@@ -22,7 +22,7 @@ class BrevoConnectionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Configuration';
+    protected static string|UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?string $navigationLabel = 'Brevo Meetings';
 

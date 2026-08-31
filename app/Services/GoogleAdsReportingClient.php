@@ -8,15 +8,17 @@ use LogicException;
 
 class GoogleAdsReportingClient
 {
+    public function __construct(private readonly GoogleAdsCredentials $credentials) {}
+
     public function sync(OrganizationIntegration $integration): int
     {
-        $credentials = $integration->credentials;
+        $organizationCredentials = $integration->credentials;
 
-        if (! $this->isReady($credentials)) {
+        if (! $this->credentials->isReady($organizationCredentials)) {
             throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
         }
 
-        $response = (new GoogleAdsApiClient($credentials))->searchStream(<<<'GAQL'
+        $response = (new GoogleAdsApiClient($organizationCredentials))->searchStream(<<<'GAQL'
                     SELECT campaign.id, campaign.name, campaign.status, segments.date,
                         metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions
                     FROM campaign
@@ -54,16 +56,10 @@ class GoogleAdsReportingClient
             $updated++;
         }
 
-        return $updated;
-    }
+        $integration->update([
+            'credentials' => [...$organizationCredentials, 'last_synced_at' => now()->toIso8601String()],
+        ]);
 
-    /** @param array<string, mixed> $credentials */
-    private function isReady(array $credentials): bool
-    {
-        return filled($credentials['customer_id'] ?? null)
-            && filled($credentials['developer_token'] ?? null)
-            && filled($credentials['oauth_client_id'] ?? null)
-            && filled($credentials['oauth_client_secret'] ?? null)
-            && filled($credentials['refresh_token'] ?? null);
+        return $updated;
     }
 }

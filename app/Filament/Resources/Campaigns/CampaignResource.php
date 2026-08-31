@@ -219,7 +219,7 @@ class CampaignResource extends Resource
                             ->first();
 
                         if ($integration === null) {
-                            Notification::make()->title('Connexion Google Ads à préparer')->body('Renseigne d’abord le compte Google Ads dans l’écran « Google Ads ».')->warning()->send();
+                            Notification::make()->title('Connexion Google Ads à préparer')->body('Renseigne d’abord le compte Google Ads dans « Configuration de l’organisation > Publicité ».')->warning()->send();
 
                             return;
                         }
@@ -298,7 +298,7 @@ class CampaignResource extends Resource
                             ->first();
 
                         if ($integration === null) {
-                            Notification::make()->title('Connexion Google Ads à préparer')->body('Renseigne d’abord le compte Google Ads dans l’écran « Google Ads ».')->warning()->send();
+                            Notification::make()->title('Connexion Google Ads à préparer')->body('Renseigne d’abord le compte Google Ads dans « Configuration de l’organisation > Publicité ».')->warning()->send();
 
                             return;
                         }

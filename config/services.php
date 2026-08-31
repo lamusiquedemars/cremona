@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'google_ads' => [
+        'developer_token' => env('GOOGLE_ADS_DEVELOPER_TOKEN'),
+        'oauth_client_id' => env('GOOGLE_ADS_OAUTH_CLIENT_ID'),
+        'oauth_client_secret' => env('GOOGLE_ADS_OAUTH_CLIENT_SECRET'),
+        'login_customer_id' => env('GOOGLE_ADS_LOGIN_CUSTOMER_ID'),
+    ],
+
 ];

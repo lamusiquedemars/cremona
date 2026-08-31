@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrganizationPermission;
 use App\Models\OrganizationIntegration;
+use App\Services\GoogleAdsCredentials;
 use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Http\RedirectResponse;
@@ -14,12 +15,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class GoogleAdsOAuthController extends Controller
 {
-    public function authorize(Request $request, int $integration): RedirectResponse
+    public function authorize(Request $request, int $integration, GoogleAdsCredentials $googleAdsCredentials): RedirectResponse
     {
         $integration = OrganizationIntegration::withoutGlobalScopes()->findOrFail($integration);
         abort_unless($request->user()?->hasOrganizationPermission(OrganizationPermission::ManageIntegrations, $integration->organization), Response::HTTP_FORBIDDEN);
 
-        $credentials = $integration->credentials;
+        $credentials = $googleAdsCredentials->resolve($integration->credentials);
         abort_unless(filled($credentials['oauth_client_id'] ?? null) && filled($credentials['oauth_client_secret'] ?? null), Response::HTTP_UNPROCESSABLE_ENTITY);
 
         $state = Str::random(64);
@@ -40,7 +41,7 @@ class GoogleAdsOAuthController extends Controller
         ]));
     }
 
-    public function callback(Request $request, OrganizationIntegrationManager $manager, OrganizationContext $context): RedirectResponse
+    public function callback(Request $request, OrganizationIntegrationManager $manager, OrganizationContext $context, GoogleAdsCredentials $googleAdsCredentials): RedirectResponse
     {
         $pending = $request->session()->pull('google_ads_oauth');
         abort_unless(is_array($pending) && $request->user()?->getKey() === $pending['user_id'], Response::HTTP_FORBIDDEN);
@@ -53,7 +54,8 @@ class GoogleAdsOAuthController extends Controller
             return redirect('/dashboard/'.$integration->organization->slug)->with('error', 'L’autorisation Google a été annulée.');
         }
 
-        $credentials = $integration->credentials;
+        $organizationCredentials = $integration->credentials;
+        $credentials = $googleAdsCredentials->resolve($organizationCredentials);
         $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
             'code' => $request->string('code')->toString(),
             'client_id' => $credentials['oauth_client_id'],
@@ -67,7 +69,7 @@ class GoogleAdsOAuthController extends Controller
 
         $context->run($integration->organization, fn () => $manager->configure(
             provider: 'google_ads', name: 'reporting',
-            credentials: [...$credentials, 'refresh_token' => $refreshToken], actor: $request->user(),
+            credentials: [...$organizationCredentials, 'refresh_token' => $refreshToken], actor: $request->user(),
         ));
 
         return redirect('/dashboard/'.$integration->organization->slug)->with('success', 'Google Ads est autorisé.');

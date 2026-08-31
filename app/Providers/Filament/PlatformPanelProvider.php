@@ -1,5 +1,6 @@
 <?php
 namespace App\Providers\Filament;
+use App\Filament\Platform\Pages\GoogleAdsInfrastructure;
 use App\Filament\Resources\Organizations\OrganizationResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Filament\Widgets\PlatformOverview;
@@ -27,7 +28,7 @@ class PlatformPanelProvider extends PanelProvider
             ->login()
             ->brandName('Cremona — Administration')
             ->resources([OrganizationResource::class, UserResource::class])
-            ->pages([Dashboard::class])
+            ->pages([Dashboard::class, GoogleAdsInfrastructure::class])
             ->widgets([PlatformOverview::class, AccountWidget::class])
             ->middleware([
                 EncryptCookies::class,

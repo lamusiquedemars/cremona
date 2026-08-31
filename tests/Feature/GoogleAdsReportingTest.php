@@ -75,6 +75,41 @@ class GoogleAdsReportingTest extends TestCase
         Http::assertSent(fn ($request): bool => str_contains($request->url(), '/v25/customers/2005073692/googleAds:searchStream')
             && $request->hasHeader('developer-token', 'developer-token')
             && $request->hasHeader('Authorization', 'Bearer short-lived-token'));
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), ':mutate'));
+    }
+
+    public function test_results_sync_does_not_modify_the_existing_atelier_campaign(): void
+    {
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
+            'googleads.googleapis.com/*' => Http::response([['results' => []]]),
+        ]);
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $campaign = Campaign::query()->create([
+                'name' => 'Atelier Ivo Incidit — Essai régional 2026',
+                'channel' => 'google_ads',
+                'tracking_key' => 'atelier-ivo-essai-regional-2026',
+                'external_reference' => '123456789',
+                'status' => CampaignStatus::Active,
+                'currency' => 'EUR',
+                'starts_on' => '2026-08-31',
+                'ends_on' => '2026-09-30',
+                'planned_budget' => 100,
+                'configuration' => ['budget_mode' => 'total'],
+            ]);
+            $before = $campaign->fresh()->toArray();
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'google_ads', 'name' => 'reporting', 'status' => 'active',
+                'credentials' => ['customer_id' => '2005073692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
+            ]);
+
+            $this->assertSame(0, app(GoogleAdsReportingClient::class)->sync($integration));
+            $this->assertSame($before, $campaign->fresh()->toArray());
+        });
+
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), ':mutate'));
     }
 
     public function test_google_ads_publisher_creates_a_complete_campaign_paused(): void
