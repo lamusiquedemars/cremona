@@ -18,8 +18,34 @@ class GoogleAdsReportingClient
             throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
         }
 
-        $response = (new GoogleAdsApiClient($organizationCredentials))->searchStream(<<<'GAQL'
-                    SELECT campaign.id, campaign.name, campaign.status, segments.date,
+        $client = new GoogleAdsApiClient($organizationCredentials);
+        $campaignStatusResponse = $client->searchStream(<<<'GAQL'
+                    SELECT campaign.id, campaign.status, campaign.primary_status,
+                        campaign.primary_status_reasons, campaign.serving_status,
+                        campaign.bidding_strategy_system_status
+                    FROM campaign
+                    GAQL,
+        );
+
+        foreach ($this->rows($campaignStatusResponse) as $row) {
+            if (! isset($row['campaign']['id'])) {
+                continue;
+            }
+
+            $campaign = Campaign::query()
+                ->where('channel', 'google_ads')
+                ->where('external_reference', (string) $row['campaign']['id'])
+                ->first();
+
+            if ($campaign !== null) {
+                $this->applyObservation($campaign, $row['campaign']);
+            }
+        }
+
+        $response = $client->searchStream(<<<'GAQL'
+                    SELECT campaign.id, campaign.name, campaign.status, campaign.primary_status,
+                        campaign.primary_status_reasons, campaign.serving_status,
+                        campaign.bidding_strategy_system_status, segments.date,
                         metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions
                     FROM campaign
                     WHERE segments.date DURING LAST_30_DAYS
@@ -27,7 +53,7 @@ class GoogleAdsReportingClient
         );
         $updated = 0;
 
-        foreach (collect($response)->pluck('results')->flatten(1) as $row) {
+        foreach ($this->rows($response) as $row) {
             if (! is_array($row) || ! isset($row['campaign']['id'], $row['segments']['date'])) {
                 continue;
             }
@@ -53,6 +79,7 @@ class GoogleAdsReportingClient
                     'metadata' => ['google_ads_campaign_status' => $row['campaign']['status'] ?? null],
                 ],
             );
+            $this->applyObservation($campaign, $row['campaign']);
             $updated++;
         }
 
@@ -61,5 +88,24 @@ class GoogleAdsReportingClient
         ]);
 
         return $updated;
+    }
+
+    /** @return iterable<int, array<string, mixed>> */
+    private function rows(array $response): iterable
+    {
+        return collect($response)->pluck('results')->flatten(1)->filter(fn (mixed $row): bool => is_array($row));
+    }
+
+    /** @param array<string, mixed> $observation */
+    private function applyObservation(Campaign $campaign, array $observation): void
+    {
+        $campaign->update([
+            'google_ads_status' => $observation['status'] ?? null,
+            'google_ads_primary_status' => $observation['primaryStatus'] ?? null,
+            'google_ads_primary_status_reasons' => $observation['primaryStatusReasons'] ?? null,
+            'google_ads_serving_status' => $observation['servingStatus'] ?? null,
+            'google_ads_bidding_status' => $observation['biddingStrategySystemStatus'] ?? null,
+            'google_ads_synced_at' => now(),
+        ]);
     }
 }

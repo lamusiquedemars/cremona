@@ -72,7 +72,7 @@ class CampaignTest extends TestCase
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
         ]);
-        app(OrganizationContext::class)->run($organization, fn () => Campaign::query()->create([
+        $campaign = app(OrganizationContext::class)->run($organization, fn () => Campaign::query()->create([
             'name' => 'Campagne visible',
             'channel' => 'google_ads',
             'tracking_key' => 'visible-campaign',
@@ -89,6 +89,13 @@ class CampaignTest extends TestCase
             ->get(Filament::getPanel('admin')->getUrl($organization))
             ->assertOk()
             ->assertSee('Pilotage des campagnes');
+
+        $this->actingAs($collaborator)
+            ->get(CampaignResource::getUrl('view', ['record' => $campaign], tenant: $organization))
+            ->assertOk()
+            ->assertSee('Pilotage de la campagne')
+            ->assertSee('Résultats — 30 derniers jours')
+            ->assertSee('Modifier la configuration');
     }
 
     public function test_site_summary_api_returns_only_aggregated_campaign_data(): void

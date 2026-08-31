@@ -13,6 +13,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'channel',
     'tracking_key',
     'external_reference',
+    'google_ads_status',
+    'google_ads_primary_status',
+    'google_ads_primary_status_reasons',
+    'google_ads_serving_status',
+    'google_ads_bidding_status',
+    'google_ads_synced_at',
     'site_reference',
     'status',
     'starts_on',
@@ -34,6 +40,8 @@ class Campaign extends Model
             'ends_on' => 'immutable_date',
             'planned_budget' => 'decimal:2',
             'configuration' => 'array',
+            'google_ads_primary_status_reasons' => 'array',
+            'google_ads_synced_at' => 'immutable_datetime',
         ];
     }
 

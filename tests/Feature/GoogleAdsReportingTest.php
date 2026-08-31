@@ -24,7 +24,15 @@ class GoogleAdsReportingTest extends TestCase
             'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
             'googleads.googleapis.com/*' => Http::response([[
                 'results' => [[
-                    'campaign' => ['id' => '123', 'name' => 'Defesa penal', 'status' => 'ENABLED'],
+                    'campaign' => [
+                        'id' => '123',
+                        'name' => 'Defesa penal',
+                        'status' => 'ENABLED',
+                        'primaryStatus' => 'LEARNING',
+                        'primaryStatusReasons' => ['BIDDING_STRATEGY_LEARNING'],
+                        'servingStatus' => 'SERVING',
+                        'biddingStrategySystemStatus' => 'LEARNING',
+                    ],
                     'segments' => ['date' => '2026-08-22'],
                     'metrics' => [
                         'costMicros' => '125500000',
@@ -68,6 +76,12 @@ class GoogleAdsReportingTest extends TestCase
             $this->assertSame('125.50', $metric->spend);
             $this->assertSame('3.50', $metric->platform_conversions);
             $this->assertSame(42, $metric->clicks);
+            $campaign = Campaign::query()->sole();
+            $this->assertSame('LEARNING', $campaign->google_ads_primary_status);
+            $this->assertSame(['BIDDING_STRATEGY_LEARNING'], $campaign->google_ads_primary_status_reasons);
+            $this->assertSame('SERVING', $campaign->google_ads_serving_status);
+            $this->assertSame('LEARNING', $campaign->google_ads_bidding_status);
+            $this->assertNotNull($campaign->google_ads_synced_at);
         });
 
         Http::assertSent(fn ($request): bool => $request->url() === 'https://oauth2.googleapis.com/token'
@@ -110,6 +124,43 @@ class GoogleAdsReportingTest extends TestCase
         });
 
         Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), ':mutate'));
+    }
+
+    public function test_google_ads_sync_keeps_an_observed_status_even_when_there_are_no_daily_metrics(): void
+    {
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
+            'googleads.googleapis.com/*' => Http::sequence()
+                ->push([['results' => [[
+                    'campaign' => [
+                        'id' => '123',
+                        'status' => 'ENABLED',
+                        'primaryStatus' => 'LEARNING',
+                        'primaryStatusReasons' => ['BIDDING_STRATEGY_LEARNING'],
+                    ],
+                ]]]])
+                ->push([['results' => []]]),
+        ]);
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $campaign = Campaign::query()->create([
+                'name' => 'Atelier Ivo — Recherche',
+                'channel' => 'google_ads',
+                'tracking_key' => 'atelier-archets',
+                'external_reference' => '123',
+                'status' => CampaignStatus::Active,
+                'currency' => 'EUR',
+            ]);
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'google_ads', 'name' => 'reporting', 'status' => 'active',
+                'credentials' => ['customer_id' => '2005073692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
+            ]);
+
+            $this->assertSame(0, app(GoogleAdsReportingClient::class)->sync($integration));
+            $this->assertSame('LEARNING', $campaign->fresh()->google_ads_primary_status);
+            $this->assertSame(['BIDDING_STRATEGY_LEARNING'], $campaign->fresh()->google_ads_primary_status_reasons);
+        });
     }
 
     public function test_google_ads_publisher_creates_a_complete_campaign_paused(): void
