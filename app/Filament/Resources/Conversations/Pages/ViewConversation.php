@@ -6,10 +6,12 @@ use App\Enums\MessageDirection;
 use App\Enums\MessageParticipantRole;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Conversation;
+use App\Models\ConversationMessage;
 use App\Services\CorrespondenceManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Icons\Heroicon;
@@ -39,6 +41,11 @@ class ViewConversation extends ViewRecord
                         ->default(fn (): string => $this->replySubject())
                         ->maxLength(255),
                     Textarea::make('body')->label('Message')->required()->rows(8)->maxLength(10000),
+                    ViewField::make('reply_context')
+                        ->hiddenLabel()
+                        ->view('filament.forms.reply-context', fn (): array => [
+                            'message' => $this->previousCorrespondenceMessage(),
+                        ]),
                 ])
                 ->action(function (array $data, CorrespondenceManager $manager): void {
                     /** @var Conversation $conversation */
@@ -108,5 +115,14 @@ class ViewConversation extends ViewRecord
         return preg_match('/^(?:re|r[eé]p)\s*:/ui', $subject) === 1
             ? $subject
             : 'Re: '.$subject;
+    }
+
+    private function previousCorrespondenceMessage(): ?ConversationMessage
+    {
+        return $this->record->messages()
+            ->whereIn('transport_status', ['received', 'accepted'])
+            ->latest('authored_at')
+            ->with(['participants', 'author', 'mailbox'])
+            ->first();
     }
 }

@@ -1,6 +1,7 @@
 @php
     use App\Enums\MessageDirection;
     use App\Enums\MessageParticipantRole;
+    use App\Support\EmailReplyComposer;
     use App\Support\EmailReplyExcerpt;
 
     $messages = $getState();
@@ -19,6 +20,19 @@
                 $author = $inbound ? ($from?->name ?: $from?->address ?: 'Expéditeur inconnu') : 'Vous';
                 $recipient = $inbound ? ($to?->name ?: $to?->address ?: $message->mailbox?->address) : ($to?->name ?: $to?->address);
                 $parts = EmailReplyExcerpt::split($message->body_text);
+                $previous = $messages->slice(0, -1)->last();
+
+                if (! $inbound && $previous !== null) {
+                    $previousFrom = $previous->participants->first(fn ($participant) => $participant->role === MessageParticipantRole::From);
+                    $composed = app(EmailReplyComposer::class)->compose(
+                        $message->body_text,
+                        $previous->body_text,
+                        $previousFrom?->name ?: $previousFrom?->address ?: $previous->author?->name ?: $previous->mailbox?->display_name,
+                        $previous->authored_at,
+                        $message->organization->timezone(),
+                    );
+                    $parts = EmailReplyExcerpt::split($composed['text']);
+                }
             @endphp
 
             <article style="border: 1px solid rgb(225 219 208); border-radius: 14px; background: rgb(255 254 251); padding: 1.25rem;">
