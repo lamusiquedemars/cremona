@@ -89,6 +89,15 @@ class Organization extends Model
         return $this->hasMany(ConversationMessage::class);
     }
 
+    public function timezone(): string
+    {
+        $timezone = $this->settings['timezone'] ?? config('app.timezone', 'UTC');
+
+        return is_string($timezone) && in_array($timezone, timezone_identifiers_list(), true)
+            ? $timezone
+            : config('app.timezone', 'UTC');
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

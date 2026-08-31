@@ -70,7 +70,7 @@ class AppointmentResource extends Resource
     {
         $organization = app(OrganizationContext::class)->require();
 
-        return (string) ($organization->settings['timezone'] ?? config('app.timezone', 'UTC'));
+        return $organization->timezone();
     }
 
     public static function form(Schema $schema): Schema

@@ -11,6 +11,7 @@ use App\Models\Campaign;
 use App\Models\OrganizationIntegration;
 use App\Services\GoogleAdsCampaignDraft;
 use App\Services\GoogleAdsCampaignPublisher;
+use App\Tenancy\OrganizationContext;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -53,6 +54,11 @@ class CampaignResource extends Resource
     protected static ?string $pluralModelLabel = 'campagnes';
 
     protected static ?int $navigationSort = 10;
+
+    public static function getOrganizationTimezone(): string
+    {
+        return app(OrganizationContext::class)->require()->timezone();
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -378,7 +384,7 @@ class CampaignResource extends Resource
 
                             return implode(' · ', is_array($state) ? $state : [$state]);
                         }),
-                    TextEntry::make('google_ads_synced_at')->label('Dernière observation')->dateTime('d/m/Y H:i')->placeholder('Jamais'),
+                    TextEntry::make('google_ads_synced_at')->label('Dernière observation')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::getOrganizationTimezone())->placeholder('Jamais'),
                     TextEntry::make('google_ads_serving_status')->label('Diffusion')->placeholder('—'),
                     TextEntry::make('google_ads_bidding_status')->label('Enchères')->placeholder('—'),
                 ]),

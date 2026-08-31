@@ -7,6 +7,7 @@ use App\Models\OrganizationIntegration;
 use App\Services\GoogleAdsCredentials;
 use App\Services\GoogleAdsReportingClient;
 use App\Services\OrganizationIntegrationManager;
+use App\Tenancy\OrganizationContext;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
@@ -38,6 +39,11 @@ class GoogleAdsConnectionResource extends Resource
 
     protected static bool $isGloballySearchable = false;
 
+    public static function getOrganizationTimezone(): string
+    {
+        return app(OrganizationContext::class)->require()->timezone();
+    }
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->where('provider', 'google_ads')->where('name', 'reporting');
@@ -62,6 +68,7 @@ class GoogleAdsConnectionResource extends Resource
                 ->label('Dernière synchronisation')
                 ->state(fn (OrganizationIntegration $record): ?string => $record->credentials['last_synced_at'] ?? null)
                 ->dateTime('d/m/Y H:i')
+                ->timezone(fn (): string => static::getOrganizationTimezone())
                 ->placeholder('Jamais'),
         ])->recordActions([
             Action::make('sync')

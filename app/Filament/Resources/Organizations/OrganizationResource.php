@@ -42,6 +42,13 @@ class OrganizationResource extends Resource
             TextInput::make('slug')->label('Identifiant URL')->required()->maxLength(255)->unique(ignoreRecord: true),
             TextInput::make('vertical_pack')->label('Type d’activité')->maxLength(255),
             Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
+            Select::make('settings.timezone')
+                ->label('Fuseau horaire')
+                ->options(array_combine(timezone_identifiers_list(), timezone_identifiers_list()))
+                ->default(config('app.timezone', 'UTC'))
+                ->searchable()
+                ->required()
+                ->helperText('Utilisé pour afficher les rendez-vous, synchronisations et résultats de cette organisation.'),
         ]);
     }
 
