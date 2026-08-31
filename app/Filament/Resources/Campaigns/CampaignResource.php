@@ -371,7 +371,13 @@ class CampaignResource extends Resource
                         ->placeholder('À synchroniser'),
                     TextEntry::make('google_ads_primary_status_reasons')
                         ->label('Détail')
-                        ->formatStateUsing(fn (?array $state): string => filled($state) ? implode(' · ', $state) : '—'),
+                        ->formatStateUsing(function (mixed $state): string {
+                            if (blank($state)) {
+                                return '—';
+                            }
+
+                            return implode(' · ', is_array($state) ? $state : [$state]);
+                        }),
                     TextEntry::make('google_ads_synced_at')->label('Dernière observation')->dateTime('d/m/Y H:i')->placeholder('Jamais'),
                     TextEntry::make('google_ads_serving_status')->label('Diffusion')->placeholder('—'),
                     TextEntry::make('google_ads_bidding_status')->label('Enchères')->placeholder('—'),

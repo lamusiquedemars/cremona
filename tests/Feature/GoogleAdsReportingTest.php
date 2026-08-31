@@ -163,6 +163,29 @@ class GoogleAdsReportingTest extends TestCase
         });
     }
 
+    public function test_google_ads_sync_explains_a_google_api_refusal(): void
+    {
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
+            'googleads.googleapis.com/*' => Http::response([
+                'error' => ['message' => 'The customer account cannot be accessed.'],
+            ], 403),
+        ]);
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'google_ads', 'name' => 'reporting', 'status' => 'active',
+                'credentials' => ['customer_id' => '2005073692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
+            ]);
+
+            $this->expectException(\LogicException::class);
+            $this->expectExceptionMessage('Google Ads a refusé la synchronisation : The customer account cannot be accessed.');
+
+            app(GoogleAdsReportingClient::class)->sync($integration);
+        });
+    }
+
     public function test_google_ads_publisher_creates_a_complete_campaign_paused(): void
     {
         Http::fake([

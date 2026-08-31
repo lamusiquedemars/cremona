@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Campaign;
 use App\Models\OrganizationIntegration;
+use Illuminate\Http\Client\RequestException;
 use LogicException;
 
 class GoogleAdsReportingClient
@@ -18,6 +19,21 @@ class GoogleAdsReportingClient
             throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
         }
 
+        try {
+            return $this->syncFromGoogle($integration, $organizationCredentials);
+        } catch (RequestException $exception) {
+            $message = $exception->response->json('error.message');
+            $message = is_string($message) && $message !== ''
+                ? $message
+                : 'la requête a été refusée.';
+
+            throw new LogicException("Google Ads a refusé la synchronisation : {$message}", previous: $exception);
+        }
+    }
+
+    /** @param array<string, mixed> $organizationCredentials */
+    private function syncFromGoogle(OrganizationIntegration $integration, array $organizationCredentials): int
+    {
         $client = new GoogleAdsApiClient($organizationCredentials);
         $campaignStatusResponse = $client->searchStream(<<<'GAQL'
                     SELECT campaign.id, campaign.status, campaign.primary_status,
