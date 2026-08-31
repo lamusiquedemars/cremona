@@ -5,6 +5,8 @@ namespace App\Filament\Resources\EmailMailboxes;
 use App\Filament\Resources\EmailMailboxes\Pages\CreateEmailMailbox;
 use App\Filament\Resources\EmailMailboxes\Pages\ListEmailMailboxes;
 use App\Models\EmailMailbox;
+use App\Services\EmailMailboxConnectionTester;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -45,6 +47,12 @@ class EmailMailboxResource extends Resource
             TextColumn::make('status')->label('État')->badge(),
             TextColumn::make('last_synced_at')->label('Dernière relève')->dateTime('d/m/Y H:i')->placeholder('Jamais'),
             TextColumn::make('last_error')->label('Dernier incident')->limit(80)->placeholder('Aucun'),
+        ])->recordActions([
+            Action::make('test_imap')
+                ->label('Tester IMAP')
+                ->action(function (EmailMailbox $record): void {
+                    app(EmailMailboxConnectionTester::class)->testImap($record);
+                }),
         ]);
     }
 
