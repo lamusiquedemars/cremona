@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\EmailMailbox;
 use LogicException;
 use Throwable;
+use Webklex\PHPIMAP\ClientManager;
 
 class EmailMailboxConnectionTester
 {
@@ -17,20 +18,23 @@ class EmailMailboxConnectionTester
             }
         }
 
-        $target = sprintf('{%s:%d/imap/ssl/novalidate-cert}%s', $credentials['imap_host'], $credentials['imap_port'], $mailbox->inbox_folder);
-        $previous = set_error_handler(static fn (): bool => true);
         try {
-            $connection = imap_open($target, $credentials['imap_username'], $credentials['imap_password'], OP_HALFOPEN, 1);
-        } finally {
-            restore_error_handler();
-        }
-
-        if ($connection === false) {
+            $client = (new ClientManager)->make([
+                'host' => $credentials['imap_host'],
+                'port' => (int) $credentials['imap_port'],
+                'encryption' => 'ssl',
+                'validate_cert' => true,
+                'protocol' => 'imap',
+                'username' => $credentials['imap_username'],
+                'password' => $credentials['imap_password'],
+                'authentication' => 'plain',
+            ]);
+            $client->connect();
+            $client->disconnect();
+        } catch (Throwable) {
             $this->fail($mailbox, 'Connexion IMAP refusée. Vérifie le serveur, le port et les identifiants.');
             throw new LogicException('Connexion IMAP refusée. Vérifie le serveur, le port et les identifiants.');
         }
-
-        imap_close($connection);
         $mailbox->update(['status' => 'active', 'last_error_at' => null, 'last_error' => null]);
     }
 
