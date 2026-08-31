@@ -6,13 +6,11 @@ use App\Enums\ConversationStatus;
 use App\Filament\Resources\Conversations\Pages\ListConversations;
 use App\Filament\Resources\Conversations\Pages\ViewConversation;
 use App\Models\Conversation;
-use App\Support\EmailReplyExcerpt;
 use BackedEnum;
 use Filament\Actions\ViewAction;
-use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -20,7 +18,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Schema as DatabaseSchema;
-use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 class ConversationResource extends Resource
@@ -66,35 +63,12 @@ class ConversationResource extends Resource
                 TextEntry::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
                 TextEntry::make('last_message_at')->label('Dernier message')->dateTime('d/m/Y H:i')->placeholder('—'),
             ]),
-            Section::make('Messages')->columnSpanFull()->schema([
-                RepeatableEntry::make('messages')->label('')->schema([
-                    Grid::make(2)->schema([
-                        TextEntry::make('direction')
-                            ->hiddenLabel()
-                            ->formatStateUsing(fn ($state): string => $state->value === 'inbound' ? 'Message reçu' : 'Réponse envoyée')
-                            ->color(fn ($state): string => $state->value === 'inbound' ? 'info' : 'success')
-                            ->badge(),
-                        TextEntry::make('authored_at')->hiddenLabel()->dateTime('d/m/Y H:i'),
-                    ]),
-                    TextEntry::make('subject')->hiddenLabel()->placeholder('Sans objet')->weight('semibold'),
-                    TextEntry::make('body_text')
-                        ->hiddenLabel()
-                        ->formatStateUsing(function (string $state): HtmlString {
-                            $parts = EmailReplyExcerpt::split($state);
-                            $html = '<div class="whitespace-pre-wrap">'.e($parts['reply']).'</div>';
-
-                            if ($parts['quoted'] !== null) {
-                                $html .= '<details class="mt-3 text-sm text-gray-500">'
-                                    .'<summary class="cursor-pointer">Afficher le contenu cité</summary>'
-                                    .'<div class="mt-2 whitespace-pre-wrap border-l-2 border-gray-200 pl-3">'.e($parts['quoted']).'</div>'
-                                    .'</details>';
-                            }
-
-                            return new HtmlString($html);
-                        })
-                        ->html()
-                        ->columnSpanFull(),
-                ])->contained(),
+            Section::make('Fil de discussion')->columnSpanFull()->schema([
+                ViewEntry::make('conversation_timeline')
+                    ->hiddenLabel()
+                    ->state(fn (Conversation $record) => $record->messages()->with('participants')->orderBy('authored_at')->get())
+                    ->view('filament.infolists.conversation-timeline')
+                    ->columnSpanFull(),
             ]),
         ]);
     }
