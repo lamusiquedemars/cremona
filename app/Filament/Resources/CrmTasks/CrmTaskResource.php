@@ -8,7 +8,9 @@ use App\Filament\Resources\CrmTasks\Pages\CreateCrmTask;
 use App\Filament\Resources\CrmTasks\Pages\EditCrmTask;
 use App\Filament\Resources\CrmTasks\Pages\ListCrmTasks;
 use App\Filament\Resources\CrmTasks\Pages\ViewCrmTask;
+use App\Models\Conversation;
 use App\Models\CrmTask;
+use App\Models\IncomingRequest;
 use App\Tenancy\OrganizationContext;
 use BackedEnum;
 use Filament\Actions\CreateAction;
@@ -73,8 +75,18 @@ class CrmTaskResource extends Resource
             Section::make('Rattachements')->columnSpanFull()->columns(2)->schema([
                 Select::make('person_id')->label('Contact')->relationship('person', 'display_name')->searchable()->preload(),
                 Select::make('company_id')->label('Entreprise')->relationship('company', 'name')->searchable()->preload(),
-                Select::make('incoming_request_id')->label('Demande')->relationship('incomingRequest', 'subject')->searchable(['subject', 'name_snapshot'])->preload(),
-                Select::make('conversation_id')->label('Correspondance')->relationship('conversation', 'subject')->searchable()->preload(),
+                Select::make('incoming_request_id')
+                    ->label('Demande')
+                    ->relationship('incomingRequest', 'subject')
+                    ->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')
+                    ->searchable(['subject', 'name_snapshot'])
+                    ->preload(),
+                Select::make('conversation_id')
+                    ->label('Correspondance')
+                    ->relationship('conversation', 'subject')
+                    ->getOptionLabelFromRecordUsing(fn (Conversation $conversation): string => $conversation->subject ?: 'Sans objet')
+                    ->searchable()
+                    ->preload(),
             ]),
         ]);
     }
