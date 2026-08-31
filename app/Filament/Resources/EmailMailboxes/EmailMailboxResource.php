@@ -6,6 +6,7 @@ use App\Filament\Resources\EmailMailboxes\Pages\CreateEmailMailbox;
 use App\Filament\Resources\EmailMailboxes\Pages\ListEmailMailboxes;
 use App\Models\EmailMailbox;
 use App\Services\EmailMailboxConnectionTester;
+use App\Services\EmailMailboxSynchronizer;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -18,9 +19,13 @@ use Filament\Tables\Table;
 class EmailMailboxResource extends Resource
 {
     protected static ?string $model = EmailMailbox::class;
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
+
     protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
+
     protected static ?string $navigationLabel = 'Boîtes email';
+
     protected static ?int $navigationSort = 110;
 
     public static function form(Schema $schema): Schema
@@ -66,6 +71,19 @@ class EmailMailboxResource extends Resource
                     Notification::make()
                         ->title('Connexion SMTP réussie')
                         ->body('L’envoi est authentifié. Aucun email n’a été envoyé.')
+                        ->success()
+                        ->send();
+                }),
+            Action::make('sync_now')
+                ->label('Relever maintenant')
+                ->icon(Heroicon::OutlinedArrowPath)
+                ->requiresConfirmation()
+                ->modalDescription('Lit au plus 50 messages récents dans INBOX et, si configuré, dans Envoyés. Aucun message distant ne sera modifié.')
+                ->action(function (EmailMailbox $record): void {
+                    $result = app(EmailMailboxSynchronizer::class)->sync($record);
+                    Notification::make()
+                        ->title('Relève terminée')
+                        ->body("{$result['imported']} message(s) importé(s), {$result['skipped']} déjà connu(s).")
                         ->success()
                         ->send();
                 }),

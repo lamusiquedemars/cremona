@@ -6,6 +6,7 @@ use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'organization_integration_id', 'address', 'display_name', 'status',
@@ -26,5 +27,15 @@ class EmailMailbox extends Model
     public function integration(): BelongsTo
     {
         return $this->belongsTo(OrganizationIntegration::class, 'organization_integration_id');
+    }
+
+    public function folders(): HasMany
+    {
+        return $this->hasMany(EmailFolder::class);
+    }
+
+    public function syncRuns(): HasMany
+    {
+        return $this->hasMany(EmailSyncRun::class);
     }
 }
