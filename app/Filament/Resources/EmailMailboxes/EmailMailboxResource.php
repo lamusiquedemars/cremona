@@ -8,6 +8,7 @@ use App\Models\EmailMailbox;
 use App\Services\EmailMailboxConnectionTester;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -52,6 +53,11 @@ class EmailMailboxResource extends Resource
                 ->label('Tester IMAP')
                 ->action(function (EmailMailbox $record): void {
                     app(EmailMailboxConnectionTester::class)->testImap($record);
+                    Notification::make()
+                        ->title('Connexion IMAP réussie')
+                        ->body('La boîte est accessible. Aucun message n’a été lu ni modifié.')
+                        ->success()
+                        ->send();
                 }),
         ]);
     }
