@@ -31,8 +31,8 @@ class EmailReplyExcerpt
 
     public static function quotedForDisplay(string $quoted): string
     {
-        $quoted = preg_replace('/\h+>\h+>\h*/u', "\n>\n> ", $quoted) ?? $quoted;
+        $lines = preg_split('/\s+(?=>)/u', $quoted);
 
-        return preg_replace('/\h+>\h?/u', "\n> ", $quoted) ?? $quoted;
+        return implode("\n", $lines ?: [$quoted]);
     }
 }
