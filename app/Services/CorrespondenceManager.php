@@ -155,7 +155,7 @@ class CorrespondenceManager
             ?? throw new LogicException('Aucune boîte email active n’est configurée pour cette organisation.');
 
         return DB::transaction(function () use ($conversation, $body, $participants, $author, $subject, $mailbox): ConversationMessage {
-            $previous = $conversation->messages()->whereNotNull('message_id')->latest('authored_at')->first();
+            $previous = $conversation->messages()->latest('authored_at')->first();
             $message = $conversation->messages()->create([
                 'email_mailbox_id' => $mailbox->getKey(),
                 'author_user_id' => $author->getKey(),
@@ -183,7 +183,7 @@ class CorrespondenceManager
                 ]);
             }
 
-            if ($previous !== null) {
+            if ($previous?->message_id !== null) {
                 $references = $previous->references()->orderBy('position')->pluck('reference')->all();
                 $references[] = $previous->message_id;
                 foreach (array_values(array_unique(array_filter($references))) as $position => $reference) {

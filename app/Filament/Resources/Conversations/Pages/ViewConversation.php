@@ -32,7 +32,6 @@ class ViewConversation extends ViewRecord
                         ->label('Destinataire')
                         ->email()
                         ->default(fn (): ?string => $this->lastInboundAddress())
-                        ->helperText('Adresse préremplie depuis le dernier message reçu ; modifiable si nécessaire.')
                         ->required()
                         ->maxLength(255),
                     TextInput::make('subject')

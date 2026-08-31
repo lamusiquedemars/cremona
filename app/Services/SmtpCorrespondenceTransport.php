@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\CorrespondenceTransport;
 use App\Enums\MessageParticipantRole;
+use App\Enums\MessageTransportStatus;
 use App\Models\ConversationMessage;
 use App\Models\EmailMailbox;
 use App\Support\EmailReplyComposer;
@@ -75,16 +76,18 @@ class SmtpCorrespondenceTransport implements CorrespondenceTransport
     /** @return array{text: string, html: string} */
     private function replyContent(ConversationMessage $message): array
     {
-        $previous = $message->in_reply_to === null ? null : ConversationMessage::query()
-            ->where('message_id_hash', ConversationMessage::headerHash(ConversationMessage::canonicalHeaderId($message->in_reply_to)))
-            ->with('participants')
+        $previous = $message->conversation?->messages()
+            ->whereKeyNot($message->getKey())
+            ->whereIn('transport_status', [MessageTransportStatus::Received, MessageTransportStatus::Accepted])
+            ->with(['participants', 'author', 'mailbox'])
+            ->latest('authored_at')
             ->first();
         $author = $previous?->participants->firstWhere('role', MessageParticipantRole::From);
 
         return $this->replyComposer->compose(
             $message->body_text,
             $previous?->body_text,
-            $author?->name ?: $author?->address,
+            $author?->name ?: $author?->address ?: $previous?->author?->name ?: $previous?->mailbox?->display_name,
             $previous?->authored_at,
             $message->organization->timezone(),
         );
