@@ -11,6 +11,7 @@ use App\Enums\MessageThreadingStatus;
 use App\Enums\MessageTransportStatus;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Models\EmailMailbox;
 use App\Models\IncomingRequest;
 use App\Models\MessageThreadCandidate;
 use App\Models\User;
@@ -150,13 +151,19 @@ class CorrespondenceManager
             throw new LogicException('A reply requires at least one recipient.');
         }
 
-        return DB::transaction(function () use ($conversation, $body, $participants, $author, $subject): ConversationMessage {
+        $mailbox = EmailMailbox::query()->where('status', 'active')->first()
+            ?? throw new LogicException('Aucune boîte email active n’est configurée pour cette organisation.');
+
+        return DB::transaction(function () use ($conversation, $body, $participants, $author, $subject, $mailbox): ConversationMessage {
+            $previous = $conversation->messages()->whereNotNull('message_id')->latest('authored_at')->first();
             $message = $conversation->messages()->create([
+                'email_mailbox_id' => $mailbox->getKey(),
                 'author_user_id' => $author->getKey(),
                 'direction' => MessageDirection::Outbound,
                 'channel' => MessageChannel::Email,
                 'subject' => $subject ?? $conversation->subject,
                 'body_text' => $body,
+                'in_reply_to' => $previous?->message_id,
                 'transport_status' => MessageTransportStatus::Draft,
                 'threading_status' => MessageThreadingStatus::Matched,
                 'payload_fingerprint' => $this->fingerprint([
@@ -176,6 +183,14 @@ class CorrespondenceManager
                 ]);
             }
 
+            if ($previous !== null) {
+                $references = $previous->references()->orderBy('position')->pluck('reference')->all();
+                $references[] = $previous->message_id;
+                foreach (array_values(array_unique(array_filter($references))) as $position => $reference) {
+                    $message->references()->create(['reference' => $reference, 'position' => $position]);
+                }
+            }
+
             $this->auditLogger->record('correspondence.reply_drafted', $message, $author, [
                 'conversation_id' => $conversation->getKey(),
             ]);
@@ -184,7 +199,7 @@ class CorrespondenceManager
         });
     }
 
-    public function sendDraft(ConversationMessage $message, User $actor): void
+    public function sendDraft(ConversationMessage $message, User $actor): ConversationMessage
     {
         $this->assertOwned($message->organization_id);
 
@@ -212,6 +227,8 @@ class CorrespondenceManager
             $this->auditLogger->record('correspondence.reply_accepted', $message, $actor, [
                 'conversation_id' => $message->conversation_id,
             ]);
+
+            return $message->refresh();
         } catch (Throwable $exception) {
             $message->update([
                 'transport_status' => MessageTransportStatus::Failed,
@@ -224,6 +241,8 @@ class CorrespondenceManager
                 'conversation_id' => $message->conversation_id,
                 'failure_code' => class_basename($exception),
             ]);
+
+            return $message->refresh();
         }
     }
 

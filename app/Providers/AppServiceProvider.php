@@ -22,6 +22,7 @@ use App\Models\OrganizationModule;
 use App\Models\Person;
 use App\Models\User;
 use App\Services\FakeCorrespondenceTransport;
+use App\Services\SmtpCorrespondenceTransport;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
@@ -35,7 +36,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(OrganizationContext::class, fn (): OrganizationContext => new OrganizationContext);
-        $this->app->bind(CorrespondenceTransport::class, FakeCorrespondenceTransport::class);
+        $this->app->bind(
+            CorrespondenceTransport::class,
+            $this->app->environment('production') ? SmtpCorrespondenceTransport::class : FakeCorrespondenceTransport::class,
+        );
     }
 
     /**

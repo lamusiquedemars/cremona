@@ -38,9 +38,17 @@ class ViewConversation extends ViewRecord
                         'role' => MessageParticipantRole::To,
                         'address' => $data['to'],
                     ]], auth()->user(), $data['subject'] ?? null);
-                    $manager->sendDraft($draft, auth()->user());
+                    $message = $manager->sendDraft($draft, auth()->user());
                     $this->reloadRecord();
-                    Notification::make()->title('Réponse prise en charge par le transport de test.')->success()->send();
+                    $notification = Notification::make()
+                        ->title($message->transport_status->value === 'accepted'
+                            ? 'Réponse acceptée par le serveur SMTP.'
+                            : 'La réponse n’a pas pu être envoyée.');
+
+                    $message->transport_status->value === 'accepted'
+                        ? $notification->success()
+                        : $notification->danger();
+                    $notification->send();
                 }),
             Action::make('markRead')
                 ->label('Marquer comme lue')
