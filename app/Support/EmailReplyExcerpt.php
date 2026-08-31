@@ -4,18 +4,28 @@ namespace App\Support;
 
 class EmailReplyExcerpt
 {
-    public static function from(string $body): string
+    /** @return array{reply: string, quoted: ?string} */
+    public static function split(string $body): array
     {
         $body = str_replace(["\r\n", "\r"], "\n", trim($body));
 
-        $parts = preg_split(
+        $patterns = [
             '/(?:^|\n|\s)(?:le\s+.+?\s+a écrit\s*:|on\s+.+?\s+wrote\s*:|em\s+.+?\s+escreveu\s*:|[- ]*original message[- ]*:)/ui',
-            $body,
-            2,
-        );
-        $excerpt = trim($parts[0] ?? $body);
-        $excerpt = trim((string) preg_split('/\n\s*>/u', $excerpt, 2)[0]);
+            '/\n\s*>/u',
+        ];
 
-        return $excerpt !== '' ? $excerpt : $body;
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $body, $match, PREG_OFFSET_CAPTURE) === 1) {
+                $offset = $match[0][1];
+                $reply = trim(substr($body, 0, $offset));
+                $quoted = trim(substr($body, $offset));
+
+                if ($reply !== '' && $quoted !== '') {
+                    return ['reply' => $reply, 'quoted' => $quoted];
+                }
+            }
+        }
+
+        return ['reply' => $body, 'quoted' => null];
     }
 }

@@ -20,6 +20,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Schema as DatabaseSchema;
+use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 class ConversationResource extends Resource
@@ -77,8 +78,20 @@ class ConversationResource extends Resource
                     TextEntry::make('subject')->label('Objet')->placeholder('Sans objet')->weight('semibold'),
                     TextEntry::make('body_text')
                         ->label('')
-                        ->formatStateUsing(fn (string $state): string => EmailReplyExcerpt::from($state))
-                        ->extraAttributes(['class' => 'whitespace-pre-wrap'])
+                        ->formatStateUsing(function (string $state): HtmlString {
+                            $parts = EmailReplyExcerpt::split($state);
+                            $html = '<div class="whitespace-pre-wrap">'.e($parts['reply']).'</div>';
+
+                            if ($parts['quoted'] !== null) {
+                                $html .= '<details class="mt-3 text-sm text-gray-500">'
+                                    .'<summary class="cursor-pointer">Afficher le contenu cité</summary>'
+                                    .'<div class="mt-2 whitespace-pre-wrap border-l-2 border-gray-200 pl-3">'.e($parts['quoted']).'</div>'
+                                    .'</details>';
+                            }
+
+                            return new HtmlString($html);
+                        })
+                        ->html()
                         ->columnSpanFull(),
                 ])->contained(false),
             ]),
