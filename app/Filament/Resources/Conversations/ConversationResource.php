@@ -6,6 +6,7 @@ use App\Enums\ConversationStatus;
 use App\Filament\Resources\Conversations\Pages\ListConversations;
 use App\Filament\Resources\Conversations\Pages\ViewConversation;
 use App\Models\Conversation;
+use App\Support\EmailReplyExcerpt;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -66,14 +67,19 @@ class ConversationResource extends Resource
             ]),
             Section::make('Messages')->columnSpanFull()->schema([
                 RepeatableEntry::make('messages')->label('')->schema([
-                    Grid::make(4)->schema([
-                        TextEntry::make('direction')->label('Sens')->badge(),
-                        TextEntry::make('channel')->label('Canal')->badge(),
-                        TextEntry::make('transport_status')->label('Transmission')->badge(),
-                        TextEntry::make('authored_at')->label('Date')->dateTime('d/m/Y H:i'),
+                    Grid::make(2)->schema([
+                        TextEntry::make('direction')
+                            ->label('')
+                            ->formatStateUsing(fn ($state): string => $state->value === 'inbound' ? 'Message reçu' : 'Réponse envoyée')
+                            ->badge(),
+                        TextEntry::make('authored_at')->label('')->dateTime('d/m/Y H:i'),
                     ]),
-                    TextEntry::make('subject')->label('Objet')->placeholder('Sans objet'),
-                    TextEntry::make('body_text')->label('Message')->columnSpanFull(),
+                    TextEntry::make('subject')->label('Objet')->placeholder('Sans objet')->weight('semibold'),
+                    TextEntry::make('body_text')
+                        ->label('')
+                        ->formatStateUsing(fn (string $state): string => EmailReplyExcerpt::from($state))
+                        ->extraAttributes(['class' => 'whitespace-pre-wrap'])
+                        ->columnSpanFull(),
                 ])->contained(false),
             ]),
         ]);
