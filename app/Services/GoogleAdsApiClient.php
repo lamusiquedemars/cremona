@@ -63,7 +63,10 @@ class GoogleAdsApiClient
 
         $this->accessToken = $token;
 
-        $request = Http::acceptJson()->withToken($token)->withHeader('developer-token', $this->credentials['developer_token'])->timeout(30);
+        $request = Http::acceptJson()->withHeaders([
+            'Authorization' => 'Bearer '.$token,
+            'developer-token' => $this->credentials['developer_token'],
+        ])->timeout(30);
 
         return filled($this->credentials['login_customer_id'] ?? null)
             ? $request->withHeader('login-customer-id', preg_replace('/\D/', '', $this->credentials['login_customer_id']))
