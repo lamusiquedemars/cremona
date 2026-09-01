@@ -169,7 +169,15 @@ class GoogleAdsReportingTest extends TestCase
         Http::fake([
             'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
             'googleads.googleapis.com/*' => Http::response([[
-                'error' => ['message' => 'The customer account cannot be accessed.'],
+                'error' => [
+                    'message' => 'The customer account cannot be accessed.',
+                    'details' => [[
+                        'errors' => [[
+                            'errorCode' => ['authorizationError' => 'USER_PERMISSION_DENIED'],
+                            'message' => 'The customer account cannot be accessed.',
+                        ]],
+                    ]],
+                ],
             ]], 403),
         ]);
         $organization = Organization::factory()->create();
@@ -184,11 +192,11 @@ class GoogleAdsReportingTest extends TestCase
                 app(GoogleAdsReportingClient::class)->sync($integration);
                 $this->fail('Google Ads refusal should stop the synchronization.');
             } catch (\LogicException $exception) {
-                $this->assertSame('Google Ads a refusé la synchronisation : The customer account cannot be accessed.', $exception->getMessage());
+                $this->assertSame('Google Ads a refusé la synchronisation : USER_PERMISSION_DENIED : The customer account cannot be accessed.', $exception->getMessage());
             }
 
             $this->assertSame(
-                'Google Ads a refusé la synchronisation : The customer account cannot be accessed.',
+                'Google Ads a refusé la synchronisation : USER_PERMISSION_DENIED : The customer account cannot be accessed.',
                 $integration->fresh()->credentials['last_sync_error'],
             );
             $this->assertNotNull($integration->fresh()->credentials['last_sync_failed_at']);

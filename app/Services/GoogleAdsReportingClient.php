@@ -27,11 +27,7 @@ class GoogleAdsReportingClient
 
             $updated = $this->syncFromGoogle($integration, $organizationCredentials);
         } catch (RequestException $exception) {
-            $payload = $exception->response->json();
-            $message = data_get($payload, 'error.message') ?? data_get($payload, '0.error.message');
-            $message = is_string($message) && $message !== ''
-                ? $message
-                : 'la requête a été refusée.';
+            $message = $this->googleErrorMessage($exception);
 
             $exception = new LogicException("Google Ads a refusé la synchronisation : {$message}", previous: $exception);
             $this->markFailure($integration, $exception);
@@ -167,5 +163,29 @@ class GoogleAdsReportingClient
             subject: $integration,
             metadata: ['reason' => $message],
         );
+    }
+
+    private function googleErrorMessage(RequestException $exception): string
+    {
+        $payload = $exception->response->json();
+        $error = data_get($payload, '0.error') ?? data_get($payload, 'error');
+        $firstDetail = data_get($error, 'details.0.errors.0');
+        $code = data_get($firstDetail, 'errorCode');
+
+        if (is_array($code) && count($code) === 1) {
+            $type = array_key_first($code);
+            $value = $code[$type];
+            $detail = data_get($firstDetail, 'message');
+
+            if (is_string($type) && is_string($value) && is_string($detail) && $detail !== '') {
+                return "{$value} : {$detail}";
+            }
+        }
+
+        $message = data_get($error, 'message');
+
+        return is_string($message) && $message !== ''
+            ? $message
+            : 'la requête a été refusée.';
     }
 }
