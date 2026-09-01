@@ -349,33 +349,31 @@ class GoogleAdsCampaignPublisher
     private function resolveLocations(GoogleAdsApiClient $client, array $names, string $countryCode): array
     {
         $resolved = [];
+        $suggestions = collect($client->suggestGeoTargets(
+            array_map(fn (string $name): string => $this->googleLocationQuery($name), $names),
+            $countryCode,
+            $countryCode === 'BR' ? 'pt-BR' : 'fr',
+        ));
 
         foreach ($names as $name) {
-            $queryName = str_replace("'", "\\\\'", $this->googleLocationQuery($name));
-            $query = <<<GAQL
-                SELECT geo_target_constant.resource_name, geo_target_constant.name,
-                    geo_target_constant.country_code, geo_target_constant.status
-                FROM geo_target_constant
-                WHERE geo_target_constant.name = '{$queryName}'
-                    AND geo_target_constant.country_code = '{$countryCode}'
-                    AND geo_target_constant.status = 'ENABLED'
-                GAQL;
-            $matches = collect($client->searchStream($query))
-                ->pluck('results')
-                ->flatten(1)
+            $matches = $suggestions
+                ->filter(fn (mixed $suggestion): bool => is_array($suggestion)
+                    && $this->matchesRequestedLocation($suggestion, $name)
+                    && ($suggestion['geoTargetConstant']['countryCode'] ?? null) === $countryCode
+                    && ($suggestion['geoTargetConstant']['status'] ?? null) === 'ENABLED'
+                    && filled($suggestion['geoTargetConstant']['resourceName'] ?? null))
                 ->pluck('geoTargetConstant')
-                ->filter(fn (mixed $location): bool => is_array($location)
-                    && $this->normaliseLocationName((string) ($location['name'] ?? '')) === $this->normaliseLocationName($name)
-                    && ($location['countryCode'] ?? null) === $countryCode
-                    && filled($location['resourceName'] ?? null))
                 ->unique('resourceName')
+                ->sortBy(fn (array $location): array => $this->locationPreference($location, $name))
                 ->values();
 
-            if ($matches->count() !== 1) {
+            $best = $matches->first();
+            $second = $matches->get(1);
+            if ($best === null || ($second !== null && $this->locationPreference($best, $name) === $this->locationPreference($second, $name))) {
                 throw new LogicException("Zone Google Ads introuvable ou ambiguë : {$name}.");
             }
 
-            $resolved[] = $matches->sole()['resourceName'];
+            $resolved[] = $best['resourceName'];
         }
 
         return $resolved;
@@ -389,6 +387,47 @@ class GoogleAdsCampaignPublisher
     private function googleLocationQuery(string $name): string
     {
         return trim(Str::ascii($name));
+    }
+
+    /** @param array<string, mixed> $suggestion */
+    private function matchesRequestedLocation(array $suggestion, string $requestedName): bool
+    {
+        $location = $suggestion['geoTargetConstant'] ?? [];
+        if (! is_array($location)) {
+            return false;
+        }
+
+        $candidates = [
+            $suggestion['searchTerm'] ?? null,
+            $location['name'] ?? null,
+            str($location['canonicalName'] ?? '')->before(',')->toString(),
+        ];
+
+        return collect($candidates)
+            ->filter(fn (mixed $candidate): bool => is_string($candidate) && $candidate !== '')
+            ->contains(fn (string $candidate): bool => $this->comparableLocationName($candidate) === $this->comparableLocationName($requestedName));
+    }
+
+    private function comparableLocationName(string $name): string
+    {
+        return preg_replace('/^(state|province|region) of\s+/i', '', $this->normaliseLocationName($name)) ?? $this->normaliseLocationName($name);
+    }
+
+    /** @param array<string, mixed> $location
+     *  @return array{int, int, string}
+     */
+    private function locationPreference(array $location, string $requestedName): array
+    {
+        $type = (string) ($location['targetType'] ?? '');
+        $typePriority = array_search($type, ['City', 'State', 'Province', 'Region', 'Department', 'Municipality', 'District'], true);
+        $canonical = $this->normaliseLocationName((string) ($location['canonicalName'] ?? $location['name'] ?? ''));
+        $needle = $this->normaliseLocationName($requestedName);
+
+        return [
+            $typePriority === false ? 99 : $typePriority,
+            max(0, substr_count($canonical, $needle) - 1),
+            (string) ($location['resourceName'] ?? ''),
+        ];
     }
 
     /** @return array{text: string, matchType: string} */

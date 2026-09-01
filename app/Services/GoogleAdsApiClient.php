@@ -26,6 +26,21 @@ class GoogleAdsApiClient
         return $this->request()->post($this->endpoint('googleAds:searchStream'), ['query' => $query])->throw()->json();
     }
 
+    /** @param array<int, string> $names
+     *  @return array<int, array<string, mixed>>
+     */
+    public function suggestGeoTargets(array $names, string $countryCode, string $locale): array
+    {
+        return $this->request()
+            ->post('https://googleads.googleapis.com/'.self::API_VERSION.'/geoTargetConstants:suggest', [
+                'locale' => $locale,
+                'countryCode' => $countryCode,
+                'locationNames' => ['names' => array_values($names)],
+            ])
+            ->throw()
+            ->json('geoTargetConstantSuggestions') ?? [];
+    }
+
     private function endpoint(string $resource): string
     {
         $customerId = preg_replace('/\D/', '', (string) $this->credentials['customer_id']);

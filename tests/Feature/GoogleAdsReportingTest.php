@@ -247,12 +247,14 @@ class GoogleAdsReportingTest extends TestCase
             'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
             '*/campaignBudgets:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/campaignBudgets/1']]]),
             '*/campaigns:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/campaigns/42']]]),
-            '*/googleAds:searchStream' => Http::response([['results' => [[
+            '*/geoTargetConstants:suggest' => Http::response(['geoTargetConstantSuggestions' => [[
+                'searchTerm' => 'Rhone',
                 'geoTargetConstant' => [
                     'resourceName' => 'geoTargetConstants/123', 'name' => 'Rhone',
+                    'canonicalName' => 'Rhone,France', 'targetType' => 'Department',
                     'countryCode' => 'FR', 'status' => 'ENABLED',
                 ],
-            ]]]]),
+            ]]]),
             '*/campaignCriteria:mutate' => Http::response(['results' => []]),
             '*/adGroups:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/adGroups/7']]]),
             '*/adGroupCriteria:mutate' => Http::response(['results' => []]),
@@ -279,8 +281,7 @@ class GoogleAdsReportingTest extends TestCase
         });
 
         Http::assertSentCount(9);
-        Http::assertSent(fn ($request): bool => str_contains($request->url(), '/googleAds:searchStream')
-            && str_contains($request['query'], "geo_target_constant.name = 'Rhone'"));
+        Http::assertSent(fn ($request): bool => str_contains($request->url(), '/geoTargetConstants:suggest'));
         Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/adGroupCriteria:mutate')
             && $request['operations'][0]['create']['keyword'] === ['text' => 'archet violon', 'matchType' => 'PHRASE']);
         Http::assertSent(fn ($request): bool => str_ends_with($request->url(), '/campaigns:mutate')
@@ -299,13 +300,15 @@ class GoogleAdsReportingTest extends TestCase
             if ($request->url() === 'https://oauth2.googleapis.com/token') {
                 return Http::response(['access_token' => 'short-lived-token']);
             }
-            if (str_ends_with($request->url(), '/googleAds:searchStream')) {
-                return Http::response([['results' => [[
+            if (str_ends_with($request->url(), '/geoTargetConstants:suggest')) {
+                return Http::response(['geoTargetConstantSuggestions' => [[
+                    'searchTerm' => 'Rhone',
                     'geoTargetConstant' => [
                         'resourceName' => 'geoTargetConstants/123', 'name' => 'Rhone',
+                        'canonicalName' => 'Rhone,France', 'targetType' => 'Department',
                         'countryCode' => 'FR', 'status' => 'ENABLED',
                     ],
-                ]]]]);
+                ]]]);
             }
             if (str_ends_with($request->url(), '/campaignBudgets:mutate')) {
                 return Http::response(['results' => [['resourceName' => 'customers/2005073692/campaignBudgets/1']]]);
