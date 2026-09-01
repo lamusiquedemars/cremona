@@ -301,6 +301,49 @@ class CampaignResource extends Resource
 
                         Notification::make()->title('Campagne activée dans Google Ads')->success()->send();
                     }),
+                Action::make('repair_google_ads_delivery')
+                    ->label('Réparer la diffusion Google Ads')
+                    ->icon(Heroicon::OutlinedArrowPath)
+                    ->color('warning')
+                    ->authorize('update')
+                    ->visible(fn (Campaign $record): bool => $record->channel === 'google_ads'
+                        && filled($record->external_reference)
+                        && $record->status === CampaignStatus::Active)
+                    ->requiresConfirmation()
+                    ->modalHeading('Réparer la diffusion de cette campagne ?')
+                    ->modalDescription('Cremona recherchera uniquement les groupes et annonces encore en pause dans cette campagne active, puis les activera. Le budget, les mots-clés, les annonces et les dates ne sont pas modifiés.')
+                    ->modalSubmitActionLabel('Réparer la diffusion')
+                    ->action(function (Campaign $record): void {
+                        $integration = OrganizationIntegration::query()
+                            ->where('provider', 'google_ads')
+                            ->where('name', 'reporting')
+                            ->first();
+
+                        if ($integration === null) {
+                            Notification::make()->title('Connexion Google Ads introuvable')->warning()->send();
+
+                            return;
+                        }
+
+                        try {
+                            $delivery = app(GoogleAdsCampaignPublisher::class)->repairActiveDelivery($record, $integration, auth()->user());
+                        } catch (LogicException $exception) {
+                            Notification::make()->title('Réparation Google Ads arrêtée')->body($exception->getMessage())->danger()->persistent()->send();
+
+                            return;
+                        } catch (Throwable $exception) {
+                            report($exception);
+                            Notification::make()->title('Réparation Google Ads interrompue')->body('Google Ads a refusé la réparation ; aucun réglage local n’a été modifié.')->danger()->persistent()->send();
+
+                            return;
+                        }
+
+                        Notification::make()
+                            ->title('Diffusion Google Ads réparée')
+                            ->body("{$delivery['ad_groups']} groupe(s) et {$delivery['ads']} annonce(s) ont été activés.")
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('discard_google_ads_paused')
                     ->label('Retirer de Google Ads')
                     ->icon(Heroicon::OutlinedTrash)

@@ -210,7 +210,9 @@ class GoogleAdsCampaignPublisher
         }
 
         $resourceName = "customers/{$customerId}/campaigns/{$campaign->external_reference}";
-        (new GoogleAdsApiClient($integration->credentials))->mutate('campaigns', [[
+        $client = new GoogleAdsApiClient($integration->credentials);
+        $delivery = $this->enablePausedDeliveryResources($client, $resourceName);
+        $client->mutate('campaigns', [[
             'updateMask' => 'status',
             'update' => [
                 'resourceName' => $resourceName,
@@ -218,14 +220,93 @@ class GoogleAdsCampaignPublisher
             ],
         ]]);
 
-        return DB::transaction(function () use ($campaign, $actor): Campaign {
+        return DB::transaction(function () use ($campaign, $actor, $delivery): Campaign {
             $campaign->update(['status' => CampaignStatus::Active]);
             $this->auditLogger->record('campaign.google_ads_activated', $campaign, $actor, [
                 'google_campaign_id' => $campaign->external_reference,
+                'enabled_ad_groups' => $delivery['ad_groups'],
+                'enabled_ads' => $delivery['ads'],
             ]);
 
             return $campaign->refresh();
         });
+    }
+
+    /** @return array{ad_groups: int, ads: int} */
+    public function repairActiveDelivery(Campaign $campaign, OrganizationIntegration $integration, ?User $actor = null): array
+    {
+        if ($campaign->channel !== 'google_ads' || blank($campaign->external_reference)) {
+            throw new LogicException('Cette campagne Google Ads n’est pas liée à une campagne distante.');
+        }
+        if ($campaign->status !== CampaignStatus::Active) {
+            throw new LogicException('Seule une campagne Google Ads active peut faire l’objet d’une réparation de diffusion.');
+        }
+        if ($integration->provider !== 'google_ads' || $integration->name !== 'reporting') {
+            throw new LogicException('La connexion Google Ads de l’organisation est introuvable.');
+        }
+
+        $customerId = preg_replace('/\D/', '', (string) ($integration->credentials['customer_id'] ?? ''));
+        if ($customerId === '' || ! ctype_digit((string) $campaign->external_reference)) {
+            throw new LogicException('L’identifiant Google Ads de la campagne est invalide.');
+        }
+
+        $delivery = $this->enablePausedDeliveryResources(
+            new GoogleAdsApiClient($integration->credentials),
+            "customers/{$customerId}/campaigns/{$campaign->external_reference}",
+        );
+        $this->auditLogger->record('campaign.google_ads_delivery_repaired', $campaign, $actor, [
+            'google_campaign_id' => $campaign->external_reference,
+            'enabled_ad_groups' => $delivery['ad_groups'],
+            'enabled_ads' => $delivery['ads'],
+        ]);
+
+        return $delivery;
+    }
+
+    /** @return array{ad_groups: int, ads: int} */
+    private function enablePausedDeliveryResources(GoogleAdsApiClient $client, string $campaignResource): array
+    {
+        $adGroups = $this->pausedResourceNames($client, <<<GAQL
+            SELECT ad_group.resource_name
+            FROM ad_group
+            WHERE ad_group.campaign = '{$campaignResource}'
+                AND ad_group.status = 'PAUSED'
+            GAQL, 'adGroup.resourceName');
+        $ads = $this->pausedResourceNames($client, <<<GAQL
+            SELECT ad_group_ad.resource_name
+            FROM ad_group_ad
+            WHERE campaign.resource_name = '{$campaignResource}'
+                AND ad_group_ad.status = 'PAUSED'
+            GAQL, 'adGroupAd.resourceName');
+
+        $this->enableResources($client, 'adGroups', $adGroups);
+        $this->enableResources($client, 'adGroupAds', $ads);
+
+        return ['ad_groups' => count($adGroups), 'ads' => count($ads)];
+    }
+
+    /** @return array<int, string> */
+    private function pausedResourceNames(GoogleAdsApiClient $client, string $query, string $field): array
+    {
+        return collect($client->searchStream($query))
+            ->pluck('results')
+            ->flatten(1)
+            ->pluck($field)
+            ->filter(fn (mixed $resourceName): bool => is_string($resourceName) && $resourceName !== '')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /** @param array<int, string> $resources */
+    private function enableResources(GoogleAdsApiClient $client, string $service, array $resources): void
+    {
+        foreach (array_chunk($resources, 1000) as $chunk) {
+            $client->mutate($service, array_map(fn (string $resourceName): array => [
+                'updateMask' => 'status',
+                'update' => ['resourceName' => $resourceName, 'status' => 'ENABLED'],
+            ], $chunk));
+        }
     }
 
     public function discardPaused(Campaign $campaign, OrganizationIntegration $integration, ?User $actor = null): Campaign
