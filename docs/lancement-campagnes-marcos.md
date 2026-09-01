@@ -63,10 +63,6 @@
 14. Dans Google Ads, vérifier que les raisons de statut ne contiennent pas
     `AD_GROUPS_PAUSED` ni `AD_GROUP_ADS_PAUSED`. `BIDDING_STRATEGY_LEARNING`
     est normal lors du démarrage.
-15. Si une campagne active comporte encore des groupes ou annonces en pause,
-    utiliser `Réparer la diffusion Google Ads` dans Cremona. Cette action ne
-    modifie ni budget, ni dates, ni mots-clés, ni textes d'annonce.
-
 ## Règle de démarrage
 
 La campagne reste en brouillon tant que les événements du site ne sont pas visibles et vérifiés. Le premier canal est Google Search. YouTube et TikTok servent d’abord au contenu organique ; leurs campagnes payantes sont une étape ultérieure.

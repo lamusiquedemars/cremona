@@ -380,36 +380,6 @@ class GoogleAdsReportingTest extends TestCase
             ]]);
     }
 
-    public function test_google_ads_publisher_repairs_paused_children_of_an_active_campaign_without_changing_the_campaign(): void
-    {
-        Http::fake([
-            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
-            '*/googleAds:searchStream' => Http::sequence()
-                ->push([['results' => [['adGroup' => ['resourceName' => 'customers/2005073692/adGroups/7']]]]])
-                ->push([['results' => [['adGroupAd' => ['resourceName' => 'customers/2005073692/adGroupAds/7~9']]]]]),
-            '*/adGroups:mutate' => Http::response(['results' => []]),
-            '*/adGroupAds:mutate' => Http::response(['results' => []]),
-        ]);
-        $organization = Organization::factory()->create();
-
-        app(OrganizationContext::class)->run($organization, function (): void {
-            $integration = OrganizationIntegration::query()->create([
-                'provider' => 'google_ads', 'name' => 'reporting', 'status' => 'active',
-                'credentials' => ['customer_id' => '200-507-3692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
-            ]);
-            $campaign = Campaign::query()->create([
-                'name' => 'Atelier Ivo — Recherche', 'channel' => 'google_ads', 'tracking_key' => 'atelier-archets', 'external_reference' => '42', 'status' => CampaignStatus::Active, 'currency' => 'EUR',
-            ]);
-
-            $delivery = app(GoogleAdsCampaignPublisher::class)->repairActiveDelivery($campaign, $integration);
-
-            $this->assertSame(['ad_groups' => 1, 'ads' => 1], $delivery);
-            $this->assertSame(CampaignStatus::Active, $campaign->refresh()->status);
-        });
-
-        Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/campaigns:mutate'));
-    }
-
     public function test_google_ads_publisher_removes_an_unlaunched_paused_campaign_and_keeps_the_local_draft(): void
     {
         Http::fake([

@@ -48,11 +48,6 @@ Une erreur avant la dernière étape laisse la campagne elle-même en pause : el
 ne peut donc pas diffuser partiellement. Le budget, les mots-clés, les annonces
 et les dates ne sont pas modifiés par l'activation.
 
-Pour une campagne historiquement activée avant cette règle, l'action
-`Réparer la diffusion Google Ads` ne touche qu'aux groupes et annonces encore
-en pause de cette campagne déjà active. Elle ne change ni le budget, ni les
-dates, ni les mots-clés, ni le statut de la campagne.
-
 Après toute première activation, contrôler dans Google Ads :
 
 - les groupes et annonces ne doivent pas présenter `AD_GROUPS_PAUSED` ou

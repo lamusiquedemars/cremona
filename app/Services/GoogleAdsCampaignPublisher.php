@@ -233,37 +233,6 @@ class GoogleAdsCampaignPublisher
     }
 
     /** @return array{ad_groups: int, ads: int} */
-    public function repairActiveDelivery(Campaign $campaign, OrganizationIntegration $integration, ?User $actor = null): array
-    {
-        if ($campaign->channel !== 'google_ads' || blank($campaign->external_reference)) {
-            throw new LogicException('Cette campagne Google Ads n’est pas liée à une campagne distante.');
-        }
-        if ($campaign->status !== CampaignStatus::Active) {
-            throw new LogicException('Seule une campagne Google Ads active peut faire l’objet d’une réparation de diffusion.');
-        }
-        if ($integration->provider !== 'google_ads' || $integration->name !== 'reporting') {
-            throw new LogicException('La connexion Google Ads de l’organisation est introuvable.');
-        }
-
-        $customerId = preg_replace('/\D/', '', (string) ($integration->credentials['customer_id'] ?? ''));
-        if ($customerId === '' || ! ctype_digit((string) $campaign->external_reference)) {
-            throw new LogicException('L’identifiant Google Ads de la campagne est invalide.');
-        }
-
-        $delivery = $this->enablePausedDeliveryResources(
-            new GoogleAdsApiClient($integration->credentials),
-            "customers/{$customerId}/campaigns/{$campaign->external_reference}",
-        );
-        $this->auditLogger->record('campaign.google_ads_delivery_repaired', $campaign, $actor, [
-            'google_campaign_id' => $campaign->external_reference,
-            'enabled_ad_groups' => $delivery['ad_groups'],
-            'enabled_ads' => $delivery['ads'],
-        ]);
-
-        return $delivery;
-    }
-
-    /** @return array{ad_groups: int, ads: int} */
     private function enablePausedDeliveryResources(GoogleAdsApiClient $client, string $campaignResource): array
     {
         $adGroups = $this->pausedResourceNames($client, <<<GAQL
