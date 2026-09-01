@@ -27,7 +27,8 @@ class GoogleAdsReportingClient
 
             $updated = $this->syncFromGoogle($integration, $organizationCredentials);
         } catch (RequestException $exception) {
-            $message = $exception->response->json('error.message');
+            $payload = $exception->response->json();
+            $message = data_get($payload, 'error.message') ?? data_get($payload, '0.error.message');
             $message = is_string($message) && $message !== ''
                 ? $message
                 : 'la requête a été refusée.';

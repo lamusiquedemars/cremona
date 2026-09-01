@@ -18,6 +18,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use UnitEnum;
 
@@ -70,13 +71,6 @@ class GoogleAdsConnectionResource extends Resource
                 ->dateTime('d/m/Y H:i')
                 ->timezone(fn (): string => static::getOrganizationTimezone())
                 ->placeholder('Jamais'),
-            TextColumn::make('last_sync_error')
-                ->label('Dernier incident')
-                ->state(fn (OrganizationIntegration $record): ?string => $record->credentials['last_sync_error'] ?? null)
-                ->limit(90)
-                ->tooltip(fn (OrganizationIntegration $record): ?string => $record->credentials['last_sync_error'] ?? null)
-                ->color('danger')
-                ->placeholder('Aucun'),
         ])->recordActions([
             Action::make('sync')
                 ->label('Synchroniser les résultats')
@@ -90,6 +84,29 @@ class GoogleAdsConnectionResource extends Resource
                     $updated = app(GoogleAdsReportingClient::class)->sync($record);
                     Notification::make()->title('Résultats Google Ads synchronisés')
                         ->body("{$updated} journée(s) de campagne mise(s) à jour.")->success()->send();
+                }),
+            Action::make('sync_diagnostic')
+                ->label('Voir le diagnostic')
+                ->icon(Heroicon::OutlinedExclamationTriangle)
+                ->color('warning')
+                ->visible(fn (OrganizationIntegration $record): bool => filled($record->credentials['last_sync_error'] ?? null))
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Fermer')
+                ->modalHeading('Diagnostic de la dernière synchronisation')
+                ->modalDescription(fn (OrganizationIntegration $record): string => self::syncDiagnostic($record)),
+            Action::make('clear_sync_diagnostic')
+                ->label('Effacer le diagnostic')
+                ->icon(Heroicon::OutlinedCheckCircle)
+                ->color('gray')
+                ->visible(fn (OrganizationIntegration $record): bool => filled($record->credentials['last_sync_error'] ?? null))
+                ->authorize('update')
+                ->requiresConfirmation()
+                ->modalDescription('Cette action efface uniquement le message affiché dans Cremona. Elle ne modifie ni Google Ads, ni la campagne.')
+                ->action(function (OrganizationIntegration $record): void {
+                    $credentials = $record->credentials;
+                    unset($credentials['last_sync_error'], $credentials['last_sync_failed_at']);
+                    $record->update(['credentials' => $credentials]);
+                    Notification::make()->title('Diagnostic effacé')->success()->send();
                 }),
             Action::make('configure')
                 ->label('Modifier le compte')
@@ -157,5 +174,15 @@ class GoogleAdsConnectionResource extends Resource
         return $value !== null && strlen($value) === 10
             ? substr($value, 0, 3).'-'.substr($value, 3, 3).'-'.substr($value, 6)
             : $value;
+    }
+
+    private static function syncDiagnostic(OrganizationIntegration $record): string
+    {
+        $credentials = $record->credentials;
+        $when = filled($credentials['last_sync_failed_at'] ?? null)
+            ? 'Le '.Carbon::parse($credentials['last_sync_failed_at'])->timezone(static::getOrganizationTimezone())->format('d/m/Y H:i').'.'
+            : 'Date non disponible.';
+
+        return $when.' '.(string) $credentials['last_sync_error'];
     }
 }

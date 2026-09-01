@@ -168,9 +168,9 @@ class GoogleAdsReportingTest extends TestCase
     {
         Http::fake([
             'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
-            'googleads.googleapis.com/*' => Http::response([
+            'googleads.googleapis.com/*' => Http::response([[
                 'error' => ['message' => 'The customer account cannot be accessed.'],
-            ], 403),
+            ]], 403),
         ]);
         $organization = Organization::factory()->create();
 

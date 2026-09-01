@@ -7,6 +7,7 @@ use App\Filament\Platform\Pages\GoogleAdsInfrastructure;
 use App\Filament\Resources\GoogleAdsConnections\GoogleAdsConnectionResource;
 use App\Models\Organization;
 use App\Models\OrganizationIntegration;
+use App\Models\PlatformSetting;
 use App\Models\User;
 use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
@@ -137,6 +138,10 @@ class GoogleAdsConnectionTest extends TestCase
             'oauth_client_id' => 'client-id',
             'oauth_client_secret' => 'client-secret',
             'api_access_level' => 'test',
+        ]);
+        PlatformSetting::query()->create([
+            'key' => 'google_ads_agency_authorization',
+            'value' => ['refresh_token' => 'central-refresh-token'],
         ]);
 
         $credentials = ['customer_id' => '2005073692', 'refresh_token' => 'refresh-token'];

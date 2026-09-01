@@ -59,12 +59,20 @@ class GoogleAdsCredentials
             return 'Infrastructure Maracuja à configurer';
         }
 
-        if (! filled($organizationCredentials['refresh_token'] ?? null)) {
-            return 'Autorisation Google requise';
-        }
-
         if (! $this->centralApiAccessIsApproved()) {
             return 'Accès API Google en attente';
+        }
+
+        $central = config('services.google_ads', []);
+        $usesCentralInfrastructure = collect(['developer_token', 'oauth_client_id', 'oauth_client_secret'])
+            ->contains(fn (string $key): bool => filled($central[$key] ?? null));
+
+        if ($usesCentralInfrastructure && ! app(GoogleAdsAgencyAuthorization::class)->isAuthorized()) {
+            return 'Autorisation centrale Google requise';
+        }
+
+        if (! filled($organizationCredentials['refresh_token'] ?? null) && ! $usesCentralInfrastructure) {
+            return 'Autorisation Google requise';
         }
 
         return $this->isReady($organizationCredentials) ? 'Connecté' : 'Configuration à vérifier';
