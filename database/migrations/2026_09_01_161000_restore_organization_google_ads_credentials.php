@@ -2,7 +2,6 @@
 
 use App\Models\OrganizationIntegration;
 use Illuminate\Database\Migrations\Migration;
-use LogicException;
 
 return new class extends Migration
 {
@@ -12,7 +11,7 @@ return new class extends Migration
 
         foreach (['oauth_client_id', 'oauth_client_secret', 'login_customer_id'] as $key) {
             if (blank($shared[$key] ?? null)) {
-                throw new LogicException("La valeur Google Ads {$key} doit être présente avant le retour aux credentials par organisation.");
+                throw new \LogicException("La valeur Google Ads {$key} doit être présente avant le retour aux credentials par organisation.");
             }
         }
 
