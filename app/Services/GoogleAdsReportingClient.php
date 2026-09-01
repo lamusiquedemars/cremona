@@ -11,18 +11,22 @@ use Throwable;
 
 class GoogleAdsReportingClient
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly GoogleAdsCredentials $credentials,
+    ) {}
 
     public function sync(OrganizationIntegration $integration): int
     {
         $organizationCredentials = $integration->credentials;
+        $resolvedCredentials = $this->credentials->resolve($organizationCredentials);
 
         try {
-            if (! $this->isReady($organizationCredentials)) {
+            if (! $this->credentials->isReady($organizationCredentials)) {
                 throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
             }
 
-            $updated = $this->syncFromGoogle($integration, $organizationCredentials);
+            $updated = $this->syncFromGoogle($integration, $resolvedCredentials);
         } catch (RequestException $exception) {
             $message = $this->googleErrorMessage($exception);
 
@@ -186,13 +190,4 @@ class GoogleAdsReportingClient
             : 'la requête a été refusée.';
     }
 
-    /** @param array<string, mixed> $credentials */
-    private function isReady(array $credentials): bool
-    {
-        return filled($credentials['customer_id'] ?? null)
-            && filled($credentials['developer_token'] ?? null)
-            && filled($credentials['oauth_client_id'] ?? null)
-            && filled($credentials['oauth_client_secret'] ?? null)
-            && filled($credentials['refresh_token'] ?? null);
-    }
 }

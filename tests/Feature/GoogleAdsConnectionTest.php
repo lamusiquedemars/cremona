@@ -96,7 +96,7 @@ class GoogleAdsConnectionTest extends TestCase
             ->get(GoogleAdsConnectionResource::getUrl('index', tenant: $organization))
             ->assertOk()
             ->assertSee('200-507-3692')
-            ->assertSee('Infrastructure technique gérée par Maracuja')
+            ->assertSee('Le compte reste propre à cette organisation')
             ->assertDontSee('999-888-7776')
             ->assertDontSee('never-render-developer-token')
             ->assertDontSee('never-render-client-id')

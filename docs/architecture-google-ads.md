@@ -5,14 +5,56 @@
 - `Acquisition > Campagnes` contient le travail métier et les actions explicites de publication.
 - `Configuration de l’organisation > Publicité` contient le compte Google Ads propre à l’organisation active, son état, son autorisation et la synchronisation en lecture des résultats.
 
+## Infrastructure agence centralisée
+
+L’infrastructure commune Maracuja contient quatre éléments : le developer token,
+l’application OAuth (identifiant et secret), l’identifiant MCC et une unique
+autorisation OAuth d’agence. Les quatre premiers restent dans le `.env` de
+production. L’autorisation de l’agence est stockée chiffrée dans le coffre
+plateforme `platform_settings`.
+
+Une organisation ne contient que son identifiant de compte Google Ads. Le
+runtime centralisé combine cet identifiant avec les credentials agence côté
+serveur, sans recopier un secret dans l’organisation.
+
+La bascule est volontairement en deux temps depuis `Plateforme > Infrastructure
+Google Ads` :
+
+1. autoriser une fois le compte agence Maracuja ;
+2. activer le mode centralisé, uniquement lorsque l’application OAuth, l’accès
+   API Basic/Standard et l’autorisation sont prêts.
+
+Avant l’étape 2, le mode historique reste strictement actif. L’action `Revenir
+au mode historique` coupe immédiatement l’usage centralisé sans supprimer ni
+écrire de donnée organisationnelle. Les anciens credentials chiffrés peuvent
+donc être retirés plus tard, uniquement après une période de vérification
+explicite.
+
 ## Stockage réellement utilisé
 
 Les données propres au client restent dans `organization_integrations` : `customer_id` et date de dernière synchronisation. La colonne `credentials` est chiffrée par Laravel et le modèle la masque lors de la sérialisation.
 
-Chaque organisation conserve, chiffrés dans `organization_integrations`, son
-`customer_id`, son developer token, ses credentials OAuth, son refresh token et,
-si nécessaire, son identifiant de compte gestionnaire. Aucun credential n’est
-remplacé par une valeur globale à l’exécution.
+Pendant la transition, les anciennes connexions conservent leurs credentials
+chiffrés, afin que le retour au mode historique soit possible. Dès que le mode
+centralisé est activé, ils ne sont plus lus à l’exécution : seule la valeur
+`customer_id` de l’organisation demeure utilisée.
+
+## Incident du 1er septembre 2026 — règle de non-régression
+
+L’incident `DEVELOPER_TOKEN_INVALID` n’était pas un refus OAuth Google. Il a
+été causé par une écriture défaillante dans `.env` : le developer token y avait
+été remplacé par la valeur littérale `v`, puis recopié dans les intégrations.
+
+Conséquences pour cette architecture :
+
+- aucune migration de centralisation ne copie de developer token, secret OAuth
+  ou refresh token vers les organisations ;
+- le package crée seulement un coffre plateforme vide et conserve le runtime
+  historique tant que la bascule explicite n’a pas eu lieu ;
+- l’autorisation centrale est créée par le flux OAuth plateforme, jamais par
+  une commande de copie de secret ;
+- toute modification future de `.env` est vérifiée par une synchronisation
+  lecture seule avant d’activer une campagne.
 
 ## Relevé automatique des résultats
 

@@ -84,6 +84,17 @@ Pour chaque nouveau client, la procédure est ensuite toujours la même :
 Le client n’a donc jamais à communiquer son mot de passe Google à Maracuja et
 aucune campagne, paiement ou diffusion ne résulte de cette autorisation.
 
+La mise en place se fait d’abord dans `Plateforme > Infrastructure Google Ads`.
+Avant l’autorisation, ajouter l’URI suivante au client OAuth Google Cloud :
+
+```txt
+https://cremona.maracujadigital.fr/integrations/google-ads/agency/callback
+```
+
+L’activation est réversible depuis cette même page. Ne jamais recopier un token
+Google depuis le presse-papiers ou le chat dans une migration ou une commande :
+les valeurs restent dans `.env` et ne sont jamais affichées.
+
 1. Créer le sous-domaine `cremona.maracujadigital.fr` dans LWS.
 2. Envoyer le projet dans le répertoire racine imposé par LWS. Les fichiers
    `.htaccess` et `index.php` à la racine assurent le routage Laravel sans

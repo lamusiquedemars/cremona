@@ -16,6 +16,7 @@ class GoogleAdsCampaignPublisher
     public function __construct(
         private readonly GoogleAdsCampaignDraft $draft,
         private readonly AuditLogger $auditLogger,
+        private readonly GoogleAdsCredentials $credentials,
     ) {}
 
     public function publishPaused(Campaign $campaign, OrganizationIntegration $integration, ?User $actor = null): Campaign
@@ -28,7 +29,7 @@ class GoogleAdsCampaignPublisher
         }
 
         $preview = $this->draft->preview($campaign);
-        $client = new GoogleAdsApiClient($integration->credentials);
+        $client = new GoogleAdsApiClient($this->credentials->resolve($integration->credentials));
         $targetLocations = $this->resolveLocations($client, $preview['campaign']['target_locations'], $preview['campaign']['target_country']);
         $this->removeUnusedBudgetsNamed($client, $campaign->name.' — budget');
 
@@ -210,7 +211,7 @@ class GoogleAdsCampaignPublisher
         }
 
         $resourceName = "customers/{$customerId}/campaigns/{$campaign->external_reference}";
-        $client = new GoogleAdsApiClient($integration->credentials);
+        $client = new GoogleAdsApiClient($this->credentials->resolve($integration->credentials));
         $delivery = $this->enablePausedDeliveryResources($client, $resourceName);
         $client->mutate('campaigns', [[
             'updateMask' => 'status',
@@ -299,7 +300,7 @@ class GoogleAdsCampaignPublisher
         }
 
         $googleCampaignId = $campaign->external_reference;
-        (new GoogleAdsApiClient($integration->credentials))->mutate('campaigns', [[
+        (new GoogleAdsApiClient($this->credentials->resolve($integration->credentials)))->mutate('campaigns', [[
             'remove' => "customers/{$customerId}/campaigns/{$googleCampaignId}",
         ]]);
 
