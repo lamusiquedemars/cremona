@@ -16,8 +16,22 @@ Les credentials partagés de l’application Maracuja peuvent être centralisés
 - `GOOGLE_ADS_OAUTH_CLIENT_ID`
 - `GOOGLE_ADS_OAUTH_CLIENT_SECRET`
 - `GOOGLE_ADS_LOGIN_CUSTOMER_ID` (facultatif)
+- `GOOGLE_ADS_API_ACCESS_LEVEL` (`pending`, `basic` ou `standard`)
 
 Ils ont priorité à l’exécution et ne sont jamais copiés vers l’organisation lors d’une nouvelle autorisation OAuth.
+
+Un token ayant seulement le niveau `test` n’est jamais considéré comme prêt pour
+un compte client réel. Cremona distingue donc explicitement quatre états :
+
+1. **Infrastructure Maracuja à configurer** : le client OAuth central manque ;
+2. **Autorisation Google requise** : le compte client est connu, mais son jeton
+   OAuth organisationnel n’existe pas encore ;
+3. **Accès API Google en attente** : l’autorisation existe, mais le token Ads
+   Basic/Standard n’est pas confirmé ;
+4. **Connecté** : les prérequis centraux et le jeton organisationnel sont prêts.
+
+Cette distinction évite de faire croire qu’une intégration est utilisable alors
+qu’elle ne peut pas encore lire un compte Google Ads réel.
 
 ## Relevé automatique des résultats
 

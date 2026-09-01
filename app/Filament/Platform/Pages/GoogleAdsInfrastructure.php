@@ -28,7 +28,7 @@ class GoogleAdsInfrastructure extends Page
         return auth()->user()?->is_platform_admin ?? false;
     }
 
-    /** @return array{central: bool, integrations: int, legacy: int} */
+    /** @return array{central: bool, oauth: bool, api: bool, integrations: int, legacy: int} */
     public function summary(): array
     {
         $integrations = OrganizationIntegration::withoutGlobalScopes()
@@ -36,8 +36,12 @@ class GoogleAdsInfrastructure extends Page
             ->where('name', 'reporting')
             ->get();
 
+        $credentials = app(GoogleAdsCredentials::class);
+
         return [
-            'central' => app(GoogleAdsCredentials::class)->centralInfrastructureIsConfigured(),
+            'central' => $credentials->centralInfrastructureIsConfigured(),
+            'oauth' => $credentials->centralOAuthIsConfigured(),
+            'api' => $credentials->centralApiAccessIsApproved(),
             'integrations' => $integrations->count(),
             'legacy' => $integrations->filter(function (OrganizationIntegration $integration): bool {
                 $credentials = $integration->credentials;

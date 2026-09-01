@@ -26,11 +26,41 @@ class GoogleAdsCredentials
 
     public function centralInfrastructureIsConfigured(): bool
     {
+        return $this->centralOAuthIsConfigured() && $this->centralApiAccessIsApproved();
+    }
+
+    public function centralOAuthIsConfigured(): bool
+    {
+        $central = config('services.google_ads', []);
+
+        return filled($central['oauth_client_id'] ?? null)
+            && filled($central['oauth_client_secret'] ?? null);
+    }
+
+    public function centralApiAccessIsApproved(): bool
+    {
         $central = config('services.google_ads', []);
 
         return filled($central['developer_token'] ?? null)
-            && filled($central['oauth_client_id'] ?? null)
-            && filled($central['oauth_client_secret'] ?? null);
+            && in_array(strtolower((string) ($central['api_access_level'] ?? 'pending')), ['basic', 'standard'], true);
+    }
+
+    /** @param array<string, mixed> $organizationCredentials */
+    public function connectionState(array $organizationCredentials): string
+    {
+        if (! $this->centralOAuthIsConfigured()) {
+            return 'Infrastructure Maracuja à configurer';
+        }
+
+        if (! filled($organizationCredentials['refresh_token'] ?? null)) {
+            return 'Autorisation Google requise';
+        }
+
+        if (! $this->centralApiAccessIsApproved()) {
+            return 'Accès API Google en attente';
+        }
+
+        return $this->isReady($organizationCredentials) ? 'Connecté' : 'Configuration à vérifier';
     }
 
     /** @param array<string, mixed> $organizationCredentials */
@@ -39,9 +69,7 @@ class GoogleAdsCredentials
         $credentials = $this->resolve($organizationCredentials);
 
         return filled($credentials['customer_id'] ?? null)
-            && filled($credentials['developer_token'] ?? null)
-            && filled($credentials['oauth_client_id'] ?? null)
-            && filled($credentials['oauth_client_secret'] ?? null)
+            && $this->centralInfrastructureIsConfigured()
             && filled($credentials['refresh_token'] ?? null);
     }
 }

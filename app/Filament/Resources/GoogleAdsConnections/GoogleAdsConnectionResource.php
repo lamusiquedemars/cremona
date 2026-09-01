@@ -60,7 +60,7 @@ class GoogleAdsConnectionResource extends Resource
                 ->copyable(),
             TextColumn::make('connection_status')
                 ->label('État de connexion')
-                ->state(fn (OrganizationIntegration $record): string => self::isReady($record->credentials) ? 'Connecté' : 'Autorisation requise')
+                ->state(fn (OrganizationIntegration $record): string => app(GoogleAdsCredentials::class)->connectionState($record->credentials))
                 ->description('Infrastructure technique gérée par Maracuja')
                 ->badge()
                 ->color(fn (OrganizationIntegration $record): string => self::isReady($record->credentials) ? 'success' : 'warning'),

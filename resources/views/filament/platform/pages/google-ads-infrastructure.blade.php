@@ -7,8 +7,19 @@
             <x-slot name="description">Developer token et application OAuth utilisés par Cremona. Leurs valeurs ne sont jamais affichées.</x-slot>
 
             <x-filament::badge :color="$summary['central'] ? 'success' : 'warning'">
-                {{ $summary['central'] ? 'Configuration centrale active' : 'Repli historique actif' }}
+                {{ $summary['central'] ? 'Configuration centrale active' : 'Configuration centrale à terminer' }}
             </x-filament::badge>
+
+            <dl class="mt-4 space-y-2 text-sm">
+                <div class="flex justify-between gap-4">
+                    <dt>Client OAuth Maracuja</dt>
+                    <dd class="font-medium">{{ $summary['oauth'] ? 'Prêt' : 'À configurer' }}</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                    <dt>Accès API Google Ads</dt>
+                    <dd class="font-medium">{{ $summary['api'] ? 'Basic ou Standard confirmé' : 'En attente ou non confirmé' }}</dd>
+                </div>
+            </dl>
         </x-filament::section>
 
         <x-filament::section>

@@ -48,6 +48,41 @@ Les identifiants MySQL restent ceux de la base LWS existante. `APP_KEY` doit
 
 Cette répartition vaut pour toutes les publications Cremona à venir.
 
+### Configuration des secrets et intégrations Google Ads
+
+Les secrets Google ne transitent ni par le chat, ni par Git, ni par les écrans
+des organisations. L’agent installe les variables exclusivement dans le `.env`
+de production via le canal SFTP LWS existant, puis Ivo exécute seulement la
+reconstruction de cache indiquée. Avant cela, l’agent vérifie la présence des
+clés sans en lire ou afficher la valeur.
+
+Les valeurs nécessaires sont centralisées une fois pour toute l’agence :
+
+```env
+GOOGLE_ADS_DEVELOPER_TOKEN=…
+GOOGLE_ADS_OAUTH_CLIENT_ID=…
+GOOGLE_ADS_OAUTH_CLIENT_SECRET=…
+GOOGLE_ADS_LOGIN_CUSTOMER_ID=…
+GOOGLE_ADS_API_ACCESS_LEVEL=basic
+```
+
+`GOOGLE_ADS_API_ACCESS_LEVEL` ne peut être `basic` ou `standard` qu’après
+confirmation dans l’API Center Google Ads. Un accès `test` reste `pending` :
+il ne doit jamais accéder aux comptes clients réels.
+
+Pour chaque nouveau client, la procédure est ensuite toujours la même :
+
+1. créer ou enregistrer le compte Ads client dans son organisation Cremona ;
+2. Ivo (compte gestionnaire Maracuja) ouvre l’action **Autoriser Google Ads** ;
+3. il choisit son compte agence qui a déjà accès au compte Ads client ;
+4. Cremona conserve seulement le jeton de rafraîchissement chiffré de cette
+   organisation ;
+5. synchroniser en lecture seule et vérifier les résultats avant toute action
+   de création ou d’activation de campagne.
+
+Le client n’a donc jamais à communiquer son mot de passe Google à Maracuja et
+aucune campagne, paiement ou diffusion ne résulte de cette autorisation.
+
 1. Créer le sous-domaine `cremona.maracujadigital.fr` dans LWS.
 2. Envoyer le projet dans le répertoire racine imposé par LWS. Les fichiers
    `.htaccess` et `index.php` à la racine assurent le routage Laravel sans

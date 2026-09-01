@@ -115,6 +115,7 @@ class GoogleAdsConnectionTest extends TestCase
             'oauth_client_id' => 'central-client-id-never-render',
             'oauth_client_secret' => 'central-client-secret-never-render',
             'login_customer_id' => null,
+            'api_access_level' => 'basic',
         ]);
         $platformAdministrator = User::factory()->platformAdministrator()->create();
         $regularUser = User::factory()->create();
@@ -127,5 +128,25 @@ class GoogleAdsConnectionTest extends TestCase
             ->assertDontSee('central-client-id-never-render')
             ->assertDontSee('central-client-secret-never-render');
         $this->actingAs($regularUser)->get($url)->assertForbidden();
+    }
+
+    public function test_connection_state_does_not_treat_a_test_or_pending_api_as_production_ready(): void
+    {
+        Config::set('services.google_ads', [
+            'developer_token' => 'test-token',
+            'oauth_client_id' => 'client-id',
+            'oauth_client_secret' => 'client-secret',
+            'api_access_level' => 'test',
+        ]);
+
+        $credentials = ['customer_id' => '2005073692', 'refresh_token' => 'refresh-token'];
+        $service = app(\App\Services\GoogleAdsCredentials::class);
+
+        $this->assertFalse($service->isReady($credentials));
+        $this->assertSame('Accès API Google en attente', $service->connectionState($credentials));
+
+        Config::set('services.google_ads.api_access_level', 'basic');
+        $this->assertTrue($service->isReady($credentials));
+        $this->assertSame('Connecté', $service->connectionState($credentials));
     }
 }
