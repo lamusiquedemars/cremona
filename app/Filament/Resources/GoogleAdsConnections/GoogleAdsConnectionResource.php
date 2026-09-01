@@ -20,6 +20,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
+use Throwable;
 use UnitEnum;
 
 class GoogleAdsConnectionResource extends Resource
@@ -81,9 +82,19 @@ class GoogleAdsConnectionResource extends Resource
                 ->requiresConfirmation()
                 ->modalDescription('Cette action lit les résultats Google Ads. Elle ne crée et ne modifie aucune campagne.')
                 ->action(function (OrganizationIntegration $record): void {
-                    $updated = app(GoogleAdsReportingClient::class)->sync($record);
-                    Notification::make()->title('Résultats Google Ads synchronisés')
-                        ->body("{$updated} journée(s) de campagne mise(s) à jour.")->success()->send();
+                    try {
+                        $updated = app(GoogleAdsReportingClient::class)->sync($record);
+                        Notification::make()->title('Résultats Google Ads synchronisés')
+                            ->body("{$updated} journée(s) de campagne mise(s) à jour.")->success()->send();
+                    } catch (Throwable $exception) {
+                        report($exception);
+                        Notification::make()
+                            ->title('Synchronisation Google Ads refusée')
+                            ->body($exception->getMessage())
+                            ->danger()
+                            ->persistent()
+                            ->send();
+                    }
                 }),
             Action::make('sync_diagnostic')
                 ->label('Voir le diagnostic')
