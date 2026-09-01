@@ -44,6 +44,25 @@ class GoogleAdsConnectionTest extends TestCase
         $this->assertTrue(GoogleAdsConnectionResource::isReady($integration->credentials));
     }
 
+    public function test_existing_organization_developer_token_is_not_overridden_by_an_unverified_central_value(): void
+    {
+        Config::set('services.google_ads', [
+            'developer_token' => 'unverified-central-token',
+            'oauth_client_id' => 'central-client-id',
+            'oauth_client_secret' => 'central-client-secret',
+            'login_customer_id' => '5950759380',
+        ]);
+
+        $credentials = app(\App\Services\GoogleAdsCredentials::class)->resolve([
+            'developer_token' => 'verified-legacy-token',
+            'customer_id' => '2005073692',
+        ]);
+
+        $this->assertSame('verified-legacy-token', $credentials['developer_token']);
+        $this->assertSame('central-client-id', $credentials['oauth_client_id']);
+        $this->assertSame('5950759380', $credentials['login_customer_id']);
+    }
+
     public function test_only_integration_managers_can_open_google_ads_setup(): void
     {
         $organization = Organization::factory()->create();

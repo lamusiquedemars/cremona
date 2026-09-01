@@ -15,10 +15,17 @@ class GoogleAdsCredentials
     {
         $central = config('services.google_ads', []);
 
-        foreach (['developer_token', 'oauth_client_id', 'oauth_client_secret', 'login_customer_id'] as $key) {
+        foreach (['oauth_client_id', 'oauth_client_secret', 'login_customer_id'] as $key) {
             if (filled($central[$key] ?? null)) {
                 $organizationCredentials[$key] = $central[$key];
             }
+        }
+
+        // Existing organizations may have a verified developer token stored before
+        // the agency configuration was introduced. Keep that working value until a
+        // central replacement has been explicitly validated.
+        if (blank($organizationCredentials['developer_token'] ?? null) && filled($central['developer_token'] ?? null)) {
+            $organizationCredentials['developer_token'] = $central['developer_token'];
         }
 
         $agencyRefreshToken = app(GoogleAdsAgencyAuthorization::class)->refreshToken();
