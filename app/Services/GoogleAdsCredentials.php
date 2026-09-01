@@ -75,7 +75,17 @@ class GoogleAdsCredentials
             return 'Autorisation Google requise';
         }
 
-        return $this->isReady($organizationCredentials) ? 'Connecté' : 'Configuration à vérifier';
+        if (! $this->isReady($organizationCredentials)) {
+            return 'Configuration à vérifier';
+        }
+
+        if (filled($organizationCredentials['last_sync_error'] ?? null)) {
+            return 'Accès Google à vérifier';
+        }
+
+        return filled($organizationCredentials['last_synced_at'] ?? null)
+            ? 'Synchronisation opérationnelle'
+            : 'Prêt à synchroniser';
     }
 
     /** @param array<string, mixed> $organizationCredentials */

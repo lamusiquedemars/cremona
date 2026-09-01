@@ -152,6 +152,6 @@ class GoogleAdsConnectionTest extends TestCase
 
         Config::set('services.google_ads.api_access_level', 'basic');
         $this->assertTrue($service->isReady($credentials));
-        $this->assertSame('Connecté', $service->connectionState($credentials));
+        $this->assertSame('Prêt à synchroniser', $service->connectionState($credentials));
     }
 }
