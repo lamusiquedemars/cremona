@@ -9,6 +9,7 @@ use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -56,13 +57,22 @@ class GoogleAdsOAuthController extends Controller
 
         $organizationCredentials = $integration->credentials;
         $credentials = $googleAdsCredentials->resolve($organizationCredentials);
-        $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-            'code' => $request->string('code')->toString(),
-            'client_id' => $credentials['oauth_client_id'],
-            'client_secret' => $credentials['oauth_client_secret'],
-            'redirect_uri' => route('google-ads.oauth.callback'),
-            'grant_type' => 'authorization_code',
-        ])->throw();
+        try {
+            $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+                'code' => $request->string('code')->toString(),
+                'client_id' => $credentials['oauth_client_id'],
+                'client_secret' => $credentials['oauth_client_secret'],
+                'redirect_uri' => route('google-ads.oauth.callback'),
+                'grant_type' => 'authorization_code',
+            ])->throw();
+        } catch (RequestException $exception) {
+            report($exception);
+
+            return redirect('/dashboard/'.$integration->organization->slug)->with(
+                'error',
+                'Google a refusé l’autorisation. Vérifiez que le client OAuth et son secret proviennent du même identifiant Google Cloud.',
+            );
+        }
 
         $refreshToken = $response->json('refresh_token');
         abort_unless(is_string($refreshToken) && filled($refreshToken), Response::HTTP_UNPROCESSABLE_ENTITY);

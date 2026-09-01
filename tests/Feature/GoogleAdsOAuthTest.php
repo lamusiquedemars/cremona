@@ -85,4 +85,34 @@ class GoogleAdsOAuthTest extends TestCase
         $credentials = OrganizationIntegration::withoutGlobalScopes()->findOrFail($integration->getKey())->credentials;
         $this->assertSame(['customer_id' => '2005073692', 'refresh_token' => 'organization-refresh-token'], $credentials);
     }
+
+    public function test_oauth_client_rejection_returns_to_the_organization_without_a_server_error(): void
+    {
+        Config::set('services.google_ads', [
+            'oauth_client_id' => 'central-client-id',
+            'oauth_client_secret' => 'wrong-secret',
+        ]);
+        $organization = Organization::factory()->create();
+        $owner = User::factory()->create();
+        $owner->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
+
+        $integration = app(OrganizationContext::class)->run($organization, fn (): OrganizationIntegration => app(OrganizationIntegrationManager::class)->configure(
+            'google_ads', 'reporting', ['customer_id' => '2005073692'], $owner,
+        ));
+        Http::fake(['oauth2.googleapis.com/token' => Http::response([
+            'error' => 'invalid_client',
+        ], 401)]);
+
+        $this->actingAs($owner)
+            ->withSession(['google_ads_oauth' => [
+                'state' => 'secure-state',
+                'integration_id' => $integration->getKey(),
+                'user_id' => $owner->getKey(),
+            ]])
+            ->get(route('google-ads.oauth.callback', ['code' => 'short-code', 'state' => 'secure-state']))
+            ->assertRedirect('/dashboard/'.$organization->slug)
+            ->assertSessionHas('error', 'Google a refusé l’autorisation. Vérifiez que le client OAuth et son secret proviennent du même identifiant Google Cloud.');
+
+        $this->assertArrayNotHasKey('refresh_token', OrganizationIntegration::withoutGlobalScopes()->findOrFail($integration->getKey())->credentials);
+    }
 }
