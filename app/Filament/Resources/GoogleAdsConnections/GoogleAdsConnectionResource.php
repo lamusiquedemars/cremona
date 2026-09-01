@@ -95,7 +95,6 @@ class GoogleAdsConnectionResource extends Resource
                 ->label(fn (OrganizationIntegration $record): string => filled($record->credentials['refresh_token'] ?? null) ? 'Reconnecter Google Ads' : 'Autoriser Google Ads')
                 ->icon(Heroicon::OutlinedLink)
                 ->url(fn (OrganizationIntegration $record): string => route('google-ads.oauth.authorize', $record))
-                ->openUrlInNewTab()
                 ->visible(function (OrganizationIntegration $record): bool {
                     $credentials = app(GoogleAdsCredentials::class)->resolve($record->credentials);
 
