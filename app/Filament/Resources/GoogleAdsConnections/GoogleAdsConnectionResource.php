@@ -4,7 +4,6 @@ namespace App\Filament\Resources\GoogleAdsConnections;
 
 use App\Filament\Resources\GoogleAdsConnections\Pages\ListGoogleAdsConnections;
 use App\Models\OrganizationIntegration;
-use App\Services\GoogleAdsCredentials;
 use App\Services\GoogleAdsReportingClient;
 use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
@@ -62,8 +61,8 @@ class GoogleAdsConnectionResource extends Resource
                 ->copyable(),
             TextColumn::make('connection_status')
                 ->label('État de connexion')
-                ->state(fn (OrganizationIntegration $record): string => app(GoogleAdsCredentials::class)->connectionState($record->credentials))
-                ->description('Infrastructure technique gérée par Maracuja')
+                ->state(fn (OrganizationIntegration $record): string => self::isReady($record->credentials) ? 'Prêt à synchroniser' : 'Configuration à compléter')
+                ->description('Credentials propres à cette organisation')
                 ->badge()
                 ->color(fn (OrganizationIntegration $record): string => self::isReady($record->credentials) ? 'success' : 'warning'),
             TextColumn::make('last_synced_at')
@@ -96,6 +95,14 @@ class GoogleAdsConnectionResource extends Resource
                             ->send();
                     }
                 }),
+            Action::make('authorize_google')
+                ->label('Autoriser Google')
+                ->icon(Heroicon::OutlinedLink)
+                ->url(fn (OrganizationIntegration $record): string => route('google-ads.oauth.authorize', $record))
+                ->openUrlInNewTab()
+                ->visible(fn (OrganizationIntegration $record): bool => filled($record->credentials['oauth_client_id'] ?? null)
+                    && filled($record->credentials['oauth_client_secret'] ?? null)
+                    && blank($record->credentials['refresh_token'] ?? null)),
             Action::make('sync_diagnostic')
                 ->label('Voir le diagnostic')
                 ->icon(Heroicon::OutlinedExclamationTriangle)
@@ -125,10 +132,15 @@ class GoogleAdsConnectionResource extends Resource
                 ->authorize(fn () => Gate::inspect('create', OrganizationIntegration::class))
                 ->fillForm(fn (OrganizationIntegration $record): array => [
                     'customer_id' => self::formatCustomerId($record->credentials['customer_id'] ?? null),
+                    'login_customer_id' => self::formatCustomerId($record->credentials['login_customer_id'] ?? null),
+                    'developer_token' => null,
+                    'oauth_client_id' => $record->credentials['oauth_client_id'] ?? null,
+                    'oauth_client_secret' => null,
+                    'refresh_token' => null,
                 ])
                 ->schema(self::configurationSchema())
                 ->modalHeading('Compte Google Ads de l’organisation')
-                ->modalDescription('Ce compte appartient au client. L’infrastructure API Maracuja est gérée séparément et n’est jamais affichée ici.')
+                ->modalDescription('Les credentials sont chiffrés et rattachés uniquement à cette organisation.')
                 ->modalSubmitActionLabel('Enregistrer le compte')
                 ->action(fn (array $data, OrganizationIntegration $record) => self::save($data, $record)),
         ]);
@@ -146,6 +158,12 @@ class GoogleAdsConnectionResource extends Resource
             TextInput::make('customer_id')->label('Identifiant du compte client')
                 ->helperText('Exemple : 200-507-3692. C’est le compte dont les résultats seront lus.')
                 ->required()->regex('/^\d{3}-?\d{3}-?\d{4}$/'),
+            TextInput::make('login_customer_id')->label('Identifiant du compte administrateur (facultatif)')
+                ->regex('/^\d{3}-?\d{3}-?\d{4}$/'),
+            TextInput::make('developer_token')->label('Developer token Google Ads')->password()->revealable(),
+            TextInput::make('oauth_client_id')->label('OAuth client ID')->maxLength(255),
+            TextInput::make('oauth_client_secret')->label('OAuth client secret')->password()->revealable(),
+            TextInput::make('refresh_token')->label('OAuth refresh token')->password()->revealable(),
         ];
     }
 
@@ -153,7 +171,15 @@ class GoogleAdsConnectionResource extends Resource
     public static function save(array $data, ?OrganizationIntegration $record = null): void
     {
         Gate::authorize('create', OrganizationIntegration::class);
-        $credentials = [...($record?->credentials ?? []), 'customer_id' => self::normaliseCustomerId($data['customer_id'])];
+        $existing = $record?->credentials ?? [];
+        $credentials = [
+            'customer_id' => self::normaliseCustomerId($data['customer_id']),
+            'login_customer_id' => filled($data['login_customer_id'] ?? null) ? self::normaliseCustomerId($data['login_customer_id']) : null,
+            'developer_token' => self::secret($data['developer_token'] ?? null, $existing['developer_token'] ?? null),
+            'oauth_client_id' => $data['oauth_client_id'] ?: ($existing['oauth_client_id'] ?? null),
+            'oauth_client_secret' => self::secret($data['oauth_client_secret'] ?? null, $existing['oauth_client_secret'] ?? null),
+            'refresh_token' => self::secret($data['refresh_token'] ?? null, $existing['refresh_token'] ?? null),
+        ];
 
         app(OrganizationIntegrationManager::class)->configure(
             provider: 'google_ads', name: 'reporting', credentials: $credentials, actor: auth()->user(),
@@ -170,7 +196,11 @@ class GoogleAdsConnectionResource extends Resource
     /** @param array<string, mixed> $credentials */
     public static function isReady(array $credentials): bool
     {
-        return app(GoogleAdsCredentials::class)->isReady($credentials);
+        return filled($credentials['customer_id'] ?? null)
+            && filled($credentials['developer_token'] ?? null)
+            && filled($credentials['oauth_client_id'] ?? null)
+            && filled($credentials['oauth_client_secret'] ?? null)
+            && filled($credentials['refresh_token'] ?? null);
     }
 
     private static function normaliseCustomerId(string $value): string
@@ -195,5 +225,10 @@ class GoogleAdsConnectionResource extends Resource
             : 'Date non disponible.';
 
         return $when.' '.(string) $credentials['last_sync_error'];
+    }
+
+    private static function secret(?string $newValue, ?string $existingValue): ?string
+    {
+        return filled($newValue) ? trim($newValue) : $existingValue;
     }
 }

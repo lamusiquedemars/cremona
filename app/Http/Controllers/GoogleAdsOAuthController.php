@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrganizationPermission;
 use App\Models\OrganizationIntegration;
-use App\Services\GoogleAdsCredentials;
 use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Http\RedirectResponse;
@@ -16,12 +15,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class GoogleAdsOAuthController extends Controller
 {
-    public function authorize(Request $request, int $integration, GoogleAdsCredentials $googleAdsCredentials): RedirectResponse
+    public function authorize(Request $request, int $integration): RedirectResponse
     {
         $integration = OrganizationIntegration::withoutGlobalScopes()->findOrFail($integration);
         abort_unless($request->user()?->hasOrganizationPermission(OrganizationPermission::ManageIntegrations, $integration->organization), Response::HTTP_FORBIDDEN);
 
-        $credentials = $googleAdsCredentials->resolve($integration->credentials);
+        $credentials = $integration->credentials;
         abort_unless(filled($credentials['oauth_client_id'] ?? null) && filled($credentials['oauth_client_secret'] ?? null), Response::HTTP_UNPROCESSABLE_ENTITY);
 
         $state = Str::random(64);
@@ -42,7 +41,7 @@ class GoogleAdsOAuthController extends Controller
         ]));
     }
 
-    public function callback(Request $request, OrganizationIntegrationManager $manager, OrganizationContext $context, GoogleAdsCredentials $googleAdsCredentials): RedirectResponse
+    public function callback(Request $request, OrganizationIntegrationManager $manager, OrganizationContext $context): RedirectResponse
     {
         $pending = $request->session()->pull('google_ads_oauth');
         abort_unless(is_array($pending) && $request->user()?->getKey() === $pending['user_id'], Response::HTTP_FORBIDDEN);
@@ -56,7 +55,7 @@ class GoogleAdsOAuthController extends Controller
         }
 
         $organizationCredentials = $integration->credentials;
-        $credentials = $googleAdsCredentials->resolve($organizationCredentials);
+        $credentials = $organizationCredentials;
         try {
             $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
                 'code' => $request->string('code')->toString(),

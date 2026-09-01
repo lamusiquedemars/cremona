@@ -4,41 +4,15 @@
 
 - `Acquisition > Campagnes` contient le travail métier et les actions explicites de publication.
 - `Configuration de l’organisation > Publicité` contient le compte Google Ads propre à l’organisation active, son état, son autorisation et la synchronisation en lecture des résultats.
-- `Plateforme > Infrastructure Google Ads` montre aux seuls administrateurs Maracuja l’état de la configuration centrale, sans rendre les valeurs des secrets.
 
 ## Stockage réellement utilisé
 
 Les données propres au client restent dans `organization_integrations` : `customer_id` et date de dernière synchronisation. La colonne `credentials` est chiffrée par Laravel et le modèle la masque lors de la sérialisation.
 
-Les credentials partagés de l’application Maracuja peuvent être centralisés dans la configuration serveur :
-
-- `GOOGLE_ADS_DEVELOPER_TOKEN`
-- `GOOGLE_ADS_OAUTH_CLIENT_ID`
-- `GOOGLE_ADS_OAUTH_CLIENT_SECRET`
-- `GOOGLE_ADS_LOGIN_CUSTOMER_ID` (facultatif)
-- `GOOGLE_ADS_API_ACCESS_LEVEL` (`pending`, `basic` ou `standard`)
-
-Ils ont priorité à l’exécution et ne sont jamais copiés vers l’organisation lors d’une nouvelle autorisation OAuth.
-
-Le refresh token OAuth de l’agence est chiffré une seule fois dans le coffre
-plateforme `platform_settings`. Il autorise le compte gestionnaire Maracuja,
-donc les comptes Ads clients auxquels ce gestionnaire est rattaché. Une
-organisation ne reçoit jamais un token OAuth propre : son seul paramètre Ads est
-son `customer_id`. Les anciens tokens par organisation sont conservés en repli
-pendant la migration, mais ne sont plus utilisés dès que le coffre agence existe.
-
-Un token ayant seulement le niveau `test` n’est jamais considéré comme prêt pour
-un compte client réel. Cremona distingue donc explicitement quatre états :
-
-1. **Infrastructure Maracuja à configurer** : le client OAuth central manque ;
-2. **Autorisation Google requise** : le compte client est connu, mais son jeton
-   OAuth organisationnel n’existe pas encore ;
-3. **Accès API Google en attente** : l’autorisation existe, mais le token Ads
-   Basic/Standard n’est pas confirmé ;
-4. **Connecté** : les prérequis centraux et le jeton organisationnel sont prêts.
-
-Cette distinction évite de faire croire qu’une intégration est utilisable alors
-qu’elle ne peut pas encore lire un compte Google Ads réel.
+Chaque organisation conserve, chiffrés dans `organization_integrations`, son
+`customer_id`, son developer token, ses credentials OAuth, son refresh token et,
+si nécessaire, son identifiant de compte gestionnaire. Aucun credential n’est
+remplacé par une valeur globale à l’exécution.
 
 ## Relevé automatique des résultats
 
@@ -77,8 +51,9 @@ Après toute première activation, contrôler dans Google Ads :
 - une campagne peut être `SERVING` tout en étant bloquée par des groupes ou des
   annonces en pause : il faut toujours vérifier ces raisons de statut.
 
-## Compatibilité et migration restante
+## Règle de sécurité
 
-Aucune donnée existante n’est supprimée ou déplacée par ce chantier. Si les variables centrales ne sont pas encore configurées, Cremona continue d’utiliser les credentials historiques chiffrés dans chaque organisation. L’écran organisationnel ne permet plus de les lire ni de les modifier.
-
-Une centralisation complète pourra être terminée séparément après sauvegarde et validation de la configuration serveur : configurer les variables centrales, contrôler chaque connexion, puis supprimer uniquement les quatre clés techniques redondantes des coffres organisationnels. Le `customer_id` et le `refresh_token` doivent rester par organisation. Cette suppression n’est volontairement pas automatisée ici.
+Une campagne ne peut être synchronisée que lorsque les cinq valeurs propres à
+l’organisation sont présentes. Les secrets ne sont jamais affichés dans les
+listes ; ils peuvent être remplacés uniquement depuis le formulaire protégé de
+l’organisation.
