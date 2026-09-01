@@ -91,15 +91,6 @@ class GoogleAdsConnectionResource extends Resource
                     Notification::make()->title('Résultats Google Ads synchronisés')
                         ->body("{$updated} journée(s) de campagne mise(s) à jour.")->success()->send();
                 }),
-            Action::make('authorize_google')
-                ->label(fn (OrganizationIntegration $record): string => filled($record->credentials['refresh_token'] ?? null) ? 'Reconnecter Google Ads' : 'Autoriser Google Ads')
-                ->icon(Heroicon::OutlinedLink)
-                ->url(fn (OrganizationIntegration $record): string => route('google-ads.oauth.authorize', $record))
-                ->visible(function (OrganizationIntegration $record): bool {
-                    $credentials = app(GoogleAdsCredentials::class)->resolve($record->credentials);
-
-                    return filled($credentials['oauth_client_id'] ?? null) && filled($credentials['oauth_client_secret'] ?? null);
-                }),
             Action::make('configure')
                 ->label('Modifier le compte')
                 ->icon(Heroicon::OutlinedCog6Tooth)

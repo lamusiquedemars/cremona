@@ -8,7 +8,7 @@
 
 ## Stockage réellement utilisé
 
-Les données propres au client restent dans `organization_integrations` : `customer_id`, autorisation OAuth (`refresh_token`) et date de dernière synchronisation. La colonne `credentials` est chiffrée par Laravel et le modèle la masque lors de la sérialisation.
+Les données propres au client restent dans `organization_integrations` : `customer_id` et date de dernière synchronisation. La colonne `credentials` est chiffrée par Laravel et le modèle la masque lors de la sérialisation.
 
 Les credentials partagés de l’application Maracuja peuvent être centralisés dans la configuration serveur :
 
@@ -19,6 +19,13 @@ Les credentials partagés de l’application Maracuja peuvent être centralisés
 - `GOOGLE_ADS_API_ACCESS_LEVEL` (`pending`, `basic` ou `standard`)
 
 Ils ont priorité à l’exécution et ne sont jamais copiés vers l’organisation lors d’une nouvelle autorisation OAuth.
+
+Le refresh token OAuth de l’agence est chiffré une seule fois dans le coffre
+plateforme `platform_settings`. Il autorise le compte gestionnaire Maracuja,
+donc les comptes Ads clients auxquels ce gestionnaire est rattaché. Une
+organisation ne reçoit jamais un token OAuth propre : son seul paramètre Ads est
+son `customer_id`. Les anciens tokens par organisation sont conservés en repli
+pendant la migration, mais ne sont plus utilisés dès que le coffre agence existe.
 
 Un token ayant seulement le niveau `test` n’est jamais considéré comme prêt pour
 un compte client réel. Cremona distingue donc explicitement quatre états :

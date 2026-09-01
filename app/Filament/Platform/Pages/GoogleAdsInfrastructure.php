@@ -3,6 +3,7 @@
 namespace App\Filament\Platform\Pages;
 
 use App\Models\OrganizationIntegration;
+use App\Services\GoogleAdsAgencyAuthorization;
 use App\Services\GoogleAdsCredentials;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -28,7 +29,7 @@ class GoogleAdsInfrastructure extends Page
         return auth()->user()?->is_platform_admin ?? false;
     }
 
-    /** @return array{central: bool, oauth: bool, api: bool, integrations: int, legacy: int} */
+    /** @return array{central: bool, oauth: bool, api: bool, authorization: bool, integrations: int, legacy: int} */
     public function summary(): array
     {
         $integrations = OrganizationIntegration::withoutGlobalScopes()
@@ -42,6 +43,7 @@ class GoogleAdsInfrastructure extends Page
             'central' => $credentials->centralInfrastructureIsConfigured(),
             'oauth' => $credentials->centralOAuthIsConfigured(),
             'api' => $credentials->centralApiAccessIsApproved(),
+            'authorization' => app(GoogleAdsAgencyAuthorization::class)->isAuthorized(),
             'integrations' => $integrations->count(),
             'legacy' => $integrations->filter(function (OrganizationIntegration $integration): bool {
                 $credentials = $integration->credentials;

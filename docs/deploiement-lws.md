@@ -75,9 +75,10 @@ Pour chaque nouveau client, la procédure est ensuite toujours la même :
 1. créer ou enregistrer le compte Ads client dans son organisation Cremona ;
 2. Ivo (compte gestionnaire Maracuja) ouvre l’action **Autoriser Google Ads** ;
 3. il choisit son compte agence qui a déjà accès au compte Ads client ;
-4. Cremona conserve seulement le jeton de rafraîchissement chiffré de cette
-   organisation ;
-5. synchroniser en lecture seule et vérifier les résultats avant toute action
+4. Cremona conserve le jeton de rafraîchissement chiffré dans le coffre
+   plateforme Maracuja, une seule fois pour l’agence ;
+5. chaque organisation ne reçoit que l’identifiant de son compte Ads ;
+6. synchroniser en lecture seule et vérifier les résultats avant toute action
    de création ou d’activation de campagne.
 
 Le client n’a donc jamais à communiquer son mot de passe Google à Maracuja et

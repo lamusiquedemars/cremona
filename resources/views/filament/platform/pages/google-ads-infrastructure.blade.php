@@ -19,6 +19,10 @@
                     <dt>Accès API Google Ads</dt>
                     <dd class="font-medium">{{ $summary['api'] ? 'Basic ou Standard confirmé' : 'En attente ou non confirmé' }}</dd>
                 </div>
+                <div class="flex justify-between gap-4">
+                    <dt>Autorisation agence OAuth</dt>
+                    <dd class="font-medium">{{ $summary['authorization'] ? 'Centralisée et chiffrée' : 'À centraliser' }}</dd>
+                </div>
             </dl>
         </x-filament::section>
 

@@ -21,12 +21,19 @@ class GoogleAdsCredentials
             }
         }
 
+        $agencyRefreshToken = app(GoogleAdsAgencyAuthorization::class)->refreshToken();
+        if ($agencyRefreshToken !== null) {
+            $organizationCredentials['refresh_token'] = $agencyRefreshToken;
+        }
+
         return $organizationCredentials;
     }
 
     public function centralInfrastructureIsConfigured(): bool
     {
-        return $this->centralOAuthIsConfigured() && $this->centralApiAccessIsApproved();
+        return $this->centralOAuthIsConfigured()
+            && $this->centralApiAccessIsApproved()
+            && app(GoogleAdsAgencyAuthorization::class)->isAuthorized();
     }
 
     public function centralOAuthIsConfigured(): bool
@@ -67,9 +74,18 @@ class GoogleAdsCredentials
     public function isReady(array $organizationCredentials): bool
     {
         $credentials = $this->resolve($organizationCredentials);
+        $central = config('services.google_ads', []);
+        $usesCentralInfrastructure = collect(['developer_token', 'oauth_client_id', 'oauth_client_secret'])
+            ->contains(fn (string $key): bool => filled($central[$key] ?? null));
+
+        $infrastructureReady = $usesCentralInfrastructure
+            ? $this->centralInfrastructureIsConfigured()
+            : filled($credentials['developer_token'] ?? null)
+                && filled($credentials['oauth_client_id'] ?? null)
+                && filled($credentials['oauth_client_secret'] ?? null);
 
         return filled($credentials['customer_id'] ?? null)
-            && $this->centralInfrastructureIsConfigured()
+            && $infrastructureReady
             && filled($credentials['refresh_token'] ?? null);
     }
 }
