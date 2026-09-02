@@ -1,5 +1,10 @@
 # Architecture Google Ads de Cremona
 
+> Cette architecture complète le runbook canonique
+> `maracuja-cms-starter/docs/google-acquisition-runbook.md`. Le Starter décrit
+> GA4, GTM, Search Console et le site ; ce document décrit exclusivement le
+> rôle d’agence Cremona, ses secrets et ses publications Ads.
+
 ## Séparation fonctionnelle
 
 - `Acquisition > Campagnes` contient le travail métier et les actions explicites de publication.
@@ -92,6 +97,29 @@ Après toute première activation, contrôler dans Google Ads :
 - `BIDDING_STRATEGY_LEARNING` est normal pendant la phase d'apprentissage ;
 - une campagne peut être `SERVING` tout en étant bloquée par des groupes ou des
   annonces en pause : il faut toujours vérifier ces raisons de statut.
+
+## Contrat d’exécution agence
+
+Avant de créer une campagne réelle, Cremona doit disposer d’une fiche client
+complète et de ses portes de lancement validées : GTM publié, `generate_lead`
+événement clé GA4, lien GA4 vers le compte Ads client, conversion Ads importée,
+budget, zone de présence, annonces et mots-clés revus. Ces contrôles restent
+visibles dans Google Ads : l’API ne les remplace pas.
+
+Le compte client est la référence de diffusion. Cremona est la référence de
+préparation et de pilotage. En cas d’écart (zone inattendue, objectif par
+défaut, groupe en pause), l’agent :
+
+1. consigne l’écart dans la fiche client ;
+2. consulte l’historique des modifications Google Ads ;
+3. corrige uniquement le réglage divergent après accord si la correction a un
+   impact de diffusion ou de dépense ;
+4. synchronise en lecture seule et conserve la preuve.
+
+Une campagne nouvelle peut commencer avec `Maximize Clicks` afin de recueillir
+un premier volume sous budget plafonné. Le passage à `Maximize Conversions`
+est une décision commerciale distincte, fondée sur des conversions réelles ;
+il n’est jamais appliqué automatiquement par Cremona.
 
 ## Règle de sécurité
 
