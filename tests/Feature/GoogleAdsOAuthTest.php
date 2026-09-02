@@ -52,16 +52,16 @@ class GoogleAdsOAuthTest extends TestCase
 
     public function test_oauth_client_rejection_returns_to_the_organization_without_a_server_error(): void
     {
-        Config::set('services.google_ads', [
-            'oauth_client_id' => 'central-client-id',
-            'oauth_client_secret' => 'wrong-secret',
-        ]);
         $organization = Organization::factory()->create();
         $owner = User::factory()->create();
         $owner->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
 
         $integration = app(OrganizationContext::class)->run($organization, fn (): OrganizationIntegration => app(OrganizationIntegrationManager::class)->configure(
-            'google_ads', 'reporting', ['customer_id' => '2005073692'], $owner,
+            'google_ads', 'reporting', [
+                'customer_id' => '2005073692',
+                'oauth_client_id' => 'central-client-id',
+                'oauth_client_secret' => 'wrong-secret',
+            ], $owner,
         ));
         Http::fake(['oauth2.googleapis.com/token' => Http::response([
             'error' => 'invalid_client',

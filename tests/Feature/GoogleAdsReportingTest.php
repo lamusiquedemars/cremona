@@ -245,6 +245,7 @@ class GoogleAdsReportingTest extends TestCase
     {
         Http::fake([
             'oauth2.googleapis.com/token' => Http::response(['access_token' => 'short-lived-token']),
+            '*/googleAds:searchStream' => Http::response([]),
             '*/campaignBudgets:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/campaignBudgets/1']]]),
             '*/campaigns:mutate' => Http::response(['results' => [['resourceName' => 'customers/2005073692/campaigns/42']]]),
             '*/geoTargetConstants:suggest' => Http::response(['geoTargetConstantSuggestions' => [[
