@@ -1,15 +1,27 @@
 <?php
 
-use App\Http\Controllers\GoogleAdsOAuthController;
 use App\Http\Controllers\GoogleAdsAgencyOAuthController;
+use App\Http\Controllers\GoogleAdsOAuthController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect('/platform/organizations');
 });
 
-Route::middleware('auth')->get('/dashboard', function () {
-    return redirect('/platform/organizations');
+Route::middleware('auth')->get('/dashboard', function (Request $request) {
+    $user = $request->user();
+
+    if ($user->is_platform_admin) {
+        return redirect('/platform/organizations');
+    }
+
+    $organization = $user->organizations()
+        ->where('status', 'active')
+        ->orderBy('name')
+        ->firstOrFail();
+
+    return redirect('/dashboard/'.$organization->slug);
 });
 
 Route::middleware('auth')->group(function (): void {

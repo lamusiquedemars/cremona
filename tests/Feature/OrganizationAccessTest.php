@@ -13,6 +13,29 @@ class OrganizationAccessTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_a_member_is_redirected_to_their_active_organization_dashboard(): void
+    {
+        $member = User::factory()->create();
+        $organization = Organization::factory()->create(['slug' => 'marcos-tulio-advocacia']);
+
+        $member->organizations()->attach($organization, [
+            'role' => OrganizationRole::Owner->value,
+        ]);
+
+        $this->actingAs($member)
+            ->get('/dashboard')
+            ->assertRedirect('/dashboard/marcos-tulio-advocacia');
+    }
+
+    public function test_a_platform_administrator_is_redirected_to_platform_administration(): void
+    {
+        $administrator = User::factory()->platformAdministrator()->create();
+
+        $this->actingAs($administrator)
+            ->get('/dashboard')
+            ->assertRedirect('/platform/organizations');
+    }
+
     public function test_a_member_can_only_access_their_organizations(): void
     {
         $member = User::factory()->create();
