@@ -94,7 +94,7 @@ class ViewCampaign extends ViewRecord
         }
 
         if ($announce) {
-            Notification::make()->title('Résultats Google Ads actualisés')->body('État et résultats des 30 derniers jours enregistrés.')->success()->send();
+            Notification::make()->title('Campagne Google Ads actualisée')->body('État, résultats et mots-clés observés ont été enregistrés.')->success()->send();
         }
     }
 }

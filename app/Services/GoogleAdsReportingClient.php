@@ -14,6 +14,7 @@ class GoogleAdsReportingClient
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly GoogleAdsCredentials $credentials,
+        private readonly GoogleAdsCampaignConfigurationReader $configurationReader,
     ) {}
 
     public function sync(OrganizationIntegration $integration): int
@@ -73,6 +74,10 @@ class GoogleAdsReportingClient
             }
 
             $updated = $this->syncOneCampaignFromGoogle($campaign, $resolvedCredentials);
+            $campaign->update([
+                'google_ads_configuration' => $this->configurationReader->read($campaign, $resolvedCredentials),
+                'google_ads_configuration_synced_at' => now(),
+            ]);
         } catch (RequestException $exception) {
             $exception = new LogicException('Google Ads a refusé la synchronisation : '.$this->googleErrorMessage($exception), previous: $exception);
             $this->markFailure($integration, $exception);

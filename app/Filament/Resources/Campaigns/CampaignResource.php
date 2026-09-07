@@ -23,6 +23,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
@@ -433,6 +434,20 @@ class CampaignResource extends Resource
                     TextEntry::make('google_ads_synced_at')->label('Dernière observation')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::getOrganizationTimezone())->placeholder('Jamais'),
                     TextEntry::make('google_ads_serving_status')->label('Diffusion')->formatStateUsing(fn (?string $state): string => static::googleAdsServingStatusLabel($state))->placeholder('—'),
                     TextEntry::make('google_ads_bidding_status')->label('Enchères')->formatStateUsing(fn (?string $state): string => static::googleAdsBiddingStatusLabel($state))->placeholder('—'),
+                ]),
+            Section::make('Configuration observée dans Google Ads')
+                ->description('Lecture seule : les écarts sont visibles sans remplacer la préparation enregistrée dans Cremona.')
+                ->columnSpanFull()
+                ->schema([
+                    ViewEntry::make('google_ads_configuration_comparison')
+                        ->hiddenLabel()
+                        ->state(fn (Campaign $record): array => [
+                            'local' => $record->configuration ?? [],
+                            'remote' => $record->google_ads_configuration,
+                            'synced_at' => $record->google_ads_configuration_synced_at?->setTimezone(static::getOrganizationTimezone())->format('d/m/Y H:i'),
+                        ])
+                        ->view('filament.campaigns.google-ads-configuration')
+                        ->columnSpanFull(),
                 ]),
         ]);
     }

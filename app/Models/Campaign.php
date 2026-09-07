@@ -27,6 +27,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'currency',
     'notes',
     'configuration',
+    'google_ads_configuration',
+    'google_ads_configuration_synced_at',
 ])]
 class Campaign extends Model
 {
@@ -40,6 +42,8 @@ class Campaign extends Model
             'ends_on' => 'immutable_date',
             'planned_budget' => 'decimal:2',
             'configuration' => 'array',
+            'google_ads_configuration' => 'array',
+            'google_ads_configuration_synced_at' => 'immutable_datetime',
             'google_ads_primary_status_reasons' => 'array',
             'google_ads_synced_at' => 'immutable_datetime',
         ];
