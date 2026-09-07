@@ -23,6 +23,8 @@ use App\Models\OrganizationModule;
 use App\Models\Person;
 use App\Models\PrivateDocument;
 use App\Models\PrivateDocumentLink;
+use App\Models\Quote;
+use App\Models\QuoteLine;
 use App\Models\User;
 use App\Services\FakeCorrespondenceTransport;
 use App\Services\SmtpCorrespondenceTransport;
@@ -71,6 +73,8 @@ class AppServiceProvider extends ServiceProvider
             'message_thread_candidate' => MessageThreadCandidate::class,
             'private_document' => PrivateDocument::class,
             'private_document_link' => PrivateDocumentLink::class,
+            'quote' => Quote::class,
+            'quote_line' => QuoteLine::class,
             'user' => User::class,
         ]);
 
