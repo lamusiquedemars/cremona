@@ -15,6 +15,13 @@ class QuoteLine extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (self $line): void {
+            if ($line->position === null) {
+                $line->position = ((int) self::query()
+                    ->where('quote_id', $line->quote_id)
+                    ->max('position')) + 1;
+            }
+        });
         static::saving(function (self $line): void {
             if ($line->quantity <= 0) {
                 throw new LogicException('La quantité doit être positive.');
