@@ -11,6 +11,7 @@ use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Gate;
 use LogicException;
 use Throwable;
 
@@ -18,51 +19,82 @@ class ViewCampaign extends ViewRecord
 {
     protected static string $resource = CampaignResource::class;
 
+    public function mount(int|string $record): void
+    {
+        parent::mount($record);
+
+        if ($this->needsGoogleAdsRefresh()) {
+            $this->synchronizeGoogleAds(false);
+        }
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             Action::make('sync_google_ads')
-                ->label('Actualiser les résultats')
+                ->label('Actualiser maintenant')
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->color('success')
-                ->visible(fn (): bool => $this->record->channel === 'google_ads')
+                ->visible(fn (): bool => $this->record->channel === 'google_ads' && filled($this->record->external_reference))
                 ->authorize('update')
-                ->requiresConfirmation()
-                ->modalDescription('Cette action lit les résultats Google Ads des 30 derniers jours. Elle ne modifie ni la campagne, ni son budget, ni sa diffusion.')
                 ->action(function (): void {
-                    $integration = OrganizationIntegration::query()
-                        ->where('provider', 'google_ads')
-                        ->where('name', 'reporting')
-                        ->first();
-
-                    if ($integration === null || ! GoogleAdsConnectionResource::isReady($integration->credentials)) {
-                        Notification::make()
-                            ->title('Connexion Google Ads à préparer')
-                            ->body('La synchronisation nécessite une connexion prête dans « Configuration de l’organisation > Publicité ».')
-                            ->warning()
-                            ->persistent()
-                            ->send();
-
-                        return;
-                    }
-
-                    try {
-                        app(GoogleAdsReportingClient::class)->sync($integration);
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Synchronisation Google Ads arrêtée')->body($exception->getMessage())->danger()->persistent()->send();
-
-                        return;
-                    } catch (Throwable $exception) {
-                        report($exception);
-                        Notification::make()->title('Synchronisation Google Ads interrompue')->body('Google Ads n’a pas pu fournir les résultats. Réessaie dans quelques minutes.')->danger()->persistent()->send();
-
-                        return;
-                    }
-
-                    $this->record->refresh();
-                    Notification::make()->title('Résultats Google Ads actualisés')->body('Les observations disponibles des 30 derniers jours ont été enregistrées.')->success()->send();
+                    $this->synchronizeGoogleAds(true);
                 }),
-            EditAction::make()->label('Modifier la configuration'),
+            EditAction::make()->label(fn (): string => filled($this->record->external_reference)
+                ? 'Modifier la préparation Cremona'
+                : 'Modifier le brouillon'),
         ];
+    }
+
+    private function needsGoogleAdsRefresh(): bool
+    {
+        return $this->record->channel === 'google_ads'
+            && filled($this->record->external_reference)
+            && Gate::allows('update', $this->record)
+            && ($this->record->google_ads_synced_at === null || $this->record->google_ads_synced_at->lt(now()->subMinutes(15)));
+    }
+
+    private function synchronizeGoogleAds(bool $announce): void
+    {
+        $integration = OrganizationIntegration::query()
+            ->where('provider', 'google_ads')
+            ->where('name', 'reporting')
+            ->first();
+
+        if ($integration === null || ! GoogleAdsConnectionResource::isReady($integration->credentials)) {
+            if ($announce) {
+                Notification::make()
+                    ->title('Connexion Google Ads à préparer')
+                    ->body('La synchronisation nécessite une connexion prête dans « Configuration de l’organisation > Publicité ».')
+                    ->warning()
+                    ->persistent()
+                    ->send();
+            }
+
+            return;
+        }
+
+        try {
+            app(GoogleAdsReportingClient::class)->syncCampaign($this->record, $integration);
+            $this->record->refresh();
+        } catch (LogicException $exception) {
+            if ($announce) {
+                Notification::make()->title('Synchronisation Google Ads arrêtée')->body($exception->getMessage())->danger()->persistent()->send();
+            }
+
+            return;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            if ($announce) {
+                Notification::make()->title('Synchronisation Google Ads interrompue')->body('Google Ads n’a pas pu fournir les résultats. Réessaie dans quelques minutes.')->danger()->persistent()->send();
+            }
+
+            return;
+        }
+
+        if ($announce) {
+            Notification::make()->title('Résultats Google Ads actualisés')->body('État et résultats des 30 derniers jours enregistrés.')->success()->send();
+        }
     }
 }

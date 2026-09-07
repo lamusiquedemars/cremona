@@ -23,13 +23,13 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Resources\Resource;
 use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -85,7 +85,7 @@ class CampaignResource extends Resource
                     Textarea::make('notes')->label('Notes')->rows(3)->columnSpanFull(),
                 ])->columns(2),
             Section::make('Coûts et résultats par jour')
-                ->description('Saisie manuelle provisoire. Google Ads pourra alimenter ces chiffres automatiquement dans une étape suivante.')
+                ->description('Les lignes Google Ads sont synchronisées automatiquement. La saisie manuelle reste disponible pour les autres canaux ou les corrections documentées.')
                 ->schema([
                     Repeater::make('dailyMetrics')
                         ->relationship()
@@ -168,7 +168,7 @@ class CampaignResource extends Resource
                             TextInput::make('name')->label('Nom')->required()->maxLength(255)->columnSpanFull(),
                             Grid::make(['default' => 1, 'md' => 2])->schema([
                                 Group::make([
-                                    Textarea::make('keywords')->label('Mots-clés, un par ligne')->helperText('"guillemets" = expression ; [crochets] = exact ; sans syntaxe = large.')->rows(4)->required(),
+                                    Textarea::make('keywords')->label('Mots-clés, un par ligne')->helperText('Sans signe : diffusion large ; “guillemets” : recherche proche de l’expression ; [crochets] : intention très précise. Google peut aussi utiliser des variantes proches.')->rows(4)->required(),
                                     Textarea::make('negative_keywords')->label('Exclusions, une par ligne')->rows(3),
                                 ]),
                                 Group::make([
@@ -215,12 +215,12 @@ class CampaignResource extends Resource
             ->recordActions([
                 ViewAction::make()->label('Ouvrir le pilotage'),
                 Action::make('preview_google_ads')
-                    ->label('Aperçu Google Ads')
+                    ->label('Prévisualiser la création')
                     ->icon(Heroicon::OutlinedEye)
-                    ->visible(fn (Campaign $record): bool => $record->channel === 'google_ads')
+                    ->visible(fn (Campaign $record): bool => $record->channel === 'google_ads' && blank($record->external_reference))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Fermer')
-                    ->modalHeading('Aperçu de création Google Ads')
+                    ->modalHeading('Prévisualisation avant création Google Ads')
                     ->modalDescription('Cet aperçu ne crée rien dans Google Ads. La campagne sera toujours créée en pause.')
                     ->modalContent(fn (Campaign $record) => view('filament.campaigns.google-ads-preview', [
                         'preview' => app(GoogleAdsCampaignDraft::class)->preview($record),
@@ -350,8 +350,64 @@ class CampaignResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
+            Section::make('Résultats — 30 derniers jours')
+                ->description('Données Google Ads observées et demandes réellement reçues par le site.')
+                ->columnSpanFull()
+                ->columns(4)
+                ->schema([
+                    TextEntry::make('performance_spend')
+                        ->label('Dépensé')
+                        ->state(fn (Campaign $record): float => static::performanceSum($record, 'spend'))
+                        ->money(fn (Campaign $record): string => $record->currency)
+                        ->icon(Heroicon::OutlinedBanknotes)
+                        ->color('warning')
+                        ->hint(fn (Campaign $record): string => static::trendHint($record, 'spend')),
+                    TextEntry::make('performance_clicks')
+                        ->label('Clics')
+                        ->state(fn (Campaign $record): int => (int) static::performanceSum($record, 'clicks'))
+                        ->numeric()
+                        ->icon(Heroicon::OutlinedCursorArrowRays)
+                        ->color('info')
+                        ->hint(fn (Campaign $record): string => static::trendHint($record, 'clicks')),
+                    TextEntry::make('performance_conversions')
+                        ->label('Conversions Google')
+                        ->state(fn (Campaign $record): float => static::performanceSum($record, 'platform_conversions'))
+                        ->numeric(decimalPlaces: 2)
+                        ->icon(Heroicon::OutlinedArrowTrendingUp)
+                        ->color('success')
+                        ->hint(fn (Campaign $record): string => static::trendHint($record, 'platform_conversions')),
+                    TextEntry::make('performance_leads')
+                        ->label('Demandes du site')
+                        ->state(fn (Campaign $record): int => $record->attributedIncomingRequests()->where('received_at', '>=', now()->subDays(30))->count())
+                        ->numeric()
+                        ->icon(Heroicon::OutlinedInboxArrowDown)
+                        ->color('success')
+                        ->hint(fn (Campaign $record): string => static::leadTrendHint($record)),
+                    TextEntry::make('performance_impressions')
+                        ->label('Impressions')
+                        ->state(fn (Campaign $record): int => (int) static::performanceSum($record, 'impressions'))
+                        ->numeric()
+                        ->icon(Heroicon::OutlinedEye)
+                        ->color('gray'),
+                    TextEntry::make('performance_ctr')
+                        ->label('CTR')
+                        ->state(fn (Campaign $record): string => static::rate($record, 'clicks', 'impressions'))
+                        ->icon(Heroicon::OutlinedChartBar)
+                        ->color('info'),
+                    TextEntry::make('performance_cpc')
+                        ->label('CPC moyen')
+                        ->state(fn (Campaign $record): string => static::costPerClick($record))
+                        ->icon(Heroicon::OutlinedCurrencyEuro)
+                        ->color('warning'),
+                    TextEntry::make('performance_converted_leads')
+                        ->label('Demandes converties')
+                        ->state(fn (Campaign $record): int => $record->attributedIncomingRequests()->where('received_at', '>=', now()->subDays(30))->whereNotNull('converted_at')->count())
+                        ->numeric()
+                        ->icon(Heroicon::OutlinedCheckCircle)
+                        ->color('success'),
+                ]),
             Section::make('Pilotage de la campagne')
-                ->description('Lecture des résultats enregistrés dans Cremona. Les chiffres récents Google Ads peuvent évoluer avec le délai de conversion.')
+                ->description('Les chiffres récents peuvent évoluer avec le délai de conversion de Google Ads.')
                 ->columnSpan(2)
                 ->schema([
                     TextEntry::make('name')->label('Campagne')->weight('semibold')->size('lg'),
@@ -377,64 +433,10 @@ class CampaignResource extends Resource
                         ->placeholder('À synchroniser'),
                     TextEntry::make('google_ads_primary_status_reasons')
                         ->label('Détail')
-                        ->formatStateUsing(function (mixed $state): string {
-                            if (blank($state)) {
-                                return '—';
-                            }
-
-                            return implode(' · ', is_array($state) ? $state : [$state]);
-                        }),
+                        ->formatStateUsing(fn (mixed $state): string => static::googleAdsPrimaryStatusReasonLabel($state)),
                     TextEntry::make('google_ads_synced_at')->label('Dernière observation')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::getOrganizationTimezone())->placeholder('Jamais'),
-                    TextEntry::make('google_ads_serving_status')->label('Diffusion')->placeholder('—'),
-                    TextEntry::make('google_ads_bidding_status')->label('Enchères')->placeholder('—'),
-                ]),
-            Section::make('Résultats — 30 derniers jours')
-                ->description('Dépenses et résultats Google Ads observés, rapprochés des demandes effectivement reçues par le site.')
-                ->columnSpanFull()
-                ->columns(4)
-                ->schema([
-                    TextEntry::make('performance_spend')
-                        ->label('Dépensé')
-                        ->state(fn (Campaign $record): float => (float) $record->dailyMetrics()->where('metric_date', '>=', now()->subDays(30)->toDateString())->sum('spend'))
-                        ->money(fn (Campaign $record): string => $record->currency),
-                    TextEntry::make('performance_impressions')
-                        ->label('Impressions')
-                        ->state(fn (Campaign $record): int => (int) $record->dailyMetrics()->where('metric_date', '>=', now()->subDays(30)->toDateString())->sum('impressions'))
-                        ->numeric(),
-                    TextEntry::make('performance_clicks')
-                        ->label('Clics')
-                        ->state(fn (Campaign $record): int => (int) $record->dailyMetrics()->where('metric_date', '>=', now()->subDays(30)->toDateString())->sum('clicks'))
-                        ->numeric(),
-                    TextEntry::make('performance_ctr')
-                        ->label('CTR')
-                        ->state(function (Campaign $record): string {
-                            $metrics = $record->dailyMetrics()->where('metric_date', '>=', now()->subDays(30)->toDateString());
-                            $impressions = (int) (clone $metrics)->sum('impressions');
-                            $clicks = (int) $metrics->sum('clicks');
-
-                            return $impressions > 0 ? number_format(($clicks / $impressions) * 100, 2, ',', ' ').' %' : '—';
-                        }),
-                    TextEntry::make('performance_cpc')
-                        ->label('CPC moyen')
-                        ->state(function (Campaign $record): string {
-                            $metrics = $record->dailyMetrics()->where('metric_date', '>=', now()->subDays(30)->toDateString());
-                            $spend = (float) (clone $metrics)->sum('spend');
-                            $clicks = (int) $metrics->sum('clicks');
-
-                            return $clicks > 0 ? number_format($spend / $clicks, 2, ',', ' ').' '.$record->currency : '—';
-                        }),
-                    TextEntry::make('performance_google_conversions')
-                        ->label('Conversions Google')
-                        ->state(fn (Campaign $record): float => (float) $record->dailyMetrics()->where('metric_date', '>=', now()->subDays(30)->toDateString())->sum('platform_conversions'))
-                        ->numeric(decimalPlaces: 2),
-                    TextEntry::make('performance_leads')
-                        ->label('Demandes du site')
-                        ->state(fn (Campaign $record): int => $record->attributedIncomingRequests()->where('received_at', '>=', now()->subDays(30))->count())
-                        ->numeric(),
-                    TextEntry::make('performance_converted_leads')
-                        ->label('Demandes converties')
-                        ->state(fn (Campaign $record): int => $record->attributedIncomingRequests()->where('received_at', '>=', now()->subDays(30))->whereNotNull('converted_at')->count())
-                        ->numeric(),
+                    TextEntry::make('google_ads_serving_status')->label('Diffusion')->formatStateUsing(fn (?string $state): string => static::googleAdsServingStatusLabel($state))->placeholder('—'),
+                    TextEntry::make('google_ads_bidding_status')->label('Enchères')->formatStateUsing(fn (?string $state): string => static::googleAdsBiddingStatusLabel($state))->placeholder('—'),
                 ]),
         ]);
     }
@@ -468,5 +470,94 @@ class CampaignResource extends Resource
             'REMOVED' => 'Supprimée',
             default => $status ?? 'À synchroniser',
         };
+    }
+
+    private static function googleAdsServingStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'SERVING' => 'Diffuse',
+            'NONE' => 'Ne diffuse pas',
+            'ENDED' => 'Terminée',
+            'PENDING' => 'En attente',
+            'SUSPENDED' => 'Suspendue',
+            default => $status ?? '—',
+        };
+    }
+
+    private static function googleAdsBiddingStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'LEARNING' => 'En apprentissage',
+            'ENABLED' => 'Active',
+            'LIMITED' => 'Limitée',
+            default => $status ?? '—',
+        };
+    }
+
+    private static function googleAdsPrimaryStatusReasonLabel(mixed $reasons): string
+    {
+        $reasons = is_array($reasons) ? $reasons : [$reasons];
+        $labels = collect($reasons)->filter()->map(fn (string $reason): string => match ($reason) {
+            'BIDDING_STRATEGY_LEARNING' => 'Les enchères automatiques s’ajustent après une modification.',
+            'CAMPAIGN_PAUSED' => 'La campagne a été mise en pause.',
+            'CAMPAIGN_ENDED' => 'La date de fin est atteinte.',
+            'CAMPAIGN_PENDING' => 'La campagne attend sa date de diffusion.',
+            default => 'Google Ads signale un point à examiner.',
+        })->unique()->values();
+
+        return $labels->isNotEmpty() ? $labels->implode(' ') : '—';
+    }
+
+    private static function performanceSum(Campaign $record, string $column): float
+    {
+        return (float) $record->dailyMetrics()->where('metric_date', '>=', now()->subDays(30)->toDateString())->sum($column);
+    }
+
+    private static function rate(Campaign $record, string $numerator, string $denominator): string
+    {
+        $base = static::performanceSum($record, $denominator);
+
+        return $base > 0 ? number_format((static::performanceSum($record, $numerator) / $base) * 100, 2, ',', ' ').' %' : '—';
+    }
+
+    private static function costPerClick(Campaign $record): string
+    {
+        $clicks = static::performanceSum($record, 'clicks');
+
+        return $clicks > 0
+            ? number_format(static::performanceSum($record, 'spend') / $clicks, 2, ',', ' ').' '.$record->currency
+            : '—';
+    }
+
+    private static function trendHint(Campaign $record, string $column): string
+    {
+        $current = static::performanceSum($record, $column);
+        $previous = (float) $record->dailyMetrics()
+            ->whereBetween('metric_date', [now()->subDays(60)->toDateString(), now()->subDays(31)->toDateString()])
+            ->sum($column);
+
+        if ($previous <= 0) {
+            return 'Pas de comparaison fiable';
+        }
+
+        $change = (($current - $previous) / $previous) * 100;
+
+        return ($change >= 0 ? '↗ +' : '↘ ').number_format($change, 0, ',', ' ').' % vs 30 j. précédents';
+    }
+
+    private static function leadTrendHint(Campaign $record): string
+    {
+        $current = $record->attributedIncomingRequests()->where('received_at', '>=', now()->subDays(30))->count();
+        $previous = $record->attributedIncomingRequests()
+            ->whereBetween('received_at', [now()->subDays(60), now()->subDays(30)])
+            ->count();
+
+        if ($previous === 0) {
+            return 'Pas de comparaison fiable';
+        }
+
+        $change = (($current - $previous) / $previous) * 100;
+
+        return ($change >= 0 ? '↗ +' : '↘ ').number_format($change, 0, ',', ' ').' % vs 30 j. précédents';
     }
 }
