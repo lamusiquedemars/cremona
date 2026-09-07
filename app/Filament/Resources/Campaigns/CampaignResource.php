@@ -360,29 +360,25 @@ class CampaignResource extends Resource
                         ->state(fn (Campaign $record): float => static::performanceSum($record, 'spend'))
                         ->money(fn (Campaign $record): string => $record->currency)
                         ->icon(Heroicon::OutlinedBanknotes)
-                        ->color('warning')
-                        ->hint(fn (Campaign $record): string => static::trendHint($record, 'spend')),
+                        ->color('warning'),
                     TextEntry::make('performance_clicks')
                         ->label('Clics')
                         ->state(fn (Campaign $record): int => (int) static::performanceSum($record, 'clicks'))
                         ->numeric()
                         ->icon(Heroicon::OutlinedCursorArrowRays)
-                        ->color('info')
-                        ->hint(fn (Campaign $record): string => static::trendHint($record, 'clicks')),
+                        ->color('info'),
                     TextEntry::make('performance_conversions')
                         ->label('Conversions Google')
                         ->state(fn (Campaign $record): float => static::performanceSum($record, 'platform_conversions'))
                         ->numeric(decimalPlaces: 2)
                         ->icon(Heroicon::OutlinedArrowTrendingUp)
-                        ->color('success')
-                        ->hint(fn (Campaign $record): string => static::trendHint($record, 'platform_conversions')),
+                        ->color('success'),
                     TextEntry::make('performance_leads')
                         ->label('Demandes du site')
                         ->state(fn (Campaign $record): int => $record->attributedIncomingRequests()->where('received_at', '>=', now()->subDays(30))->count())
                         ->numeric()
                         ->icon(Heroicon::OutlinedInboxArrowDown)
-                        ->color('success')
-                        ->hint(fn (Campaign $record): string => static::leadTrendHint($record)),
+                        ->color('success'),
                     TextEntry::make('performance_impressions')
                         ->label('Impressions')
                         ->state(fn (Campaign $record): int => (int) static::performanceSum($record, 'impressions'))
@@ -527,37 +523,5 @@ class CampaignResource extends Resource
         return $clicks > 0
             ? number_format(static::performanceSum($record, 'spend') / $clicks, 2, ',', ' ').' '.$record->currency
             : '—';
-    }
-
-    private static function trendHint(Campaign $record, string $column): string
-    {
-        $current = static::performanceSum($record, $column);
-        $previous = (float) $record->dailyMetrics()
-            ->whereBetween('metric_date', [now()->subDays(60)->toDateString(), now()->subDays(31)->toDateString()])
-            ->sum($column);
-
-        if ($previous <= 0) {
-            return 'Pas de comparaison fiable';
-        }
-
-        $change = (($current - $previous) / $previous) * 100;
-
-        return ($change >= 0 ? '↗ +' : '↘ ').number_format($change, 0, ',', ' ').' % vs 30 j. précédents';
-    }
-
-    private static function leadTrendHint(Campaign $record): string
-    {
-        $current = $record->attributedIncomingRequests()->where('received_at', '>=', now()->subDays(30))->count();
-        $previous = $record->attributedIncomingRequests()
-            ->whereBetween('received_at', [now()->subDays(60), now()->subDays(30)])
-            ->count();
-
-        if ($previous === 0) {
-            return 'Pas de comparaison fiable';
-        }
-
-        $change = (($current - $previous) / $previous) * 100;
-
-        return ($change >= 0 ? '↗ +' : '↘ ').number_format($change, 0, ',', ' ').' % vs 30 j. précédents';
     }
 }
