@@ -1,7 +1,7 @@
 @php
     $state = $getState(); $remote = $state['remote'] ?? null;
     $key = fn (array $g): string => mb_strtolower(trim((string) ($g['name'] ?? '')));
-    $words = fn (array $v): array => collect($v)->filter('is_string')->mapWithKeys(fn (string $w) => [str_replace(['"', '“', '”'], '"', mb_strtolower(trim($w))) => trim($w)])->all();
+    $words = fn (array $v): array => collect($v)->filter(fn (mixed $word): bool => is_string($word))->mapWithKeys(fn (string $w) => [str_replace(['"', '“', '”'], '"', mb_strtolower(trim($w))) => trim($w)])->all();
     $local = collect(data_get($state, 'local.ad_groups', []))->filter(fn ($g) => is_array($g) && $key($g) !== '')->keyBy($key);
     $google = collect(data_get($remote, 'ad_groups', []))->filter(fn ($g) => is_array($g) && $key($g) !== '')->keyBy($key);
     $groups = $local->keys()->merge($google->keys())->unique()->sort()->map(function ($id) use ($local, $google, $words) {
