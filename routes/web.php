@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GoogleAdsAgencyOAuthController;
 use App\Http\Controllers\GoogleAdsOAuthController;
+use App\Http\Controllers\PrivateDocumentDownloadController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,9 @@ Route::middleware('auth')->get('/dashboard', function (Request $request) {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/documents/{publicId}/download', PrivateDocumentDownloadController::class)
+        ->whereUlid('publicId')
+        ->name('private-documents.download');
     Route::get('/integrations/google-ads/agency/authorize', [GoogleAdsAgencyOAuthController::class, 'authorize'])
         ->name('google-ads.agency.authorize');
     Route::get('/integrations/google-ads/agency/callback', [GoogleAdsAgencyOAuthController::class, 'callback'])

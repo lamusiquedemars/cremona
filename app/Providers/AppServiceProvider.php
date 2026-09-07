@@ -21,6 +21,8 @@ use App\Models\OrganizationIntegration;
 use App\Models\OrganizationMembership;
 use App\Models\OrganizationModule;
 use App\Models\Person;
+use App\Models\PrivateDocument;
+use App\Models\PrivateDocumentLink;
 use App\Models\User;
 use App\Services\FakeCorrespondenceTransport;
 use App\Services\SmtpCorrespondenceTransport;
@@ -67,6 +69,8 @@ class AppServiceProvider extends ServiceProvider
             'message_participant' => MessageParticipant::class,
             'message_reference' => MessageReference::class,
             'message_thread_candidate' => MessageThreadCandidate::class,
+            'private_document' => PrivateDocument::class,
+            'private_document_link' => PrivateDocumentLink::class,
             'user' => User::class,
         ]);
 
