@@ -309,6 +309,57 @@ class GoogleAdsReportingTest extends TestCase
         });
     }
 
+    public function test_scheduled_google_ads_configuration_sync_refreshes_the_campaign_snapshot_without_metrics(): void
+    {
+        Http::fake(function (Request $request) {
+            if ($request->url() === 'https://oauth2.googleapis.com/token') {
+                return Http::response(['access_token' => 'short-lived-token']);
+            }
+
+            $query = (string) $request['query'];
+
+            return match (true) {
+                str_contains($query, 'campaign_budget.amount_micros') => Http::response([['results' => [[
+                    'campaignBudget' => ['amountMicros' => '15000000'],
+                ]]]]),
+                str_contains($query, 'FROM ad_group_criterion') => Http::response([['results' => [[
+                    'adGroup' => ['id' => '7'],
+                    'adGroupCriterion' => ['criterionId' => '70', 'negative' => false, 'keyword' => ['text' => 'archet de violon', 'matchType' => 'PHRASE']],
+                ]]]]),
+                str_contains($query, 'FROM ad_group') => Http::response([['results' => [[
+                    'adGroup' => ['id' => '7', 'name' => 'Archets', 'status' => 'ENABLED'],
+                ]]]]),
+                default => Http::response([['results' => [[
+                    'campaign' => ['id' => '42', 'name' => 'Atelier Ivo — Recherche', 'status' => 'ENABLED'],
+                ]]]]),
+            };
+        });
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            Campaign::query()->create([
+                'name' => 'Atelier Ivo — Recherche', 'channel' => 'google_ads', 'tracking_key' => 'atelier-archets', 'external_reference' => '42', 'status' => CampaignStatus::Active, 'currency' => 'EUR',
+            ]);
+            OrganizationIntegration::query()->create([
+                'provider' => 'google_ads', 'name' => 'reporting', 'status' => 'active',
+                'credentials' => ['customer_id' => '200-507-3692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
+            ]);
+        });
+
+        $this->artisan('cremona:sync-google-ads-configurations')
+            ->expectsOutput("{$organization->name}: 1 campagne(s) configurée(s) actualisée(s).")
+            ->assertExitCode(0);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $campaign = Campaign::query()->sole();
+            $this->assertSame('"archet de violon"', $campaign->google_ads_configuration['ad_groups'][0]['keywords'][0]);
+            $this->assertNotNull($campaign->google_ads_configuration_synced_at);
+            $this->assertSame('google_ads.campaign_configuration_synchronized', OrganizationAuditLog::query()->sole()->event);
+        });
+
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), ':mutate'));
+    }
+
     public function test_google_ads_publisher_creates_a_complete_campaign_paused(): void
     {
         Http::fake([

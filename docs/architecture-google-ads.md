@@ -69,6 +69,11 @@ planifiée toutes les heures par Laravel et protégée contre les exécutions qu
 chevauchent. Le cron LWS existant doit continuer à appeler `php artisan
 schedule:run` chaque minute.
 
+À cinq minutes après chaque heure, `cremona:sync-google-ads-configurations`
+relève séparément la configuration des campagnes connues : groupes, mots-clés
+et exclusions. Les écarts visibles dans Cremona sont ainsi actualisés sans
+ouvrir la campagne ni recalculer une seconde fois les résultats.
+
 Chaque succès ou échec est journalisé dans l'audit de l'organisation. Le dernier
 incident est aussi visible dans `Configuration de l’organisation > Publicité` ;
 les secrets et jetons n'y sont jamais affichés.

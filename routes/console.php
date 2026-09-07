@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\SyncEmailMailboxes;
+use App\Console\Commands\SyncGoogleAdsCampaignConfigurations;
 use App\Console\Commands\SyncGoogleAdsReporting;
 use App\Models\User;
 use Illuminate\Foundation\Inspiring;
@@ -35,6 +36,10 @@ Artisan::command('cremona:create-admin {email} {name?}', function (string $email
 
 Schedule::command(SyncGoogleAdsReporting::class)
     ->hourly()
+    ->withoutOverlapping();
+
+Schedule::command(SyncGoogleAdsCampaignConfigurations::class)
+    ->hourlyAt(5)
     ->withoutOverlapping();
 
 Schedule::command(SyncEmailMailboxes::class)

@@ -106,6 +106,45 @@ class GoogleAdsReportingClient
         return $updated;
     }
 
+    /** Relève la configuration d’une campagne sans recalculer ses résultats. */
+    public function syncCampaignConfiguration(Campaign $campaign, OrganizationIntegration $integration): void
+    {
+        if ($campaign->channel !== 'google_ads' || ! ctype_digit((string) $campaign->external_reference)) {
+            throw new LogicException('Cette campagne n’est pas encore liée à une campagne Google Ads identifiable.');
+        }
+        if ($integration->provider !== 'google_ads' || $integration->name !== 'reporting') {
+            throw new LogicException('La connexion Google Ads de l’organisation est introuvable.');
+        }
+
+        $organizationCredentials = $integration->credentials;
+        $resolvedCredentials = $this->credentials->resolve($organizationCredentials);
+
+        try {
+            if (! $this->credentials->isReady($organizationCredentials)) {
+                throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
+            }
+
+            $campaign->update([
+                'google_ads_configuration' => $this->configurationReader->read($campaign, $resolvedCredentials),
+                'google_ads_configuration_synced_at' => now(),
+            ]);
+        } catch (RequestException $exception) {
+            $exception = new LogicException('Google Ads a refusé la synchronisation : '.$this->googleErrorMessage($exception), previous: $exception);
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
+        } catch (Throwable $exception) {
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
+        }
+
+        $this->auditLogger->record(
+            event: 'google_ads.campaign_configuration_synchronized',
+            subject: $campaign,
+        );
+    }
+
     /** @param array<string, mixed> $organizationCredentials */
     private function syncFromGoogle(OrganizationIntegration $integration, array $organizationCredentials): int
     {
