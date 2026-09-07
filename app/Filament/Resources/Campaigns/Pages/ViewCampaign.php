@@ -6,6 +6,7 @@ use App\Filament\Resources\Campaigns\CampaignResource;
 use App\Filament\Resources\GoogleAdsConnections\GoogleAdsConnectionResource;
 use App\Models\OrganizationIntegration;
 use App\Services\GoogleAdsCampaignConfigurationAdopter;
+use App\Services\GoogleAdsCampaignKeywordPublisher;
 use App\Services\GoogleAdsReportingClient;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -58,6 +59,50 @@ class ViewCampaign extends ViewRecord
                     $this->record->refresh();
                     Notification::make()->title('Préparation Cremona mise à jour.')->body($count.' groupe(s) adopté(s) depuis Google Ads.')->success()->send();
                 }),
+            Action::make('apply_prepared_keywords')
+                ->label('Appliquer les mots-clés Cremona à Google')
+                ->icon(Heroicon::OutlinedArrowUpTray)
+                ->color('danger')
+                ->visible(fn (): bool => $this->record->channel === 'google_ads'
+                    && filled($this->record->external_reference)
+                    && filled($this->record->google_ads_configuration))
+                ->authorize('update')
+                ->requiresConfirmation()
+                ->modalHeading('Appliquer la préparation Cremona dans Google Ads ?')
+                ->modalDescription('Cremona relira Google Ads juste avant l’envoi, puis ajoutera ou supprimera uniquement les mots-clés et exclusions des groupes portant exactement le même nom. Les annonces, budgets, ciblages et groupes restent inchangés.')
+                ->action(function (GoogleAdsCampaignKeywordPublisher $publisher): void {
+                    $integration = $this->googleAdsIntegration();
+
+                    if ($integration === null) {
+                        Notification::make()
+                            ->title('Connexion Google Ads à préparer')
+                            ->body('La mise à jour nécessite une connexion prête dans « Configuration de l’organisation > Publicité ».')
+                            ->warning()
+                            ->persistent()
+                            ->send();
+
+                        return;
+                    }
+
+                    try {
+                        $result = $publisher->apply($this->record, $integration, auth()->user());
+                        $this->record->refresh();
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Mise à jour Google Ads arrêtée')->body($exception->getMessage())->danger()->persistent()->send();
+
+                        return;
+                    } catch (Throwable $exception) {
+                        report($exception);
+                        Notification::make()->title('Mise à jour Google Ads interrompue')->body('Google Ads n’a pas confirmé la modification. Réessaie dans quelques minutes.')->danger()->persistent()->send();
+
+                        return;
+                    }
+
+                    $this->synchronizeGoogleAds(false);
+                    $this->record->refresh();
+                    $message = $result['created'].' ajout(s), '.$result['removed'].' retrait(s), dans '.$result['groups'].' groupe(s) correspondant(s).';
+                    Notification::make()->title('Mots-clés Google Ads mis à jour.')->body($message)->success()->send();
+                }),
         ];
     }
 
@@ -71,10 +116,7 @@ class ViewCampaign extends ViewRecord
 
     private function synchronizeGoogleAds(bool $announce): void
     {
-        $integration = OrganizationIntegration::query()
-            ->where('provider', 'google_ads')
-            ->where('name', 'reporting')
-            ->first();
+        $integration = $this->googleAdsIntegration();
 
         if ($integration === null || ! GoogleAdsConnectionResource::isReady($integration->credentials)) {
             if ($announce) {
@@ -111,5 +153,13 @@ class ViewCampaign extends ViewRecord
         if ($announce) {
             Notification::make()->title('Campagne Google Ads actualisée')->body('État, résultats et mots-clés observés ont été enregistrés.')->success()->send();
         }
+    }
+
+    private function googleAdsIntegration(): ?OrganizationIntegration
+    {
+        return OrganizationIntegration::query()
+            ->where('provider', 'google_ads')
+            ->where('name', 'reporting')
+            ->first();
     }
 }

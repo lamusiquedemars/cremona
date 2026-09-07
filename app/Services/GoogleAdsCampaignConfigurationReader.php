@@ -51,10 +51,11 @@ class GoogleAdsCampaignConfigurationReader
                 'status' => $group['status'] ?? null,
                 'keywords' => [],
                 'negative_keywords' => [],
+                'keyword_criteria' => [],
             ]] : [];
         })->all();
         $keywords = $this->rows($client->searchStream(<<<GAQL
-                    SELECT ad_group.id, ad_group_criterion.negative,
+                    SELECT ad_group.id, ad_group_criterion.criterion_id, ad_group_criterion.negative,
                         ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type
                     FROM ad_group_criterion
                     WHERE campaign.id = {$campaignId}
@@ -71,7 +72,13 @@ class GoogleAdsCampaignConfigurationReader
             }
 
             $field = data_get($row, 'adGroupCriterion.negative') ? 'negative_keywords' : 'keywords';
-            $groups[$groupId][$field][] = $this->keyword($text, (string) data_get($row, 'adGroupCriterion.keyword.matchType'));
+            $formatted = $this->keyword($text, (string) data_get($row, 'adGroupCriterion.keyword.matchType'));
+            $groups[$groupId][$field][] = $formatted;
+            $groups[$groupId]['keyword_criteria'][] = [
+                'criterion_id' => (string) data_get($row, 'adGroupCriterion.criterionId'),
+                'text' => $formatted,
+                'negative' => $field === 'negative_keywords',
+            ];
         }
 
         return [
@@ -83,9 +90,6 @@ class GoogleAdsCampaignConfigurationReader
                 'total_budget' => isset($budget['totalAmountMicros']) ? ((float) $budget['totalAmountMicros']) / 1_000_000 : null,
             ],
             'ad_groups' => collect($groups)->map(function (array $group): array {
-                $group['keywords'] = array_values(array_unique($group['keywords']));
-                $group['negative_keywords'] = array_values(array_unique($group['negative_keywords']));
-
                 return $group;
             })->values()->all(),
         ];

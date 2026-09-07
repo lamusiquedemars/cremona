@@ -7,8 +7,9 @@ use App\Models\Campaign;
 use App\Models\Organization;
 use App\Models\OrganizationAuditLog;
 use App\Models\OrganizationIntegration;
-use App\Services\GoogleAdsReportingClient;
+use App\Services\GoogleAdsCampaignKeywordPublisher;
 use App\Services\GoogleAdsCampaignPublisher;
+use App\Services\GoogleAdsReportingClient;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -18,6 +19,73 @@ use Tests\TestCase;
 class GoogleAdsReportingTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_google_ads_keyword_publisher_refreshes_then_applies_only_the_prepared_keyword_difference(): void
+    {
+        Http::fake(function (Request $request) {
+            if ($request->url() === 'https://oauth2.googleapis.com/token') {
+                return Http::response(['access_token' => 'short-lived-token']);
+            }
+
+            if (str_ends_with($request->url(), '/googleAds:searchStream')) {
+                $query = (string) $request['query'];
+
+                return match (true) {
+                    str_contains($query, 'campaign_budget.amount_micros') => Http::response([['results' => [[
+                        'campaignBudget' => ['amountMicros' => '15000000'],
+                    ]]]]),
+                    str_contains($query, 'FROM ad_group_criterion') => Http::response([['results' => [[
+                        'adGroup' => ['id' => '7'],
+                        'adGroupCriterion' => ['criterionId' => '70', 'negative' => false, 'keyword' => ['text' => 'archet de violon', 'matchType' => 'PHRASE']],
+                    ], [
+                        'adGroup' => ['id' => '7'],
+                        'adGroupCriterion' => ['criterionId' => '71', 'negative' => false, 'keyword' => ['text' => 'archet baroque', 'matchType' => 'BROAD']],
+                    ], [
+                        'adGroup' => ['id' => '7'],
+                        'adGroupCriterion' => ['criterionId' => '72', 'negative' => true, 'keyword' => ['text' => 'occasion', 'matchType' => 'BROAD']],
+                    ]]]]),
+                    str_contains($query, 'FROM ad_group') => Http::response([['results' => [[
+                        'adGroup' => ['id' => '7', 'name' => 'Archets', 'status' => 'ENABLED'],
+                    ]]]]),
+                    default => Http::response([['results' => [[
+                        'campaign' => ['id' => '42', 'name' => 'Atelier Ivo — Recherche', 'status' => 'ENABLED'],
+                    ]]]]),
+                };
+            }
+
+            return Http::response(['results' => []]);
+        });
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'google_ads', 'name' => 'reporting', 'status' => 'active',
+                'credentials' => ['customer_id' => '200-507-3692', 'developer_token' => 'developer-token', 'oauth_client_id' => 'client-id', 'oauth_client_secret' => 'client-secret', 'refresh_token' => 'refresh-token'],
+            ]);
+            $campaign = Campaign::query()->create([
+                'name' => 'Atelier Ivo — Recherche', 'channel' => 'google_ads', 'tracking_key' => 'atelier-archets', 'external_reference' => '42', 'status' => CampaignStatus::Active, 'currency' => 'EUR',
+                'configuration' => ['ad_groups' => [[
+                    'name' => 'Archets',
+                    'keywords' => "\"archet baroque\"\n[archet artisanal]",
+                    'negative_keywords' => 'occasion',
+                ]]],
+            ]);
+
+            $result = app(GoogleAdsCampaignKeywordPublisher::class)->apply($campaign, $integration);
+
+            $this->assertSame(['created' => 2, 'removed' => 2, 'groups' => 1], $result);
+            $this->assertSame('70', $campaign->refresh()->google_ads_configuration['ad_groups'][0]['keyword_criteria'][0]['criterion_id']);
+            $this->assertSame('campaign.google_ads_keywords_applied', OrganizationAuditLog::query()->sole()->event);
+        });
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/adGroupCriteria:mutate')
+            && $request['operations'] === [
+                ['remove' => 'customers/2005073692/adGroupCriteria/7~70'],
+                ['remove' => 'customers/2005073692/adGroupCriteria/7~71'],
+                ['create' => ['adGroup' => 'customers/2005073692/adGroups/7', 'status' => 'ENABLED', 'keyword' => ['text' => 'archet baroque', 'matchType' => 'PHRASE']]],
+                ['create' => ['adGroup' => 'customers/2005073692/adGroups/7', 'status' => 'ENABLED', 'keyword' => ['text' => 'archet artisanal', 'matchType' => 'EXACT']]],
+            ]);
+    }
 
     public function test_google_ads_sync_updates_only_known_campaigns_from_aggregated_daily_metrics(): void
     {
