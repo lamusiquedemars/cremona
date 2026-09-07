@@ -100,7 +100,7 @@ class GoogleAdsCampaignConfigurationReader
     private function keyword(string $text, string $matchType): string
     {
         return match ($matchType) {
-            'PHRASE' => '“'.$text.'”',
+            'PHRASE' => '"'.$text.'"',
             'EXACT' => '['.$text.']',
             default => $text,
         };
