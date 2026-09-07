@@ -9,6 +9,7 @@ use App\Filament\Resources\Quotes\Pages\ListQuotes;
 use App\Filament\Resources\Quotes\Pages\ViewQuote;
 use App\Models\IncomingRequest;
 use App\Models\Quote;
+use App\Models\QuoteLine;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -75,7 +76,7 @@ class QuoteResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make('Devis')->columnSpan(2)->schema([TextEntry::make('reference')->label('Référence')->weight('semibold'), TextEntry::make('title')->label('Objet')->size('lg'), TextEntry::make('introduction')->label('Introduction')->columnSpanFull(), RepeatableEntry::make('lines')->label('Détail')->schema([TextEntry::make('kind')->label('Type'), TextEntry::make('description')->label('Description'), TextEntry::make('quantity')->label('Qté'), TextEntry::make('unit_amount')->label('Prix')->money(fn (Quote $record) => $record->currency), TextEntry::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)])->columns(5)->columnSpanFull()]),
+            Section::make('Devis')->columnSpan(2)->schema([TextEntry::make('reference')->label('Référence')->weight('semibold'), TextEntry::make('title')->label('Objet')->size('lg'), TextEntry::make('introduction')->label('Introduction')->columnSpanFull(), RepeatableEntry::make('lines')->label('Détail')->schema([TextEntry::make('kind')->label('Type'), TextEntry::make('description')->label('Description'), TextEntry::make('quantity')->label('Qté'), TextEntry::make('unit_amount')->label('Prix')->money(fn (QuoteLine $record) => $record->quote->currency), TextEntry::make('total_amount')->label('Total')->money(fn (QuoteLine $record) => $record->quote->currency)])->columns(5)->columnSpanFull()]),
             Section::make('Total')->columnSpan(1)->schema([TextEntry::make('status')->label('Statut')->badge(), TextEntry::make('subtotal_amount')->label('Sous-total')->money(fn (Quote $record) => $record->currency), TextEntry::make('discount_amount')->label('Remise')->money(fn (Quote $record) => $record->currency), TextEntry::make('total_amount')->label('Total final')->money(fn (Quote $record) => $record->currency)->weight('bold')]),
             Section::make('Conditions')->columnSpanFull()->columns(3)->schema([TextEntry::make('tax_note')->label('Note fiscale')->placeholder('—'), TextEntry::make('payment_terms')->label('Règlement')->placeholder('—'), TextEntry::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')]),
         ]);
