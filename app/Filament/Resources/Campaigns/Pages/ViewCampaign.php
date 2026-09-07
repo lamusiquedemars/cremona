@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Campaigns\Pages;
 use App\Filament\Resources\Campaigns\CampaignResource;
 use App\Filament\Resources\GoogleAdsConnections\GoogleAdsConnectionResource;
 use App\Models\OrganizationIntegration;
+use App\Services\GoogleAdsCampaignConfigurationAdopter;
 use App\Services\GoogleAdsReportingClient;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -43,6 +44,20 @@ class ViewCampaign extends ViewRecord
             EditAction::make()->label(fn (): string => filled($this->record->external_reference)
                 ? 'Modifier la préparation Cremona'
                 : 'Modifier le brouillon'),
+            Action::make('adopt_google_keywords')
+                ->label('Adopter les mots-clés Google')
+                ->icon(Heroicon::OutlinedArrowDownTray)
+                ->color('warning')
+                ->visible(fn (): bool => filled($this->record->google_ads_configuration))
+                ->authorize('update')
+                ->requiresConfirmation()
+                ->modalHeading('Adopter les mots-clés Google dans Cremona ?')
+                ->modalDescription('Les mots-clés et exclusions des groupes correspondants remplaceront la préparation Cremona. Google Ads ne sera pas modifié ; les annonces et textes Cremona sont conservés.')
+                ->action(function (GoogleAdsCampaignConfigurationAdopter $adopter): void {
+                    $count = $adopter->adoptKeywords($this->record, auth()->user());
+                    $this->record->refresh();
+                    Notification::make()->title('Préparation Cremona mise à jour.')->body($count.' groupe(s) adopté(s) depuis Google Ads.')->success()->send();
+                }),
         ];
     }
 
