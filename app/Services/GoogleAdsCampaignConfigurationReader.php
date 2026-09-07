@@ -20,8 +20,7 @@ class GoogleAdsCampaignConfigurationReader
         $client = new GoogleAdsApiClient($credentials);
         $campaignId = (int) $campaign->external_reference;
         $campaignRow = $this->rows($client->searchStream(<<<GAQL
-                    SELECT campaign.id, campaign.name, campaign.status, campaign.start_date,
-                        campaign.end_date
+                    SELECT campaign.id, campaign.name, campaign.status
                     FROM campaign
                     WHERE campaign.id = {$campaignId}
                     GAQL,
@@ -80,8 +79,6 @@ class GoogleAdsCampaignConfigurationReader
                 'id' => (string) ($campaignRow['id'] ?? $campaignId),
                 'name' => $campaignRow['name'] ?? null,
                 'status' => $campaignRow['status'] ?? null,
-                'starts_on' => $campaignRow['startDate'] ?? null,
-                'ends_on' => $campaignRow['endDate'] ?? null,
                 'daily_budget' => isset($budget['amountMicros']) ? ((float) $budget['amountMicros']) / 1_000_000 : null,
                 'total_budget' => isset($budget['totalAmountMicros']) ? ((float) $budget['totalAmountMicros']) / 1_000_000 : null,
             ],
