@@ -1,13 +1,13 @@
 @php
     $state = $getState(); $remote = $state['remote'] ?? null;
     $key = fn (array $g): string => mb_strtolower(trim((string) ($g['name'] ?? '')));
-    $words = fn (array $v): array => collect($v)->filter(fn (mixed $word): bool => is_string($word))->mapWithKeys(fn (string $w) => [str_replace(['"', '“', '”'], '"', mb_strtolower(trim($w))) => trim($w)])->all();
+    $words = fn (mixed $value): array => collect(is_string($value) ? preg_split('/\R/', $value) : (array) $value)->filter(fn (mixed $word): bool => is_string($word) && trim($word) !== '')->mapWithKeys(fn (string $w) => [str_replace(['"', '“', '”'], '"', mb_strtolower(trim($w))) => trim($w)])->all();
     $local = collect(data_get($state, 'local.ad_groups', []))->filter(fn ($g) => is_array($g) && $key($g) !== '')->keyBy($key);
     $google = collect(data_get($remote, 'ad_groups', []))->filter(fn ($g) => is_array($g) && $key($g) !== '')->keyBy($key);
     $groups = $local->keys()->merge($google->keys())->unique()->sort()->map(function ($id) use ($local, $google, $words) {
         $l = $local->get($id); $g = $google->get($id); $changes = [];
         foreach (['keywords' => 'Mots-clés', 'negative_keywords' => 'Exclusions'] as $field => $label) {
-            $a = $words((array) ($l[$field] ?? [])); $b = $words((array) ($g[$field] ?? []));
+            $a = $words($l[$field] ?? []); $b = $words($g[$field] ?? []);
             $changes[$field] = ['label' => $label, 'added' => array_values(array_diff_key($b, $a)), 'missing' => array_values(array_diff_key($a, $b))];
         }
         $same = $l && $g && collect($changes)->every(fn ($c) => $c['added'] === [] && $c['missing'] === []);
