@@ -6,6 +6,29 @@ use App\Tenancy\OrganizationContext;
 
 class OrganizationPresentation
 {
+    /** @var array<string, array{label: string, items: array<string, string>}> */
+    private const GROUPS = [
+        'relation_client' => [
+            'label' => 'Relation client',
+            'items' => [
+                'contacts' => 'Contacts',
+                'companies' => 'Entreprises',
+                'requests' => 'Demandes',
+                'conversations' => 'Correspondances',
+                'tasks' => 'Tâches',
+                'appointments' => 'Rendez-vous',
+                'quotes' => 'Devis',
+                'documents' => 'Documents',
+            ],
+        ],
+        'acquisition' => [
+            'label' => 'Acquisition',
+            'items' => [
+                'campaigns' => 'Campagnes',
+            ],
+        ],
+    ];
+
     /** @var array<string, true> */
     private const KEYS = [
         'relation_client' => true,
@@ -44,5 +67,11 @@ class OrganizationPresentation
     public function createActionLabel(string $key, string $fallback): string
     {
         return 'Créer : '.$this->label($key, $fallback);
+    }
+
+    /** @return array<string, array{label: string, items: array<string, string>}> */
+    public static function groups(): array
+    {
+        return self::GROUPS;
     }
 }

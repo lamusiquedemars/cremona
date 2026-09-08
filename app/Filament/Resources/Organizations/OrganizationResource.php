@@ -8,6 +8,7 @@ use App\Filament\Resources\Organizations\Pages\ListOrganizations;
 use App\Filament\Resources\Organizations\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\Organizations\RelationManagers\SitesRelationManager;
 use App\Models\Organization;
+use App\Services\OrganizationPresentation;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
@@ -56,46 +57,7 @@ class OrganizationResource extends Resource
             Section::make('Présentation métier')
                 ->description('Ces libellés adaptent l’interface sans modifier les données, les droits ni les intégrations.')
                 ->columnSpanFull()
-                ->schema([
-                    Section::make('Relation client')
-                        ->compact()
-                        ->columns(3)
-                        ->schema([
-                            TextInput::make('settings.presentation.labels.relation_client')
-                                ->label('Nom du groupe dans le menu')
-                                ->placeholder('Relation client')
-                                ->maxLength(80)
-                                ->columnSpanFull(),
-                            TextInput::make('settings.presentation.labels.contacts')->label('Contacts')->maxLength(80)->columnSpan(2),
-                            Toggle::make('settings.presentation.visible.contacts')->label('Visible dans le menu')->default(true),
-                            TextInput::make('settings.presentation.labels.companies')->label('Entreprises')->maxLength(80)->columnSpan(2),
-                            Toggle::make('settings.presentation.visible.companies')->label('Visible dans le menu')->default(true),
-                            TextInput::make('settings.presentation.labels.requests')->label('Demandes')->maxLength(80)->columnSpan(2),
-                            Toggle::make('settings.presentation.visible.requests')->label('Visible dans le menu')->default(true),
-                            TextInput::make('settings.presentation.labels.conversations')->label('Correspondances')->maxLength(80)->columnSpan(2),
-                            Toggle::make('settings.presentation.visible.conversations')->label('Visible dans le menu')->default(true),
-                            TextInput::make('settings.presentation.labels.tasks')->label('Tâches')->maxLength(80)->columnSpan(2),
-                            Toggle::make('settings.presentation.visible.tasks')->label('Visible dans le menu')->default(true),
-                            TextInput::make('settings.presentation.labels.appointments')->label('Rendez-vous')->maxLength(80)->columnSpan(2),
-                            Toggle::make('settings.presentation.visible.appointments')->label('Visible dans le menu')->default(true),
-                            TextInput::make('settings.presentation.labels.quotes')->label('Devis')->maxLength(80)->columnSpan(2),
-                            Toggle::make('settings.presentation.visible.quotes')->label('Visible dans le menu')->default(true),
-                            TextInput::make('settings.presentation.labels.documents')->label('Documents')->maxLength(80)->columnSpan(2),
-                            Toggle::make('settings.presentation.visible.documents')->label('Visible dans le menu')->default(true),
-                        ]),
-                    Section::make('Acquisition')
-                        ->compact()
-                        ->columns(3)
-                        ->schema([
-                            TextInput::make('settings.presentation.labels.acquisition')
-                                ->label('Nom du groupe dans le menu')
-                                ->placeholder('Acquisition')
-                                ->maxLength(80)
-                                ->columnSpanFull(),
-                            TextInput::make('settings.presentation.labels.campaigns')->label('Campagnes')->maxLength(80)->columnSpan(2),
-                            Toggle::make('settings.presentation.visible.campaigns')->label('Visible dans le menu')->default(true),
-                        ]),
-                ]),
+                ->schema(static::presentationGroups()),
         ]);
     }
 
@@ -119,5 +81,38 @@ class OrganizationResource extends Resource
     public static function getRelations(): array
     {
         return [MembersRelationManager::class, SitesRelationManager::class];
+    }
+
+    /** @return array<int, Section> */
+    private static function presentationGroups(): array
+    {
+        return array_map(
+            function (array $group, string $groupKey): Section {
+                $fields = [
+                    TextInput::make("settings.presentation.labels.{$groupKey}")
+                        ->label('Nom du groupe dans le menu')
+                        ->placeholder($group['label'])
+                        ->maxLength(80)
+                        ->columnSpanFull(),
+                ];
+
+                foreach ($group['items'] as $key => $label) {
+                    $fields[] = TextInput::make("settings.presentation.labels.{$key}")
+                        ->label($label)
+                        ->maxLength(80)
+                        ->columnSpan(2);
+                    $fields[] = Toggle::make("settings.presentation.visible.{$key}")
+                        ->label('Visible dans le menu')
+                        ->default(true);
+                }
+
+                return Section::make($group['label'])
+                    ->compact()
+                    ->columns(3)
+                    ->schema($fields);
+            },
+            OrganizationPresentation::groups(),
+            array_keys(OrganizationPresentation::groups()),
+        );
     }
 }
