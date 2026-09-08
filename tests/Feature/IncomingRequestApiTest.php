@@ -75,6 +75,18 @@ class IncomingRequestApiTest extends TestCase
             ->assertUnauthorized();
     }
 
+    public function test_a_site_reference_can_be_restricted_to_an_integration(): void
+    {
+        $organization = Organization::factory()->create();
+        $issued = app(OrganizationContext::class)->run($organization, fn (): array => app(OrganizationIntegrationManager::class)->createApiToken('maracuja_cms', 'site', null));
+        app(OrganizationContext::class)->run($organization, fn () => $issued['integration']->update(['credentials' => ['site_references' => ['site-42']]]));
+
+        $this->withToken($issued['token'])->withHeader('Idempotency-Key', 'site-42:one')->postJson('/api/v1/incoming-requests', $this->payload())->assertCreated();
+        $payload = $this->payload();
+        $payload['source']['site_reference'] = 'other-site';
+        $this->withToken($issued['token'])->withHeader('Idempotency-Key', 'other:one')->postJson('/api/v1/incoming-requests', $payload)->assertForbidden();
+    }
+
     public function test_the_contract_validates_required_fields_and_idempotency_conflicts(): void
     {
         $organization = Organization::factory()->create();

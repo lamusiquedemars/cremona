@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreIncomingRequest;
+use App\Models\OrganizationIntegration;
 use App\Services\IncomingRequestManager;
 use Illuminate\Http\JsonResponse;
 
@@ -14,6 +15,13 @@ class IncomingRequestController extends Controller
         IncomingRequestManager $manager,
     ): JsonResponse {
         $data = $request->validated();
+        $integration = $request->attributes->get('organization_integration');
+        $allowedSites = $integration instanceof OrganizationIntegration
+            ? ($integration->credentials['site_references'] ?? []) : [];
+
+        if ($allowedSites !== [] && ! in_array($data['source']['site_reference'] ?? null, $allowedSites, true)) {
+            abort(403, 'This site is not authorized for the integration.');
+        }
         $incomingRequest = $manager->receive([
             'idempotency_key' => $data['idempotency_key'],
             'source_channel' => $data['source']['channel'],
