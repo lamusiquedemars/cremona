@@ -17,6 +17,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -89,24 +90,26 @@ class OrganizationResource extends Resource
         return array_map(
             function (array $group, string $groupKey): Section {
                 $fields = [
+                    Text::make('Nom du groupe dans le menu')->columnSpan(4),
                     TextInput::make("settings.presentation.labels.{$groupKey}")
-                        ->label('Nom du groupe dans le menu')
+                        ->hiddenLabel()
                         ->placeholder($group['label'])
                         ->maxLength(80)
-                        ->inlineLabel()
-                        ->columnSpanFull(),
+                        ->columnSpan(8),
+                    Text::make('Libellé')->columnSpan(4),
+                    Text::make('Libellé métier')->columnSpan(5),
+                    Text::make('Activé')->columnSpan(3),
                 ];
 
                 foreach ($group['items'] as $key => $label) {
+                    $fields[] = Text::make($label)->columnSpan(4);
                     $fields[] = TextInput::make("settings.presentation.labels.{$key}")
-                        ->label($label)
+                        ->hiddenLabel()
                         ->maxLength(80)
-                        ->inlineLabel()
-                        ->columnSpan(9);
+                        ->columnSpan(5);
                     $fields[] = Toggle::make("settings.presentation.visible.{$key}")
-                        ->label('Visible dans le menu')
+                        ->hiddenLabel()
                         ->default(true)
-                        ->inlineLabel()
                         ->columnSpan(3);
                 }
 
