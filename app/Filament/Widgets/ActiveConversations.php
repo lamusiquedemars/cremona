@@ -12,6 +12,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
+use Illuminate\Database\Eloquent\Builder;
 
 class ActiveConversations extends TableWidget
 {
@@ -40,6 +41,9 @@ class ActiveConversations extends TableWidget
                 Conversation::query()
                     ->where('status', ConversationStatus::Open)
                     ->whereNotNull('last_inbound_at')
+                    ->where(fn (Builder $query): Builder => $query
+                        ->whereNull('last_outbound_at')
+                        ->orWhereColumn('last_inbound_at', '>', 'last_outbound_at'))
                     ->orderByDesc('last_inbound_at')
                     ->limit(8),
             )
