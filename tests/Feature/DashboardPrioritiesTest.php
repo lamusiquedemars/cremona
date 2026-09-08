@@ -51,6 +51,14 @@ class DashboardPrioritiesTest extends TestCase
                 'received_at' => now()->subHour(),
                 'payload_fingerprint' => hash('sha256', 'dashboard-priority-request'),
             ]);
+            IncomingRequest::query()->create([
+                'name_snapshot' => 'Demande en attente du contact',
+                'message' => 'Une réponse a déjà été envoyée au contact.',
+                'status' => IncomingRequestStatus::WaitingCustomer,
+                'received_at' => now()->subHours(2),
+                'read_at' => now()->subHour(),
+                'payload_fingerprint' => hash('sha256', 'dashboard-waiting-request'),
+            ]);
             Conversation::query()->create([
                 'subject' => 'Réponse client attendue',
                 'status' => ConversationStatus::Open,
@@ -99,7 +107,12 @@ class DashboardPrioritiesTest extends TestCase
             ->assertSeeTextInOrder(['Rendez-vous aujourd’hui', '1', 'À venir'])
             ->assertSeeTextInOrder(['Devis à suivre', '1', '1 hors validité'])
             ->assertSeeTextInOrder(['Campagnes à vérifier', '1', 'Google Ads · synchro 06/09 12:00'])
-            ->assertSeeText('Cremona · 12:00 · Europe/Paris');
+            ->assertSeeText('Cremona · 12:00 · Europe/Paris')
+            ->assertSeeText('Action — ouvrir la demande')
+            ->assertSeeText('Information — les rendez-vous')
+            ->assertSeeText('Ouvrir')
+            ->assertDontSeeText('Demande en attente du contact')
+            ->assertDontSeeText('Réponse déjà envoyée');
     }
 
     public function test_priority_links_open_prefiltered_work_queues(): void

@@ -5,6 +5,8 @@
 > Dernière mise à jour : 8 septembre 2026.
 >
 > Ce document est la référence de reprise du chantier. Il décrit la cible ; il ne vaut pas autorisation de supprimer, migrer ou masquer une capacité sans audit, tests et validation explicite.
+>
+> Le suivi des lots livrés et du reste à faire est tenu dans [Avancement du plan directeur](avancement-plan-directeur.md).
 
 ## 1. Intention du produit
 

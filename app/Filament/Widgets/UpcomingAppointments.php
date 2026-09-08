@@ -37,7 +37,7 @@ class UpcomingAppointments extends TableWidget
 
         return $table
             ->heading('Prochains rendez-vous')
-            ->description('Les rendez-vous planifiés à partir de maintenant.')
+            ->description('Information — les rendez-vous planifiés à partir de maintenant.')
             ->query(
                 Appointment::query()
                     ->where('status', AppointmentStatus::Scheduled)
@@ -65,6 +65,12 @@ class UpcomingAppointments extends TableWidget
                     ->placeholder('Non attribué'),
             ])
             ->recordUrl(fn (Appointment $record): string => AppointmentResource::getUrl('view', ['record' => $record]))
+            ->recordActions([
+                Action::make('open')
+                    ->label('Ouvrir')
+                    ->icon(Heroicon::OutlinedArrowRight)
+                    ->url(fn (Appointment $record): string => AppointmentResource::getUrl('view', ['record' => $record])),
+            ])
             ->headerActions([
                 Action::make('seeAll')
                     ->label('Voir tous les rendez-vous')

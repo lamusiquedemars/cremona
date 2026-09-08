@@ -36,7 +36,7 @@ class ActiveConversations extends TableWidget
     {
         return $table
             ->heading('Correspondances à traiter')
-            ->description('Les échanges où le dernier mouvement vient du contact.')
+            ->description('Action — ouvrir les échanges dont le dernier message vient du contact.')
             ->query(
                 Conversation::query()
                     ->where('status', ConversationStatus::Open)
@@ -64,6 +64,12 @@ class ActiveConversations extends TableWidget
                     ->since(),
             ])
             ->recordUrl(fn (Conversation $record): string => ConversationResource::getUrl('view', ['record' => $record]))
+            ->recordActions([
+                Action::make('open')
+                    ->label('Ouvrir')
+                    ->icon(Heroicon::OutlinedArrowRight)
+                    ->url(fn (Conversation $record): string => ConversationResource::getUrl('view', ['record' => $record])),
+            ])
             ->headerActions([
                 Action::make('seeAll')
                     ->label('Voir toutes les correspondances')

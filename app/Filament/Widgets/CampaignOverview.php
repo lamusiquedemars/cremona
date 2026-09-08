@@ -25,7 +25,7 @@ class CampaignOverview extends StatsOverviewWidget
 
     protected ?string $heading = 'Pilotage des campagnes';
 
-    protected ?string $description = 'Les 30 derniers jours : dépenses renseignées et demandes réellement reçues par les sites.';
+    protected ?string $description = 'Information — les 30 derniers jours : dépenses renseignées et demandes réellement reçues par les sites.';
 
     public static function canView(): bool
     {

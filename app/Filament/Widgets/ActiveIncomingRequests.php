@@ -35,10 +35,14 @@ class ActiveIncomingRequests extends TableWidget
     {
         return $table
             ->heading('Demandes à traiter')
-            ->description('Les dernières demandes encore ouvertes.')
+            ->description('Action — ouvrir la demande pour la qualifier, l’attribuer ou poursuivre son traitement.')
             ->query(
                 IncomingRequest::query()
-                    ->where('status', '!=', IncomingRequestStatus::Closed)
+                    ->whereIn('status', [
+                        IncomingRequestStatus::New,
+                        IncomingRequestStatus::InProgress,
+                        IncomingRequestStatus::Qualified,
+                    ])
                     ->orderByRaw('read_at IS NULL DESC')
                     ->latest('received_at')
                     ->limit(8),
@@ -65,6 +69,12 @@ class ActiveIncomingRequests extends TableWidget
             ])
             ->recordUrl(fn (IncomingRequest $record): string => IncomingRequestResource::getUrl('view', ['record' => $record]))
             ->recordClasses(fn (IncomingRequest $record): ?string => $record->read_at === null ? 'crm-record-unread' : null)
+            ->recordActions([
+                Action::make('open')
+                    ->label('Ouvrir')
+                    ->icon(Heroicon::OutlinedArrowRight)
+                    ->url(fn (IncomingRequest $record): string => IncomingRequestResource::getUrl('view', ['record' => $record])),
+            ])
             ->headerActions([
                 Action::make('seeAll')
                     ->label('Voir toutes les demandes')

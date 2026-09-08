@@ -37,7 +37,7 @@ class OpenCrmTasks extends TableWidget
 
         return $table
             ->heading('Tâches à faire')
-            ->description('Les retards arrivent en premier, puis les prochaines échéances.')
+            ->description('Action — traiter les retards en premier, puis les prochaines échéances.')
             ->query(
                 CrmTask::query()
                     ->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])
@@ -57,6 +57,12 @@ class OpenCrmTasks extends TableWidget
                 TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
             ])
             ->recordUrl(fn (CrmTask $record): string => CrmTaskResource::getUrl('view', ['record' => $record]))
+            ->recordActions([
+                Action::make('open')
+                    ->label('Ouvrir')
+                    ->icon(Heroicon::OutlinedArrowRight)
+                    ->url(fn (CrmTask $record): string => CrmTaskResource::getUrl('view', ['record' => $record])),
+            ])
             ->headerActions([
                 Action::make('seeAll')
                     ->label('Voir toutes les tâches')
