@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
 
-#[Fillable(['kind', 'description', 'quantity', 'unit_amount'])]
+#[Fillable(['quote_line_template_id', 'template_label_snapshot', 'kind', 'description', 'quantity', 'unit_amount'])]
 class QuoteLine extends Model
 {
     use BelongsToOrganization;
@@ -39,5 +39,10 @@ class QuoteLine extends Model
     public function quote(): BelongsTo
     {
         return $this->belongsTo(Quote::class);
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(QuoteLineTemplate::class, 'quote_line_template_id');
     }
 }
