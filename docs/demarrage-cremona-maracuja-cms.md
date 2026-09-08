@@ -1,6 +1,9 @@
 # Démarrage du chantier Cremona + Maracuja CMS
 
-> Document de passation pour reprendre le chantier dans un nouveau chat.
+> Document de passation historique pour reprendre le chantier dans un nouveau
+> chat. La référence active pour les profils de sites, la propriété des données
+> et le connecteur est désormais le
+> [Blueprint — sites autonomes et gestion connectée](blueprint-sites-connectes.md).
 > État constaté le 14 août 2026.
 
 ## 1. Mission

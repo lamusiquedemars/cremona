@@ -27,12 +27,20 @@ Ces éléments décrivent l’usage constaté. Les durées, montants et conditio
 - Cremona reçoit les demandes et gère la relation client, les correspondances, tâches, rendez-vous, devis et documents privés.
 - Aucun changement de source de vérité n’est réalisé sans contrat de synchronisation, inventaire et plan de reprise.
 
-### Cible
+### Cible validée pour Atelier Ivo
 
-- Un futur module métier Luthier dans Cremona devient la source de vérité des archets, essais et commandes.
-- Maracuja CMS reçoit uniquement la projection publique nécessaire : présentation, disponibilité publiable, prix public éventuel et médias autorisés.
-- Le site ne reçoit jamais les notes internes, coordonnées privées, conditions négociées, documents, paiements ou historique client.
-- Les identifiants techniques ne contiennent ni le nom d’Atelier Ivo ni un vocabulaire imposé aux autres métiers.
+- Le catalogue `Arcus` du CMS reste propriétaire des archets et de leur
+  publication. Il n'est pas déplacé dans Cremona sans décision ultérieure,
+  inventaire et migration.
+- Cremona est propriétaire des demandes, contacts, correspondances, tâches,
+  rendez-vous, devis et documents privés, quelle que soit leur origine.
+- Lorsqu'un flux métier a besoin d'un archet, il conserve une référence stable
+  au catalogue Arcus et un snapshot commercial utile ; il ne réplique pas un
+  second catalogue éditable.
+- Le site ne reçoit jamais les notes internes, coordonnées privées, conditions
+  négociées, documents, paiements ou historique client.
+- Les identifiants techniques ne contiennent ni le nom d’Atelier Ivo ni un
+  vocabulaire imposé aux autres métiers.
 
 ## 3. Socle commun aux trois flux
 
@@ -83,7 +91,10 @@ Un musicien cherche un conseil, a repéré un archet ou ne sait pas encore leque
 
 ### Plus petit périmètre utile
 
-Conserver la demande, la correspondance et les tâches existantes ; ajouter seulement des liens vérifiés vers les archets lorsque le module Luthier fournit leurs identifiants canoniques. Ne pas créer une colonne texte libre qui simule durablement cette relation.
+Conserver la demande, la correspondance et les tâches existantes ; ajouter une
+référence vérifiée au code stable Arcus et le snapshot utile au devis. Ne pas
+créer une colonne texte libre qui simule durablement cette relation ni un second
+catalogue éditable dans Cremona.
 
 ## 5. Flux 2 — Essai d’un ou plusieurs archets
 
@@ -116,7 +127,9 @@ Un essai n’est pas seulement un rendez-vous : il peut contenir plusieurs arche
 - Un archet marqué `En essai` doit être relié à un essai actif identifiable.
 - Un rendez-vous annulé ne libère pas implicitement un archet expédié.
 - Une tâche de rappel et une échéance d’essai peuvent représenter la même obligation ; l’interface doit éviter de les afficher deux fois comme deux événements distincts.
-- La disponibilité publique ne change qu’après une action explicite et une projection confirmée vers le site.
+- La disponibilité publique est modifiée dans Arcus/CMS par une action explicite.
+  Une future intégration ne pourra proposer cette modification qu'avec une
+  confirmation et une trace ; elle ne doit pas créer deux propriétaires.
 
 ## 6. Flux 3 — Proposition, vente ou commande
 
@@ -127,7 +140,9 @@ Un essai n’est pas seulement un rendez-vous : il peut contenir plusieurs arche
 3. Envoyer le devis et suivre sa validité.
 4. Enregistrer acceptation ou refus sans confondre acceptation et paiement.
 5. À confirmation de la vente, conserver la date, le prix final, les conditions, les documents et la garantie applicables.
-6. Marquer l’archet vendu puis projeter ce nouvel état vers le site.
+6. Marquer l’archet vendu dans Arcus/CMS, après confirmation du résultat
+   commercial ; Cremona conserve son lien et son historique, sans devenir une
+   seconde source de disponibilité.
 
 ### Commande sur mesure
 

@@ -143,10 +143,13 @@ Un archet, une intervention de lutherie, un dossier juridique ou un chantier ne 
 1. Cadrer Atelier Ivo sur trois cas : vente d'archet, essai, commande ou service éventuel.
 2. Distinguer ce qui est catalogue, prestation, réalisation publiée et document interne.
 3. Créer un module métier si l'objet le requiert, plutôt que des colonnes génériques sans fin dans le noyau.
-4. Prévoir une projection contrôlée vers Maracuja CMS lorsque la donnée est publique ; Cremona reste la source de vérité métier.
+4. Prévoir une projection contrôlée vers Maracuja CMS lorsque la donnée est publique. Pour chaque objet, décider une seule source de vérité : Cremona lorsqu'il est géré dans l'espace métier ; CMS lorsqu'un catalogue autonome existant reste propriétaire. Aucun objet n'est éditable dans les deux applications.
 5. N'afficher Produits, Services ou Réalisations qu'une fois le premier flux complet livré, testé et documenté.
 
 **Fin :** l'entreprise gère une offre réelle sans vocabulaire emprunté à un autre métier ni doublon avec le site public.
+
+Le contrat complet des sites autonomes et connectés est documenté dans le
+[Blueprint — sites autonomes et gestion connectée](blueprint-sites-connectes.md).
 
 ### E. Présence en ligne
 

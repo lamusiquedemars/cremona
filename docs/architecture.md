@@ -2,7 +2,10 @@
 
 ## Responsabilité du produit
 
-Cremona est le SaaS métier central de Maracuja Digital. Il ne remplace pas Maracuja CMS Starter, qui reste responsable des sites publics indépendants.
+Cremona est la plateforme métier multi-organisation interne de Maracuja Digital.
+Elle ne remplace pas Maracuja CMS Starter, qui reste responsable des sites
+publics indépendants. Les clients n'ont pas à connaître le nom Cremona : ils
+utilisent, lorsque nécessaire, un espace de gestion à leur identité.
 
 ```text
 Sites publics Maracuja CMS
@@ -56,8 +59,10 @@ ni des valeurs à coder dans le noyau.
 
 Les objets propres à une profession sont définis dans son module métier, avec
 son vocabulaire réel. Le noyau ne crée pas de table catalogue universelle pour
-les absorber. Un objet destiné à être publié peut avoir une projection contrôlée
-vers Maracuja CMS, sans devenir la source de vérité du site public.
+les absorber. Chaque objet possède un propriétaire unique : un objet géré dans
+Cremona peut avoir une projection contrôlée vers Maracuja CMS ; un catalogue CMS
+autonome existant peut rester propriétaire et être seulement référencé dans
+Cremona.
 
 ## Règles avant import des modules du CMS
 

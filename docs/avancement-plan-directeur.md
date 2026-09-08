@@ -34,18 +34,29 @@
 ### D. Offre
 
 - Les trois parcours Atelier Ivo sont cadrés dans [Flux métier Atelier Ivo](flux-metier-atelier-ivo.md).
+- Le profil de site autonome et le profil de site connecté, ainsi que leur
+  frontière CMS/Cremona, sont validés dans le
+  [Blueprint — sites autonomes et gestion connectée](blueprint-sites-connectes.md).
+- Une demande site reste captée par le CMS mais est traitée dans Cremona pour
+  un site connecté ; les emails directs, demandes téléphoniques et rencontres
+  y rejoignent la même file.
+- Atelier Ivo conserve Arcus/CMS comme propriétaire de son catalogue ; Contempo
+  est le pilote du futur pack Luthier propriétaire de son parc et de son stock.
 - Aucun catalogue universel n’a été ajouté au noyau.
 
 État : **cadrage en cours**.
 
 ## Reste à faire prioritaire
 
-1. Terminer B2 et observer l’accueil avec les données réelles d’Atelier Ivo.
-2. Valider avec Ivo les décisions ouvertes du cadrage : réservation d’archets, essai à distance, acompte, paiement et propriété future du catalogue.
-3. Choisir le premier flux vertical complet : recommandation actuelle, **essai d’archet**.
-4. Concevoir le module métier Luthier et son contrat de projection vers Maracuja CMS avant toute migration du catalogue.
-5. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
-6. Reprendre le registre canonique de capacités et terminer le chantier A.
+1. Définir le contrat et le premier lot du bridge CMS ↔ Cremona.
+2. Tester ce bridge avec deux organisations, dont un formulaire site, sans fuite
+   de données ni doublon sur reprise.
+3. Basculer le traitement des demandes d’Atelier Ivo, sans supprimer Arcus ni
+   les historiques locaux avant vérification.
+4. Cadrer le socle commercial de Cremona : bibliothèque de lignes de devis,
+   références externes et statut Pennylane.
+5. Modéliser le pack Luthier pour Contempo avant tout import Dynamics ou stock.
+6. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
 
 ## Dette de contrôle connue
 
