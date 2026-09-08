@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Campaigns;
 
 use App\Enums\CampaignStatus;
+use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Campaigns\Pages\CreateCampaign;
 use App\Filament\Resources\Campaigns\Pages\EditCampaign;
 use App\Filament\Resources\Campaigns\Pages\ListCampaigns;
@@ -42,6 +43,8 @@ use UnitEnum;
 
 class CampaignResource extends Resource
 {
+    use UsesOrganizationPresentation;
+
     protected static ?string $model = Campaign::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMegaphone;
@@ -49,6 +52,10 @@ class CampaignResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Acquisition';
 
     protected static ?string $navigationLabel = 'Campagnes';
+
+    protected static ?string $presentationKey = 'campaigns';
+
+    protected static ?string $presentationGroupKey = 'acquisition';
 
     protected static ?string $modelLabel = 'campagne';
 

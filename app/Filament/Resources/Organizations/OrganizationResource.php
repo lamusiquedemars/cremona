@@ -56,29 +56,44 @@ class OrganizationResource extends Resource
             Section::make('Présentation métier')
                 ->description('Ces libellés adaptent l’interface sans modifier les données, les droits ni les intégrations.')
                 ->columnSpanFull()
-                ->columns(3)
                 ->schema([
-                    TextInput::make('settings.presentation.labels.relation_client')->label('Groupe relation client')->maxLength(80),
-                    TextInput::make('settings.presentation.labels.contacts')->label('Contacts')->maxLength(80),
-                    TextInput::make('settings.presentation.labels.companies')->label('Entreprises')->maxLength(80),
-                    TextInput::make('settings.presentation.labels.requests')->label('Demandes')->maxLength(80),
-                    TextInput::make('settings.presentation.labels.conversations')->label('Correspondances')->maxLength(80),
-                    TextInput::make('settings.presentation.labels.tasks')->label('Tâches')->maxLength(80),
-                    TextInput::make('settings.presentation.labels.appointments')->label('Rendez-vous')->maxLength(80),
-                    TextInput::make('settings.presentation.labels.quotes')->label('Devis')->maxLength(80),
-                    TextInput::make('settings.presentation.labels.documents')->label('Documents')->maxLength(80),
-                    Section::make('Modules visibles dans le menu')
-                        ->columnSpanFull()
+                    Section::make('Relation client')
+                        ->compact()
                         ->columns(3)
                         ->schema([
-                            Toggle::make('settings.presentation.visible.contacts')->label('Contacts')->default(true),
-                            Toggle::make('settings.presentation.visible.companies')->label('Entreprises')->default(true),
-                            Toggle::make('settings.presentation.visible.requests')->label('Demandes')->default(true),
-                            Toggle::make('settings.presentation.visible.conversations')->label('Correspondances')->default(true),
-                            Toggle::make('settings.presentation.visible.tasks')->label('Tâches')->default(true),
-                            Toggle::make('settings.presentation.visible.appointments')->label('Rendez-vous')->default(true),
-                            Toggle::make('settings.presentation.visible.quotes')->label('Devis')->default(true),
-                            Toggle::make('settings.presentation.visible.documents')->label('Documents')->default(true),
+                            TextInput::make('settings.presentation.labels.relation_client')
+                                ->label('Nom du groupe dans le menu')
+                                ->placeholder('Relation client')
+                                ->maxLength(80)
+                                ->columnSpanFull(),
+                            TextInput::make('settings.presentation.labels.contacts')->label('Contacts')->maxLength(80)->columnSpan(2),
+                            Toggle::make('settings.presentation.visible.contacts')->label('Visible dans le menu')->default(true),
+                            TextInput::make('settings.presentation.labels.companies')->label('Entreprises')->maxLength(80)->columnSpan(2),
+                            Toggle::make('settings.presentation.visible.companies')->label('Visible dans le menu')->default(true),
+                            TextInput::make('settings.presentation.labels.requests')->label('Demandes')->maxLength(80)->columnSpan(2),
+                            Toggle::make('settings.presentation.visible.requests')->label('Visible dans le menu')->default(true),
+                            TextInput::make('settings.presentation.labels.conversations')->label('Correspondances')->maxLength(80)->columnSpan(2),
+                            Toggle::make('settings.presentation.visible.conversations')->label('Visible dans le menu')->default(true),
+                            TextInput::make('settings.presentation.labels.tasks')->label('Tâches')->maxLength(80)->columnSpan(2),
+                            Toggle::make('settings.presentation.visible.tasks')->label('Visible dans le menu')->default(true),
+                            TextInput::make('settings.presentation.labels.appointments')->label('Rendez-vous')->maxLength(80)->columnSpan(2),
+                            Toggle::make('settings.presentation.visible.appointments')->label('Visible dans le menu')->default(true),
+                            TextInput::make('settings.presentation.labels.quotes')->label('Devis')->maxLength(80)->columnSpan(2),
+                            Toggle::make('settings.presentation.visible.quotes')->label('Visible dans le menu')->default(true),
+                            TextInput::make('settings.presentation.labels.documents')->label('Documents')->maxLength(80)->columnSpan(2),
+                            Toggle::make('settings.presentation.visible.documents')->label('Visible dans le menu')->default(true),
+                        ]),
+                    Section::make('Acquisition')
+                        ->compact()
+                        ->columns(3)
+                        ->schema([
+                            TextInput::make('settings.presentation.labels.acquisition')
+                                ->label('Nom du groupe dans le menu')
+                                ->placeholder('Acquisition')
+                                ->maxLength(80)
+                                ->columnSpanFull(),
+                            TextInput::make('settings.presentation.labels.campaigns')->label('Campagnes')->maxLength(80)->columnSpan(2),
+                            Toggle::make('settings.presentation.visible.campaigns')->label('Visible dans le menu')->default(true),
                         ]),
                 ]),
         ]);

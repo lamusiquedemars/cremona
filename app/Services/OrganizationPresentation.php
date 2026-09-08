@@ -17,6 +17,8 @@ class OrganizationPresentation
         'appointments' => true,
         'quotes' => true,
         'documents' => true,
+        'acquisition' => true,
+        'campaigns' => true,
     ];
 
     public function label(string $key, string $fallback): string
