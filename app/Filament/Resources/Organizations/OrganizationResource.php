@@ -46,7 +46,13 @@ class OrganizationResource extends Resource
         return $schema->components([
             TextInput::make('name')->label('Nom')->required()->maxLength(255),
             TextInput::make('slug')->label('Identifiant URL')->required()->maxLength(255)->unique(ignoreRecord: true),
-            TextInput::make('vertical_pack')->label('Type d’activité')->maxLength(255),
+            Select::make('vertical_pack')
+                ->label('Pack métier')
+                ->options([
+                    'luthier' => 'Luthier — instruments, atelier, location et stock',
+                ])
+                ->placeholder('Aucun pack métier')
+                ->helperText('Choisir Luthier installe les lignes de devis de départ sans écraser les tarifs déjà réglés.'),
             Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
             Select::make('settings.timezone')
                 ->label('Fuseau horaire')

@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Organization;
 use App\Models\Quote;
 use App\Models\QuoteLineTemplate;
-use App\Services\LuthierQuoteLineTemplateCatalog;
 use App\Services\QuoteLineTemplateManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -80,7 +79,7 @@ class QuoteLineTemplateTest extends TestCase
 
     public function test_luthier_catalog_adds_practical_defaults_without_overwriting_prices(): void
     {
-        $organization = Organization::factory()->create(['vertical_pack' => 'luthier']);
+        $organization = Organization::factory()->create();
 
         app(OrganizationContext::class)->run($organization, fn (): QuoteLineTemplate => QuoteLineTemplate::query()->create([
             'code' => 'REMECHAGE',
@@ -90,9 +89,8 @@ class QuoteLineTemplateTest extends TestCase
             'default_unit_amount' => 92,
         ]));
 
-        $created = app(LuthierQuoteLineTemplateCatalog::class)->seed($organization);
+        $organization->update(['vertical_pack' => 'luthier']);
 
-        $this->assertSame(8, $created);
         app(OrganizationContext::class)->run($organization, function (): void {
             $reméchage = QuoteLineTemplate::query()->where('code', 'REMECHAGE')->sole();
             $cordes = QuoteLineTemplate::query()->where('code', 'CORDES')->sole();
@@ -101,6 +99,7 @@ class QuoteLineTemplateTest extends TestCase
             $this->assertSame('92.00', $reméchage->default_unit_amount);
             $this->assertSame('product', $cordes->kind);
             $this->assertSame('0.00', $cordes->default_unit_amount);
+            $this->assertCount(9, QuoteLineTemplate::query()->get());
         });
     }
 }
