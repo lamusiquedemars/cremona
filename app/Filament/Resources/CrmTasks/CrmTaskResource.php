@@ -4,6 +4,7 @@ namespace App\Filament\Resources\CrmTasks;
 
 use App\Enums\CrmTaskPriority;
 use App\Enums\CrmTaskStatus;
+use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\CrmTasks\Pages\CreateCrmTask;
 use App\Filament\Resources\CrmTasks\Pages\EditCrmTask;
 use App\Filament\Resources\CrmTasks\Pages\ListCrmTasks;
@@ -34,6 +35,8 @@ use UnitEnum;
 
 class CrmTaskResource extends Resource
 {
+    use UsesOrganizationPresentation;
+
     protected static ?string $model = CrmTask::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCheckCircle;
@@ -41,6 +44,10 @@ class CrmTaskResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Relation client';
 
     protected static ?string $navigationLabel = 'Tâches';
+
+    protected static ?string $presentationKey = 'tasks';
+
+    protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'tâche';
 

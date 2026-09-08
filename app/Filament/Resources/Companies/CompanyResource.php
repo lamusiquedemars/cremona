@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Companies;
 
 use App\Enums\ContactMethodType;
+use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\RelationManagers\AppointmentsRelationManager;
 use App\Filament\RelationManagers\ConversationsRelationManager;
 use App\Filament\RelationManagers\NotesRelationManager;
@@ -37,6 +38,8 @@ use UnitEnum;
 
 class CompanyResource extends Resource
 {
+    use UsesOrganizationPresentation;
+
     protected static ?string $model = Company::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
@@ -44,6 +47,10 @@ class CompanyResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Relation client';
 
     protected static ?string $navigationLabel = 'Entreprises';
+
+    protected static ?string $presentationKey = 'companies';
+
+    protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'entreprise';
 

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Appointments;
 
 use App\Enums\AppointmentModality;
 use App\Enums\AppointmentStatus;
+use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Appointments\Pages\ListAppointments;
 use App\Filament\Resources\Appointments\Pages\ViewAppointment;
 use App\Filament\Resources\Companies\CompanyResource;
@@ -31,6 +32,8 @@ use UnitEnum;
 
 class AppointmentResource extends Resource
 {
+    use UsesOrganizationPresentation;
+
     protected static ?string $model = Appointment::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
@@ -38,6 +41,10 @@ class AppointmentResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Relation client';
 
     protected static ?string $navigationLabel = 'Rendez-vous';
+
+    protected static ?string $presentationKey = 'appointments';
+
+    protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'rendez-vous';
 

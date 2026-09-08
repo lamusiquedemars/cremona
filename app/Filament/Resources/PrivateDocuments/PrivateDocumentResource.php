@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PrivateDocuments;
 
+use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\PrivateDocuments\Pages\CreatePrivateDocument;
 use App\Filament\Resources\PrivateDocuments\Pages\EditPrivateDocument;
 use App\Filament\Resources\PrivateDocuments\Pages\ListPrivateDocuments;
@@ -31,6 +32,8 @@ use UnitEnum;
 
 class PrivateDocumentResource extends Resource
 {
+    use UsesOrganizationPresentation;
+
     protected static ?string $model = PrivateDocument::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolder;
@@ -38,6 +41,10 @@ class PrivateDocumentResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Relation client';
 
     protected static ?string $navigationLabel = 'Documents';
+
+    protected static ?string $presentationKey = 'documents';
+
+    protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'document privé';
 

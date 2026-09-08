@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\People;
 
 use App\Enums\ContactMethodType;
+use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\RelationManagers\AppointmentsRelationManager;
 use App\Filament\RelationManagers\ConversationsRelationManager;
 use App\Filament\RelationManagers\NotesRelationManager;
@@ -37,6 +38,8 @@ use UnitEnum;
 
 class PersonResource extends Resource
 {
+    use UsesOrganizationPresentation;
+
     protected static ?string $model = Person::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
@@ -44,6 +47,10 @@ class PersonResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Relation client';
 
     protected static ?string $navigationLabel = 'Contacts';
+
+    protected static ?string $presentationKey = 'contacts';
+
+    protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'contact';
 

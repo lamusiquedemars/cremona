@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Quotes;
 
 use App\Enums\QuoteStatus;
+use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Quotes\Pages\CreateQuote;
 use App\Filament\Resources\Quotes\Pages\EditQuote;
 use App\Filament\Resources\Quotes\Pages\ListQuotes;
@@ -30,9 +31,15 @@ use Filament\Tables\Table;
 
 class QuoteResource extends Resource
 {
+    use UsesOrganizationPresentation;
+
     protected static ?string $model = Quote::class;
 
     protected static ?string $navigationLabel = 'Devis';
+
+    protected static ?string $presentationKey = 'quotes';
+
+    protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'devis';
 

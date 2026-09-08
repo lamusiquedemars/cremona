@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Conversations;
 
 use App\Enums\ConversationStatus;
+use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Conversations\Pages\ListConversations;
 use App\Filament\Resources\Conversations\Pages\ViewConversation;
 use App\Models\Conversation;
@@ -23,6 +24,8 @@ use UnitEnum;
 
 class ConversationResource extends Resource
 {
+    use UsesOrganizationPresentation;
+
     protected static ?string $model = Conversation::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChatBubbleLeftRight;
@@ -30,6 +33,10 @@ class ConversationResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Relation client';
 
     protected static ?string $navigationLabel = 'Correspondances';
+
+    protected static ?string $presentationKey = 'conversations';
+
+    protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'conversation';
 

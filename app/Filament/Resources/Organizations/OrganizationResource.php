@@ -9,12 +9,13 @@ use App\Filament\Resources\Organizations\RelationManagers\MembersRelationManager
 use App\Filament\Resources\Organizations\RelationManagers\SitesRelationManager;
 use App\Models\Organization;
 use BackedEnum;
-use Filament\Actions\EditAction;
 use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -26,8 +27,11 @@ class OrganizationResource extends Resource
     protected static ?string $model = Organization::class;
 
     protected static bool $isScopedToTenant = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
+
     protected static string|UnitEnum|null $navigationGroup = 'Plateforme';
+
     protected static ?string $navigationLabel = 'Organisations';
 
     public static function shouldRegisterNavigation(): bool
@@ -49,6 +53,20 @@ class OrganizationResource extends Resource
                 ->searchable()
                 ->required()
                 ->helperText('Utilisé pour afficher les rendez-vous, synchronisations et résultats de cette organisation.'),
+            Section::make('Présentation métier')
+                ->description('Ces libellés adaptent l’interface sans modifier les données, les droits ni les intégrations.')
+                ->columns(3)
+                ->schema([
+                    TextInput::make('settings.presentation.labels.relation_client')->label('Groupe relation client')->maxLength(80),
+                    TextInput::make('settings.presentation.labels.contacts')->label('Contacts')->maxLength(80),
+                    TextInput::make('settings.presentation.labels.companies')->label('Entreprises')->maxLength(80),
+                    TextInput::make('settings.presentation.labels.requests')->label('Demandes')->maxLength(80),
+                    TextInput::make('settings.presentation.labels.conversations')->label('Correspondances')->maxLength(80),
+                    TextInput::make('settings.presentation.labels.tasks')->label('Tâches')->maxLength(80),
+                    TextInput::make('settings.presentation.labels.appointments')->label('Rendez-vous')->maxLength(80),
+                    TextInput::make('settings.presentation.labels.quotes')->label('Devis')->maxLength(80),
+                    TextInput::make('settings.presentation.labels.documents')->label('Documents')->maxLength(80),
+                ]),
         ]);
     }
 

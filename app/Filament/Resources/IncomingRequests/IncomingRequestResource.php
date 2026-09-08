@@ -4,6 +4,7 @@ namespace App\Filament\Resources\IncomingRequests;
 
 use App\Enums\IncomingRequestStatus;
 use App\Enums\IncomingRequestUrgency;
+use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\IncomingRequests\Pages\ListIncomingRequests;
 use App\Filament\Resources\IncomingRequests\Pages\ViewIncomingRequest;
@@ -27,6 +28,8 @@ use UnitEnum;
 
 class IncomingRequestResource extends Resource
 {
+    use UsesOrganizationPresentation;
+
     protected static ?string $model = IncomingRequest::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedInboxArrowDown;
@@ -34,6 +37,10 @@ class IncomingRequestResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Relation client';
 
     protected static ?string $navigationLabel = 'Demandes';
+
+    protected static ?string $presentationKey = 'requests';
+
+    protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'demande';
 
