@@ -29,4 +29,13 @@ class OrganizationPresentation
 
         return is_string($value) && trim($value) !== '' ? trim($value) : $fallback;
     }
+
+    public function isVisible(string $key): bool
+    {
+        if (! isset(self::KEYS[$key])) {
+            return true;
+        }
+
+        return app(OrganizationContext::class)->current()?->settings['presentation']['visible'][$key] !== false;
+    }
 }

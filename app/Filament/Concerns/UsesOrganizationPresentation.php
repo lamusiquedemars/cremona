@@ -20,4 +20,9 @@ trait UsesOrganizationPresentation
             ? app(OrganizationPresentation::class)->label(static::$presentationGroupKey ?? '', $group)
             : $group;
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return app(OrganizationPresentation::class)->isVisible(static::$presentationKey ?? '');
+    }
 }

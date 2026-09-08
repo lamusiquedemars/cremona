@@ -14,6 +14,7 @@ use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -66,6 +67,19 @@ class OrganizationResource extends Resource
                     TextInput::make('settings.presentation.labels.appointments')->label('Rendez-vous')->maxLength(80),
                     TextInput::make('settings.presentation.labels.quotes')->label('Devis')->maxLength(80),
                     TextInput::make('settings.presentation.labels.documents')->label('Documents')->maxLength(80),
+                    Section::make('Modules visibles dans le menu')
+                        ->columnSpanFull()
+                        ->columns(3)
+                        ->schema([
+                            Toggle::make('settings.presentation.visible.contacts')->label('Contacts')->default(true),
+                            Toggle::make('settings.presentation.visible.companies')->label('Entreprises')->default(true),
+                            Toggle::make('settings.presentation.visible.requests')->label('Demandes')->default(true),
+                            Toggle::make('settings.presentation.visible.conversations')->label('Correspondances')->default(true),
+                            Toggle::make('settings.presentation.visible.tasks')->label('Tâches')->default(true),
+                            Toggle::make('settings.presentation.visible.appointments')->label('Rendez-vous')->default(true),
+                            Toggle::make('settings.presentation.visible.quotes')->label('Devis')->default(true),
+                            Toggle::make('settings.presentation.visible.documents')->label('Documents')->default(true),
+                        ]),
                 ]),
         ]);
     }
