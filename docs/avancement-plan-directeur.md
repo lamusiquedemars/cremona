@@ -44,17 +44,20 @@
   est le pilote du futur pack Luthier propriétaire de son parc et de son stock.
 - Le contrat du bridge CMS ↔ Cremona est écrit : outbox, idempotence,
   authentification, reprise et bascule sans suppression des historiques.
+- Le bridge est livré sur le CMS instance : le mode connecté ne crée pas de
+  demande locale, tente la transmission immédiatement et conserve une outbox
+  chiffrée relançable par planificateur. Le pilote Atelier Ivo applique le même
+  principe en production.
 - Aucun catalogue universel n’a été ajouté au noyau.
 
-État : **cadrage en cours**.
+État : **bridge en cours de validation ; cadrage métier en cours**.
 
 ## Reste à faire prioritaire
 
-1. Implémenter et tester le premier lot du bridge CMS ↔ Cremona avec deux
-   organisations, dont un formulaire site, sans fuite
-   de données ni doublon sur reprise.
-2. Basculer le traitement des demandes d’Atelier Ivo, sans supprimer Arcus ni
-   les historiques locaux avant vérification.
+1. Vérifier le bridge CMS ↔ Cremona avec deux organisations et une soumission
+   réelle, sans fuite ni doublon sur reprise.
+2. Finaliser la bascule fonctionnelle Atelier Ivo, sans supprimer Arcus ni les
+   historiques locaux avant vérification.
 3. Cadrer le socle commercial de Cremona : bibliothèque de lignes de devis,
    références externes et statut Pennylane.
 4. Modéliser le pack Luthier pour Contempo avant tout import Dynamics ou stock.

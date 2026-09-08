@@ -13,12 +13,14 @@ Cremona, sans transformer le CMS en second CRM.
 
 | Application | État actuel | Écart à combler |
 | --- | --- | --- |
-| Atelier Ivo | Le formulaire crée une `ContactSubmission`, puis appelle déjà `POST /api/v1/incoming-requests` avec un jeton et une clé d'idempotence | l'appel est synchrone et sans reprise ; le stockage local reste la file de travail de secours |
-| Contempo | `ContactForm` enregistre une `Inquiry` locale si ce module est actif | aucun connecteur Cremona ni reprise fiable |
-| Cremona | L'API `POST /api/v1/incoming-requests` est authentifiée par intégration, isolée par organisation et idempotente | la liaison entre le jeton et le `site_reference` doit être contrôlée ; l'API ne reçoit pas encore une outbox CMS générique |
+| Atelier Ivo | Le formulaire crée une `ContactSubmission`, une livraison chiffrée puis tente immédiatement `POST /api/v1/incoming-requests` | les indisponibilités temporaires restent locales et sont relancées par `cremona:retry-deliveries` |
+| CMS instance (Starter) | Le mode connecté crée une livraison chiffrée sans `Inquiry` locale et tente immédiatement l'API | les indisponibilités temporaires sont relancées par `acquisition:retry-deliveries` ; le lien d'accès à la gestion reste à ajouter |
+| Contempo | `ContactForm` enregistre encore une `Inquiry` locale | activer le bridge CMS après le cadrage du pack Luthier et la reprise contrôlée des historiques |
+| Cremona | L'API `POST /api/v1/incoming-requests` est authentifiée par intégration, isolée par organisation, idempotente et restreint les références de site autorisées | exposer l'identifiant distant et l'état de réception utile au bridge |
 
-Le point de départ est donc réutilisable, mais ce n'est pas encore un bridge
-installable ni suffisamment fiable pour devenir le seul flux métier.
+Le premier flux est désormais réutilisable sur une instance CMS. Le contrat
+reste à achever sur l'observabilité de l'outbox, le lien de gestion et la
+vérification réelle entre deux organisations.
 
 ## 2. Responsabilité du bridge
 
