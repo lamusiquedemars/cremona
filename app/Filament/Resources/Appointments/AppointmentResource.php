@@ -11,6 +11,7 @@ use App\Filament\Resources\Companies\CompanyResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use App\Filament\Resources\People\PersonResource;
 use App\Models\Appointment;
+use App\Services\OrganizationPresentation;
 use App\Tenancy\OrganizationContext;
 use BackedEnum;
 use Filament\Actions\ViewAction;
@@ -85,7 +86,7 @@ class AppointmentResource extends Resource
         return $schema
             ->columns(3)
             ->components([
-                Section::make('Rendez-vous')
+                Section::make(fn (): string => app(OrganizationPresentation::class)->label('appointments', 'Rendez-vous'))
                     ->columnSpan(2)
                     ->schema([
                         TextInput::make('title')
@@ -197,7 +198,7 @@ class AppointmentResource extends Resource
         return $schema
             ->columns(3)
             ->components([
-                Section::make('Rendez-vous')->columnSpan(2)->schema([
+                Section::make(fn (): string => app(OrganizationPresentation::class)->label('appointments', 'Rendez-vous'))->columnSpan(2)->schema([
                     TextEntry::make('title')->label('Objet')->weight('semibold')->size('lg'),
                     TextEntry::make('description')->label('Informations internes')->placeholder('—'),
                     Grid::make(2)->schema([

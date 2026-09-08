@@ -14,6 +14,7 @@ use App\Filament\Resources\People\Pages\ViewPerson;
 use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
 use App\Filament\Resources\People\RelationManagers\IncomingRequestsRelationManager;
 use App\Models\Person;
+use App\Services\OrganizationPresentation;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -163,7 +164,7 @@ class PersonResource extends Resource
         return $schema
             ->columns(3)
             ->components([
-                Section::make('Contact')
+                Section::make(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))
                     ->columnSpan(2)
                     ->schema([
                         TextEntry::make('display_name')

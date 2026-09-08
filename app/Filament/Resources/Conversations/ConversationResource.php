@@ -7,6 +7,7 @@ use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Conversations\Pages\ListConversations;
 use App\Filament\Resources\Conversations\Pages\ViewConversation;
 use App\Models\Conversation;
+use App\Services\OrganizationPresentation;
 use App\Support\TechnicalEmailNotification;
 use BackedEnum;
 use Filament\Actions\ViewAction;
@@ -62,9 +63,9 @@ class ConversationResource extends Resource
         return $schema->columns(3)->components([
             Section::make('Contexte CRM')->columnSpan(2)->schema([
                 TextEntry::make('subject')->label('Objet')->placeholder('Sans objet')->weight('semibold'),
-                TextEntry::make('person.display_name')->label('Contact')->placeholder('Non rattaché'),
-                TextEntry::make('company.name')->label('Entreprise')->placeholder('—'),
-                TextEntry::make('incomingRequest.subject')->label('Demande liée')->placeholder('—'),
+                TextEntry::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder('Non rattaché'),
+                TextEntry::make('company.name')->label(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))->placeholder('—'),
+                TextEntry::make('incomingRequest.subject')->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))->placeholder('—'),
             ]),
             Section::make('Suivi')->columnSpan(1)->schema([
                 TextEntry::make('status')->label('Statut')->badge(),
@@ -89,8 +90,8 @@ class ConversationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('last_message_at', 'desc')->columns([
-            TextColumn::make('subject')->label('Conversation')->placeholder('Sans objet')->searchable()->weight('medium'),
-            TextColumn::make('person.display_name')->label('Contact')->placeholder('Non rattaché')->searchable(),
+            TextColumn::make('subject')->label(fn (): string => app(OrganizationPresentation::class)->label('conversations', 'Correspondance'))->placeholder('Sans objet')->searchable()->weight('medium'),
+            TextColumn::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder('Non rattaché')->searchable(),
             TextColumn::make('status')->label('Statut')->badge()->sortable(),
             TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
             TextColumn::make('last_message_at')->label('Dernier message')->dateTime('d/m/Y H:i')->sortable(),

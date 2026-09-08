@@ -107,7 +107,7 @@ class CrmTaskResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make('Tâche')->columnSpan(2)->schema([
+            Section::make(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâche'))->columnSpan(2)->schema([
                 TextEntry::make('title')->label('À faire')->weight('semibold')->size('lg'),
                 TextEntry::make('description')->label('Précisions internes')->placeholder('—')->columnSpanFull(),
             ]),
@@ -119,10 +119,10 @@ class CrmTaskResource extends Resource
                 TextEntry::make('completed_at')->label('Terminée le')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder('—'),
             ]),
             Section::make('Rattachements')->columnSpanFull()->columns(4)->schema([
-                TextEntry::make('person.display_name')->label('Contact')->placeholder('—'),
-                TextEntry::make('company.name')->label('Entreprise')->placeholder('—'),
-                TextEntry::make('incomingRequest.subject')->label('Demande')->placeholder('—'),
-                TextEntry::make('conversation.subject')->label('Correspondance')->placeholder('—'),
+                TextEntry::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder('—'),
+                TextEntry::make('company.name')->label(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))->placeholder('—'),
+                TextEntry::make('incomingRequest.subject')->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))->placeholder('—'),
+                TextEntry::make('conversation.subject')->label(fn (): string => app(OrganizationPresentation::class)->label('conversations', 'Correspondance'))->placeholder('—'),
             ]),
         ]);
     }
@@ -130,7 +130,7 @@ class CrmTaskResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('due_at')->columns([
-            TextColumn::make('title')->label('Tâche')->searchable()->weight('medium')->wrap(),
+            TextColumn::make('title')->label(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâche'))->searchable()->weight('medium')->wrap(),
             TextColumn::make('status')->label('Statut')->badge()->sortable(),
             TextColumn::make('priority')->label('Priorité')->badge()->sortable(),
             TextColumn::make('due_at')->label('Échéance')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->sortable()->placeholder('—'),
@@ -138,7 +138,7 @@ class CrmTaskResource extends Resource
         ])->filters([
             SelectFilter::make('status')->label('Statut')->options(CrmTaskStatus::class),
             SelectFilter::make('priority')->label('Priorité')->options(CrmTaskPriority::class),
-        ])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => 'Nouvelle '.mb_strtolower(app(OrganizationPresentation::class)->label('tasks', 'tâche')))]);
+        ])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('tasks', 'Tâche'))]);
     }
 
     public static function getPages(): array

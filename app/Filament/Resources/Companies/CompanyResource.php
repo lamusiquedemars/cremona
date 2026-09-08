@@ -14,6 +14,7 @@ use App\Filament\Resources\Companies\Pages\ViewCompany;
 use App\Filament\Resources\Companies\RelationManagers\IncomingRequestsRelationManager;
 use App\Filament\Resources\Companies\RelationManagers\PeopleRelationManager;
 use App\Models\Company;
+use App\Services\OrganizationPresentation;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -95,7 +96,7 @@ class CompanyResource extends Resource
         return $schema
             ->columns(3)
             ->components([
-                Section::make('Entreprise')
+                Section::make(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))
                     ->columnSpan(2)
                     ->schema([
                         Grid::make(2)->schema([
@@ -157,7 +158,7 @@ class CompanyResource extends Resource
         return $schema
             ->columns(3)
             ->components([
-                Section::make('Entreprise')
+                Section::make(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))
                     ->columnSpan(2)
                     ->schema([
                         TextEntry::make('name')

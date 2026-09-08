@@ -9,6 +9,7 @@ use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\IncomingRequests\Pages\ListIncomingRequests;
 use App\Filament\Resources\IncomingRequests\Pages\ViewIncomingRequest;
 use App\Models\IncomingRequest;
+use App\Services\OrganizationPresentation;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -101,7 +102,7 @@ class IncomingRequestResource extends Resource
         return $schema
             ->columns(3)
             ->components([
-                Section::make('Demande reçue')
+                Section::make(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))
                     ->columnSpan(2)
                     ->schema([
                         TextEntry::make('subject')
@@ -144,10 +145,10 @@ class IncomingRequestResource extends Resource
                     ->columnSpan(1)
                     ->schema([
                         TextEntry::make('person.display_name')
-                            ->label('Contact')
+                            ->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))
                             ->placeholder('Non rattaché'),
                         TextEntry::make('company.name')
-                            ->label('Entreprise')
+                            ->label(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))
                             ->placeholder('Non rattachée'),
                         TextEntry::make('source')
                             ->label('Origine')
@@ -156,7 +157,7 @@ class IncomingRequestResource extends Resource
                             ->label('Canal')
                             ->badge(),
                         TextEntry::make('conversation.public_id')
-                            ->label('Correspondance')
+                            ->label(fn (): string => app(OrganizationPresentation::class)->label('conversations', 'Correspondance'))
                             ->formatStateUsing(fn (): string => 'Ouvrir le fil')
                             ->url(fn (IncomingRequest $record): ?string => $record->conversation
                                 ? ConversationResource::getUrl('view', ['record' => $record->conversation])
@@ -267,13 +268,13 @@ class IncomingRequestResource extends Resource
             ->defaultSort('received_at', 'desc')
             ->columns([
                 TextColumn::make('name_snapshot')
-                    ->label('Contact')
+                    ->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))
                     ->description(fn (IncomingRequest $record): ?string => $record->email_snapshot ?? $record->phone_snapshot)
                     ->placeholder('Anonyme')
                     ->searchable(['name_snapshot', 'email_snapshot', 'phone_snapshot'])
                     ->weight('medium'),
                 TextColumn::make('subject')
-                    ->label('Demande')
+                    ->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))
                     ->description(fn (IncomingRequest $record): string => str($record->message)->squish()->limit(70))
                     ->placeholder('Sans objet')
                     ->searchable(['subject', 'message'])

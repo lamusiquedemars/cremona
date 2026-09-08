@@ -92,7 +92,7 @@ class QuoteResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->defaultSort('created_at', 'desc')->columns([TextColumn::make('reference')->label('Référence')->searchable(), TextColumn::make('title')->label('Objet')->searchable()->wrap(), TextColumn::make('status')->label('Statut')->badge(), TextColumn::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)->sortable(), TextColumn::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')])->filters([SelectFilter::make('status')->options(QuoteStatus::class)])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => 'Nouveau '.mb_strtolower(app(OrganizationPresentation::class)->label('quotes', 'devis')))]);
+        return $table->defaultSort('created_at', 'desc')->columns([TextColumn::make('reference')->label('Référence')->searchable(), TextColumn::make('title')->label('Objet')->searchable()->wrap(), TextColumn::make('status')->label('Statut')->badge(), TextColumn::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)->sortable(), TextColumn::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')])->filters([SelectFilter::make('status')->options(QuoteStatus::class)])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('quotes', 'Devis'))]);
     }
 
     public static function getPages(): array

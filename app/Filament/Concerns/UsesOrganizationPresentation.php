@@ -9,7 +9,17 @@ trait UsesOrganizationPresentation
 {
     public static function getNavigationLabel(): string
     {
-        return app(OrganizationPresentation::class)->label(static::$presentationKey ?? '', static::$navigationLabel ?? static::getModelLabel());
+        return app(OrganizationPresentation::class)->label(static::$presentationKey ?? '', static::$navigationLabel ?? parent::getNavigationLabel());
+    }
+
+    public static function getModelLabel(): string
+    {
+        return app(OrganizationPresentation::class)->label(static::$presentationKey ?? '', static::$modelLabel ?? parent::getModelLabel());
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return app(OrganizationPresentation::class)->label(static::$presentationKey ?? '', static::$pluralModelLabel ?? parent::getPluralModelLabel());
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null
@@ -23,6 +33,7 @@ trait UsesOrganizationPresentation
 
     public static function shouldRegisterNavigation(): bool
     {
-        return app(OrganizationPresentation::class)->isVisible(static::$presentationKey ?? '');
+        return parent::shouldRegisterNavigation()
+            && app(OrganizationPresentation::class)->isVisible(static::$presentationKey ?? '');
     }
 }

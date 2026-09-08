@@ -38,4 +38,9 @@ class OrganizationPresentation
 
         return data_get(app(OrganizationContext::class)->current()?->settings ?? [], "presentation.visible.{$key}", true) !== false;
     }
+
+    public function createActionLabel(string $key, string $fallback): string
+    {
+        return 'Créer : '.$this->label($key, $fallback);
+    }
 }

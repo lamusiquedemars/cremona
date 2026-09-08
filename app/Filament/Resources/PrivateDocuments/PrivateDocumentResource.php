@@ -14,6 +14,7 @@ use App\Models\CrmTask;
 use App\Models\IncomingRequest;
 use App\Models\Person;
 use App\Models\PrivateDocument;
+use App\Services\OrganizationPresentation;
 use BackedEnum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
@@ -57,7 +58,7 @@ class PrivateDocumentResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(2)->components([
-            Section::make('Document')->columnSpan(1)->schema([
+            Section::make(fn (): string => app(OrganizationPresentation::class)->label('documents', 'Document'))->columnSpan(1)->schema([
                 FileUpload::make('file')
                     ->label('Fichier')
                     ->storeFiles(false)
@@ -72,12 +73,12 @@ class PrivateDocumentResource extends Resource
                 TextInput::make('category')->label('Catégorie')->maxLength(100),
             ]),
             Section::make('Rattachements facultatifs')->columnSpan(1)->schema([
-                Select::make('person_ids')->label('Contacts')->multiple()->options(fn (): array => Person::query()->orderBy('display_name')->pluck('display_name', 'id')->all())->searchable(),
-                Select::make('company_ids')->label('Entreprises')->multiple()->options(fn (): array => Company::query()->orderBy('name')->pluck('name', 'id')->all())->searchable(),
-                Select::make('incoming_request_ids')->label('Demandes')->multiple()->options(fn (): array => IncomingRequest::query()->orderByDesc('created_at')->limit(100)->get()->mapWithKeys(fn (IncomingRequest $request): array => [$request->getKey() => $request->subject ?: 'Demande sans objet'])->all())->searchable(),
-                Select::make('conversation_ids')->label('Correspondances')->multiple()->options(fn (): array => Conversation::query()->orderByDesc('last_message_at')->limit(100)->get()->mapWithKeys(fn (Conversation $conversation): array => [$conversation->getKey() => $conversation->subject ?: 'Correspondance sans objet'])->all())->searchable(),
-                Select::make('crm_task_ids')->label('Tâches')->multiple()->options(fn (): array => CrmTask::query()->orderByDesc('created_at')->limit(100)->pluck('title', 'id')->all())->searchable(),
-                Select::make('appointment_ids')->label('Rendez-vous')->multiple()->options(fn (): array => Appointment::query()->orderByDesc('starts_at')->limit(100)->get()->mapWithKeys(fn (Appointment $appointment): array => [$appointment->getKey() => $appointment->title.' — '.$appointment->starts_at->format('d/m/Y H:i')])->all())->searchable(),
+                Select::make('person_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contacts'))->multiple()->options(fn (): array => Person::query()->orderBy('display_name')->pluck('display_name', 'id')->all())->searchable(),
+                Select::make('company_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprises'))->multiple()->options(fn (): array => Company::query()->orderBy('name')->pluck('name', 'id')->all())->searchable(),
+                Select::make('incoming_request_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demandes'))->multiple()->options(fn (): array => IncomingRequest::query()->orderByDesc('created_at')->limit(100)->get()->mapWithKeys(fn (IncomingRequest $request): array => [$request->getKey() => $request->subject ?: 'Demande sans objet'])->all())->searchable(),
+                Select::make('conversation_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('conversations', 'Correspondances'))->multiple()->options(fn (): array => Conversation::query()->orderByDesc('last_message_at')->limit(100)->get()->mapWithKeys(fn (Conversation $conversation): array => [$conversation->getKey() => $conversation->subject ?: 'Correspondance sans objet'])->all())->searchable(),
+                Select::make('crm_task_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâches'))->multiple()->options(fn (): array => CrmTask::query()->orderByDesc('created_at')->limit(100)->pluck('title', 'id')->all())->searchable(),
+                Select::make('appointment_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('appointments', 'Rendez-vous'))->multiple()->options(fn (): array => Appointment::query()->orderByDesc('starts_at')->limit(100)->get()->mapWithKeys(fn (Appointment $appointment): array => [$appointment->getKey() => $appointment->title.' — '.$appointment->starts_at->format('d/m/Y H:i')])->all())->searchable(),
             ]),
         ]);
     }
@@ -85,7 +86,7 @@ class PrivateDocumentResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(2)->components([
-            Section::make('Document')->columnSpan(1)->schema([
+            Section::make(fn (): string => app(OrganizationPresentation::class)->label('documents', 'Document'))->columnSpan(1)->schema([
                 TextEntry::make('original_name')->label('Fichier')->weight('semibold'),
                 TextEntry::make('title')->label('Intitulé interne')->placeholder('—'),
                 TextEntry::make('category')->label('Catégorie')->placeholder('—'),
@@ -110,7 +111,7 @@ class PrivateDocumentResource extends Resource
             TextColumn::make('version_number')->label('Version')->formatStateUsing(fn (int $state): string => 'v'.$state),
             TextColumn::make('created_at')->label('Déposé le')->dateTime('d/m/Y H:i')->sortable(),
         ])->recordActions([ViewAction::make(), EditAction::make()])
-            ->headerActions([CreateAction::make()->label('Déposer un document')]);
+            ->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('documents', 'Document'))]);
     }
 
     public static function getPages(): array
