@@ -23,15 +23,15 @@ class QuoteLineTemplateResource extends Resource
 {
     protected static ?string $model = QuoteLineTemplate::class;
 
-    protected static ?string $navigationLabel = 'Modèles de lignes';
+    protected static ?string $navigationLabel = 'Modèles commerciaux';
 
     protected static ?string $modelLabel = 'modèle de ligne';
 
-    protected static ?string $pluralModelLabel = 'modèles de lignes';
+    protected static ?string $pluralModelLabel = 'modèles commerciaux';
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Relation client';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?int $navigationSort = 65;
 
