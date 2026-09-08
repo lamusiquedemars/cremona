@@ -8,16 +8,25 @@ use Illuminate\Console\Command;
 
 class SeedLuthierQuoteLineTemplates extends Command
 {
-    protected $signature = 'cremona:seed-luthier-quote-lines {organization : Slug de l’organisation Luthier}';
+    protected $signature = 'cremona:seed-luthier-quote-lines {organization? : Slug d’une organisation Luthier précise}';
 
     protected $description = 'Ajoute les lignes de devis Luthier initiales sans écraser les réglages existants.';
 
     public function handle(LuthierQuoteLineTemplateCatalog $catalog): int
     {
-        $organization = Organization::query()->where('slug', $this->argument('organization'))->firstOrFail();
-        $created = $catalog->seed($organization);
+        $organizations = filled($this->argument('organization'))
+            ? Organization::query()->where('slug', $this->argument('organization'))->get()
+            : Organization::query()->where('vertical_pack', 'luthier')->get();
 
-        $this->info("{$created} ligne(s) de devis ajoutée(s) ; les lignes déjà présentes sont conservées.");
+        if ($organizations->isEmpty()) {
+            $this->components->warn('Aucune organisation Luthier à amorcer.');
+
+            return self::SUCCESS;
+        }
+
+        $created = $organizations->sum(fn (Organization $organization): int => $catalog->seed($organization));
+
+        $this->info("{$created} ligne(s) de devis ajoutée(s) pour {$organizations->count()} organisation(s) ; les lignes déjà présentes sont conservées.");
 
         return self::SUCCESS;
     }
