@@ -55,6 +55,7 @@ class OrganizationResource extends Resource
                 ->helperText('Utilisé pour afficher les rendez-vous, synchronisations et résultats de cette organisation.'),
             Section::make('Présentation métier')
                 ->description('Ces libellés adaptent l’interface sans modifier les données, les droits ni les intégrations.')
+                ->columnSpanFull()
                 ->columns(3)
                 ->schema([
                     TextInput::make('settings.presentation.labels.relation_client')->label('Groupe relation client')->maxLength(80),
@@ -87,7 +88,7 @@ class OrganizationResource extends Resource
     {
         return $table->columns([
             TextColumn::make('name')->label('Organisation')->searchable()->sortable()
-                ->url(fn (Organization $record): string => static::getUrl('edit', ['record' => $record])),
+                ->url(fn (Organization $record): string => '/dashboard/'.$record->slug),
             TextColumn::make('vertical_pack')->label('Activité')->placeholder('—'),
             TextColumn::make('status')->label('Statut')->badge(),
             TextColumn::make('users_count')->label('Membres')->counts('users'),
