@@ -18,9 +18,9 @@
 
 - Lot B1 livré en production par le commit `dfb2183` : synthèse des demandes, correspondances, tâches, rendez-vous, devis et campagnes.
 - Les calculs du jour utilisent le fuseau de l’organisation.
-- Les chiffres locaux indiquent Cremona comme source et l’heure d’observation ; les campagnes indiquent la dernière synchronisation Google Ads.
+- Les cartes locales indiquent directement la file qu’elles ouvrent, sans répéter l’heure d’accès ni le fuseau ; les campagnes indiquent la dernière synchronisation Google Ads.
 - Chaque indicateur ouvre une file filtrée correspondant au contexte.
-- Lot B2 en cours : rendre les files détaillées explicitement actionnables et distinguer action et information.
+- Lot B2 livré : les listes détaillées restent entièrement cliquables et leurs descriptions indiquent naturellement ce qu’elles contiennent.
 
 État : **en cours**.
 

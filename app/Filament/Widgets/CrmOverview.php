@@ -100,39 +100,38 @@ class CrmOverview extends StatsOverviewWidget
         $lastCampaignSync = Campaign::query()
             ->where('channel', 'google_ads')
             ->max('google_ads_synced_at');
-        $localSource = 'Cremona · '.$now->format('H:i').' · '.$timezone;
         $campaignSource = $lastCampaignSync === null
             ? 'Google Ads · jamais synchronisé'
             : 'Google Ads · synchro '.Carbon::parse($lastCampaignSync)->setTimezone($timezone)->format('d/m H:i');
 
         return [
             Stat::make('Nouvelles demandes', $new)
-                ->description("{$unread} non lue".($unread > 1 ? 's' : '')." · {$localSource}")
+                ->description("{$unread} non lue".($unread > 1 ? 's' : '').' · Voir les demandes')
                 ->descriptionIcon(Heroicon::OutlinedEnvelopeOpen)
                 ->color($new > 0 ? 'info' : 'gray')
                 ->url(IncomingRequestResource::getUrl('index', ['tab' => 'new'])),
             Stat::make('Correspondances à traiter', $conversations)
-                ->description("Dernier message reçu · {$localSource}")
+                ->description('Dernier message reçu · Voir les correspondances')
                 ->descriptionIcon(Heroicon::OutlinedChatBubbleLeftRight)
                 ->color($conversations > 0 ? 'warning' : 'gray')
                 ->url(ConversationResource::getUrl('index', ['tab' => 'open'])),
             Stat::make('Tâches à échéance', $tasksDue)
-                ->description("{$overdueTasks} en retard · {$localSource}")
+                ->description("{$overdueTasks} en retard · Voir les tâches")
                 ->descriptionIcon(Heroicon::OutlinedCheckCircle)
                 ->color($overdueTasks > 0 ? 'danger' : ($tasksDue > 0 ? 'warning' : 'gray'))
                 ->url(CrmTaskResource::getUrl('index', ['tab' => 'due'])),
             Stat::make('Rendez-vous aujourd’hui', $appointmentsToday)
-                ->description("À venir · {$localSource}")
+                ->description('À venir · Voir les rendez-vous')
                 ->descriptionIcon(Heroicon::OutlinedCalendarDays)
                 ->color($appointmentsToday > 0 ? 'info' : 'gray')
                 ->url(AppointmentResource::getUrl('index', ['tab' => 'today'])),
             Stat::make('Devis à suivre', $quotesToFollow)
-                ->description("{$expiredQuotes} hors validité · {$localSource}")
+                ->description("{$expiredQuotes} hors validité · Voir les devis")
                 ->descriptionIcon(Heroicon::OutlinedDocumentCurrencyEuro)
                 ->color($expiredQuotes > 0 ? 'danger' : ($quotesToFollow > 0 ? 'warning' : 'gray'))
                 ->url(QuoteResource::getUrl('index', ['tab' => 'follow_up'])),
             Stat::make('Campagnes à vérifier', $campaignsToCheck)
-                ->description($campaignSource)
+                ->description($campaignSource.' · Voir les campagnes')
                 ->descriptionIcon(Heroicon::OutlinedMegaphone)
                 ->color($campaignsToCheck > 0 ? 'warning' : 'gray')
                 ->url(CampaignResource::getUrl('index', ['tab' => 'attention'])),
