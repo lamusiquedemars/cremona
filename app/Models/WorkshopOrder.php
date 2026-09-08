@@ -7,6 +7,7 @@ use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -51,6 +52,11 @@ class WorkshopOrder extends Model
     public function incomingRequest(): BelongsTo
     {
         return $this->belongsTo(IncomingRequest::class);
+    }
+
+    public function services(): HasMany
+    {
+        return $this->hasMany(WorkshopOrderService::class);
     }
 
     public function getRouteKeyName(): string

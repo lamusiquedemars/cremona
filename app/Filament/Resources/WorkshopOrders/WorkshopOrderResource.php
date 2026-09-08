@@ -11,7 +11,9 @@ use App\Models\IncomingRequest;
 use App\Models\WorkshopOrder;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -51,6 +53,14 @@ class WorkshopOrderResource extends Resource
                 Textarea::make('instrument_description')->label('Instrument confié')->rows(3)->columnSpan(6),
                 Textarea::make('customer_instructions')->label('Demande du client')->rows(3)->columnSpan(6),
                 Textarea::make('diagnosis')->label('Diagnostic atelier')->rows(4)->columnSpanFull(),
+                Repeater::make('services')->label('Prestations prévues')->relationship()->schema([
+                    Select::make('service_definition_id')->label('Prestation')->relationship('definition', 'name')->searchable(),
+                    TextInput::make('label_snapshot')->label('Intitulé')->required(),
+                    Textarea::make('description_snapshot')->label('Description')->rows(2),
+                    TextInput::make('quantity')->label('Quantité')->numeric()->default(1),
+                    TextInput::make('unit_amount')->label('Prix HT')->numeric()->prefix('€')->default(0),
+                    Checkbox::make('include_in_quote')->label('À ajouter au devis'),
+                ])->columns(3)->columnSpanFull(),
                 DateTimePicker::make('received_at')->label('Reçu le')->seconds(false)->columnSpan(3),
                 DateTimePicker::make('due_at')->label('Échéance prévue')->seconds(false)->columnSpan(3),
                 DateTimePicker::make('ready_at')->label('Prêt le')->seconds(false)->columnSpan(3),
