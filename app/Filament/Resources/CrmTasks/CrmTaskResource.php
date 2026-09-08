@@ -12,6 +12,7 @@ use App\Filament\Resources\CrmTasks\Pages\ViewCrmTask;
 use App\Models\Conversation;
 use App\Models\CrmTask;
 use App\Models\IncomingRequest;
+use App\Services\OrganizationPresentation;
 use App\Tenancy\OrganizationContext;
 use BackedEnum;
 use Filament\Actions\CreateAction;
@@ -65,7 +66,7 @@ class CrmTaskResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make('Tâche')->columnSpan(2)->schema([
+            Section::make(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâches'))->columnSpan(2)->schema([
                 TextInput::make('title')->label('À faire')->required()->maxLength(255),
                 Textarea::make('description')->label('Précisions internes')->rows(5)->maxLength(5000),
                 Grid::make(2)->schema([
@@ -137,7 +138,7 @@ class CrmTaskResource extends Resource
         ])->filters([
             SelectFilter::make('status')->label('Statut')->options(CrmTaskStatus::class),
             SelectFilter::make('priority')->label('Priorité')->options(CrmTaskPriority::class),
-        ])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle tâche')]);
+        ])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => 'Nouvelle '.mb_strtolower(app(OrganizationPresentation::class)->label('tasks', 'tâche')))]);
     }
 
     public static function getPages(): array

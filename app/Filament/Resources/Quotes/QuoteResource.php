@@ -11,6 +11,7 @@ use App\Filament\Resources\Quotes\Pages\ViewQuote;
 use App\Models\IncomingRequest;
 use App\Models\Quote;
 use App\Models\QuoteLine;
+use App\Services\OrganizationPresentation;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -54,7 +55,7 @@ class QuoteResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make('Proposition')->columnSpan(2)->schema([
+            Section::make(fn (): string => app(OrganizationPresentation::class)->label('quotes', 'Devis'))->columnSpan(2)->schema([
                 TextInput::make('reference')->label('Référence')->required()->maxLength(80),
                 TextInput::make('title')->label('Objet')->required()->maxLength(255),
                 Textarea::make('introduction')->label('Introduction')->rows(3),
@@ -91,7 +92,7 @@ class QuoteResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->defaultSort('created_at', 'desc')->columns([TextColumn::make('reference')->label('Référence')->searchable(), TextColumn::make('title')->label('Objet')->searchable()->wrap(), TextColumn::make('status')->label('Statut')->badge(), TextColumn::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)->sortable(), TextColumn::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')])->filters([SelectFilter::make('status')->options(QuoteStatus::class)])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label('Nouveau devis')]);
+        return $table->defaultSort('created_at', 'desc')->columns([TextColumn::make('reference')->label('Référence')->searchable(), TextColumn::make('title')->label('Objet')->searchable()->wrap(), TextColumn::make('status')->label('Statut')->badge(), TextColumn::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)->sortable(), TextColumn::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')])->filters([SelectFilter::make('status')->options(QuoteStatus::class)])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => 'Nouveau '.mb_strtolower(app(OrganizationPresentation::class)->label('quotes', 'devis')))]);
     }
 
     public static function getPages(): array
