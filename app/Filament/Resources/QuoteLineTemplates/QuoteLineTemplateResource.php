@@ -16,8 +16,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 
 class QuoteLineTemplateResource extends Resource
@@ -39,20 +39,20 @@ class QuoteLineTemplateResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(12)->components([
-            Section::make('Ligne prête à ajouter à un devis')
-                ->description('Elle préremplit le libellé, le texte et le tarif. Elle ne crée ni un produit, ni une prestation d’atelier : ces objets viendront dans le pack métier.')
+            Section::make('Ligne de devis enregistrée')
+                ->description('Cette ligne préremplit l’intitulé, la description et le tarif lors de son ajout à un devis.')
                 ->columns(12)
                 ->columnSpanFull()
                 ->schema([
                     TextInput::make('label')
-                        ->label('Nom affiché dans le devis')
+                        ->label('Intitulé')
                         ->placeholder('Ex. Reméchage d’archet')
-                        ->helperText('Le titre court que tu retrouves quand tu ajoutes cette ligne.')
+                        ->helperText('Exemple : Reméchage d’archet.')
                         ->required()
                         ->maxLength(255)
                         ->columnSpan(6),
                     Select::make('kind')
-                        ->label('De quoi s’agit-il ?')
+                        ->label('Type de ligne')
                         ->options([
                             'service' => 'Prestation : travail réalisé',
                             'product' => 'Produit : article vendu',
@@ -62,14 +62,14 @@ class QuoteLineTemplateResource extends Resource
                         ->required()
                         ->columnSpan(3),
                     Checkbox::make('is_active')
-                        ->label('Disponible lors de la création d’un devis')
+                        ->label('Ligne active')
                         ->helperText('Désactivez cette ligne pour la retirer de la sélection, sans modifier les devis existants.')
                         ->default(true)
                         ->columnSpan(3),
                     Textarea::make('description')
-                        ->label('Texte détaillé repris dans le devis')
+                        ->label('Description par défaut, modifiable pour chaque devis')
                         ->placeholder('Ex. Fourniture du chevalet, taille, ajustement et pose.')
-                        ->helperText('Le texte est repris lors de l’ajout au devis. Une modification du devis n’altère pas cette ligne enregistrée.')
+                        ->helperText('Elle est copiée dans le devis au moment de l’ajout.')
                         ->required()
                         ->rows(4)
                         ->columnSpanFull(),
@@ -100,13 +100,13 @@ class QuoteLineTemplateResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('label')->columns([
-            TextColumn::make('label')->label('Libellé')->searchable(),
+            TextColumn::make('label')->label('Intitulé')->searchable(),
             TextColumn::make('kind')->label('Type')->badge()->formatStateUsing(fn (string $state): string => match ($state) {
                 'service' => 'Prestation', 'product' => 'Produit', 'rental' => 'Location', 'fee' => 'Frais', default => $state,
             }),
-            TextColumn::make('description')->label('Texte proposé')->limit(70)->tooltip(fn (QuoteLineTemplate $record): string => $record->description),
+            TextColumn::make('description')->label('Description')->limit(70)->tooltip(fn (QuoteLineTemplate $record): string => $record->description),
             TextColumn::make('default_unit_amount')->label('Prix HT')->money('EUR')->sortable(),
-            IconColumn::make('is_active')->label('Actif')->boolean(),
+            ToggleColumn::make('is_active')->label('Ligne active'),
         ])->recordActions([EditAction::make()])->headerActions([CreateAction::make()]);
     }
 
