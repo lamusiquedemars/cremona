@@ -121,7 +121,8 @@ départ : activation explicite, contrôle des prérequis, migrations et tests.
 
 ## 7. Ordre de réalisation
 
-1. Écrire les contrats du bridge CMS ↔ Cremona et les scénarios de reprise.
+1. Écrire les contrats du bridge CMS ↔ Cremona et les scénarios de reprise :
+   [contrat du bridge](contrat-bridge-cms-cremona.md).
 2. Livrer le bridge sur un site de test, avec deux organisations sans fuite.
 3. Basculer le traitement des demandes d'Atelier Ivo sans supprimer son
    catalogue Arcus ni ses historiques locaux.

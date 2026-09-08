@@ -42,21 +42,23 @@
   y rejoignent la même file.
 - Atelier Ivo conserve Arcus/CMS comme propriétaire de son catalogue ; Contempo
   est le pilote du futur pack Luthier propriétaire de son parc et de son stock.
+- Le contrat du bridge CMS ↔ Cremona est écrit : outbox, idempotence,
+  authentification, reprise et bascule sans suppression des historiques.
 - Aucun catalogue universel n’a été ajouté au noyau.
 
 État : **cadrage en cours**.
 
 ## Reste à faire prioritaire
 
-1. Définir le contrat et le premier lot du bridge CMS ↔ Cremona.
-2. Tester ce bridge avec deux organisations, dont un formulaire site, sans fuite
+1. Implémenter et tester le premier lot du bridge CMS ↔ Cremona avec deux
+   organisations, dont un formulaire site, sans fuite
    de données ni doublon sur reprise.
-3. Basculer le traitement des demandes d’Atelier Ivo, sans supprimer Arcus ni
+2. Basculer le traitement des demandes d’Atelier Ivo, sans supprimer Arcus ni
    les historiques locaux avant vérification.
-4. Cadrer le socle commercial de Cremona : bibliothèque de lignes de devis,
+3. Cadrer le socle commercial de Cremona : bibliothèque de lignes de devis,
    références externes et statut Pennylane.
-5. Modéliser le pack Luthier pour Contempo avant tout import Dynamics ou stock.
-6. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
+4. Modéliser le pack Luthier pour Contempo avant tout import Dynamics ou stock.
+5. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
 
 ## Dette de contrôle connue
 
