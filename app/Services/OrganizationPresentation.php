@@ -25,7 +25,7 @@ class OrganizationPresentation
             return $fallback;
         }
 
-        $value = app(OrganizationContext::class)->current()?->settings['presentation']['labels'][$key] ?? null;
+        $value = data_get(app(OrganizationContext::class)->current()?->settings ?? [], "presentation.labels.{$key}");
 
         return is_string($value) && trim($value) !== '' ? trim($value) : $fallback;
     }
@@ -36,6 +36,6 @@ class OrganizationPresentation
             return true;
         }
 
-        return app(OrganizationContext::class)->current()?->settings['presentation']['visible'][$key] !== false;
+        return data_get(app(OrganizationContext::class)->current()?->settings ?? [], "presentation.visible.{$key}", true) !== false;
     }
 }

@@ -9,7 +9,6 @@ use App\Filament\Resources\Organizations\RelationManagers\MembersRelationManager
 use App\Filament\Resources\Organizations\RelationManagers\SitesRelationManager;
 use App\Models\Organization;
 use BackedEnum;
-use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
@@ -87,17 +86,13 @@ class OrganizationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('name')->label('Organisation')->searchable()->sortable(),
+            TextColumn::make('name')->label('Organisation')->searchable()->sortable()
+                ->url(fn (Organization $record): string => static::getUrl('edit', ['record' => $record])),
             TextColumn::make('vertical_pack')->label('Activité')->placeholder('—'),
             TextColumn::make('status')->label('Statut')->badge(),
             TextColumn::make('users_count')->label('Membres')->counts('users'),
             TextColumn::make('updated_at')->label('Mis à jour')->since(),
-        ])->recordActions([
-            Action::make('open_workspace')
-                ->label('Ouvrir l’espace')
-                ->url(fn (Organization $record): string => '/dashboard/'.$record->slug),
-            EditAction::make(),
-        ]);
+        ])->recordActions([EditAction::make()->label('Modifier')]);
     }
 
     public static function getPages(): array
