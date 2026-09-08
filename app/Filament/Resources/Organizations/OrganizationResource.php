@@ -93,6 +93,7 @@ class OrganizationResource extends Resource
                         ->label('Nom du groupe dans le menu')
                         ->placeholder($group['label'])
                         ->maxLength(80)
+                        ->inlineLabel()
                         ->columnSpanFull(),
                 ];
 
@@ -100,15 +101,18 @@ class OrganizationResource extends Resource
                     $fields[] = TextInput::make("settings.presentation.labels.{$key}")
                         ->label($label)
                         ->maxLength(80)
-                        ->columnSpan(2);
+                        ->inlineLabel()
+                        ->columnSpan(9);
                     $fields[] = Toggle::make("settings.presentation.visible.{$key}")
                         ->label('Visible dans le menu')
-                        ->default(true);
+                        ->default(true)
+                        ->inlineLabel()
+                        ->columnSpan(3);
                 }
 
                 return Section::make($group['label'])
                     ->compact()
-                    ->columns(3)
+                    ->columns(12)
                     ->schema($fields);
             },
             OrganizationPresentation::groups(),
