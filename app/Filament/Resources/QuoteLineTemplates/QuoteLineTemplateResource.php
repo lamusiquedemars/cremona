@@ -62,14 +62,14 @@ class QuoteLineTemplateResource extends Resource
                         ->required()
                         ->columnSpan(3),
                     Checkbox::make('is_active')
-                        ->label('Proposer dans les nouveaux devis')
-                        ->helperText('Décoche pour conserver l’historique sans la proposer.')
+                        ->label('Disponible lors de la création d’un devis')
+                        ->helperText('Désactivez cette ligne pour la retirer de la sélection, sans modifier les devis existants.')
                         ->default(true)
                         ->columnSpan(3),
                     Textarea::make('description')
                         ->label('Texte détaillé repris dans le devis')
                         ->placeholder('Ex. Fourniture du chevalet, taille, ajustement et pose.')
-                        ->helperText('Tu peux l’adapter ensuite dans un devis précis ; la ligne enregistrée ne sera pas modifiée.')
+                        ->helperText('Le texte est repris lors de l’ajout au devis. Une modification du devis n’altère pas cette ligne enregistrée.')
                         ->required()
                         ->rows(4)
                         ->columnSpanFull(),
