@@ -123,7 +123,9 @@ départ : activation explicite, contrôle des prérequis, migrations et tests.
 
 1. Écrire les contrats du bridge CMS ↔ Cremona et les scénarios de reprise :
    [contrat du bridge](contrat-bridge-cms-cremona.md).
-2. Livrer le bridge sur un site de test, avec deux organisations sans fuite.
+2. Tester le bridge en local avec deux organisations et deux sites simulés,
+   sans fuite ; puis le déployer de façon limitée sur le premier site de
+   production et le vérifier sur des données réelles.
 3. Basculer le traitement des demandes d'Atelier Ivo sans supprimer son
    catalogue Arcus ni ses historiques locaux.
 4. Construire le socle commercial réutilisable dans Cremona : modèles de lignes

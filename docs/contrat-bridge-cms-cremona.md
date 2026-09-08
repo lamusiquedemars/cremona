@@ -146,14 +146,17 @@ réception ; Cremona porte la notification de la nouvelle demande.
    Cremona ; vérifier l'organisation, le `site_reference` et l'URL cible.
 2. Installer/activer le bridge dans le CMS, renseigner ses seules variables
    d'environnement, puis lancer le contrôle de prérequis.
-3. Tester une soumission de démonstration : une seule demande et conversation
-   doivent apparaître dans la bonne organisation Cremona.
-4. Activer le mode connecté : `Inquiries` ne reçoit plus de nouvelles demandes,
+3. En local, tester deux organisations et deux sites simulés ; une soumission de
+   démonstration doit créer une seule demande et conversation dans la bonne
+   organisation Cremona, y compris après reprise.
+4. Déployer ce lot sur le premier site de production sans activer encore la
+   bascule. Vérifier la configuration et une soumission réelle avec Ivo.
+5. Activer le mode connecté : `Inquiries` ne reçoit plus de nouvelles demandes,
    ses ressources et indicateurs sont masqués ; le formulaire et son accusé de
    réception restent actifs.
-5. Vérifier l'outbox et le flux réel pendant une période convenue. Les demandes
+6. Vérifier l'outbox et le flux réel pendant une période convenue. Les demandes
    locales historiques restent intactes et accessibles en lecture.
-6. Décider séparément d'un import historique idempotent. Il marque les éléments
+7. Décider séparément d'un import historique idempotent. Il marque les éléments
    importés, ne supprime aucune ligne locale et n'est jamais lancé par défaut.
 
 La bascule est réversible avant l'import historique : on désactive le bridge et
