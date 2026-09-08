@@ -60,7 +60,12 @@ class QuoteResource extends Resource
                 TextInput::make('title')->label('Objet')->required()->maxLength(255),
                 Textarea::make('introduction')->label('Introduction')->rows(3),
                 Repeater::make('lines')->label('Lignes')->relationship()->orderColumn('position')->schema([
-                    TextInput::make('kind')->label('Type')->maxLength(80),
+                    Select::make('kind')->label('Type')->options([
+                        'service' => 'Prestation',
+                        'product' => 'Produit',
+                        'rental' => 'Location',
+                        'fee' => 'Frais',
+                    ]),
                     Textarea::make('description')->label('Description')->required()->rows(2)->columnSpan(2),
                     TextInput::make('quantity')->label('Quantité')->numeric()->default(1)->minValue(0.01),
                     TextInput::make('unit_amount')->label('Prix unitaire')->numeric()->prefix('€')->default(0),

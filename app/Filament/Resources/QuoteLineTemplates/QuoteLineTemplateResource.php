@@ -23,11 +23,11 @@ class QuoteLineTemplateResource extends Resource
 {
     protected static ?string $model = QuoteLineTemplate::class;
 
-    protected static ?string $navigationLabel = 'Modèles commerciaux';
+    protected static ?string $navigationLabel = 'Lignes de devis enregistrées';
 
-    protected static ?string $modelLabel = 'modèle de ligne';
+    protected static ?string $modelLabel = 'ligne de devis enregistrée';
 
-    protected static ?string $pluralModelLabel = 'modèles commerciaux';
+    protected static ?string $pluralModelLabel = 'lignes de devis enregistrées';
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
@@ -41,7 +41,12 @@ class QuoteLineTemplateResource extends Resource
             Section::make('Modèle commercial')->columns(3)->schema([
                 TextInput::make('code')->label('Code interne')->maxLength(80),
                 TextInput::make('label')->label('Libellé')->required()->maxLength(255)->columnSpan(2),
-                TextInput::make('kind')->label('Type')->maxLength(80)->placeholder('Prestation, pièce, location…'),
+                Select::make('kind')->label('Type')->options([
+                    'service' => 'Prestation',
+                    'product' => 'Produit',
+                    'rental' => 'Location',
+                    'fee' => 'Frais',
+                ])->required(),
                 Textarea::make('description')->label('Description reprise dans le devis')->required()->rows(3)->columnSpan(2),
                 TextInput::make('default_quantity')->label('Quantité par défaut')->numeric()->minValue(0.01)->default(1),
                 TextInput::make('default_unit_amount')->label('Prix unitaire HT')->numeric()->prefix('€')->default(0),

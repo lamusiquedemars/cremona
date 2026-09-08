@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Organization;
 use App\Models\Quote;
 use App\Models\QuoteLineTemplate;
+use App\Services\LuthierQuoteLineTemplateCatalog;
 use App\Services\QuoteLineTemplateManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -75,5 +76,31 @@ class QuoteLineTemplateTest extends TestCase
         ]));
 
         $this->assertSame('pen-quote-42', $other->pennylane_quote_id);
+    }
+
+    public function test_luthier_catalog_adds_practical_defaults_without_overwriting_prices(): void
+    {
+        $organization = Organization::factory()->create(['vertical_pack' => 'luthier']);
+
+        app(OrganizationContext::class)->run($organization, fn (): QuoteLineTemplate => QuoteLineTemplate::query()->create([
+            'code' => 'REMECHAGE',
+            'label' => 'Reméchage personnalisé',
+            'kind' => 'service',
+            'description' => 'Tarif validé par l’atelier.',
+            'default_unit_amount' => 92,
+        ]));
+
+        $created = app(LuthierQuoteLineTemplateCatalog::class)->seed($organization);
+
+        $this->assertSame(8, $created);
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $reméchage = QuoteLineTemplate::query()->where('code', 'REMECHAGE')->sole();
+            $cordes = QuoteLineTemplate::query()->where('code', 'CORDES')->sole();
+
+            $this->assertSame('Reméchage personnalisé', $reméchage->label);
+            $this->assertSame('92.00', $reméchage->default_unit_amount);
+            $this->assertSame('product', $cordes->kind);
+            $this->assertSame('0.00', $cordes->default_unit_amount);
+        });
     }
 }
