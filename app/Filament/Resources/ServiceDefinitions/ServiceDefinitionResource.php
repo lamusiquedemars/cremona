@@ -33,6 +33,8 @@ class ServiceDefinitionResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
+    protected static ?int $navigationSort = 70;
+
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(12)->components([Section::make('Prestation')->columns(12)->columnSpanFull()->schema([
