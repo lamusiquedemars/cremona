@@ -8,6 +8,7 @@ use App\Filament\Resources\WorkshopOrders\Pages\CreateWorkshopOrder;
 use App\Filament\Resources\WorkshopOrders\Pages\EditWorkshopOrder;
 use App\Filament\Resources\WorkshopOrders\Pages\ListWorkshopOrders;
 use App\Models\IncomingRequest;
+use App\Models\ServiceDefinition;
 use App\Models\WorkshopOrder;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
@@ -19,6 +20,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -54,7 +56,15 @@ class WorkshopOrderResource extends Resource
                 Textarea::make('customer_instructions')->label('Demande du client')->rows(3)->columnSpan(6),
                 Textarea::make('diagnosis')->label('Diagnostic atelier')->rows(4)->columnSpanFull(),
                 Repeater::make('services')->label('Prestations prévues')->relationship()->schema([
-                    Select::make('service_definition_id')->label('Prestation')->relationship('definition', 'name')->searchable(),
+                    Select::make('service_definition_id')->label('Prestation')->relationship('definition', 'name')->searchable()->live()->afterStateUpdated(function (?string $state, Set $set): void {
+                        $service = filled($state) ? ServiceDefinition::query()->find($state) : null;
+                        if ($service === null) {
+                            return;
+                        }
+                        $set('label_snapshot', $service->name);
+                        $set('description_snapshot', $service->description);
+                        $set('unit_amount', $service->suggested_unit_amount);
+                    }),
                     TextInput::make('label_snapshot')->label('Intitulé')->required(),
                     Textarea::make('description_snapshot')->label('Description')->rows(2),
                     TextInput::make('quantity')->label('Quantité')->numeric()->default(1),

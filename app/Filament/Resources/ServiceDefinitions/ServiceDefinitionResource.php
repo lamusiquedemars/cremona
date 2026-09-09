@@ -25,6 +25,10 @@ class ServiceDefinitionResource extends Resource
 
     protected static ?string $navigationLabel = 'Prestations atelier';
 
+    protected static ?string $modelLabel = 'prestation atelier';
+
+    protected static ?string $pluralModelLabel = 'prestations atelier';
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\LuthierQuoteLineTemplateCatalog;
+use App\Services\LuthierServiceCatalog;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,7 @@ class Organization extends Model
         static::saved(function (self $organization): void {
             if ($organization->wasChanged('vertical_pack') && $organization->vertical_pack === 'luthier') {
                 app(LuthierQuoteLineTemplateCatalog::class)->seed($organization);
+                app(LuthierServiceCatalog::class)->seed($organization);
             }
         });
     }
