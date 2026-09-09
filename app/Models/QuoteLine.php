@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
 
-#[Fillable(['quote_line_template_id', 'template_label_snapshot', 'kind', 'description', 'quantity', 'unit_amount'])]
+#[Fillable(['workshop_order_service_id', 'quote_line_template_id', 'template_label_snapshot', 'kind', 'description', 'quantity', 'unit_amount'])]
 class QuoteLine extends Model
 {
     use BelongsToOrganization;

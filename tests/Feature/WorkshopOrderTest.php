@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\WorkshopOrderStatus;
 use App\Models\Organization;
 use App\Models\WorkshopOrder;
+use App\Services\WorkshopOrderQuoteManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -22,6 +23,19 @@ class WorkshopOrderTest extends TestCase
             $this->assertStringStartsWith('AT-', $order->reference);
             $order->update(['status' => WorkshopOrderStatus::Returned]);
             $this->assertNotNull($order->returned_at);
+        });
+    }
+
+    public function test_selected_services_create_quote_lines_once(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $order = WorkshopOrder::query()->create(['title' => 'Révision']);
+            $order->services()->create(['label_snapshot' => 'Reméchage', 'quantity' => 1, 'unit_amount' => 85, 'include_in_quote' => true]);
+            $quote = app(WorkshopOrderQuoteManager::class)->sync($order);
+            app(WorkshopOrderQuoteManager::class)->sync($order);
+            $this->assertSame(1, $quote->lines()->count());
+            $this->assertSame('85.00', $quote->total_amount);
         });
     }
 }
