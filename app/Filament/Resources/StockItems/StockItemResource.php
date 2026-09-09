@@ -2,13 +2,19 @@
 
 namespace App\Filament\Resources\StockItems;
 
+use App\Enums\StockMovementType;
 use App\Filament\Resources\StockItems\Pages\CreateStockItem;
 use App\Filament\Resources\StockItems\Pages\EditStockItem;
 use App\Filament\Resources\StockItems\Pages\ListStockItems;
 use App\Models\StockItem;
+use App\Services\StockManager;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -35,7 +41,33 @@ class StockItemResource extends Resource
 
     public static function table(Table $t): Table
     {
-        return $t->columns([TextColumn::make('name')->label('Article')->searchable(), TextColumn::make('quantity_on_hand')->label('Disponible'), TextColumn::make('reorder_level')->label('Alerte sous'), TextColumn::make('suggested_unit_amount')->label('Prix HT')->money('EUR')])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvel article')]);
+        return $t->columns([
+            TextColumn::make('name')->label('Article')->searchable(),
+            TextColumn::make('quantity_on_hand')->label('Disponible')->color(fn (StockItem $record): string => $record->quantity_on_hand <= $record->reorder_level ? 'danger' : 'success'),
+            TextColumn::make('reorder_level')->label('Alerte sous'),
+            TextColumn::make('suggested_unit_amount')->label('Prix HT')->money('EUR'),
+            TextColumn::make('latestMovement.occurred_at')->label('Dernier mouvement')->since()->placeholder('—')->toggleable(),
+        ])->recordActions([
+            Action::make('recordMovement')
+                ->label('Mouvement')
+                ->schema([
+                    Select::make('type')->label('Nature')->options(StockMovementType::class)->default(StockMovementType::Receipt->value)->required(),
+                    TextInput::make('quantity')->label('Quantité')->numeric()->required()->helperText('Positive, sauf pour une correction d’inventaire qui peut être négative.'),
+                    Textarea::make('note')->label('Note')->rows(2),
+                ])
+                ->action(function (StockItem $record, array $data): void {
+                    try {
+                        app(StockManager::class)->record($record, StockMovementType::from($data['type']), (float) $data['quantity'], $data['note'] ?? null);
+                    } catch (\LogicException $exception) {
+                        Notification::make()->title('Mouvement non enregistré')->body($exception->getMessage())->danger()->send();
+
+                        return;
+                    }
+
+                    Notification::make()->title('Mouvement de stock enregistré')->success()->send();
+                }),
+            EditAction::make(),
+        ])->headerActions([CreateAction::make()->label('Nouvel article')]);
     }
 
     public static function getPages(): array

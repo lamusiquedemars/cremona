@@ -59,6 +59,11 @@ class WorkshopOrder extends Model
         return $this->hasMany(WorkshopOrderService::class);
     }
 
+    public function stockItems(): HasMany
+    {
+        return $this->hasMany(WorkshopOrderStockItem::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'public_id';

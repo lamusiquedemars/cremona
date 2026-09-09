@@ -9,6 +9,7 @@ use App\Filament\Resources\WorkshopOrders\Pages\EditWorkshopOrder;
 use App\Filament\Resources\WorkshopOrders\Pages\ListWorkshopOrders;
 use App\Models\IncomingRequest;
 use App\Models\ServiceDefinition;
+use App\Models\StockItem;
 use App\Models\WorkshopOrder;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
@@ -71,6 +72,16 @@ class WorkshopOrderResource extends Resource
                     TextInput::make('unit_amount')->label('Prix HT')->numeric()->prefix('€')->default(0),
                     Checkbox::make('include_in_quote')->label('À ajouter au devis'),
                 ])->columns(3)->columnSpanFull(),
+                Repeater::make('stockItems')->label('Articles à consommer')->relationship()->schema([
+                    Select::make('stock_item_id')->label('Article de stock')->relationship('stockItem', 'name')->searchable()->live()->afterStateUpdated(function (?string $state, Set $set): void {
+                        $item = filled($state) ? StockItem::query()->find($state) : null;
+                        if ($item !== null) {
+                            $set('label_snapshot', $item->name);
+                        }
+                    }),
+                    TextInput::make('label_snapshot')->label('Intitulé')->required(),
+                    TextInput::make('quantity')->label('Quantité utilisée')->numeric()->minValue(0.01)->default(1)->required(),
+                ])->columns(3)->columnSpanFull()->helperText('Prépare les consommables nécessaires. Ils ne sont retirés du stock qu’avec l’action « Déduire le stock consommé ». Les lignes déjà déduites restent tracées.'),
                 DateTimePicker::make('received_at')->label('Reçu le')->seconds(false)->columnSpan(3),
                 DateTimePicker::make('due_at')->label('Échéance prévue')->seconds(false)->columnSpan(3),
                 DateTimePicker::make('ready_at')->label('Prêt le')->seconds(false)->columnSpan(3),
