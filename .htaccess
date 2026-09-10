@@ -10,7 +10,8 @@ RewriteRule ^(?:\.env|artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|ph
 RewriteRule ^storage/(.*)$ /media/$1 [R=302,L,NE]
 
 # Public assets retain their normal Laravel paths.
-RewriteRule ^(build|css|fonts|images|js|storage)/(.*)$ public/$1/$2 [L,NC]
+RewriteRule ^(build|css|fonts|images|js|pwa|storage)/(.*)$ public/$1/$2 [L,NC]
+RewriteRule ^sw\.js$ public/sw.js [L,NC]
 
 # The application dashboard is the public entry point.
 RewriteRule ^$ dashboard [R=302,L]
