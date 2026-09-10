@@ -2,18 +2,20 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\CremonaLogin;
 use App\Http\Middleware\SetActiveOrganization;
 use App\Models\Organization;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -30,8 +32,11 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('dashboard')
-            ->login()
-            ->brandName('Cremona')
+            ->login(CremonaLogin::class)
+            ->brandName(fn (): string => config('cremona.pwa.name'))
+            ->favicon(fn (): string => asset(config('cremona.pwa.icon_192')))
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('pwa.head')->render())
+            ->renderHook(PanelsRenderHook::BODY_END, fn (): string => view('pwa.service-worker')->render())
             ->globalSearchResourceOptIn()
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->tenant(Organization::class, slugAttribute: 'slug')
