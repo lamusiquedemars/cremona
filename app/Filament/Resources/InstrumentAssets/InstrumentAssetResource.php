@@ -39,6 +39,8 @@ class InstrumentAssetResource extends Resource
 
     protected static ?string $presentationGroupKey = 'offer';
 
+    protected static ?string $presentationKey = 'instruments';
+
     protected static string $organizationModule = 'instruments';
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedMusicalNote;

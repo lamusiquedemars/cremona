@@ -9,11 +9,9 @@ use App\Filament\Resources\Organizations\RelationManagers\MembersRelationManager
 use App\Filament\Resources\Organizations\RelationManagers\SitesRelationManager;
 use App\Models\Organization;
 use App\Services\OrganizationModuleRegistry;
-use App\Services\OrganizationPresentation;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -63,19 +61,10 @@ class OrganizationResource extends Resource
                 ->searchable()
                 ->required()
                 ->helperText('Utilisé pour afficher les rendez-vous, synchronisations et résultats de cette organisation.'),
-            Section::make('Modules actifs')
-                ->description('Une capacité non sélectionnée est masquée du menu, du tableau de bord et bloquée en accès direct. Les données existantes sont conservées.')
+            Section::make('Modules et présentation')
+                ->description('Chaque module est activé et nommé ici. Une capacité inactive est absente du menu, du tableau de bord et des accès directs ; ses données restent conservées.')
                 ->columnSpanFull()
-                ->schema([
-                    CheckboxList::make('modules')
-                        ->label('Capacités disponibles')
-                        ->options(app(OrganizationModuleRegistry::class)->options())
-                        ->columns(2),
-                ]),
-            Section::make('Présentation métier')
-                ->description('Ces libellés adaptent l’interface sans modifier les données, les droits ni les intégrations.')
-                ->columnSpanFull()
-                ->schema(static::presentationGroups()),
+                ->schema(static::moduleGroups()),
         ]);
     }
 
@@ -102,31 +91,34 @@ class OrganizationResource extends Resource
     }
 
     /** @return array<int, Section> */
-    private static function presentationGroups(): array
+    private static function moduleGroups(): array
     {
         return array_map(
             function (array $group, string $groupKey): Section {
                 $fields = [
-                    Text::make('Nom du groupe dans le menu')->columnSpan(4),
+                    Text::make('Rubrique dans le menu')->columnSpan(4),
                     TextInput::make("settings.presentation.labels.{$groupKey}")
                         ->hiddenLabel()
                         ->placeholder($group['label'])
                         ->maxLength(80)
                         ->columnSpan(8),
-                    Text::make('Libellé')->columnSpan(4),
-                    Text::make('Libellé métier')->columnSpan(5),
+                    Text::make('Module')->columnSpan(4),
+                    Text::make('Nom affiché')->columnSpan(5),
                     Text::make('Activé')->columnSpan(3),
                 ];
 
-                foreach ($group['items'] as $key => $label) {
-                    $fields[] = Text::make($label)->columnSpan(4);
-                    $fields[] = TextInput::make("settings.presentation.labels.{$key}")
+                foreach ($group['modules'] as $module => $definition) {
+                    $fields[] = Text::make($definition['label'])
+                        ->tooltip($definition['description'])
+                        ->columnSpan(4);
+                    $fields[] = TextInput::make("settings.presentation.labels.{$definition['presentation_key']}")
                         ->hiddenLabel()
+                        ->placeholder($definition['label'])
                         ->maxLength(80)
                         ->columnSpan(5);
-                    $fields[] = Toggle::make("settings.presentation.visible.{$key}")
+                    $fields[] = Toggle::make("modules.{$module}")
                         ->hiddenLabel()
-                        ->default(true)
+                        ->default(false)
                         ->columnSpan(3);
                 }
 
@@ -135,8 +127,8 @@ class OrganizationResource extends Resource
                     ->columns(12)
                     ->schema($fields);
             },
-            OrganizationPresentation::groups(),
-            array_keys(OrganizationPresentation::groups()),
+            app(OrganizationModuleRegistry::class)->grouped(),
+            array_keys(app(OrganizationModuleRegistry::class)->grouped()),
         );
     }
 }

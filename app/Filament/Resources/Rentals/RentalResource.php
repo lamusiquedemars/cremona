@@ -37,6 +37,8 @@ class RentalResource extends Resource
 
     protected static ?string $presentationGroupKey = 'offer';
 
+    protected static ?string $presentationKey = 'rentals';
+
     protected static string $organizationModule = 'rentals';
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;

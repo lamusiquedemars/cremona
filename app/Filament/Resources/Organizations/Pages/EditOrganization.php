@@ -15,14 +15,14 @@ class EditOrganization extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['modules'] = app(OrganizationModuleRegistry::class)->enabledFor($this->record);
+        $data['modules'] = app(OrganizationModuleRegistry::class)->selectionFor($this->record);
 
         return $data;
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $this->modules = $data['modules'] ?? [];
+        $this->modules = app(OrganizationModuleRegistry::class)->selectedFromSelection($data['modules'] ?? []);
         unset($data['modules']);
 
         return $data;

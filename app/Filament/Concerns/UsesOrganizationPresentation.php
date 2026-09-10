@@ -35,8 +35,7 @@ trait UsesOrganizationPresentation
     public static function shouldRegisterNavigation(): bool
     {
         return parent::shouldRegisterNavigation()
-            && app(OrganizationModuleAccess::class)->enabled(static::$organizationModule)
-            && app(OrganizationPresentation::class)->isVisible(static::$presentationKey ?? '');
+            && app(OrganizationModuleAccess::class)->enabled(static::$organizationModule);
     }
 
     public static function canAccess(): bool

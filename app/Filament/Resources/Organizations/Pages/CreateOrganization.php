@@ -15,7 +15,7 @@ class CreateOrganization extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $this->modules = $data['modules'] ?? [];
+        $this->modules = app(OrganizationModuleRegistry::class)->selectedFromSelection($data['modules'] ?? []);
         unset($data['modules']);
 
         return $data;

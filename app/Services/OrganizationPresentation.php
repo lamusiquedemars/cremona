@@ -53,6 +53,11 @@ class OrganizationPresentation
         'documents' => true,
         'acquisition' => true,
         'campaigns' => true,
+        'instruments' => true,
+        'interventions' => true,
+        'rentals' => true,
+        'inventory' => true,
+        'contempo' => true,
     ];
 
     public function label(string $key, string $fallback): string
@@ -64,15 +69,6 @@ class OrganizationPresentation
         $value = data_get(app(OrganizationContext::class)->current()?->settings ?? [], "presentation.labels.{$key}");
 
         return is_string($value) && trim($value) !== '' ? trim($value) : $fallback;
-    }
-
-    public function isVisible(string $key): bool
-    {
-        if (! isset(self::KEYS[$key])) {
-            return true;
-        }
-
-        return data_get(app(OrganizationContext::class)->current()?->settings ?? [], "presentation.visible.{$key}", true) !== false;
     }
 
     public function createActionLabel(string $key, string $fallback): string

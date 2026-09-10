@@ -38,6 +38,8 @@ class WorkshopOrderResource extends Resource
 
     protected static ?string $presentationGroupKey = 'offer';
 
+    protected static ?string $presentationKey = 'interventions';
+
     protected static string $organizationModule = 'interventions';
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
