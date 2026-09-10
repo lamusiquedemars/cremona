@@ -101,7 +101,7 @@ class DashboardPrioritiesTest extends TestCase
             ->get(Filament::getPanel('admin')->getUrl($organization))
             ->assertOk()
             ->assertSeeText('Priorités du jour')
-            ->assertSeeText('Pilotage des campagnes')
+            ->assertSeeText('Vue d’ensemble des campagnes')
             ->assertSeeText('Campagnes actives')
             ->assertSeeText('Campagne à vérifier')
             ->assertSeeTextInOrder(['Nouvelles demandes', '1', '1 non lue'])

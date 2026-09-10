@@ -23,9 +23,9 @@ class CampaignOverview extends StatsOverviewWidget
 
     protected static ?int $sort = 15;
 
-    protected ?string $heading = 'Pilotage des campagnes';
+    protected ?string $heading = 'Vue d’ensemble des campagnes';
 
-    protected ?string $description = 'Les 30 derniers jours : dépenses renseignées et demandes réellement reçues par les sites.';
+    protected ?string $description = 'Les 30 derniers jours.';
 
     /**
      * Les indicateurs restent confortables au toucher sur téléphone.
@@ -70,23 +70,23 @@ class CampaignOverview extends StatsOverviewWidget
 
         return [
             Stat::make('Campagnes actives', $active)
-                ->description('Celles actuellement en diffusion')
+                ->description('En diffusion actuellement')
                 ->icon(Heroicon::OutlinedMegaphone)
                 ->color($active > 0 ? 'success' : 'gray')
                 ->url(CampaignResource::getUrl('index')),
-            Stat::make('Dépense renseignée', $spend !== '' ? $spend : '—')
+            Stat::make('Budget dépensé', $spend !== '' ? $spend : '—')
                 ->description($spendByCurrency->count() > 1
-                    ? 'Totaux séparés par devise : aucune conversion artificielle.'
-                    : 'Somme des coûts journaliers observés.')
+                    ? 'Total affiché séparément pour chaque devise.'
+                    : 'Dépenses enregistrées sur la période.')
                 ->icon(Heroicon::OutlinedBanknotes)
                 ->color($spend !== '' ? 'warning' : 'gray')
                 ->url(CampaignResource::getUrl('index')),
-            Stat::make('Demandes attribuées', $leads)
-                ->description('Avec une clé de campagne reconnue')
+            Stat::make('Demandes issues des campagnes', $leads)
+                ->description('Demandes du site reliées à une campagne')
                 ->icon(Heroicon::OutlinedArrowTrendingUp)
                 ->color($leads > 0 ? 'info' : 'gray'),
-            Stat::make('Demandes converties', $converted)
-                ->description('Résultat commercial confirmé')
+            Stat::make('Demandes concrétisées', $converted)
+                ->description('Demandes marquées comme gagnées')
                 ->icon(Heroicon::OutlinedCheckCircle)
                 ->color($converted > 0 ? 'success' : 'gray'),
         ];

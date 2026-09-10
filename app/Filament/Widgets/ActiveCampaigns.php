@@ -7,19 +7,19 @@ use App\Enums\OrganizationPermission;
 use App\Filament\Resources\Campaigns\CampaignResource;
 use App\Models\Campaign;
 use App\Tenancy\OrganizationContext;
-use Filament\Actions\Action;
-use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
-use Filament\Widgets\TableWidget;
+use Filament\Widgets\Widget;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Number;
 
-class ActiveCampaigns extends TableWidget
+class ActiveCampaigns extends Widget
 {
     protected static bool $isLazy = false;
 
     protected static ?int $sort = 20;
 
     protected int|string|array $columnSpan = 'full';
+
+    protected string $view = 'filament.widgets.active-campaigns';
 
     public static function canView(): bool
     {
@@ -31,67 +31,53 @@ class ActiveCampaigns extends TableWidget
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 
-    public function table(Table $table): Table
+    /** @return array{campaigns: array<int, array<string, string>>} */
+    protected function getViewData(): array
     {
-        return $table
-            ->heading('Campagnes actives')
-            ->description('Accès direct au pilotage des campagnes actuellement en diffusion.')
-            ->query(
-                Campaign::query()
-                    ->where('status', CampaignStatus::Active)
-                    ->orderByDesc('google_ads_synced_at')
-                    ->limit(5),
-            )
-            ->columns([
-                TextColumn::make('name')
-                    ->label('Campagne')
-                    ->description(fn (Campaign $record): string => $record->tracking_key)
-                    ->weight('medium')
-                    ->wrap(),
-                TextColumn::make('google_ads_primary_status')
-                    ->label('État Google')
-                    ->formatStateUsing(fn (?string $state): string => $this->googleAdsPrimaryStatusLabel($state))
-                    ->badge()
-                    ->color(fn (?string $state): string => match ($state) {
-                        'ELIGIBLE' => 'success',
-                        'LEARNING', 'LIMITED' => 'warning',
-                        'MISCONFIGURED', 'NOT_ELIGIBLE' => 'danger',
-                        default => 'gray',
-                    })
-                    ->placeholder('À synchroniser'),
-                TextColumn::make('daily_metrics_sum_spend')
-                    ->label('Dépensé')
-                    ->money(fn (Campaign $record): string => $record->currency)
-                    ->hiddenFrom('md'),
-                TextColumn::make('google_ads_synced_at')
-                    ->label('Actualisée')
-                    ->since()
-                    ->placeholder('Jamais')
-                    ->hiddenFrom('md'),
+        $organization = app(OrganizationContext::class)->require();
+        $since = now($organization->timezone())->subDays(30)->toDateString();
+
+        $campaigns = Campaign::query()
+            ->where('status', CampaignStatus::Active)
+            ->withSum([
+                'dailyMetrics as spend_last_30_days' => fn (Builder $query): Builder => $query
+                    ->where('metric_date', '>=', $since),
+            ], 'spend')
+            ->withCount([
+                'attributedIncomingRequests as recent_leads_count' => fn (Builder $query): Builder => $query
+                    ->where('received_at', '>=', $since),
             ])
-            ->recordUrl(fn (Campaign $record): string => CampaignResource::getUrl('view', ['record' => $record]))
-            ->headerActions([
-                Action::make('seeAll')
-                    ->label('Voir les campagnes')
-                    ->icon(Heroicon::OutlinedArrowRight)
-                    ->url(CampaignResource::getUrl('index')),
+            ->orderByDesc('google_ads_synced_at')
+            ->limit(3)
+            ->get()
+            ->map(fn (Campaign $campaign): array => [
+                'name' => $campaign->name,
+                'url' => CampaignResource::getUrl('view', ['record' => $campaign]),
+                'google_status' => $this->googleAdsPrimaryStatusLabel($campaign->google_ads_primary_status),
+                'spend' => $campaign->spend_last_30_days === null
+                    ? 'Aucune dépense renseignée'
+                    : Number::currency((float) $campaign->spend_last_30_days, $campaign->currency, 'fr'),
+                'leads' => $campaign->recent_leads_count.' demande'.($campaign->recent_leads_count > 1 ? 's' : '').' issue'.($campaign->recent_leads_count > 1 ? 's' : '').' de cette campagne',
+                'synced_at' => $campaign->google_ads_synced_at?->setTimezone($organization->timezone())->diffForHumans() ?? 'Google Ads non actualisé',
             ])
-            ->paginated(false);
+            ->all();
+
+        return ['campaigns' => $campaigns];
     }
 
     private function googleAdsPrimaryStatusLabel(?string $status): string
     {
         return match ($status) {
-            'ELIGIBLE' => 'Éligible',
+            'ELIGIBLE' => 'Diffusion possible',
             'LEARNING' => 'En apprentissage',
-            'LIMITED' => 'Limitée',
+            'LIMITED' => 'Diffusion limitée',
             'MISCONFIGURED' => 'À corriger',
             'NOT_ELIGIBLE' => 'Non éligible',
             'PAUSED' => 'En pause',
             'PENDING' => 'En attente',
             'ENDED' => 'Terminée',
             'REMOVED' => 'Supprimée',
-            default => $status ?? 'À synchroniser',
+            default => 'État Google à actualiser',
         };
     }
 }
