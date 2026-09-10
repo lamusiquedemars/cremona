@@ -103,7 +103,7 @@ class OrganizationModuleAccessTest extends TestCase
             ->fillForm([
                 'name' => 'Marcos Túlio Advocacia',
                 'slug' => 'marcos-tulio-advocacia',
-                'vertical_pack' => null,
+                'vertical_pack' => '__none__',
                 'status' => 'active',
                 'settings.timezone' => 'America/Cuiaba',
                 'modules' => [],
@@ -120,13 +120,19 @@ class OrganizationModuleAccessTest extends TestCase
     public function test_a_platform_administrator_can_remove_an_existing_business_pack(): void
     {
         $administrator = User::factory()->platformAdministrator()->create();
-        $organization = Organization::factory()->create(['vertical_pack' => 'luthier']);
+        $organization = Organization::factory()->create([
+            'vertical_pack' => 'luthier',
+            'settings' => ['timezone' => 'America/Cuiaba'],
+        ]);
         Filament::setCurrentPanel(Filament::getPanel('platform'));
 
         Livewire::actingAs($administrator)
             ->test(EditOrganization::class, ['record' => $organization->getRouteKey()])
+            ->assertFormSet([
+                'vertical_pack' => 'luthier',
+            ])
             ->fillForm([
-                'vertical_pack' => null,
+                'vertical_pack' => '__none__',
             ])
             ->call('save')
             ->assertHasNoFormErrors();

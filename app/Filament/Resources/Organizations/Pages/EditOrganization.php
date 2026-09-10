@@ -16,7 +16,7 @@ class EditOrganization extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['modules'] = app(OrganizationModuleRegistry::class)->selectionFor($this->record);
-        $data['settings']['timezone'] ??= config('app.timezone', 'UTC');
+        $data['vertical_pack'] ??= '__none__';
 
         return $data;
     }
@@ -25,7 +25,7 @@ class EditOrganization extends EditRecord
     {
         $this->modules = app(OrganizationModuleRegistry::class)->selectedFromSelection($data['modules'] ?? []);
         unset($data['modules']);
-        $data['vertical_pack'] = filled($data['vertical_pack'] ?? null) ? $data['vertical_pack'] : null;
+        $data['vertical_pack'] = ($data['vertical_pack'] ?? null) === 'luthier' ? 'luthier' : null;
 
         return $data;
     }

@@ -17,7 +17,7 @@ class CreateOrganization extends CreateRecord
     {
         $this->modules = app(OrganizationModuleRegistry::class)->selectedFromSelection($data['modules'] ?? []);
         unset($data['modules']);
-        $data['vertical_pack'] = filled($data['vertical_pack'] ?? null) ? $data['vertical_pack'] : null;
+        $data['vertical_pack'] = ($data['vertical_pack'] ?? null) === 'luthier' ? 'luthier' : null;
 
         return $data;
     }

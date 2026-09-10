@@ -49,11 +49,10 @@ class OrganizationResource extends Resource
             Select::make('vertical_pack')
                 ->label('Pack métier')
                 ->options([
+                    '__none__' => 'Aucun pack métier',
                     'luthier' => 'Luthier — instruments, atelier, location et stock',
                 ])
-                ->nullable()
-                ->default(null)
-                ->placeholder('Aucun pack métier')
+                ->default('__none__')
                 ->helperText('Choisir Luthier installe les lignes de devis de départ sans écraser les tarifs déjà réglés.'),
             Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
             Select::make('settings.timezone')
