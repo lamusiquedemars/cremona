@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\EmailMailboxes;
 
+use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\EmailMailboxes\Pages\CreateEmailMailbox;
 use App\Filament\Resources\EmailMailboxes\Pages\ListEmailMailboxes;
 use App\Models\EmailMailbox;
@@ -18,7 +19,11 @@ use Filament\Tables\Table;
 
 class EmailMailboxResource extends Resource
 {
+    use UsesOrganizationModule;
+
     protected static ?string $model = EmailMailbox::class;
+
+    protected static string $organizationModule = 'conversations';
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
 

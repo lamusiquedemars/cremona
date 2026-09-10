@@ -37,6 +37,8 @@ class ConversationResource extends Resource
 
     protected static ?string $presentationKey = 'conversations';
 
+    protected static string $organizationModule = 'conversations';
+
     protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'conversation';

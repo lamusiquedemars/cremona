@@ -55,6 +55,8 @@ class CampaignResource extends Resource
 
     protected static ?string $presentationKey = 'campaigns';
 
+    protected static string $organizationModule = 'acquisition';
+
     protected static ?string $presentationGroupKey = 'acquisition';
 
     protected static ?string $modelLabel = 'campagne';

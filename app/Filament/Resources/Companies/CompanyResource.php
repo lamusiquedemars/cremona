@@ -51,6 +51,8 @@ class CompanyResource extends Resource
 
     protected static ?string $presentationKey = 'companies';
 
+    protected static string $organizationModule = 'contacts';
+
     protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'entreprise';

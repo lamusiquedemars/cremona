@@ -39,6 +39,8 @@ class InstrumentAssetResource extends Resource
 
     protected static ?string $presentationGroupKey = 'relation_client';
 
+    protected static string $organizationModule = 'instruments';
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedMusicalNote;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Relation client';

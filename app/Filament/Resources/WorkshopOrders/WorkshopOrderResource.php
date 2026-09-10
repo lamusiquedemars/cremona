@@ -38,6 +38,8 @@ class WorkshopOrderResource extends Resource
 
     protected static ?string $presentationGroupKey = 'relation_client';
 
+    protected static string $organizationModule = 'interventions';
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Relation client';

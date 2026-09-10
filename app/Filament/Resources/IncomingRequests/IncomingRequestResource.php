@@ -41,6 +41,8 @@ class IncomingRequestResource extends Resource
 
     protected static ?string $presentationKey = 'requests';
 
+    protected static string $organizationModule = 'inquiries';
+
     protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'demande';

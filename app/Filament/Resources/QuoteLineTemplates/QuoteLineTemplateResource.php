@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\QuoteLineTemplates;
 
+use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\QuoteLineTemplates\Pages\CreateQuoteLineTemplate;
 use App\Filament\Resources\QuoteLineTemplates\Pages\EditQuoteLineTemplate;
 use App\Filament\Resources\QuoteLineTemplates\Pages\ListQuoteLineTemplates;
@@ -22,7 +23,11 @@ use Filament\Tables\Table;
 
 class QuoteLineTemplateResource extends Resource
 {
+    use UsesOrganizationModule;
+
     protected static ?string $model = QuoteLineTemplate::class;
+
+    protected static string $organizationModule = 'quotes';
 
     protected static ?string $navigationLabel = 'Lignes de devis enregistrées';
 

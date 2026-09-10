@@ -6,6 +6,7 @@ use App\Enums\ConversationStatus;
 use App\Enums\OrganizationPermission;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Conversation;
+use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
@@ -29,6 +30,7 @@ class ActiveConversations extends TableWidget
 
         return $organization !== null
             && $user !== null
+            && app(OrganizationModuleAccess::class)->enabled('conversations', $organization)
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCorrespondence, $organization);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\GoogleAdsConnections;
 
+use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\GoogleAdsConnections\Pages\ListGoogleAdsConnections;
 use App\Models\OrganizationIntegration;
 use App\Services\GoogleAdsCredentials;
@@ -25,7 +26,11 @@ use UnitEnum;
 
 class GoogleAdsConnectionResource extends Resource
 {
+    use UsesOrganizationModule;
+
     protected static ?string $model = OrganizationIntegration::class;
+
+    protected static string $organizationModule = 'acquisition';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;
 
@@ -206,5 +211,4 @@ class GoogleAdsConnectionResource extends Resource
 
         return $when.' '.(string) $credentials['last_sync_error'];
     }
-
 }

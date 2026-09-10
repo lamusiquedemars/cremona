@@ -2,6 +2,7 @@
 
 namespace App\Filament\Concerns;
 
+use App\Services\OrganizationModuleAccess;
 use App\Services\OrganizationPresentation;
 use UnitEnum;
 
@@ -34,6 +35,13 @@ trait UsesOrganizationPresentation
     public static function shouldRegisterNavigation(): bool
     {
         return parent::shouldRegisterNavigation()
+            && app(OrganizationModuleAccess::class)->enabled(static::$organizationModule)
             && app(OrganizationPresentation::class)->isVisible(static::$presentationKey ?? '');
+    }
+
+    public static function canAccess(): bool
+    {
+        return parent::canAccess()
+            && app(OrganizationModuleAccess::class)->enabled(static::$organizationModule);
     }
 }

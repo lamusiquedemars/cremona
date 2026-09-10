@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\StockItems;
 
 use App\Enums\StockMovementType;
+use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\StockItems\Pages\CreateStockItem;
 use App\Filament\Resources\StockItems\Pages\EditStockItem;
 use App\Filament\Resources\StockItems\Pages\ListStockItems;
@@ -22,7 +23,11 @@ use Filament\Tables\Table;
 
 class StockItemResource extends Resource
 {
+    use UsesOrganizationModule;
+
     protected static ?string $model = StockItem::class;
+
+    protected static string $organizationModule = 'inventory';
 
     protected static ?string $navigationLabel = 'Articles de stock';
 

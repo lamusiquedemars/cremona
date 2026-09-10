@@ -45,6 +45,8 @@ class PrivateDocumentResource extends Resource
 
     protected static ?string $presentationKey = 'documents';
 
+    protected static string $organizationModule = 'documents';
+
     protected static ?string $presentationGroupKey = 'relation_client';
 
     protected static ?string $modelLabel = 'document privé';

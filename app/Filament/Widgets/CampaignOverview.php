@@ -9,6 +9,7 @@ use App\Filament\Resources\Campaigns\CampaignResource;
 use App\Models\Campaign;
 use App\Models\CampaignDailyMetric;
 use App\Models\IncomingRequest;
+use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
@@ -34,6 +35,7 @@ class CampaignOverview extends StatsOverviewWidget
 
         return $organization !== null
             && $user !== null
+            && app(OrganizationModuleAccess::class)->enabled('acquisition', $organization)
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 

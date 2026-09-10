@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ServiceDefinitions;
 
+use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\ServiceDefinitions\Pages\CreateServiceDefinition;
 use App\Filament\Resources\ServiceDefinitions\Pages\EditServiceDefinition;
 use App\Filament\Resources\ServiceDefinitions\Pages\ListServiceDefinitions;
@@ -21,7 +22,11 @@ use Filament\Tables\Table;
 
 class ServiceDefinitionResource extends Resource
 {
+    use UsesOrganizationModule;
+
     protected static ?string $model = ServiceDefinition::class;
+
+    protected static string $organizationModule = 'interventions';
 
     protected static ?string $navigationLabel = 'Prestations atelier';
 

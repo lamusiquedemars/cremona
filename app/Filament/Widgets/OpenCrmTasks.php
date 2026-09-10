@@ -6,6 +6,7 @@ use App\Enums\CrmTaskStatus;
 use App\Enums\OrganizationPermission;
 use App\Filament\Resources\CrmTasks\CrmTaskResource;
 use App\Models\CrmTask;
+use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
@@ -28,6 +29,7 @@ class OpenCrmTasks extends TableWidget
 
         return $organization !== null
             && $user !== null
+            && app(OrganizationModuleAccess::class)->enabled('tasks', $organization)
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 

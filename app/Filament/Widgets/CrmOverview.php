@@ -21,6 +21,7 @@ use App\Models\Conversation;
 use App\Models\CrmTask;
 use App\Models\IncomingRequest;
 use App\Models\Quote;
+use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
@@ -45,6 +46,14 @@ class CrmOverview extends StatsOverviewWidget
 
         return $organization !== null
             && $user !== null
+            && app(OrganizationModuleAccess::class)->anyEnabled([
+                'inquiries',
+                'conversations',
+                'tasks',
+                'appointments',
+                'quotes',
+                'acquisition',
+            ], $organization)
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 

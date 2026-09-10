@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ContempoProjections;
 
+use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\ContempoProjections\Pages\ListContempoProjections;
 use App\Models\OrganizationIntegration;
 use App\Services\OrganizationIntegrationManager;
@@ -15,7 +16,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ContempoProjectionResource extends Resource
 {
+    use UsesOrganizationModule;
+
     protected static ?string $model = OrganizationIntegration::class;
+
+    protected static string $organizationModule = 'contempo';
 
     protected static ?string $navigationLabel = 'Projection Contempo';
 

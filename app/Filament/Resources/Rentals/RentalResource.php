@@ -37,6 +37,8 @@ class RentalResource extends Resource
 
     protected static ?string $presentationGroupKey = 'relation_client';
 
+    protected static string $organizationModule = 'rentals';
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Relation client';

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BrevoConnections;
 
+use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\BrevoConnections\Pages\ListBrevoConnections;
 use App\Models\OrganizationIntegration;
 use App\Services\OrganizationIntegrationManager;
@@ -18,7 +19,11 @@ use UnitEnum;
 
 class BrevoConnectionResource extends Resource
 {
+    use UsesOrganizationModule;
+
     protected static ?string $model = OrganizationIntegration::class;
+
+    protected static string $organizationModule = 'appointments';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 

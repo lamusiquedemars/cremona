@@ -6,6 +6,7 @@ use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationPermission;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use App\Models\IncomingRequest;
+use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
@@ -28,6 +29,7 @@ class ActiveIncomingRequests extends TableWidget
 
         return $organization !== null
             && $user !== null
+            && app(OrganizationModuleAccess::class)->enabled('inquiries', $organization)
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 
