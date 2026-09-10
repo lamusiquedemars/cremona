@@ -24,6 +24,7 @@ class EditOrganization extends EditRecord
     {
         $this->modules = app(OrganizationModuleRegistry::class)->selectedFromSelection($data['modules'] ?? []);
         unset($data['modules']);
+        $data['vertical_pack'] = filled($data['vertical_pack'] ?? null) ? $data['vertical_pack'] : null;
 
         return $data;
     }

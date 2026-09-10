@@ -51,6 +51,8 @@ class OrganizationResource extends Resource
                 ->options([
                     'luthier' => 'Luthier — instruments, atelier, location et stock',
                 ])
+                ->nullable()
+                ->default(null)
                 ->placeholder('Aucun pack métier')
                 ->helperText('Choisir Luthier installe les lignes de devis de départ sans écraser les tarifs déjà réglés.'),
             Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
