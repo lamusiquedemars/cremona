@@ -8,6 +8,13 @@ use Filament\Facades\Filament;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/manifest.webmanifest', function () {
+    return response()
+        ->view('pwa.manifest')
+        ->header('Content-Type', 'application/manifest+json')
+        ->header('Cache-Control', 'public, max-age=3600');
+})->name('pwa.manifest');
+
 Route::get('/', function () {
     return redirect('/dashboard');
 });

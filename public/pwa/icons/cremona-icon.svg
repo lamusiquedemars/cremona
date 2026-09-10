@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>Cremona</title>
+  <rect width="512" height="512" rx="112" fill="#f59e0b"/>
+  <path fill="#2a211b" d="M256 96c-96 0-174 78-174 174s78 174 174 174c48 0 92-20 124-51l-45-45c-20 19-48 31-79 31-61 0-110-49-110-109s49-109 110-109c31 0 59 12 79 31l45-45c-32-31-76-51-124-51Z"/>
+  <circle cx="337" cy="256" r="24" fill="#faf8f3"/>
+</svg>
