@@ -24,6 +24,6 @@ class CreateOrganization extends CreateRecord
 
     protected function afterCreate(): void
     {
-        app(OrganizationModuleRegistry::class)->sync($this->record, $this->modules);
+        app(OrganizationModuleRegistry::class)->syncForPack($this->record, $this->record->vertical_pack, $this->modules);
     }
 }

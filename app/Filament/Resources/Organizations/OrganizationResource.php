@@ -16,6 +16,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
@@ -53,7 +54,7 @@ class OrganizationResource extends Resource
                     'luthier' => 'Luthier — instruments, atelier, location et stock',
                 ])
                 ->default('__none__')
-                ->helperText('Choisir Luthier installe les lignes de devis de départ sans écraser les tarifs déjà réglés.'),
+                ->helperText('Le pack Luthier active son socle de travail : suivi client, devis, atelier, locations, stock et connecteurs. Aucun pack retire les modules propres au métier Luthier, sans supprimer leurs données.'),
             Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
             Select::make('settings.timezone')
                 ->label('Fuseau horaire')
@@ -91,24 +92,21 @@ class OrganizationResource extends Resource
         return [MembersRelationManager::class, SitesRelationManager::class];
     }
 
-    /** @return array<int, Section> */
+    /** @return array<int, Grid> */
     private static function moduleGroups(): array
     {
         $registry = app(OrganizationModuleRegistry::class);
         $definitions = $registry->all();
 
         return array_map(
-            function (array $group, string $groupKey) use ($definitions): Section {
+            function (array $group, string $groupKey) use ($definitions): Grid {
                 $fields = [
-                    Text::make('Rubrique dans le menu')->columnSpan(4),
+                    Text::make($group['label'])->columnSpan(4),
                     TextInput::make("settings.presentation.labels.{$groupKey}")
                         ->hiddenLabel()
-                        ->placeholder($group['label'])
+                        ->placeholder('Nom de cette rubrique dans le menu')
                         ->maxLength(80)
                         ->columnSpan(8),
-                    Text::make('Module')->columnSpan(4),
-                    Text::make('Nom affiché')->columnSpan(5),
-                    Text::make('Activé')->columnSpan(3),
                 ];
 
                 foreach ($group['modules'] as $module => $definition) {
@@ -123,7 +121,7 @@ class OrganizationResource extends Resource
                         ->columnSpan(4);
                     $fields[] = TextInput::make("settings.presentation.labels.{$definition['presentation_key']}")
                         ->hiddenLabel()
-                        ->placeholder($definition['label'])
+                        ->placeholder('Nom affiché dans le menu (facultatif)')
                         ->maxLength(80)
                         ->columnSpan(5);
                     $fields[] = Toggle::make("modules.{$module}")
@@ -132,8 +130,7 @@ class OrganizationResource extends Resource
                         ->columnSpan(3);
                 }
 
-                return Section::make($group['label'])
-                    ->compact()
+                return Grid::make(12)
                     ->columns(12)
                     ->schema($fields);
             },

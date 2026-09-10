@@ -109,6 +109,36 @@ class OrganizationModuleAccessTest extends TestCase
         $this->assertSame(['luthier_catalog', 'workshop'], app(OrganizationModuleRegistry::class)->enabledFor($organization));
     }
 
+    public function test_luthier_pack_adds_its_operational_modules_including_publication_connectors(): void
+    {
+        $modules = app(OrganizationModuleRegistry::class)->forPack('luthier', []);
+
+        $this->assertSame([
+            'crm',
+            'appointments',
+            'quotes',
+            'luthier_catalog',
+            'workshop',
+            'rentals',
+            'inventory',
+            'communications',
+        ], $modules);
+    }
+
+    public function test_no_pack_removes_luthier_only_modules_without_touching_common_modules(): void
+    {
+        $modules = app(OrganizationModuleRegistry::class)->forPack(null, [
+            'crm',
+            'quotes',
+            'luthier_catalog',
+            'workshop',
+            'rentals',
+            'communications',
+        ]);
+
+        $this->assertSame(['crm', 'quotes', 'communications'], $modules);
+    }
+
     public function test_a_platform_administrator_can_create_an_organization_without_a_business_pack(): void
     {
         $administrator = User::factory()->platformAdministrator()->create();

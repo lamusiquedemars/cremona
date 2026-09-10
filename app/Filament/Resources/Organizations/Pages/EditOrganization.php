@@ -32,6 +32,6 @@ class EditOrganization extends EditRecord
 
     protected function afterSave(): void
     {
-        app(OrganizationModuleRegistry::class)->sync($this->record, $this->modules);
+        app(OrganizationModuleRegistry::class)->syncForPack($this->record, $this->record->vertical_pack, $this->modules);
     }
 }
