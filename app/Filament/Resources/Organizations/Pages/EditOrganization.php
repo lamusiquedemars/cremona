@@ -16,6 +16,7 @@ class EditOrganization extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['modules'] = app(OrganizationModuleRegistry::class)->selectionFor($this->record);
+        $data['settings']['timezone'] ??= config('app.timezone', 'UTC');
 
         return $data;
     }

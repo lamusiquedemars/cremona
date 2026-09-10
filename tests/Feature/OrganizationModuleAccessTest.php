@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\InstrumentAssets\InstrumentAssetResource;
+use App\Filament\Resources\Organizations\Pages\CreateOrganization;
+use App\Filament\Resources\Organizations\Pages\EditOrganization;
 use App\Filament\Resources\People\PersonResource;
 use App\Models\Organization;
 use App\Models\OrganizationModule;
@@ -10,7 +12,9 @@ use App\Models\User;
 use App\Services\OrganizationModuleAccess;
 use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class OrganizationModuleAccessTest extends TestCase
@@ -87,5 +91,46 @@ class OrganizationModuleAccessTest extends TestCase
         $this->assertArrayHasKey('instruments', $groups['offer']['modules']);
         $this->assertArrayNotHasKey(0, $groups['relation_client']['modules']);
         $this->assertArrayNotHasKey(0, $groups['organisation']['modules']);
+    }
+
+    public function test_a_platform_administrator_can_create_an_organization_without_a_business_pack(): void
+    {
+        $administrator = User::factory()->platformAdministrator()->create();
+        Filament::setCurrentPanel(Filament::getPanel('platform'));
+
+        Livewire::actingAs($administrator)
+            ->test(CreateOrganization::class)
+            ->fillForm([
+                'name' => 'Marcos Túlio Advocacia',
+                'slug' => 'marcos-tulio-advocacia',
+                'vertical_pack' => null,
+                'status' => 'active',
+                'settings.timezone' => 'America/Cuiaba',
+                'modules' => [],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('organizations', [
+            'slug' => 'marcos-tulio-advocacia',
+            'vertical_pack' => null,
+        ]);
+    }
+
+    public function test_a_platform_administrator_can_remove_an_existing_business_pack(): void
+    {
+        $administrator = User::factory()->platformAdministrator()->create();
+        $organization = Organization::factory()->create(['vertical_pack' => 'luthier']);
+        Filament::setCurrentPanel(Filament::getPanel('platform'));
+
+        Livewire::actingAs($administrator)
+            ->test(EditOrganization::class, ['record' => $organization->getRouteKey()])
+            ->fillForm([
+                'vertical_pack' => null,
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertNull($organization->refresh()->vertical_pack);
     }
 }
