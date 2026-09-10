@@ -17,6 +17,7 @@ class OrganizationIsolationTest extends TestCase
     public function test_scoped_records_are_invisible_without_an_active_organization(): void
     {
         $organization = Organization::factory()->create();
+        $organization->modules()->delete();
         $context = app(OrganizationContext::class);
 
         $context->run($organization, fn () => OrganizationModule::create([
@@ -31,6 +32,8 @@ class OrganizationIsolationTest extends TestCase
     {
         $first = Organization::factory()->create();
         $second = Organization::factory()->create();
+        $first->modules()->delete();
+        $second->modules()->delete();
         $context = app(OrganizationContext::class);
 
         $context->run($first, fn () => OrganizationModule::create([
@@ -58,6 +61,8 @@ class OrganizationIsolationTest extends TestCase
     {
         $first = Organization::factory()->create();
         $second = Organization::factory()->create();
+        $first->modules()->delete();
+        $second->modules()->delete();
         $context = app(OrganizationContext::class);
 
         $module = $context->run($first, fn () => OrganizationModule::create([

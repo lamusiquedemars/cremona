@@ -26,7 +26,7 @@ class ServiceDefinitionResource extends Resource
 
     protected static ?string $model = ServiceDefinition::class;
 
-    protected static string $organizationModule = 'interventions';
+    protected static string $organizationModule = 'luthier_catalog';
 
     protected static ?string $navigationLabel = 'Prestations atelier';
 
@@ -36,7 +36,7 @@ class ServiceDefinitionResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Offre';
+    protected static string|\UnitEnum|null $navigationGroup = 'Catalogue et stock';
 
     protected static ?int $navigationSort = 70;
 

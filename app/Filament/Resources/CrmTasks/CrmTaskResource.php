@@ -42,15 +42,15 @@ class CrmTaskResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCheckCircle;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Organisation';
+    protected static string|UnitEnum|null $navigationGroup = 'Suivi client';
 
     protected static ?string $navigationLabel = 'Tâches';
 
     protected static ?string $presentationKey = 'tasks';
 
-    protected static string $organizationModule = 'tasks';
+    protected static string $organizationModule = 'crm';
 
-    protected static ?string $presentationGroupKey = 'organisation';
+    protected static ?string $presentationGroupKey = 'customer_follow_up';
 
     protected static ?string $modelLabel = 'tâche';
 

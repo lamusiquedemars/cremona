@@ -39,15 +39,15 @@ class PrivateDocumentResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolder;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Organisation';
+    protected static string|UnitEnum|null $navigationGroup = 'Activité commerciale';
 
     protected static ?string $navigationLabel = 'Documents';
 
     protected static ?string $presentationKey = 'documents';
 
-    protected static string $organizationModule = 'documents';
+    protected static string $organizationModule = 'quotes';
 
-    protected static ?string $presentationGroupKey = 'organisation';
+    protected static ?string $presentationGroupKey = 'commercial_activity';
 
     protected static ?string $modelLabel = 'document privé';
 

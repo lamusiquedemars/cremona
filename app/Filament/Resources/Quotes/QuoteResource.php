@@ -42,7 +42,7 @@ class QuoteResource extends Resource
 
     protected static string $organizationModule = 'quotes';
 
-    protected static ?string $presentationGroupKey = 'relation_client';
+    protected static ?string $presentationGroupKey = 'commercial_activity';
 
     protected static ?string $modelLabel = 'devis';
 
@@ -50,7 +50,7 @@ class QuoteResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCurrencyEuro;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Relation client';
+    protected static string|\UnitEnum|null $navigationGroup = 'Activité commerciale';
 
     protected static ?int $navigationSort = 60;
 

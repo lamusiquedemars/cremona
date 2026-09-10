@@ -8,35 +8,23 @@ use App\Tenancy\OrganizationContext;
 
 final class OrganizationModuleRegistry
 {
-    /** @return array<string, array{label: string, description: string, group: string, group_key: string, presentation_key: string}> */
+    /** @return array<string, array{label: string, description: string, group: string, group_key: string, presentation_key: string, requires: array<int, string>}> */
     public function all(): array
     {
         return [
-            'contacts' => ['label' => 'Contacts et entreprises', 'description' => 'Fiches contacts et entreprises.', 'group' => 'Relation client', 'group_key' => 'relation_client', 'presentation_key' => 'contacts'],
-            'inquiries' => ['label' => 'Demandes', 'description' => 'Demandes entrantes et canaux du site.', 'group' => 'Relation client', 'group_key' => 'relation_client', 'presentation_key' => 'requests'],
-            'conversations' => ['label' => 'Correspondances', 'description' => 'Emails et échanges avec les contacts.', 'group' => 'Relation client', 'group_key' => 'relation_client', 'presentation_key' => 'conversations'],
-            'quotes' => ['label' => 'Devis', 'description' => 'Propositions commerciales et lignes enregistrées.', 'group' => 'Relation client', 'group_key' => 'relation_client', 'presentation_key' => 'quotes'],
-            'appointments' => ['label' => 'Rendez-vous', 'description' => 'Rendez-vous et connexion Brevo Meetings.', 'group' => 'Organisation', 'group_key' => 'organisation', 'presentation_key' => 'appointments'],
-            'tasks' => ['label' => 'Tâches', 'description' => 'Tâches et échéances.', 'group' => 'Organisation', 'group_key' => 'organisation', 'presentation_key' => 'tasks'],
-            'documents' => ['label' => 'Documents', 'description' => 'Documents privés associés au suivi.', 'group' => 'Organisation', 'group_key' => 'organisation', 'presentation_key' => 'documents'],
-            'acquisition' => ['label' => 'Acquisition', 'description' => 'Campagnes et connexion Google Ads.', 'group' => 'Acquisition', 'group_key' => 'acquisition', 'presentation_key' => 'campaigns'],
-            'instruments' => ['label' => 'Instruments', 'description' => 'Parc d’instruments et publication contrôlée.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'instruments'],
-            'interventions' => ['label' => 'Atelier', 'description' => 'Dossiers atelier et prestations.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'interventions'],
-            'rentals' => ['label' => 'Locations', 'description' => 'Contrats et suivi des locations.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'rentals'],
-            'inventory' => ['label' => 'Stock', 'description' => 'Articles, niveaux et mouvements de stock.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'inventory'],
-            'contempo' => ['label' => 'Connecteurs de publication', 'description' => 'Connexions de publication contrôlée vers les sites.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'contempo'],
+            'crm' => ['label' => 'Suivi client', 'description' => 'Contacts, entreprises, demandes, correspondances et tâches.', 'group' => 'Suivi client', 'group_key' => 'customer_follow_up', 'presentation_key' => 'crm', 'requires' => []],
+            'appointments' => ['label' => 'Rendez-vous', 'description' => 'Rendez-vous et agenda.', 'group' => 'Suivi client', 'group_key' => 'customer_follow_up', 'presentation_key' => 'appointments', 'requires' => []],
+            'quotes' => ['label' => 'Devis et documents', 'description' => 'Devis, lignes de devis enregistrées et documents privés.', 'group' => 'Activité commerciale', 'group_key' => 'commercial_activity', 'presentation_key' => 'quotes', 'requires' => []],
+            'luthier_catalog' => ['label' => 'Catalogue luthier', 'description' => 'Instruments et prestations atelier.', 'group' => 'Atelier', 'group_key' => 'workshop', 'presentation_key' => 'luthier_catalog', 'requires' => []],
+            'workshop' => ['label' => 'Dossiers atelier', 'description' => 'Suivi des interventions sur les instruments. Requiert le catalogue luthier.', 'group' => 'Atelier', 'group_key' => 'workshop', 'presentation_key' => 'workshop', 'requires' => ['luthier_catalog']],
+            'rentals' => ['label' => 'Locations', 'description' => 'Contrats et suivi des locations. Requiert le catalogue luthier.', 'group' => 'Atelier', 'group_key' => 'workshop', 'presentation_key' => 'rentals', 'requires' => ['luthier_catalog']],
+            'inventory' => ['label' => 'Catalogue et stock', 'description' => 'Articles et niveaux de stock.', 'group' => 'Catalogue et stock', 'group_key' => 'catalog_inventory', 'presentation_key' => 'inventory', 'requires' => []],
+            'marketing' => ['label' => 'Marketing', 'description' => 'Campagnes et publicité Google.', 'group' => 'Marketing', 'group_key' => 'marketing', 'presentation_key' => 'marketing', 'requires' => []],
+            'communications' => ['label' => 'Canaux et intégrations', 'description' => 'Canaux entrants, boîtes email, Brevo Meetings et connecteurs de publication.', 'group' => 'Canaux et intégrations', 'group_key' => 'communications', 'presentation_key' => 'communications', 'requires' => []],
         ];
     }
 
-    /** @return array<string, string> */
-    public function options(): array
-    {
-        return collect($this->all())->mapWithKeys(
-            fn (array $definition, string $module): array => [$module => $definition['group'].' — '.$definition['label']],
-        )->all();
-    }
-
-    /** @return array<string, array{label: string, modules: array<string, array{label: string, description: string, group: string, group_key: string, presentation_key: string}>}> */
+    /** @return array<string, array{label: string, modules: array<string, array{label: string, description: string, group: string, group_key: string, presentation_key: string, requires: array<int, string>}>}> */
     public function grouped(): array
     {
         return collect($this->all())
@@ -54,6 +42,7 @@ final class OrganizationModuleRegistry
         return OrganizationModule::withoutGlobalScopes()
             ->where('organization_id', $organization->getKey())
             ->where('enabled', true)
+            ->whereIn('module', array_keys($this->all()))
             ->pluck('module')
             ->all();
     }
@@ -71,19 +60,42 @@ final class OrganizationModuleRegistry
     /** @param array<string, mixed> $selection @return array<int, string> */
     public function selectedFromSelection(array $selection): array
     {
-        return collect($selection)
-            ->filter(fn (mixed $enabled): bool => $enabled === true)
-            ->keys()
-            ->intersect(array_keys($this->all()))
-            ->values()
-            ->all();
+        return $this->withDependencies(
+            collect($selection)
+                ->filter(fn (mixed $enabled): bool => $enabled === true)
+                ->keys()
+                ->intersect(array_keys($this->all()))
+                ->values()
+                ->all(),
+        );
+    }
+
+    /** @param array<int, string> $modules @return array<int, string> */
+    public function withDependencies(array $modules): array
+    {
+        $selected = array_fill_keys(array_intersect(array_keys($this->all()), $modules), true);
+
+        do {
+            $added = false;
+
+            foreach (array_keys($selected) as $module) {
+                foreach ($this->all()[$module]['requires'] as $requiredModule) {
+                    if (! isset($selected[$requiredModule])) {
+                        $selected[$requiredModule] = true;
+                        $added = true;
+                    }
+                }
+            }
+        } while ($added);
+
+        return array_keys($selected);
     }
 
     /** @param array<int, string> $modules */
     public function sync(Organization $organization, array $modules): void
     {
         $knownModules = array_keys($this->all());
-        $selectedModules = array_values(array_intersect($knownModules, $modules));
+        $selectedModules = $this->withDependencies($modules);
 
         app(OrganizationContext::class)->run($organization, function () use ($organization, $knownModules, $selectedModules): void {
             foreach ($knownModules as $module) {

@@ -8,8 +8,8 @@ class OrganizationPresentation
 {
     /** @var array<string, array{label: string, items: array<string, string>}> */
     private const GROUPS = [
-        'relation_client' => [
-            'label' => 'Relation client',
+        'customer_follow_up' => [
+            'label' => 'Suivi client',
             'items' => [
                 'contacts' => 'Contacts',
                 'companies' => 'Entreprises',
@@ -18,20 +18,20 @@ class OrganizationPresentation
                 'quotes' => 'Devis',
             ],
         ],
-        'organisation' => [
-            'label' => 'Organisation',
+        'commercial_activity' => [
+            'label' => 'Activité commerciale',
             'items' => [
                 'tasks' => 'Tâches',
                 'appointments' => 'Rendez-vous',
                 'documents' => 'Documents',
             ],
         ],
-        'offer' => [
-            'label' => 'Offre',
+        'workshop' => [
+            'label' => 'Atelier',
             'items' => [],
         ],
-        'acquisition' => [
-            'label' => 'Acquisition',
+        'marketing' => [
+            'label' => 'Marketing',
             'items' => [
                 'campaigns' => 'Campagnes',
             ],
@@ -40,9 +40,12 @@ class OrganizationPresentation
 
     /** @var array<string, true> */
     private const KEYS = [
-        'relation_client' => true,
-        'organisation' => true,
-        'offer' => true,
+        'customer_follow_up' => true,
+        'commercial_activity' => true,
+        'workshop' => true,
+        'catalog_inventory' => true,
+        'marketing' => true,
+        'communications' => true,
         'contacts' => true,
         'companies' => true,
         'requests' => true,
@@ -51,7 +54,6 @@ class OrganizationPresentation
         'appointments' => true,
         'quotes' => true,
         'documents' => true,
-        'acquisition' => true,
         'campaigns' => true,
         'instruments' => true,
         'interventions' => true,

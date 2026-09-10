@@ -29,7 +29,7 @@ class ActiveIncomingRequests extends TableWidget
 
         return $organization !== null
             && $user !== null
-            && app(OrganizationModuleAccess::class)->enabled('inquiries', $organization)
+            && app(OrganizationModuleAccess::class)->enabled('crm', $organization)
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 

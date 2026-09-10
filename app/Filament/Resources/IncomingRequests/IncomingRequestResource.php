@@ -35,15 +35,15 @@ class IncomingRequestResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedInboxArrowDown;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Relation client';
+    protected static string|UnitEnum|null $navigationGroup = 'Suivi client';
 
     protected static ?string $navigationLabel = 'Demandes';
 
     protected static ?string $presentationKey = 'requests';
 
-    protected static string $organizationModule = 'inquiries';
+    protected static string $organizationModule = 'crm';
 
-    protected static ?string $presentationGroupKey = 'relation_client';
+    protected static ?string $presentationGroupKey = 'customer_follow_up';
 
     protected static ?string $modelLabel = 'demande';
 

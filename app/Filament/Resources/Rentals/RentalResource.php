@@ -35,7 +35,7 @@ class RentalResource extends Resource
 
     protected static ?string $pluralModelLabel = 'locations';
 
-    protected static ?string $presentationGroupKey = 'offer';
+    protected static ?string $presentationGroupKey = 'workshop';
 
     protected static ?string $presentationKey = 'rentals';
 
@@ -43,7 +43,7 @@ class RentalResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Offre';
+    protected static string|\UnitEnum|null $navigationGroup = 'Atelier';
 
     protected static ?int $navigationSort = 61;
 

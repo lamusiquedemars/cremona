@@ -30,7 +30,7 @@ class ActiveConversations extends TableWidget
 
         return $organization !== null
             && $user !== null
-            && app(OrganizationModuleAccess::class)->enabled('conversations', $organization)
+            && app(OrganizationModuleAccess::class)->enabled('crm', $organization)
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCorrespondence, $organization);
     }
 

@@ -35,7 +35,7 @@ class CampaignOverview extends StatsOverviewWidget
 
         return $organization !== null
             && $user !== null
-            && app(OrganizationModuleAccess::class)->enabled('acquisition', $organization)
+            && app(OrganizationModuleAccess::class)->enabled('marketing', $organization)
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 

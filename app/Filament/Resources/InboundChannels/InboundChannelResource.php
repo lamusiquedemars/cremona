@@ -23,11 +23,11 @@ class InboundChannelResource extends Resource
 
     protected static ?string $model = OrganizationIntegration::class;
 
-    protected static string $organizationModule = 'inquiries';
+    protected static string $organizationModule = 'communications';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Paramètres';
+    protected static string|UnitEnum|null $navigationGroup = 'Canaux et intégrations';
 
     protected static ?string $navigationLabel = 'Canaux entrants';
 

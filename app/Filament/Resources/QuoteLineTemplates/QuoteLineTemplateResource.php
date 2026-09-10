@@ -37,7 +37,7 @@ class QuoteLineTemplateResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Relation client';
+    protected static string|\UnitEnum|null $navigationGroup = 'Activité commerciale';
 
     protected static ?int $navigationSort = 65;
 

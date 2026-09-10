@@ -49,15 +49,15 @@ class CampaignResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMegaphone;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Acquisition';
+    protected static string|UnitEnum|null $navigationGroup = 'Marketing';
 
     protected static ?string $navigationLabel = 'Campagnes';
 
     protected static ?string $presentationKey = 'campaigns';
 
-    protected static string $organizationModule = 'acquisition';
+    protected static string $organizationModule = 'marketing';
 
-    protected static ?string $presentationGroupKey = 'acquisition';
+    protected static ?string $presentationGroupKey = 'marketing';
 
     protected static ?string $modelLabel = 'campagne';
 

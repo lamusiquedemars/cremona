@@ -20,7 +20,7 @@ class ContempoProjectionResource extends Resource
 
     protected static ?string $model = OrganizationIntegration::class;
 
-    protected static string $organizationModule = 'contempo';
+    protected static string $organizationModule = 'communications';
 
     protected static ?string $navigationLabel = 'Connecteurs de publication';
 
@@ -28,7 +28,7 @@ class ContempoProjectionResource extends Resource
 
     protected static ?string $pluralModelLabel = 'connecteurs de publication';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Paramètres';
+    protected static string|\UnitEnum|null $navigationGroup = 'Canaux et intégrations';
 
     protected static ?int $navigationSort = 85;
 

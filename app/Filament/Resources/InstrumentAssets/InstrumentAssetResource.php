@@ -37,15 +37,15 @@ class InstrumentAssetResource extends Resource
 
     protected static ?string $pluralModelLabel = 'instruments';
 
-    protected static ?string $presentationGroupKey = 'offer';
+    protected static ?string $presentationGroupKey = 'workshop';
 
     protected static ?string $presentationKey = 'instruments';
 
-    protected static string $organizationModule = 'instruments';
+    protected static string $organizationModule = 'luthier_catalog';
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedMusicalNote;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Offre';
+    protected static string|\UnitEnum|null $navigationGroup = 'Atelier';
 
     protected static ?int $navigationSort = 60;
 

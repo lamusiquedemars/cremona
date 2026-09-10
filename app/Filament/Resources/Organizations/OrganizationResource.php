@@ -94,8 +94,11 @@ class OrganizationResource extends Resource
     /** @return array<int, Section> */
     private static function moduleGroups(): array
     {
+        $registry = app(OrganizationModuleRegistry::class);
+        $definitions = $registry->all();
+
         return array_map(
-            function (array $group, string $groupKey): Section {
+            function (array $group, string $groupKey) use ($definitions): Section {
                 $fields = [
                     Text::make('Rubrique dans le menu')->columnSpan(4),
                     TextInput::make("settings.presentation.labels.{$groupKey}")
@@ -109,7 +112,13 @@ class OrganizationResource extends Resource
                 ];
 
                 foreach ($group['modules'] as $module => $definition) {
-                    $fields[] = Text::make($definition['label'])
+                    $requiredLabels = array_map(
+                        fn (string $requiredModule): string => $definitions[$requiredModule]['label'],
+                        $definition['requires'],
+                    );
+                    $label = $definition['label'].(count($requiredLabels) ? ' · dépend de '.implode(', ', $requiredLabels) : '');
+
+                    $fields[] = Text::make($label)
                         ->tooltip($definition['description'])
                         ->columnSpan(4);
                     $fields[] = TextInput::make("settings.presentation.labels.{$definition['presentation_key']}")
@@ -128,8 +137,8 @@ class OrganizationResource extends Resource
                     ->columns(12)
                     ->schema($fields);
             },
-            app(OrganizationModuleRegistry::class)->grouped(),
-            array_keys(app(OrganizationModuleRegistry::class)->grouped()),
+            $registry->grouped(),
+            array_keys($registry->grouped()),
         );
     }
 }

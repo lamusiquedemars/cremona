@@ -23,11 +23,11 @@ class BrevoConnectionResource extends Resource
 
     protected static ?string $model = OrganizationIntegration::class;
 
-    protected static string $organizationModule = 'appointments';
+    protected static string $organizationModule = 'communications';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Paramètres';
+    protected static string|UnitEnum|null $navigationGroup = 'Canaux et intégrations';
 
     protected static ?string $navigationLabel = 'Brevo Meetings';
 

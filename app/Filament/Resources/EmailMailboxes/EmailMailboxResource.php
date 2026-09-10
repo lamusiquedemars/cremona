@@ -23,11 +23,11 @@ class EmailMailboxResource extends Resource
 
     protected static ?string $model = EmailMailbox::class;
 
-    protected static string $organizationModule = 'conversations';
+    protected static string $organizationModule = 'communications';
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Paramètres';
+    protected static string|\UnitEnum|null $navigationGroup = 'Canaux et intégrations';
 
     protected static ?string $navigationLabel = 'Boîtes email';
 

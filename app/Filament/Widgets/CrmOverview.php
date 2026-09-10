@@ -47,12 +47,10 @@ class CrmOverview extends StatsOverviewWidget
         return $organization !== null
             && $user !== null
             && app(OrganizationModuleAccess::class)->anyEnabled([
-                'inquiries',
-                'conversations',
-                'tasks',
+                'crm',
                 'appointments',
                 'quotes',
-                'acquisition',
+                'marketing',
             ], $organization)
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
@@ -113,37 +111,51 @@ class CrmOverview extends StatsOverviewWidget
             ? 'Google Ads · jamais synchronisé'
             : 'Google Ads · synchro '.Carbon::parse($lastCampaignSync)->setTimezone($timezone)->format('d/m H:i');
 
-        return [
-            Stat::make('Nouvelles demandes', $new)
+        $moduleAccess = app(OrganizationModuleAccess::class);
+        $stats = [];
+
+        if ($moduleAccess->enabled('crm', $organization)) {
+            $stats[] = Stat::make('Nouvelles demandes', $new)
                 ->description("{$unread} non lue".($unread > 1 ? 's' : '').' · Voir les demandes')
                 ->descriptionIcon(Heroicon::OutlinedEnvelopeOpen)
                 ->color($new > 0 ? 'info' : 'gray')
-                ->url(IncomingRequestResource::getUrl('index', ['tab' => 'new'])),
-            Stat::make('Correspondances à traiter', $conversations)
+                ->url(IncomingRequestResource::getUrl('index', ['tab' => 'new']));
+            $stats[] = Stat::make('Correspondances à traiter', $conversations)
                 ->description('Dernier message reçu · Voir les correspondances')
                 ->descriptionIcon(Heroicon::OutlinedChatBubbleLeftRight)
                 ->color($conversations > 0 ? 'warning' : 'gray')
-                ->url(ConversationResource::getUrl('index', ['tab' => 'open'])),
-            Stat::make('Tâches à échéance', $tasksDue)
+                ->url(ConversationResource::getUrl('index', ['tab' => 'open']));
+            $stats[] = Stat::make('Tâches à échéance', $tasksDue)
                 ->description("{$overdueTasks} en retard · Voir les tâches")
                 ->descriptionIcon(Heroicon::OutlinedCheckCircle)
                 ->color($overdueTasks > 0 ? 'danger' : ($tasksDue > 0 ? 'warning' : 'gray'))
-                ->url(CrmTaskResource::getUrl('index', ['tab' => 'due'])),
-            Stat::make('Rendez-vous aujourd’hui', $appointmentsToday)
+                ->url(CrmTaskResource::getUrl('index', ['tab' => 'due']));
+        }
+
+        if ($moduleAccess->enabled('appointments', $organization)) {
+            $stats[] = Stat::make('Rendez-vous aujourd’hui', $appointmentsToday)
                 ->description('À venir · Voir les rendez-vous')
                 ->descriptionIcon(Heroicon::OutlinedCalendarDays)
                 ->color($appointmentsToday > 0 ? 'info' : 'gray')
-                ->url(AppointmentResource::getUrl('index', ['tab' => 'today'])),
-            Stat::make('Devis à suivre', $quotesToFollow)
+                ->url(AppointmentResource::getUrl('index', ['tab' => 'today']));
+        }
+
+        if ($moduleAccess->enabled('quotes', $organization)) {
+            $stats[] = Stat::make('Devis à suivre', $quotesToFollow)
                 ->description("{$expiredQuotes} hors validité · Voir les devis")
                 ->descriptionIcon(Heroicon::OutlinedDocumentCurrencyEuro)
                 ->color($expiredQuotes > 0 ? 'danger' : ($quotesToFollow > 0 ? 'warning' : 'gray'))
-                ->url(QuoteResource::getUrl('index', ['tab' => 'follow_up'])),
-            Stat::make('Campagnes à vérifier', $campaignsToCheck)
+                ->url(QuoteResource::getUrl('index', ['tab' => 'follow_up']));
+        }
+
+        if ($moduleAccess->enabled('marketing', $organization)) {
+            $stats[] = Stat::make('Campagnes à vérifier', $campaignsToCheck)
                 ->description($campaignSource.' · Voir les campagnes')
                 ->descriptionIcon(Heroicon::OutlinedMegaphone)
                 ->color($campaignsToCheck > 0 ? 'warning' : 'gray')
-                ->url(CampaignResource::getUrl('index', ['tab' => 'attention'])),
-        ];
+                ->url(CampaignResource::getUrl('index', ['tab' => 'attention']));
+        }
+
+        return $stats;
     }
 }

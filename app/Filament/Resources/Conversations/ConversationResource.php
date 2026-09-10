@@ -31,15 +31,15 @@ class ConversationResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChatBubbleLeftRight;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Relation client';
+    protected static string|UnitEnum|null $navigationGroup = 'Suivi client';
 
     protected static ?string $navigationLabel = 'Correspondances';
 
     protected static ?string $presentationKey = 'conversations';
 
-    protected static string $organizationModule = 'conversations';
+    protected static string $organizationModule = 'crm';
 
-    protected static ?string $presentationGroupKey = 'relation_client';
+    protected static ?string $presentationGroupKey = 'customer_follow_up';
 
     protected static ?string $modelLabel = 'conversation';
 

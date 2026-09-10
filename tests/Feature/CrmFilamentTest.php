@@ -13,12 +13,12 @@ use App\Filament\Resources\People\PersonResource;
 use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
 use App\Models\Company;
 use App\Models\Organization;
-use App\Models\OrganizationIntegration;
 use App\Models\Person;
 use App\Models\User;
 use App\Services\CrmRecordManager;
 use App\Services\IncomingRequestManager;
 use App\Services\OrganizationIntegrationManager;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,9 +29,17 @@ class CrmFilamentTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_viewer_can_open_crm_lists_but_cannot_open_creation_pages(): void
+    private function organizationWithCrm(): Organization
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'communications']);
+
+        return $organization;
+    }
+
+    public function test_a_viewer_can_open_crm_lists_but_cannot_open_creation_pages(): void
+    {
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, [
             'role' => OrganizationRole::Viewer->value,
@@ -56,7 +64,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_a_collaborator_can_open_contact_and_company_creation_pages(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -72,7 +80,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_a_request_detail_renders_its_snapshot_and_workflow_actions(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -99,7 +107,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_the_dashboard_and_work_queues_reflect_active_requests(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -124,10 +132,13 @@ class CrmFilamentTest extends TestCase
         $this->actingAs($collaborator)
             ->get(Filament::getPanel('admin')->getUrl($organization))
             ->assertOk()
-            ->assertSee('Relation client')
+            ->assertSee('Suivi client')
             ->assertSee('Demandes à traiter')
             ->assertSee('Demande non attribuée')
-            ->assertSee('Demande attribuée');
+            ->assertSee('Demande attribuée')
+            ->assertDontSee('Rendez-vous aujourd’hui')
+            ->assertDontSee('Devis à suivre')
+            ->assertDontSee('Campagnes à vérifier');
 
         $this->actingAs($collaborator)
             ->get(IncomingRequestResource::getUrl('index', ['tab' => 'unassigned'], tenant: $organization))
@@ -138,7 +149,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_the_contact_page_combines_identity_coordinates_companies_and_requests(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, [
             'role' => OrganizationRole::Viewer->value,
@@ -200,7 +211,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_the_company_page_combines_identity_coordinates_contacts_and_requests(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, [
             'role' => OrganizationRole::Viewer->value,
@@ -259,8 +270,8 @@ class CrmFilamentTest extends TestCase
 
     public function test_global_search_finds_crm_records_and_keeps_tenants_isolated(): void
     {
-        $organization = Organization::factory()->create();
-        $otherOrganization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
+        $otherOrganization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, [
             'role' => OrganizationRole::Viewer->value,
@@ -315,7 +326,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_contact_notes_are_visible_to_viewers_but_only_managers_can_add_them(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, [
@@ -355,7 +366,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_contact_company_links_can_only_be_managed_by_collaborators(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, [
@@ -400,7 +411,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_a_collaborator_can_link_an_existing_company_to_a_contact(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -439,7 +450,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_archived_crm_records_are_read_only_until_reactivated(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, [
@@ -484,7 +495,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_only_integration_managers_can_see_inbound_channels(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $administrator = User::factory()->create();
         $collaborator = User::factory()->create();
         $administrator->organizations()->attach($organization, [
@@ -514,7 +525,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_an_integration_manager_can_create_an_inbound_channel(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $administrator = User::factory()->create();
         $administrator->organizations()->attach($organization, [
             'role' => OrganizationRole::Administrator->value,

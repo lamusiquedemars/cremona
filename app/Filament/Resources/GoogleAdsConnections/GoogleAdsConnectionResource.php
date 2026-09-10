@@ -30,11 +30,11 @@ class GoogleAdsConnectionResource extends Resource
 
     protected static ?string $model = OrganizationIntegration::class;
 
-    protected static string $organizationModule = 'acquisition';
+    protected static string $organizationModule = 'marketing';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Paramètres';
+    protected static string|UnitEnum|null $navigationGroup = 'Marketing';
 
     protected static ?string $navigationLabel = 'Publicité';
 
