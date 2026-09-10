@@ -16,10 +16,10 @@ class EditInstrumentAsset extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [Action::make('publishContempo')->label('Publier sur Contempo')->icon(Heroicon::OutlinedGlobeAlt)->requiresConfirmation()->action(function (ContempoInstrumentPublisher $publisher): void {
+        return [Action::make('publishContempo')->label('Publier sur le site')->icon(Heroicon::OutlinedGlobeAlt)->requiresConfirmation()->action(function (ContempoInstrumentPublisher $publisher): void {
             try {
                 $publisher->publish($this->record);
-                Notification::make()->title('Instrument publié sur Contempo')->success()->send();
+                Notification::make()->title('Instrument publié sur le site')->success()->send();
             } catch (LogicException $exception) {
                 Notification::make()->title('Publication interrompue')->body($exception->getMessage())->danger()->send();
             }

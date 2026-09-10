@@ -24,7 +24,7 @@ final class OrganizationModuleRegistry
             'interventions' => ['label' => 'Atelier', 'description' => 'Dossiers atelier et prestations.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'interventions'],
             'rentals' => ['label' => 'Locations', 'description' => 'Contrats et suivi des locations.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'rentals'],
             'inventory' => ['label' => 'Stock', 'description' => 'Articles, niveaux et mouvements de stock.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'inventory'],
-            'contempo' => ['label' => 'Projection Contempo', 'description' => 'Projection publique contrôlée des instruments.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'contempo'],
+            'contempo' => ['label' => 'Connecteurs de publication', 'description' => 'Connexions de publication contrôlée vers les sites.', 'group' => 'Offre', 'group_key' => 'offer', 'presentation_key' => 'contempo'],
         ];
     }
 
