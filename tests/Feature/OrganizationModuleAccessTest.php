@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\OrganizationModule;
 use App\Models\User;
 use App\Services\OrganizationModuleAccess;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -58,6 +59,22 @@ class OrganizationModuleAccessTest extends TestCase
 
             $this->assertFalse(app(OrganizationModuleAccess::class)->enabled('instruments'));
             $this->assertFalse(InstrumentAssetResource::shouldRegisterNavigation());
+        });
+    }
+
+    public function test_the_module_registry_persists_the_selection_without_deleting_existing_data(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationModuleRegistry::class)->sync($organization, ['contacts', 'instruments']);
+
+        $this->assertSame(['contacts', 'instruments'], app(OrganizationModuleRegistry::class)->enabledFor($organization));
+        $this->assertFalse(app(OrganizationModuleAccess::class)->enabled('contacts'));
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $this->assertTrue(app(OrganizationModuleAccess::class)->enabled('contacts'));
+            $this->assertTrue(app(OrganizationModuleAccess::class)->enabled('instruments'));
+            $this->assertFalse(app(OrganizationModuleAccess::class)->enabled('interventions'));
         });
     }
 }

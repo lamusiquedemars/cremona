@@ -28,7 +28,7 @@ class ContempoProjectionResource extends Resource
 
     protected static ?string $pluralModelLabel = 'projection Contempo';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
+    protected static string|\UnitEnum|null $navigationGroup = 'Paramètres';
 
     protected static ?int $navigationSort = 85;
 

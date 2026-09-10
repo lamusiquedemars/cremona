@@ -35,7 +35,7 @@ class StockItemResource extends Resource
 
     protected static ?string $pluralModelLabel = 'articles de stock';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
+    protected static string|\UnitEnum|null $navigationGroup = 'Offre';
 
     protected static ?int $navigationSort = 75;
 

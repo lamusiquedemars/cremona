@@ -35,13 +35,13 @@ class RentalResource extends Resource
 
     protected static ?string $pluralModelLabel = 'locations';
 
-    protected static ?string $presentationGroupKey = 'relation_client';
+    protected static ?string $presentationGroupKey = 'offer';
 
     protected static string $organizationModule = 'rentals';
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Relation client';
+    protected static string|\UnitEnum|null $navigationGroup = 'Offre';
 
     protected static ?int $navigationSort = 61;
 

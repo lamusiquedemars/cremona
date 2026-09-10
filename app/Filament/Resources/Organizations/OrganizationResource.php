@@ -8,10 +8,12 @@ use App\Filament\Resources\Organizations\Pages\ListOrganizations;
 use App\Filament\Resources\Organizations\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\Organizations\RelationManagers\SitesRelationManager;
 use App\Models\Organization;
+use App\Services\OrganizationModuleRegistry;
 use App\Services\OrganizationPresentation;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -61,6 +63,15 @@ class OrganizationResource extends Resource
                 ->searchable()
                 ->required()
                 ->helperText('Utilisé pour afficher les rendez-vous, synchronisations et résultats de cette organisation.'),
+            Section::make('Modules actifs')
+                ->description('Une capacité non sélectionnée est masquée du menu, du tableau de bord et bloquée en accès direct. Les données existantes sont conservées.')
+                ->columnSpanFull()
+                ->schema([
+                    CheckboxList::make('modules')
+                        ->label('Capacités disponibles')
+                        ->options(app(OrganizationModuleRegistry::class)->options())
+                        ->columns(2),
+                ]),
             Section::make('Présentation métier')
                 ->description('Ces libellés adaptent l’interface sans modifier les données, les droits ni les intégrations.')
                 ->columnSpanFull()

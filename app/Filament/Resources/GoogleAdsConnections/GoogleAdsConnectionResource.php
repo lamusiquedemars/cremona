@@ -34,7 +34,7 @@ class GoogleAdsConnectionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
+    protected static string|UnitEnum|null $navigationGroup = 'Paramètres';
 
     protected static ?string $navigationLabel = 'Publicité';
 

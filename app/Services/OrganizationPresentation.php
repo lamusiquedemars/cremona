@@ -15,11 +15,20 @@ class OrganizationPresentation
                 'companies' => 'Entreprises',
                 'requests' => 'Demandes',
                 'conversations' => 'Correspondances',
+                'quotes' => 'Devis',
+            ],
+        ],
+        'organisation' => [
+            'label' => 'Organisation',
+            'items' => [
                 'tasks' => 'Tâches',
                 'appointments' => 'Rendez-vous',
-                'quotes' => 'Devis',
                 'documents' => 'Documents',
             ],
+        ],
+        'offer' => [
+            'label' => 'Offre',
+            'items' => [],
         ],
         'acquisition' => [
             'label' => 'Acquisition',
@@ -32,6 +41,8 @@ class OrganizationPresentation
     /** @var array<string, true> */
     private const KEYS = [
         'relation_client' => true,
+        'organisation' => true,
+        'offer' => true,
         'contacts' => true,
         'companies' => true,
         'requests' => true,
