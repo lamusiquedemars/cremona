@@ -40,7 +40,12 @@ class UserResource extends Resource
         return $schema->components([
             TextInput::make('name')->label('Nom')->required(),
             TextInput::make('email')->label('Email')->email()->required()->unique(ignoreRecord: true),
-            TextInput::make('password')->label('Mot de passe')->password()->required(fn (string $operation) => $operation === 'create')->dehydrated(fn ($state) => filled($state)),
+            TextInput::make('password')
+                ->label('Mot de passe')
+                ->password()
+                ->revealable()
+                ->required(fn (string $operation) => $operation === 'create')
+                ->visibleOn('create'),
             Toggle::make('is_platform_admin')->label('Super-admin'),
             Section::make('Accès aux organisations')
                 ->description('Le profil est réglé séparément pour chaque organisation. Un compte client n’accède jamais à l’administration de la plateforme.')
