@@ -62,6 +62,13 @@ class InstrumentAssetResource extends Resource
                 Checkbox::make('available_for_rental')->label('Proposer à la location'),
                 TextInput::make('suggested_rental_amount')->label('Loyer HT indicatif')->numeric()->prefix('€')->default(0)->helperText('Montant de référence ; le montant est ajustable pour chaque location.'),
             ])->columns(2),
+            Section::make('Visibilité sur le site')->description('Ces informations sont celles que le site public peut afficher. Elles ne modifient ni la location, ni la vente, ni le suivi atelier.')->schema([
+                Checkbox::make('is_site_published')->label('Afficher cet instrument sur le site'),
+                TextInput::make('public_title')->label('Titre affiché')->placeholder(fn (?InstrumentAsset $record): ?string => $record?->name),
+                TextInput::make('public_slug')->label('Adresse publique')->helperText('Laissez vide pour utiliser la référence ou le titre.'),
+                Textarea::make('public_description')->label('Présentation publique')->rows(4)->columnSpanFull(),
+                TextInput::make('public_price_label')->label('Prix affiché')->placeholder('Ex. Sur demande ou 2 400 €'),
+            ])->columns(2),
         ]);
     }
 
