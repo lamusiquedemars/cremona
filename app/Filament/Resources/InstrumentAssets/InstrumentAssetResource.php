@@ -11,6 +11,8 @@ use App\Models\InstrumentAsset;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -55,6 +57,12 @@ class InstrumentAssetResource extends Resource
                 Select::make('ownership')->label('Provenance')->options(['owned' => 'Propriété de l’atelier', 'deposit' => 'Dépôt-vente', 'consignment' => 'Confié par un tiers'])->default('owned')->required(),
                 Select::make('status')->label('Disponibilité actuelle')->options(InstrumentAssetStatus::class)->default(InstrumentAssetStatus::Available)->required(),
                 Textarea::make('description')->label('Description interne')->rows(4)->columnSpanFull(),
+                KeyValue::make('attributes')->label('Caractéristiques de l’instrument')->keyLabel('Caractéristique')->valueLabel('Valeur')->columnSpanFull()->helperText('Ex. Longueur de corde : 328 mm. Ces données sont structurées et pourront être sélectionnées pour le site.'),
+                Repeater::make('media')->label('Médias liés')->schema([
+                    TextInput::make('url')->label('Adresse du média')->url()->required(),
+                    TextInput::make('caption')->label('Légende'),
+                    Checkbox::make('is_public')->label('Autoriser sur le site'),
+                ])->columns(3)->columnSpanFull()->helperText('Liste les images ou documents déjà déposés dans la médiathèque. Seuls les médias autorisés seront transmis au site.'),
             ])->columns(2),
             Section::make('Mise à disposition')->schema([
                 Checkbox::make('available_for_sale')->label('Proposer à la vente'),
