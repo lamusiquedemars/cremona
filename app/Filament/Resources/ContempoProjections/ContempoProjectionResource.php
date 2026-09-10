@@ -22,11 +22,11 @@ class ContempoProjectionResource extends Resource
 
     protected static string $organizationModule = 'contempo';
 
-    protected static ?string $navigationLabel = 'Projection Contempo';
+    protected static ?string $navigationLabel = 'Connecteurs de publication';
 
-    protected static ?string $modelLabel = 'projection Contempo';
+    protected static ?string $modelLabel = 'connecteur de publication';
 
-    protected static ?string $pluralModelLabel = 'projection Contempo';
+    protected static ?string $pluralModelLabel = 'connecteurs de publication';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Paramètres';
 
@@ -39,9 +39,9 @@ class ContempoProjectionResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([TextColumn::make('status')->label('État')->badge(), TextColumn::make('created_at')->label('Configurée le')->dateTime('d/m/Y H:i')])->headerActions([Action::make('configure')->label('Configurer la projection')->schema([TextInput::make('endpoint')->label('Adresse de réception Contempo')->url()->required(), TextInput::make('token')->label('Jeton de projection')->password()->revealable()->required()])->action(function (array $data): void {
+        return $table->columns([TextColumn::make('status')->label('État')->badge(), TextColumn::make('created_at')->label('Configurée le')->dateTime('d/m/Y H:i')])->headerActions([Action::make('configure')->label('Configurer le connecteur')->schema([TextInput::make('endpoint')->label('Adresse de réception du site')->url()->required(), TextInput::make('token')->label('Jeton du connecteur')->password()->revealable()->required()])->action(function (array $data): void {
             app(OrganizationIntegrationManager::class)->configure('contempo_cms', 'instrument_projection', $data, auth()->user());
-            Notification::make()->title('Projection Contempo configurée')->success()->send();
+            Notification::make()->title('Connecteur de publication configuré')->success()->send();
         })]);
     }
 
