@@ -58,7 +58,8 @@ class ActiveConversations extends TableWidget
                     ->placeholder('Non rattaché'),
                 TextColumn::make('assignedUser.name')
                     ->label('Responsable')
-                    ->placeholder('Non attribué'),
+                    ->placeholder('Non attribué')
+                    ->hiddenFrom('md'),
                 TextColumn::make('last_inbound_at')
                     ->label('Dernier message reçu')
                     ->since(),

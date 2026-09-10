@@ -38,6 +38,14 @@ class CrmOverview extends StatsOverviewWidget
 
     protected ?string $heading = 'Priorités du jour';
 
+    /**
+     * Une carte par ligne sur téléphone afin que chaque priorité reste lisible
+     * et facilement touchable.
+     *
+     * @var array<string, int>
+     */
+    protected int|array|null $columns = ['sm' => 2, 'xl' => 3];
+
     public static function canView(): bool
     {
         $organization = app(OrganizationContext::class)->current();

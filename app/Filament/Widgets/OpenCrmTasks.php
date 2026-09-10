@@ -54,7 +54,7 @@ class OpenCrmTasks extends TableWidget
                     ->timezone($timezone)
                     ->color(fn (CrmTask $record): string => $record->due_at?->isPast() ? 'danger' : 'gray')
                     ->placeholder('Sans échéance'),
-                TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
+                TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué')->hiddenFrom('md'),
             ])
             ->recordUrl(fn (CrmTask $record): string => CrmTaskResource::getUrl('view', ['record' => $record]))
             ->headerActions([

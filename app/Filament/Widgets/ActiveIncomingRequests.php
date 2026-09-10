@@ -62,7 +62,8 @@ class ActiveIncomingRequests extends TableWidget
                     ->badge(),
                 TextColumn::make('assignedUser.name')
                     ->label('Responsable')
-                    ->placeholder('Non attribuée'),
+                    ->placeholder('Non attribuée')
+                    ->hiddenFrom('md'),
                 TextColumn::make('received_at')
                     ->label('Reçue')
                     ->since(),

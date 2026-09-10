@@ -21,11 +21,18 @@ class CampaignOverview extends StatsOverviewWidget
 
     protected ?string $pollingInterval = null;
 
-    protected static ?int $sort = 30;
+    protected static ?int $sort = 15;
 
     protected ?string $heading = 'Pilotage des campagnes';
 
     protected ?string $description = 'Les 30 derniers jours : dépenses renseignées et demandes réellement reçues par les sites.';
+
+    /**
+     * Les indicateurs restent confortables au toucher sur téléphone.
+     *
+     * @var array<string, int>
+     */
+    protected int|array|null $columns = ['sm' => 2, 'xl' => 4];
 
     public static function canView(): bool
     {

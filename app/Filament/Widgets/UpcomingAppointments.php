@@ -59,10 +59,12 @@ class UpcomingAppointments extends TableWidget
                     ->placeholder('—'),
                 TextColumn::make('modality')
                     ->label('Modalité')
-                    ->badge(),
+                    ->badge()
+                    ->hiddenFrom('md'),
                 TextColumn::make('assignedUser.name')
                     ->label('Responsable')
-                    ->placeholder('Non attribué'),
+                    ->placeholder('Non attribué')
+                    ->hiddenFrom('md'),
             ])
             ->recordUrl(fn (Appointment $record): string => AppointmentResource::getUrl('view', ['record' => $record]))
             ->headerActions([
