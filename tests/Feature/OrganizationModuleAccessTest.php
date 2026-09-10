@@ -77,4 +77,15 @@ class OrganizationModuleAccessTest extends TestCase
             $this->assertFalse(app(OrganizationModuleAccess::class)->enabled('interventions'));
         });
     }
+
+    public function test_grouped_modules_keep_their_unique_technical_keys(): void
+    {
+        $groups = app(OrganizationModuleRegistry::class)->grouped();
+
+        $this->assertArrayHasKey('contacts', $groups['relation_client']['modules']);
+        $this->assertArrayHasKey('appointments', $groups['organisation']['modules']);
+        $this->assertArrayHasKey('instruments', $groups['offer']['modules']);
+        $this->assertArrayNotHasKey(0, $groups['relation_client']['modules']);
+        $this->assertArrayNotHasKey(0, $groups['organisation']['modules']);
+    }
 }

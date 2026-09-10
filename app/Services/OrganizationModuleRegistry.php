@@ -40,7 +40,7 @@ final class OrganizationModuleRegistry
     public function grouped(): array
     {
         return collect($this->all())
-            ->groupBy('group_key')
+            ->groupBy('group_key', preserveKeys: true)
             ->map(fn ($definitions): array => [
                 'label' => $definitions->first()['group'],
                 'modules' => $definitions->all(),
