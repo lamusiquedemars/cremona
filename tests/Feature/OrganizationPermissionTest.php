@@ -16,18 +16,30 @@ class OrganizationPermissionTest extends TestCase
     public function test_roles_grant_their_default_permissions(): void
     {
         $organization = Organization::factory()->create();
-        $administrator = User::factory()->create();
+        $owner = User::factory()->create();
+        $collaborator = User::factory()->create();
         $viewer = User::factory()->create();
 
-        $administrator->organizations()->attach($organization, [
-            'role' => OrganizationRole::Administrator->value,
+        $owner->organizations()->attach($organization, [
+            'role' => OrganizationRole::Owner->value,
+        ]);
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
         ]);
         $viewer->organizations()->attach($organization, [
             'role' => OrganizationRole::Viewer->value,
         ]);
 
-        $this->assertTrue($administrator->hasOrganizationPermission(
+        $this->assertTrue($owner->hasOrganizationPermission(
+            OrganizationPermission::ManageCorrespondenceLinks,
+            $organization,
+        ));
+        $this->assertFalse($owner->hasOrganizationPermission(
             OrganizationPermission::ManageIntegrations,
+            $organization,
+        ));
+        $this->assertFalse($collaborator->hasOrganizationPermission(
+            OrganizationPermission::ManageCorrespondenceLinks,
             $organization,
         ));
         $this->assertFalse($viewer->hasOrganizationPermission(

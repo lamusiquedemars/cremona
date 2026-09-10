@@ -13,7 +13,6 @@ use App\Filament\Resources\People\PersonResource;
 use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
 use App\Models\Company;
 use App\Models\Organization;
-use App\Models\OrganizationIntegration;
 use App\Models\Person;
 use App\Models\User;
 use App\Services\CrmRecordManager;
@@ -485,11 +484,8 @@ class CrmFilamentTest extends TestCase
     public function test_only_integration_managers_can_see_inbound_channels(): void
     {
         $organization = Organization::factory()->create();
-        $administrator = User::factory()->create();
+        $administrator = User::factory()->platformAdministrator()->create();
         $collaborator = User::factory()->create();
-        $administrator->organizations()->attach($organization, [
-            'role' => OrganizationRole::Administrator->value,
-        ]);
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
         ]);
@@ -515,10 +511,7 @@ class CrmFilamentTest extends TestCase
     public function test_an_integration_manager_can_create_an_inbound_channel(): void
     {
         $organization = Organization::factory()->create();
-        $administrator = User::factory()->create();
-        $administrator->organizations()->attach($organization, [
-            'role' => OrganizationRole::Administrator->value,
-        ]);
+        $administrator = User::factory()->platformAdministrator()->create();
 
         $this->actingAs($administrator);
         Filament::setCurrentPanel(Filament::getPanel('admin'));

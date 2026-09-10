@@ -39,10 +39,7 @@ class BrevoConnectionTest extends TestCase
     public function test_brevo_configuration_reuses_the_encrypted_integration_vault(): void
     {
         $organization = Organization::factory()->create();
-        $administrator = User::factory()->create();
-        $administrator->organizations()->attach($organization, [
-            'role' => OrganizationRole::Administrator->value,
-        ]);
+        $administrator = User::factory()->platformAdministrator()->create();
 
         $integration = app(OrganizationContext::class)->run($organization, function () use ($administrator): OrganizationIntegration {
             $manager = app(OrganizationIntegrationManager::class);
@@ -79,11 +76,8 @@ class BrevoConnectionTest extends TestCase
     public function test_only_integration_managers_can_open_brevo_configuration(): void
     {
         $organization = Organization::factory()->create();
-        $administrator = User::factory()->create();
+        $administrator = User::factory()->platformAdministrator()->create();
         $collaborator = User::factory()->create();
-        $administrator->organizations()->attach($organization, [
-            'role' => OrganizationRole::Administrator->value,
-        ]);
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
         ]);

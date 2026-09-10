@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Organizations\RelationManagers;
 
 use App\Enums\OrganizationRole;
+use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;
 use Filament\Forms\Components\Select;
@@ -22,7 +24,7 @@ class MembersRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('name')->label('Nom')->searchable(),
                 TextColumn::make('email')->label('Email')->searchable()->copyable(),
-                TextColumn::make('pivot.role')->label('Rôle')->badge()->formatStateUsing(fn (OrganizationRole|string $state): string => $state instanceof OrganizationRole ? $state->label() : OrganizationRole::from($state)->label()),
+                TextColumn::make('pivot.role')->label('Profil')->badge()->formatStateUsing(fn (OrganizationRole|string $state): string => $state instanceof OrganizationRole ? $state->label() : OrganizationRole::from($state)->label()),
             ])
             ->headerActions([
                 AttachAction::make()
@@ -31,9 +33,28 @@ class MembersRelationManager extends RelationManager
                     ->recordSelectSearchColumns(['name', 'email'])
                     ->schema(fn (AttachAction $action): array => [
                         $action->getRecordSelect()->label('Compte'),
-                        Select::make('role')->label('Rôle')->options(OrganizationRole::class)->default(OrganizationRole::Collaborator->value)->required(),
+                        Select::make('role')->label('Profil')->options(OrganizationRole::options())->default(OrganizationRole::Collaborator->value)->required(),
                     ]),
             ])
-            ->recordActions([DetachAction::make()->label('Retirer')]);
+            ->recordActions([
+                Action::make('changeRole')
+                    ->label('Modifier le profil')
+                    ->icon('heroicon-o-user-circle')
+                    ->fillForm(fn (User $record): array => ['role' => $record->pivot->role->value])
+                    ->schema([
+                        Select::make('role')
+                            ->label('Profil')
+                            ->options(OrganizationRole::options())
+                            ->helperText(fn (?string $state): string => OrganizationRole::tryFrom((string) $state)?->description() ?? 'Choisir le profil du compte.')
+                            ->required(),
+                    ])
+                    ->action(function (User $record, array $data): void {
+                        $this->getOwnerRecord()->users()->updateExistingPivot($record, [
+                            'role' => $data['role'],
+                            'permissions' => null,
+                        ]);
+                    }),
+                DetachAction::make()->label('Retirer'),
+            ]);
     }
 }

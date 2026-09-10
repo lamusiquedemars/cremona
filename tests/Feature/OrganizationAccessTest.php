@@ -72,5 +72,10 @@ class OrganizationAccessTest extends TestCase
         $user = User::factory()->create();
 
         $this->assertFalse($user->canAccessPanel(Filament::getPanel('admin')));
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertForbidden()
+            ->assertSee('Votre compte n’est associé à aucune organisation active.');
     }
 }

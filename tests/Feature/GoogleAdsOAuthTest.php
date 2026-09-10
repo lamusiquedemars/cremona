@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\OrganizationRole;
 use App\Models\Organization;
 use App\Models\OrganizationIntegration;
 use App\Models\User;
@@ -16,11 +15,10 @@ class GoogleAdsOAuthTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_administrator_can_authorize_google_ads_without_exposing_refresh_token(): void
+    public function test_platform_administrator_can_authorize_google_ads_without_exposing_refresh_token(): void
     {
         $organization = Organization::factory()->create();
-        $administrator = User::factory()->create();
-        $administrator->organizations()->attach($organization, ['role' => OrganizationRole::Administrator->value]);
+        $administrator = User::factory()->platformAdministrator()->create();
 
         $integration = app(OrganizationContext::class)->run($organization, fn (): OrganizationIntegration => app(OrganizationIntegrationManager::class)->configure(
             'google_ads', 'reporting', [
@@ -53,8 +51,7 @@ class GoogleAdsOAuthTest extends TestCase
     public function test_oauth_client_rejection_returns_to_the_organization_without_a_server_error(): void
     {
         $organization = Organization::factory()->create();
-        $owner = User::factory()->create();
-        $owner->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
+        $owner = User::factory()->platformAdministrator()->create();
 
         $integration = app(OrganizationContext::class)->run($organization, fn (): OrganizationIntegration => app(OrganizationIntegrationManager::class)->configure(
             'google_ads', 'reporting', [

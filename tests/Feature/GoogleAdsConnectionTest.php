@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -21,8 +20,7 @@ class GoogleAdsConnectionTest extends TestCase
     public function test_google_ads_account_preparation_uses_the_encrypted_integration_vault(): void
     {
         $organization = Organization::factory()->create();
-        $administrator = User::factory()->create();
-        $administrator->organizations()->attach($organization, ['role' => OrganizationRole::Administrator->value]);
+        $administrator = User::factory()->platformAdministrator()->create();
 
         $integration = app(OrganizationContext::class)->run($organization, function () use ($administrator): OrganizationIntegration {
             return app(OrganizationIntegrationManager::class)->configure('google_ads', 'reporting', [
@@ -46,11 +44,10 @@ class GoogleAdsConnectionTest extends TestCase
     {
         $organization = Organization::factory()->create();
         $owner = User::factory()->create();
-        $administrator = User::factory()->create();
+        $administrator = User::factory()->platformAdministrator()->create();
         $collaborator = User::factory()->create();
         $viewer = User::factory()->create();
         $owner->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
-        $administrator->organizations()->attach($organization, ['role' => OrganizationRole::Administrator->value]);
         $collaborator->organizations()->attach($organization, ['role' => OrganizationRole::Collaborator->value]);
         $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
 
@@ -58,14 +55,14 @@ class GoogleAdsConnectionTest extends TestCase
 
         $this->assertSame('Publicité', GoogleAdsConnectionResource::getNavigationLabel());
         $this->assertSame('Configuration de l’organisation', GoogleAdsConnectionResource::getNavigationGroup());
-        $this->actingAs($owner)->get($url)->assertOk()->assertSee('Compte Google Ads');
+        $this->actingAs($owner)->get($url)->assertForbidden();
         $this->actingAs($administrator)->get($url)->assertOk()->assertSee('Compte Google Ads');
         $this->actingAs($collaborator)->get($url)->assertForbidden();
         $this->actingAs($viewer)->get($url)->assertForbidden();
 
         app(OrganizationContext::class)->run($organization, function () use ($owner, $administrator, $collaborator, $viewer): void {
             $this->actingAs($owner);
-            $this->assertTrue(GoogleAdsConnectionResource::canViewAny());
+            $this->assertFalse(GoogleAdsConnectionResource::canViewAny());
             $this->actingAs($administrator);
             $this->assertTrue(GoogleAdsConnectionResource::canViewAny());
             $this->actingAs($collaborator);
@@ -78,8 +75,7 @@ class GoogleAdsConnectionTest extends TestCase
     public function test_organization_screen_never_renders_google_ads_secrets(): void
     {
         $organization = Organization::factory()->create();
-        $owner = User::factory()->create();
-        $owner->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
+        $owner = User::factory()->platformAdministrator()->create();
 
         app(OrganizationContext::class)->run($organization, fn (): OrganizationIntegration => app(OrganizationIntegrationManager::class)->configure(
             'google_ads', 'reporting', [
@@ -106,5 +102,4 @@ class GoogleAdsConnectionTest extends TestCase
             ->assertDontSee('OAuth client secret')
             ->assertDontSee('OAuth refresh token');
     }
-
 }

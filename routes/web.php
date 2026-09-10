@@ -3,6 +3,8 @@
 use App\Http\Controllers\GoogleAdsAgencyOAuthController;
 use App\Http\Controllers\GoogleAdsOAuthController;
 use App\Http\Controllers\PrivateDocumentDownloadController;
+use App\Models\Organization;
+use Filament\Facades\Filament;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,12 +19,11 @@ Route::middleware('auth')->get('/dashboard', function (Request $request) {
         return redirect('/platform/organizations');
     }
 
-    $organization = $user->organizations()
-        ->where('status', 'active')
-        ->orderBy('name')
-        ->firstOrFail();
+    $organization = $user->getDefaultTenant(Filament::getPanel('admin'));
 
-    return redirect('/dashboard/'.$organization->slug);
+    abort_unless($organization instanceof Organization, 403, 'Votre compte n’est associé à aucune organisation active.');
+
+    return redirect(Filament::getPanel('admin')->getUrl($organization));
 });
 
 Route::middleware('auth')->group(function (): void {
