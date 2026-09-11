@@ -42,7 +42,7 @@ class DashboardHomeSummary extends Widget
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 
-    /** @return array{first_name: string, date: string, status: string, overview: array<int, array{label: string, value: string, icon: string}>} */
+    /** @return array{first_name: string, date: string, status: string, overview: array<int, array{label: string, value: string, icon: Heroicon}>} */
     protected function getViewData(): array
     {
         $organization = app(OrganizationContext::class)->require();
@@ -92,7 +92,7 @@ class DashboardHomeSummary extends Widget
             $overview[] = [
                 'label' => 'Suivi client',
                 'value' => $contacts.' contact'.($contacts > 1 ? 's' : '').' · '.$requestsThisMonth.' demande'.($requestsThisMonth > 1 ? 's' : '').' en 30 j',
-                'icon' => Heroicon::OutlinedUsers->value,
+                'icon' => Heroicon::OutlinedUsers,
             ];
         }
 
@@ -104,7 +104,7 @@ class DashboardHomeSummary extends Widget
             $overview[] = [
                 'label' => 'Rendez-vous',
                 'value' => $upcomingAppointments.' à venir',
-                'icon' => Heroicon::OutlinedCalendarDays->value,
+                'icon' => Heroicon::OutlinedCalendarDays,
             ];
         }
 
@@ -113,7 +113,7 @@ class DashboardHomeSummary extends Widget
             $overview[] = [
                 'label' => 'Devis',
                 'value' => $sentQuotes.' envoyé'.($sentQuotes > 1 ? 's' : ''),
-                'icon' => Heroicon::OutlinedDocumentCurrencyEuro->value,
+                'icon' => Heroicon::OutlinedDocumentCurrencyEuro,
             ];
         }
 
@@ -126,7 +126,7 @@ class DashboardHomeSummary extends Widget
             $overview[] = [
                 'label' => 'Campagnes',
                 'value' => $activeCampaigns.' active'.($activeCampaigns > 1 ? 's' : '').' · '.$synchronization,
-                'icon' => Heroicon::OutlinedMegaphone->value,
+                'icon' => Heroicon::OutlinedMegaphone,
             ];
         }
 

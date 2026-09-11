@@ -11,7 +11,7 @@
         @if (count($overview))
             <section class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
                 <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    <x-filament::icon icon="heroicon-o-squares-2x2" class="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                    <x-filament::icon :icon="\Filament\Support\Icons\Heroicon::OutlinedSquares2x2" class="h-5 w-5 text-primary-600 dark:text-primary-400" />
                     Vue générale
                 </div>
                 <dl class="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">

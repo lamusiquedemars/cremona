@@ -2,6 +2,7 @@
 
 namespace App\Filament\Concerns;
 
+use App\Services\OrganizationModuleAccess;
 use App\Services\OrganizationPresentation;
 use UnitEnum;
 
@@ -33,6 +34,30 @@ trait UsesOrganizationPresentation
 
     public static function shouldRegisterNavigation(): bool
     {
-        return parent::shouldRegisterNavigation();
+        return parent::shouldRegisterNavigation() && static::moduleIsEnabled();
+    }
+
+    public static function canAccess(): bool
+    {
+        return parent::canAccess() && static::moduleIsEnabled();
+    }
+
+    private static function moduleIsEnabled(): bool
+    {
+        $module = property_exists(static::class, 'organizationModule')
+            ? static::$organizationModule
+            : match (static::$presentationKey ?? null) {
+                'contacts', 'companies', 'requests', 'conversations', 'tasks' => 'crm',
+                'appointments' => 'appointments',
+                'quotes', 'documents' => 'quotes',
+                'campaigns' => 'marketing',
+                'instruments' => 'luthier_catalog',
+                'interventions' => 'workshop',
+                'rentals' => 'rentals',
+                'inventory' => 'inventory',
+                default => null,
+            };
+
+        return $module === null || app(OrganizationModuleAccess::class)->enabled($module);
     }
 }
