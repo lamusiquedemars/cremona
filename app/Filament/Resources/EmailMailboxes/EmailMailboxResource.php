@@ -26,13 +26,11 @@ class EmailMailboxResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Canaux et intégrations';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?string $navigationLabel = 'Boîtes email';
 
     protected static ?int $navigationSort = 110;
-
-    protected static string $organizationModule = 'communications';
 
     protected static function configurationPermission(): OrganizationPermission
     {

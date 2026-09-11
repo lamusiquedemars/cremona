@@ -32,7 +32,7 @@ class CrmFilamentTest extends TestCase
     private function organizationWithCrm(): Organization
     {
         $organization = Organization::factory()->create();
-        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'communications']);
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm']);
 
         return $organization;
     }

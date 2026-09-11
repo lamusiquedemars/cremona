@@ -11,7 +11,6 @@ use App\Services\OrganizationIntegrationManager;
 use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -59,7 +58,7 @@ class GoogleAdsConnectionTest extends TestCase
         $url = GoogleAdsConnectionResource::getUrl('index', tenant: $organization);
 
         $this->assertSame('Publicité', GoogleAdsConnectionResource::getNavigationLabel());
-        $this->assertSame('Marketing', GoogleAdsConnectionResource::getNavigationGroup());
+        $this->assertSame('Configuration de l’organisation', GoogleAdsConnectionResource::getNavigationGroup());
         $this->actingAs($owner)->get($url)->assertOk()->assertSee('Compte Google Ads');
         $this->actingAs($administrator)->get($url)->assertOk()->assertSee('Compte Google Ads');
         $this->actingAs($collaborator)->get($url)->assertForbidden();
@@ -109,5 +108,4 @@ class GoogleAdsConnectionTest extends TestCase
             ->assertDontSee('OAuth client secret')
             ->assertDontSee('OAuth refresh token');
     }
-
 }
