@@ -33,7 +33,6 @@ trait UsesOrganizationPresentation
 
     public static function shouldRegisterNavigation(): bool
     {
-        return parent::shouldRegisterNavigation()
-            && app(OrganizationPresentation::class)->isVisible(static::$presentationKey ?? '');
+        return parent::shouldRegisterNavigation();
     }
 }
