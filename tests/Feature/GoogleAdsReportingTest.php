@@ -9,6 +9,8 @@ use App\Models\OrganizationAuditLog;
 use App\Models\OrganizationIntegration;
 use App\Services\GoogleAdsCampaignKeywordPublisher;
 use App\Services\GoogleAdsCampaignPublisher;
+use App\Services\GoogleAdsCredentials;
+use App\Services\GoogleAdsDashboardRefresher;
 use App\Services\GoogleAdsReportingClient;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,6 +21,38 @@ use Tests\TestCase;
 class GoogleAdsReportingTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_dashboard_refreshes_stale_google_ads_results_for_the_current_organization(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function () use ($organization): void {
+            OrganizationIntegration::query()->create([
+                'provider' => 'google_ads',
+                'name' => 'reporting',
+                'status' => 'active',
+                'credentials' => ['customer_id' => '2005073692'],
+            ]);
+            Campaign::query()->create([
+                'name' => 'Defesa penal Cuiabá',
+                'channel' => 'google_ads',
+                'tracking_key' => 'criminal-cuiaba',
+                'external_reference' => '123',
+                'status' => CampaignStatus::Active,
+                'currency' => 'BRL',
+                'google_ads_synced_at' => now()->subMinutes(16),
+            ]);
+
+            $credentials = $this->createMock(GoogleAdsCredentials::class);
+            $credentials->expects($this->once())->method('isReady')->willReturn(true);
+            $reporting = $this->createMock(GoogleAdsReportingClient::class);
+            $reporting->expects($this->once())
+                ->method('sync')
+                ->with($this->callback(fn (OrganizationIntegration $integration): bool => $integration->organization_id === $organization->getKey()));
+
+            (new GoogleAdsDashboardRefresher($credentials, $reporting))->refreshIfStale($organization);
+        });
+    }
 
     public function test_google_ads_keyword_publisher_refreshes_then_applies_only_the_prepared_keyword_difference(): void
     {

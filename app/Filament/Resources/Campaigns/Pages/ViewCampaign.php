@@ -13,7 +13,6 @@ use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\Facades\Gate;
 use LogicException;
 use Throwable;
 
@@ -38,7 +37,7 @@ class ViewCampaign extends ViewRecord
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->color('success')
                 ->visible(fn (): bool => $this->record->channel === 'google_ads' && filled($this->record->external_reference))
-                ->authorize('update')
+                ->authorize('view')
                 ->action(function (): void {
                     $this->synchronizeGoogleAds(true);
                 }),
@@ -110,7 +109,6 @@ class ViewCampaign extends ViewRecord
     {
         return $this->record->channel === 'google_ads'
             && filled($this->record->external_reference)
-            && Gate::allows('update', $this->record)
             && ($this->record->google_ads_synced_at === null || $this->record->google_ads_synced_at->lt(now()->subMinutes(15)));
     }
 

@@ -15,6 +15,7 @@ use App\Models\CrmTask;
 use App\Models\IncomingRequest;
 use App\Models\Person;
 use App\Models\Quote;
+use App\Services\GoogleAdsDashboardRefresher;
 use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Support\Icons\Heroicon;
@@ -49,6 +50,10 @@ class DashboardHomeSummary extends Widget
         $moduleAccess = app(OrganizationModuleAccess::class);
         $timezone = $organization->timezone();
         $todayEnd = now($timezone)->endOfDay()->utc();
+
+        if ($moduleAccess->enabled('marketing', $organization)) {
+            app(GoogleAdsDashboardRefresher::class)->refreshIfStale($organization);
+        }
 
         $crmEnabled = $moduleAccess->enabled('crm', $organization);
         $appointmentsEnabled = $moduleAccess->enabled('appointments', $organization);
