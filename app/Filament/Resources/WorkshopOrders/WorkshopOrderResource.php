@@ -61,7 +61,7 @@ class WorkshopOrderResource extends Resource
                 Textarea::make('customer_instructions')->label('Demande du client')->rows(3)->columnSpan(6),
                 Textarea::make('diagnosis')->label('Diagnostic atelier')->rows(4)->columnSpanFull(),
                 Repeater::make('services')->label('Prestations prévues')->relationship()->schema([
-                    Select::make('service_definition_id')->label('Prestation')->relationship('definition', 'name')->searchable()->live()->afterStateUpdated(function (?string $state, Set $set): void {
+                    Select::make('service_definition_id')->label('Prestation')->relationship('definition', 'name', fn ($query) => $query->where('is_active', true))->preload()->searchable()->live()->afterStateUpdated(function (?string $state, Set $set): void {
                         $service = filled($state) ? ServiceDefinition::query()->find($state) : null;
                         if ($service === null) {
                             return;
