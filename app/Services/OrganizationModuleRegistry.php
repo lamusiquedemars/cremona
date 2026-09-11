@@ -31,7 +31,7 @@ final class OrganizationModuleRegistry
     public function all(): array
     {
         return [
-            'crm' => ['label' => 'Suivi client', 'description' => 'Contacts, entreprises, demandes, correspondances et tâches.', 'group' => 'Suivi client', 'group_key' => 'customer_follow_up', 'presentation_key' => 'crm', 'requires' => []],
+            'crm' => ['label' => 'Contacts, demandes et échanges', 'description' => 'Contacts, entreprises, demandes, correspondances et tâches.', 'group' => 'Suivi client', 'group_key' => 'customer_follow_up', 'presentation_key' => 'crm', 'requires' => []],
             'appointments' => ['label' => 'Rendez-vous', 'description' => 'Rendez-vous et agenda.', 'group' => 'Suivi client', 'group_key' => 'customer_follow_up', 'presentation_key' => 'appointments', 'requires' => []],
             'quotes' => ['label' => 'Devis et documents', 'description' => 'Devis, lignes de devis enregistrées et documents privés.', 'group' => 'Activité commerciale', 'group_key' => 'commercial_activity', 'presentation_key' => 'quotes', 'requires' => []],
             'luthier_catalog' => ['label' => 'Catalogue luthier', 'description' => 'Instruments et prestations atelier.', 'group' => 'Atelier', 'group_key' => 'workshop', 'presentation_key' => 'luthier_catalog', 'requires' => []],

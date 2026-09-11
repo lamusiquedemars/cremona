@@ -19,6 +19,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -54,6 +56,16 @@ class OrganizationResource extends Resource
                     'luthier' => 'Luthier — instruments, atelier, location et stock',
                 ])
                 ->default('__none__')
+                ->live()
+                ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
+                    $registry = app(OrganizationModuleRegistry::class);
+                    $selected = $registry->selectedFromSelection((array) $get('modules'));
+                    $enabled = array_flip($registry->forPack($state === 'luthier' ? 'luthier' : null, $selected));
+
+                    foreach (array_keys($registry->all()) as $module) {
+                        $set("modules.{$module}", isset($enabled[$module]));
+                    }
+                })
                 ->helperText('Le pack Luthier active son socle de travail : suivi client, devis, atelier, locations, stock et connecteurs. Aucun pack retire les modules propres au métier Luthier, sans supprimer leurs données.'),
             Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
             Select::make('settings.timezone')
@@ -100,7 +112,8 @@ class OrganizationResource extends Resource
 
         return array_map(
             function (array $group, string $groupKey) use ($definitions): Grid {
-                $fields = [
+                $singleModule = count($group['modules']) === 1;
+                $fields = $singleModule ? [] : [
                     Text::make($group['label'])->columnSpan(4),
                     TextInput::make("settings.presentation.labels.{$groupKey}")
                         ->hiddenLabel()
@@ -116,12 +129,12 @@ class OrganizationResource extends Resource
                     );
                     $label = $definition['label'].(count($requiredLabels) ? ' · dépend de '.implode(', ', $requiredLabels) : '');
 
-                    $fields[] = Text::make($label)
+                    $fields[] = Text::make($singleModule ? $definition['label'] : $label)
                         ->tooltip($definition['description'])
                         ->columnSpan(4);
                     $fields[] = TextInput::make("settings.presentation.labels.{$definition['presentation_key']}")
                         ->hiddenLabel()
-                        ->placeholder('Nom affiché dans le menu (facultatif)')
+                        ->placeholder($singleModule ? 'Nom affiché dans le menu (facultatif)' : 'Nom affiché (facultatif)')
                         ->maxLength(80)
                         ->columnSpan(5);
                     $fields[] = Toggle::make("modules.{$module}")

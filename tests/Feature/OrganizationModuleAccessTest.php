@@ -139,6 +139,32 @@ class OrganizationModuleAccessTest extends TestCase
         $this->assertSame(['crm', 'quotes', 'communications'], $modules);
     }
 
+    public function test_pack_selector_updates_module_toggles_immediately(): void
+    {
+        $administrator = User::factory()->platformAdministrator()->create();
+        $organization = Organization::factory()->create([
+            'settings' => ['timezone' => 'Europe/Paris'],
+        ]);
+        $organization->modules()->delete();
+        Filament::setCurrentPanel(Filament::getPanel('platform'));
+
+        Livewire::actingAs($administrator)
+            ->test(EditOrganization::class, ['record' => $organization->getRouteKey()])
+            ->fillForm(['vertical_pack' => 'luthier'])
+            ->assertFormSet([
+                'modules.luthier_catalog' => true,
+                'modules.workshop' => true,
+                'modules.rentals' => true,
+                'modules.communications' => true,
+            ])
+            ->fillForm(['vertical_pack' => '__none__'])
+            ->assertFormSet([
+                'modules.luthier_catalog' => false,
+                'modules.workshop' => false,
+                'modules.rentals' => false,
+            ]);
+    }
+
     public function test_a_platform_administrator_can_create_an_organization_without_a_business_pack(): void
     {
         $administrator = User::factory()->platformAdministrator()->create();
