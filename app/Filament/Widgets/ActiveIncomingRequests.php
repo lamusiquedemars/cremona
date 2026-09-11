@@ -42,7 +42,7 @@ class ActiveIncomingRequests extends TableWidget
     {
         return $table
             ->heading('Demandes à traiter')
-            ->description('Les demandes nouvelles, en cours ou qualifiées qui nécessitent une suite.')
+            ->description('À suivre.')
             ->query(
                 IncomingRequest::query()
                     ->whereIn('status', [

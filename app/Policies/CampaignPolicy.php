@@ -9,9 +9,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class CampaignPolicy extends CrmPolicy
 {
+    public function create(User $user): bool
+    {
+        return $user->is_platform_admin && parent::create($user);
+    }
+
     public function update(User $user, Model $record): bool
     {
-        return $record instanceof Campaign
+        return $user->is_platform_admin
+            && $record instanceof Campaign
             && $this->view($user, $record)
             && $record->status !== CampaignStatus::Archived
             && $this->canManage($user);

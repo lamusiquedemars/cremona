@@ -45,7 +45,7 @@ class ActiveConversations extends TableWidget
     {
         return $table
             ->heading('Correspondances à traiter')
-            ->description('Les échanges dont le dernier message vient du contact.')
+            ->description('Messages à répondre.')
             ->query(
                 Conversation::query()
                     ->where('status', ConversationStatus::Open)

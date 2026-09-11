@@ -43,7 +43,7 @@ class UpcomingAppointments extends TableWidget
 
         return $table
             ->heading('Prochains rendez-vous')
-            ->description('Les rendez-vous planifiés à partir de maintenant.')
+            ->description('À venir.')
             ->query(
                 Appointment::query()
                     ->where('status', AppointmentStatus::Scheduled)

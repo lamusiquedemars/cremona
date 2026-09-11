@@ -34,7 +34,7 @@ class ActiveCampaigns extends Widget
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 
-    /** @return array{campaigns: array<int, array<string, string>>} */
+    /** @return array{campaigns: array<int, array<string, string|null>>} */
     protected function getViewData(): array
     {
         $organization = app(OrganizationContext::class)->require();
@@ -64,7 +64,7 @@ class ActiveCampaigns extends Widget
             ->map(fn (Campaign $campaign): array => [
                 'name' => $campaign->name,
                 'url' => CampaignResource::getUrl('view', ['record' => $campaign]),
-                'google_status' => $this->googleAdsPrimaryStatusLabel($campaign->google_ads_primary_status),
+                'google_status' => $this->googleAdsStatusLabel($campaign->google_ads_serving_status, $campaign->google_ads_primary_status),
                 'spend' => $campaign->spend_last_30_days === null
                     ? 'Aucune dépense renseignée'
                     : Number::currency((float) $campaign->spend_last_30_days, $campaign->currency, 'fr'),
@@ -82,19 +82,26 @@ class ActiveCampaigns extends Widget
         return ['campaigns' => $campaigns];
     }
 
-    private function googleAdsPrimaryStatusLabel(?string $status): string
+    private function googleAdsStatusLabel(?string $servingStatus, ?string $primaryStatus): ?string
     {
-        return match ($status) {
-            'ELIGIBLE' => 'Diffusion possible',
-            'LEARNING' => 'En apprentissage',
-            'LIMITED' => 'Diffusion limitée',
-            'MISCONFIGURED' => 'À corriger',
-            'NOT_ELIGIBLE' => 'Non éligible',
-            'PAUSED' => 'En pause',
-            'PENDING' => 'En attente',
+        return match ($servingStatus) {
+            'SERVING' => 'En diffusion',
+            'NONE' => 'Hors diffusion',
+            'SUSPENDED' => 'Suspendue',
             'ENDED' => 'Terminée',
-            'REMOVED' => 'Supprimée',
-            default => 'État Google à actualiser',
+            'PENDING' => 'En attente',
+            default => match ($primaryStatus) {
+                'ELIGIBLE' => null,
+                'LEARNING' => 'En apprentissage',
+                'LIMITED' => 'Diffusion limitée',
+                'MISCONFIGURED' => 'À corriger',
+                'NOT_ELIGIBLE' => 'Non éligible',
+                'PAUSED' => 'En pause',
+                'PENDING' => 'En attente',
+                'ENDED' => 'Terminée',
+                'REMOVED' => 'Supprimée',
+                default => null,
+            },
         };
     }
 }

@@ -40,7 +40,7 @@ class OpenCrmTasks extends TableWidget
 
         return $table
             ->heading('Tâches à faire')
-            ->description('Les retards en premier, puis les prochaines échéances.')
+            ->description('À faire.')
             ->query(
                 CrmTask::query()
                     ->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])

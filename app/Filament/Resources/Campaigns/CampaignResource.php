@@ -486,19 +486,19 @@ class CampaignResource extends Resource
             'PENDING' => 'En attente',
             'ENDED' => 'Terminée',
             'REMOVED' => 'Supprimée',
-            default => $status ?? 'À synchroniser',
+            default => 'À synchroniser',
         };
     }
 
     private static function googleAdsServingStatusLabel(?string $status): string
     {
         return match ($status) {
-            'SERVING' => 'Diffuse',
-            'NONE' => 'Ne diffuse pas',
+            'SERVING' => 'En diffusion',
+            'NONE' => 'Hors diffusion',
             'ENDED' => 'Terminée',
             'PENDING' => 'En attente',
             'SUSPENDED' => 'Suspendue',
-            default => $status ?? '—',
+            default => '—',
         };
     }
 
@@ -508,7 +508,7 @@ class CampaignResource extends Resource
             'LEARNING' => 'En apprentissage',
             'ENABLED' => 'Active',
             'LIMITED' => 'Limitée',
-            default => $status ?? '—',
+            default => '—',
         };
     }
 

@@ -1,7 +1,7 @@
 <x-filament-widgets::widget>
     <x-filament::section
         heading="Campagnes actives"
-        description="Les 30 derniers jours. Les résultats de chaque campagne sont visibles ici ; touchez une carte pour son pilotage complet."
+        description="Touchez une carte pour voir le détail."
     >
         @if (count($campaigns))
             <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -12,7 +12,9 @@
                     >
                         <div class="flex items-start justify-between gap-3">
                             <h3 class="font-semibold text-gray-950 dark:text-white">{{ $campaign['name'] }}</h3>
-                            <span class="shrink-0 text-sm font-medium text-primary-700 dark:text-primary-300">{{ $campaign['google_status'] }}</span>
+                            @if (filled($campaign['google_status']))
+                                <span class="shrink-0 text-sm font-medium text-primary-700 dark:text-primary-300">{{ $campaign['google_status'] }}</span>
+                            @endif
                         </div>
 
                         <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
