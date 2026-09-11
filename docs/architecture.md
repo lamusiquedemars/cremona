@@ -37,6 +37,8 @@ Les permissions fines viendront compléter le rôle lorsque les premiers modules
 
 `organization_modules` active une capacité pour une organisation et conserve sa configuration non sensible. Les secrets d’intégration auront un stockage chiffré dédié.
 
+Les **rubriques du menu** regroupent visuellement des modules ; elles ne sont pas elles-mêmes des capacités activables. Les connexions techniques — boîtes email, Brevo, Google Ads, canaux entrants et connecteurs de publication — ne sont pas des modules métier : elles sont regroupées dans **Configuration de l’organisation** et accessibles seulement aux propriétaires, administrateurs ou administrateurs de plateforme.
+
 Les premiers packs prévus sont :
 
 - Luthier : musiciens, instruments, interventions, documents ;

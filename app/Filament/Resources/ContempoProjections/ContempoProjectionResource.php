@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\ContempoProjections;
 
-use App\Filament\Concerns\UsesOrganizationModule;
+use App\Filament\Concerns\UsesOrganizationConfiguration;
 use App\Filament\Resources\ContempoProjections\Pages\ListContempoProjections;
 use App\Models\OrganizationIntegration;
 use App\Services\OrganizationIntegrationManager;
@@ -16,11 +16,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ContempoProjectionResource extends Resource
 {
-    use UsesOrganizationModule;
+    use UsesOrganizationConfiguration;
 
     protected static ?string $model = OrganizationIntegration::class;
-
-    protected static string $organizationModule = 'communications';
 
     protected static ?string $navigationLabel = 'Connecteurs de publication';
 
@@ -28,7 +26,7 @@ class ContempoProjectionResource extends Resource
 
     protected static ?string $pluralModelLabel = 'connecteurs de publication';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Canaux et intégrations';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?int $navigationSort = 85;
 

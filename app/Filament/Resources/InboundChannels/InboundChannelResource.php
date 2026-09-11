@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\InboundChannels;
 
-use App\Filament\Concerns\UsesOrganizationModule;
+use App\Filament\Concerns\UsesOrganizationConfiguration;
 use App\Filament\Resources\InboundChannels\Pages\ListInboundChannels;
 use App\Models\OrganizationIntegration;
 use App\Services\OrganizationIntegrationManager;
@@ -19,15 +19,13 @@ use UnitEnum;
 
 class InboundChannelResource extends Resource
 {
-    use UsesOrganizationModule;
+    use UsesOrganizationConfiguration;
 
     protected static ?string $model = OrganizationIntegration::class;
 
-    protected static string $organizationModule = 'communications';
-
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Canaux et intégrations';
+    protected static string|UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?string $navigationLabel = 'Canaux entrants';
 

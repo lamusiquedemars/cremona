@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\GoogleAdsConnections;
 
-use App\Filament\Concerns\UsesOrganizationModule;
+use App\Filament\Concerns\UsesOrganizationConfiguration;
 use App\Filament\Resources\GoogleAdsConnections\Pages\ListGoogleAdsConnections;
 use App\Models\OrganizationIntegration;
 use App\Services\GoogleAdsCredentials;
@@ -26,15 +26,13 @@ use UnitEnum;
 
 class GoogleAdsConnectionResource extends Resource
 {
-    use UsesOrganizationModule;
+    use UsesOrganizationConfiguration;
 
     protected static ?string $model = OrganizationIntegration::class;
 
-    protected static string $organizationModule = 'marketing';
-
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Marketing';
+    protected static string|UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?string $navigationLabel = 'Publicité';
 

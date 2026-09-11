@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\EmailMailboxes;
 
-use App\Filament\Concerns\UsesOrganizationModule;
+use App\Enums\OrganizationPermission;
+use App\Filament\Concerns\UsesOrganizationConfiguration;
 use App\Filament\Resources\EmailMailboxes\Pages\CreateEmailMailbox;
 use App\Filament\Resources\EmailMailboxes\Pages\ListEmailMailboxes;
 use App\Models\EmailMailbox;
@@ -19,19 +20,22 @@ use Filament\Tables\Table;
 
 class EmailMailboxResource extends Resource
 {
-    use UsesOrganizationModule;
+    use UsesOrganizationConfiguration;
 
     protected static ?string $model = EmailMailbox::class;
 
-    protected static string $organizationModule = 'communications';
-
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Canaux et intégrations';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?string $navigationLabel = 'Boîtes email';
 
     protected static ?int $navigationSort = 110;
+
+    protected static function configurationPermission(): OrganizationPermission
+    {
+        return OrganizationPermission::ManageEmailMailboxes;
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -22,6 +22,8 @@ use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\Size;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -122,7 +124,11 @@ class OrganizationResource extends Resource
         return array_map(
             function (array $group, string $groupKey) use ($definitions): Grid {
                 $fields = [
-                    Text::make(fn (Get $get): string => $get("settings.presentation.labels.{$groupKey}") ?: $group['label'])->columnSpan(4),
+                    Text::make(fn (Get $get): string => 'Rubrique du menu · '.($get("settings.presentation.labels.{$groupKey}") ?: $group['label']))
+                        ->color('primary')
+                        ->size(Size::Large)
+                        ->weight(FontWeight::Bold)
+                        ->columnSpan(4),
                     TextInput::make("settings.presentation.labels.{$groupKey}")
                         ->hiddenLabel()
                         ->placeholder('Nom de cette rubrique dans le menu')

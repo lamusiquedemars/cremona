@@ -121,7 +121,6 @@ class OrganizationModuleAccessTest extends TestCase
             'workshop',
             'rentals',
             'inventory',
-            'communications',
         ], $preset['modules']);
         $this->assertSame('Clients', $preset['labels']['customer_follow_up']);
         $this->assertSame('Instruments et prestations', $preset['labels']['luthier_catalog']);
@@ -136,7 +135,6 @@ class OrganizationModuleAccessTest extends TestCase
             'appointments',
             'quotes',
             'marketing',
-            'communications',
         ], $preset['modules']);
         $this->assertSame('Relation client', $preset['labels']['customer_follow_up']);
     }
@@ -157,7 +155,6 @@ class OrganizationModuleAccessTest extends TestCase
                 'modules.luthier_catalog' => true,
                 'modules.workshop' => true,
                 'modules.rentals' => true,
-                'modules.communications' => true,
                 'settings.presentation.labels.customer_follow_up' => 'Clients',
                 'settings.presentation.labels.luthier_catalog' => 'Instruments et prestations',
             ])

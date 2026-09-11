@@ -11,18 +11,17 @@ final class OrganizationModuleRegistry
     /** @var array<int, string> */
     private const PACK_PRESETS = [
         '__none__' => [
-            'modules' => ['crm', 'appointments', 'quotes', 'marketing', 'communications'],
+            'modules' => ['crm', 'appointments', 'quotes', 'marketing'],
             'labels' => [
                 'customer_follow_up' => 'Relation client',
                 'crm' => 'Contacts, demandes et échanges',
                 'commercial_activity' => 'Activité commerciale',
                 'quotes' => 'Devis et documents',
                 'marketing' => 'Campagnes et publicité',
-                'communications' => 'Boîtes email et connecteurs',
             ],
         ],
         'luthier' => [
-            'modules' => ['crm', 'appointments', 'quotes', 'luthier_catalog', 'workshop', 'rentals', 'inventory', 'communications'],
+            'modules' => ['crm', 'appointments', 'quotes', 'luthier_catalog', 'workshop', 'rentals', 'inventory'],
             'labels' => [
                 'customer_follow_up' => 'Clients',
                 'crm' => 'Contacts, demandes et échanges',
@@ -33,7 +32,6 @@ final class OrganizationModuleRegistry
                 'rentals' => 'Locations',
                 'catalog_inventory' => 'Stock et accessoires',
                 'inventory' => 'Articles et stock',
-                'communications' => 'Boîtes email et connecteurs',
             ],
         ],
     ];
@@ -50,7 +48,6 @@ final class OrganizationModuleRegistry
             'rentals' => ['label' => 'Locations', 'description' => 'Contrats et suivi des locations. Requiert le catalogue luthier.', 'group' => 'Atelier', 'group_key' => 'workshop', 'presentation_key' => 'rentals', 'requires' => ['luthier_catalog']],
             'inventory' => ['label' => 'Articles et stock', 'description' => 'Articles et niveaux de stock.', 'group' => 'Catalogue et stock', 'group_key' => 'catalog_inventory', 'presentation_key' => 'inventory', 'requires' => []],
             'marketing' => ['label' => 'Campagnes et publicité', 'description' => 'Campagnes et publicité Google.', 'group' => 'Marketing', 'group_key' => 'marketing', 'presentation_key' => 'marketing', 'requires' => []],
-            'communications' => ['label' => 'Boîtes email et connecteurs', 'description' => 'Canaux entrants, boîtes email, Brevo Meetings et connecteurs de publication.', 'group' => 'Canaux et intégrations', 'group_key' => 'communications', 'presentation_key' => 'communications', 'requires' => []],
         ];
     }
 
