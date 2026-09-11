@@ -124,7 +124,7 @@ class OrganizationResource extends Resource
         return array_map(
             function (array $group, string $groupKey) use ($definitions): Grid {
                 $fields = [
-                    Text::make(fn (Get $get): string => 'Rubrique du menu · '.($get("settings.presentation.labels.{$groupKey}") ?: $group['label']))
+                    Text::make(fn (Get $get): string => $get("settings.presentation.labels.{$groupKey}") ?: $group['label'])
                         ->color('primary')
                         ->size(Size::Large)
                         ->weight(FontWeight::Bold)
