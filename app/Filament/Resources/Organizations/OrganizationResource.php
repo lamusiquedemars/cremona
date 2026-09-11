@@ -17,6 +17,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
@@ -121,9 +122,16 @@ class OrganizationResource extends Resource
         $registry = app(OrganizationModuleRegistry::class);
         $definitions = $registry->all();
 
+        $groups = $registry->grouped();
+
         return array_map(
-            function (array $group, string $groupKey) use ($definitions): Grid {
+            function (array $group, string $groupKey, int $index) use ($definitions): Grid {
+                $fields = $index === 0 ? [] : [
+                    Html::make('<hr class="border-0 border-t border-gray-200 dark:border-white/10">')->columnSpanFull(),
+                ];
+
                 $fields = [
+                    ...$fields,
                     Text::make(fn (Get $get): string => $get("settings.presentation.labels.{$groupKey}") ?: $group['label'])
                         ->color('primary')
                         ->size(Size::Large)
@@ -171,11 +179,11 @@ class OrganizationResource extends Resource
 
                 return Grid::make(12)
                     ->columns(12)
-                    ->extraAttributes(['class' => 'border-t border-gray-200 pt-3 dark:border-white/10'])
                     ->schema($fields);
             },
-            $registry->grouped(),
-            array_keys($registry->grouped()),
+            array_values($groups),
+            array_keys($groups),
+            array_keys(array_values($groups)),
         );
     }
 
