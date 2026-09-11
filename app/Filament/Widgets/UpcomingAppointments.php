@@ -30,10 +30,6 @@ class UpcomingAppointments extends TableWidget
         return $organization !== null
             && $user !== null
             && app(OrganizationModuleAccess::class)->enabled('appointments', $organization)
-            && Appointment::query()
-                ->where('status', AppointmentStatus::Scheduled)
-                ->where('starts_at', '>=', now())
-                ->exists()
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 
@@ -44,6 +40,9 @@ class UpcomingAppointments extends TableWidget
         return $table
             ->heading('Prochains rendez-vous')
             ->description('À venir.')
+            ->emptyStateHeading('Aucun rendez-vous à venir')
+            ->emptyStateDescription('Aucun rendez-vous n’est programmé.')
+            ->emptyStateIcon(Heroicon::OutlinedCalendarDays)
             ->query(
                 Appointment::query()
                     ->where('status', AppointmentStatus::Scheduled)

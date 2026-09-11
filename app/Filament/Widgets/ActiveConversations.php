@@ -31,13 +31,6 @@ class ActiveConversations extends TableWidget
         return $organization !== null
             && $user !== null
             && app(OrganizationModuleAccess::class)->enabled('crm', $organization)
-            && Conversation::query()
-                ->where('status', ConversationStatus::Open)
-                ->whereNotNull('last_inbound_at')
-                ->where(fn (Builder $query): Builder => $query
-                    ->whereNull('last_outbound_at')
-                    ->orWhereColumn('last_inbound_at', '>', 'last_outbound_at'))
-                ->exists()
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCorrespondence, $organization);
     }
 
@@ -46,6 +39,9 @@ class ActiveConversations extends TableWidget
         return $table
             ->heading('Correspondances à traiter')
             ->description('Messages à répondre.')
+            ->emptyStateHeading('Aucune correspondance à traiter')
+            ->emptyStateDescription('Tout est à jour.')
+            ->emptyStateIcon(Heroicon::OutlinedChatBubbleLeftRight)
             ->query(
                 Conversation::query()
                     ->where('status', ConversationStatus::Open)

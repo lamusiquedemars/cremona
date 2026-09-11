@@ -30,7 +30,6 @@ class OpenCrmTasks extends TableWidget
         return $organization !== null
             && $user !== null
             && app(OrganizationModuleAccess::class)->enabled('crm', $organization)
-            && CrmTask::query()->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])->exists()
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 
@@ -41,6 +40,9 @@ class OpenCrmTasks extends TableWidget
         return $table
             ->heading('Tâches à faire')
             ->description('À faire.')
+            ->emptyStateHeading('Aucune tâche à faire')
+            ->emptyStateDescription('Tout est à jour.')
+            ->emptyStateIcon(Heroicon::OutlinedCheckCircle)
             ->query(
                 CrmTask::query()
                     ->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])

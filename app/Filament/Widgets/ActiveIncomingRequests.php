@@ -30,11 +30,6 @@ class ActiveIncomingRequests extends TableWidget
         return $organization !== null
             && $user !== null
             && app(OrganizationModuleAccess::class)->enabled('crm', $organization)
-            && IncomingRequest::query()->whereIn('status', [
-                IncomingRequestStatus::New,
-                IncomingRequestStatus::InProgress,
-                IncomingRequestStatus::Qualified,
-            ])->exists()
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 
@@ -43,6 +38,9 @@ class ActiveIncomingRequests extends TableWidget
         return $table
             ->heading('Demandes à traiter')
             ->description('À suivre.')
+            ->emptyStateHeading('Aucune demande à traiter')
+            ->emptyStateDescription('Tout est à jour.')
+            ->emptyStateIcon(Heroicon::OutlinedInbox)
             ->query(
                 IncomingRequest::query()
                     ->whereIn('status', [
