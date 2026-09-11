@@ -17,8 +17,8 @@ final class OrganizationModuleRegistry
                 'crm' => 'Contacts, demandes et échanges',
                 'commercial_activity' => 'Activité commerciale',
                 'quotes' => 'Devis et documents',
-                'marketing' => 'Marketing',
-                'communications' => 'Canaux et intégrations',
+                'marketing' => 'Campagnes et publicité',
+                'communications' => 'Boîtes email et connecteurs',
             ],
         ],
         'luthier' => [
@@ -33,7 +33,7 @@ final class OrganizationModuleRegistry
                 'rentals' => 'Locations',
                 'catalog_inventory' => 'Stock et accessoires',
                 'inventory' => 'Articles et stock',
-                'communications' => 'Canaux et intégrations',
+                'communications' => 'Boîtes email et connecteurs',
             ],
         ],
     ];
@@ -48,9 +48,9 @@ final class OrganizationModuleRegistry
             'luthier_catalog' => ['label' => 'Catalogue luthier', 'description' => 'Instruments et prestations atelier.', 'group' => 'Atelier', 'group_key' => 'workshop', 'presentation_key' => 'luthier_catalog', 'requires' => []],
             'workshop' => ['label' => 'Dossiers atelier', 'description' => 'Suivi des interventions sur les instruments. Requiert le catalogue luthier.', 'group' => 'Atelier', 'group_key' => 'workshop', 'presentation_key' => 'workshop', 'requires' => ['luthier_catalog']],
             'rentals' => ['label' => 'Locations', 'description' => 'Contrats et suivi des locations. Requiert le catalogue luthier.', 'group' => 'Atelier', 'group_key' => 'workshop', 'presentation_key' => 'rentals', 'requires' => ['luthier_catalog']],
-            'inventory' => ['label' => 'Catalogue et stock', 'description' => 'Articles et niveaux de stock.', 'group' => 'Catalogue et stock', 'group_key' => 'catalog_inventory', 'presentation_key' => 'inventory', 'requires' => []],
-            'marketing' => ['label' => 'Marketing', 'description' => 'Campagnes et publicité Google.', 'group' => 'Marketing', 'group_key' => 'marketing', 'presentation_key' => 'marketing', 'requires' => []],
-            'communications' => ['label' => 'Canaux et intégrations', 'description' => 'Canaux entrants, boîtes email, Brevo Meetings et connecteurs de publication.', 'group' => 'Canaux et intégrations', 'group_key' => 'communications', 'presentation_key' => 'communications', 'requires' => []],
+            'inventory' => ['label' => 'Articles et stock', 'description' => 'Articles et niveaux de stock.', 'group' => 'Catalogue et stock', 'group_key' => 'catalog_inventory', 'presentation_key' => 'inventory', 'requires' => []],
+            'marketing' => ['label' => 'Campagnes et publicité', 'description' => 'Campagnes et publicité Google.', 'group' => 'Marketing', 'group_key' => 'marketing', 'presentation_key' => 'marketing', 'requires' => []],
+            'communications' => ['label' => 'Boîtes email et connecteurs', 'description' => 'Canaux entrants, boîtes email, Brevo Meetings et connecteurs de publication.', 'group' => 'Canaux et intégrations', 'group_key' => 'communications', 'presentation_key' => 'communications', 'requires' => []],
         ];
     }
 
