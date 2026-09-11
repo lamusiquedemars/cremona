@@ -5,9 +5,9 @@ RewriteBase /
 RewriteRule ^(?:app|bootstrap|config|database|docs|resources|routes|tests|vendor)(?:/|$) - [F,L,NC]
 RewriteRule ^(?:\.env|artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml|vite\.config\.js)$ - [F,L,NC]
 
-# Existing photo URLs used /storage. Redirect them internally to the secure
-# Laravel media route while new uploads use /media directly.
-RewriteRule ^storage/(.*)$ media/$1 [L,NC]
+# Existing photo URLs used /storage. Redirect them to the secure Laravel media
+# route while new uploads use /media directly.
+RewriteRule ^storage/(.*)$ /media/$1 [R=302,L,NE]
 
 # Public assets retain their normal Laravel paths.
 RewriteRule ^(build|css|fonts|images|js|storage)/(.*)$ public/$1/$2 [L,NC]
