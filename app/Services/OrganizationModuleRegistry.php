@@ -9,13 +9,6 @@ use App\Tenancy\OrganizationContext;
 final class OrganizationModuleRegistry
 {
     /** @var array<int, string> */
-    private const LUTHIER_MODULES = [
-        'luthier_catalog',
-        'workshop',
-        'rentals',
-    ];
-
-    /** @var array<int, string> */
     private const LUTHIER_PACK_DEFAULTS = [
         'crm',
         'appointments',
@@ -24,7 +17,6 @@ final class OrganizationModuleRegistry
         'workshop',
         'rentals',
         'inventory',
-        'communications',
     ];
 
     /** @return array<string, array{label: string, description: string, group: string, group_key: string, presentation_key: string, requires: array<int, string>}> */
@@ -122,7 +114,7 @@ final class OrganizationModuleRegistry
             ]);
         }
 
-        return array_values(array_diff($selected, self::LUTHIER_MODULES));
+        return $selected;
     }
 
     /** @param array<int, string> $modules */

@@ -66,7 +66,7 @@ class OrganizationResource extends Resource
                         $set("modules.{$module}", isset($enabled[$module]));
                     }
                 })
-                ->helperText('Le pack Luthier active son socle de travail : suivi client, devis, atelier, locations, stock et connecteurs. Aucun pack retire les modules propres au métier Luthier, sans supprimer leurs données.'),
+                ->helperText('Le pack Luthier préconfigure le suivi client, les devis, l’atelier, les locations et le stock. Aucun pack ne modifie pas les modules déjà choisis.'),
             Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
             Select::make('settings.timezone')
                 ->label('Fuseau horaire')

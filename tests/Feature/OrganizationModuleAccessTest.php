@@ -109,7 +109,7 @@ class OrganizationModuleAccessTest extends TestCase
         $this->assertSame(['luthier_catalog', 'workshop'], app(OrganizationModuleRegistry::class)->enabledFor($organization));
     }
 
-    public function test_luthier_pack_adds_its_operational_modules_including_publication_connectors(): void
+    public function test_luthier_pack_adds_its_operational_modules_without_enabling_communications(): void
     {
         $modules = app(OrganizationModuleRegistry::class)->forPack('luthier', []);
 
@@ -121,11 +121,10 @@ class OrganizationModuleAccessTest extends TestCase
             'workshop',
             'rentals',
             'inventory',
-            'communications',
         ], $modules);
     }
 
-    public function test_no_pack_removes_luthier_only_modules_without_touching_common_modules(): void
+    public function test_no_pack_keeps_the_administrator_module_selection_unchanged(): void
     {
         $modules = app(OrganizationModuleRegistry::class)->forPack(null, [
             'crm',
@@ -136,7 +135,14 @@ class OrganizationModuleAccessTest extends TestCase
             'communications',
         ]);
 
-        $this->assertSame(['crm', 'quotes', 'communications'], $modules);
+        $this->assertSame([
+            'crm',
+            'quotes',
+            'luthier_catalog',
+            'workshop',
+            'rentals',
+            'communications',
+        ], $modules);
     }
 
     public function test_pack_selector_updates_module_toggles_immediately(): void
@@ -155,13 +161,13 @@ class OrganizationModuleAccessTest extends TestCase
                 'modules.luthier_catalog' => true,
                 'modules.workshop' => true,
                 'modules.rentals' => true,
-                'modules.communications' => true,
+                'modules.communications' => false,
             ])
             ->fillForm(['vertical_pack' => '__none__'])
             ->assertFormSet([
-                'modules.luthier_catalog' => false,
-                'modules.workshop' => false,
-                'modules.rentals' => false,
+                'modules.luthier_catalog' => true,
+                'modules.workshop' => true,
+                'modules.rentals' => true,
             ]);
     }
 
