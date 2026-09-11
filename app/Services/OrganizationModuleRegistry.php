@@ -9,14 +9,33 @@ use App\Tenancy\OrganizationContext;
 final class OrganizationModuleRegistry
 {
     /** @var array<int, string> */
-    private const LUTHIER_PACK_DEFAULTS = [
-        'crm',
-        'appointments',
-        'quotes',
-        'luthier_catalog',
-        'workshop',
-        'rentals',
-        'inventory',
+    private const PACK_PRESETS = [
+        '__none__' => [
+            'modules' => ['crm', 'appointments', 'quotes', 'marketing', 'communications'],
+            'labels' => [
+                'customer_follow_up' => 'Relation client',
+                'crm' => 'Contacts, demandes et échanges',
+                'commercial_activity' => 'Activité commerciale',
+                'quotes' => 'Devis et documents',
+                'marketing' => 'Marketing',
+                'communications' => 'Canaux et intégrations',
+            ],
+        ],
+        'luthier' => [
+            'modules' => ['crm', 'appointments', 'quotes', 'luthier_catalog', 'workshop', 'rentals', 'inventory', 'communications'],
+            'labels' => [
+                'customer_follow_up' => 'Clients',
+                'crm' => 'Contacts, demandes et échanges',
+                'commercial_activity' => 'Activité commerciale',
+                'quotes' => 'Devis et documents',
+                'workshop' => 'Atelier',
+                'luthier_catalog' => 'Instruments et prestations',
+                'rentals' => 'Locations',
+                'catalog_inventory' => 'Stock et accessoires',
+                'inventory' => 'Articles et stock',
+                'communications' => 'Canaux et intégrations',
+            ],
+        ],
     ];
 
     /** @return array<string, array{label: string, description: string, group: string, group_key: string, presentation_key: string, requires: array<int, string>}> */
@@ -105,16 +124,13 @@ final class OrganizationModuleRegistry
     /** @param array<int, string> $modules @return array<int, string> */
     public function forPack(?string $verticalPack, array $modules): array
     {
-        $selected = $this->withDependencies($modules);
+        return $this->withDependencies($modules);
+    }
 
-        if ($verticalPack === 'luthier') {
-            return $this->withDependencies([
-                ...self::LUTHIER_PACK_DEFAULTS,
-                ...$selected,
-            ]);
-        }
-
-        return $selected;
+    /** @return array{modules: array<int, string>, labels: array<string, string>} */
+    public function preset(?string $verticalPack): array
+    {
+        return self::PACK_PRESETS[$verticalPack === 'luthier' ? 'luthier' : '__none__'];
     }
 
     /** @param array<int, string> $modules */

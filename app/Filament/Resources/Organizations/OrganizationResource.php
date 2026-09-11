@@ -59,14 +59,23 @@ class OrganizationResource extends Resource
                 ->live()
                 ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
                     $registry = app(OrganizationModuleRegistry::class);
-                    $selected = $registry->selectedFromSelection((array) $get('modules'));
-                    $enabled = array_flip($registry->forPack($state === 'luthier' ? 'luthier' : null, $selected));
+                    $preset = $registry->preset($state);
+                    $enabled = array_flip($registry->withDependencies($preset['modules']));
 
                     foreach (array_keys($registry->all()) as $module) {
                         $set("modules.{$module}", isset($enabled[$module]));
                     }
+
+                    foreach ($registry->grouped() as $groupKey => $group) {
+                        $set("settings.presentation.labels.{$groupKey}", $preset['labels'][$groupKey] ?? null);
+
+                        foreach ($group['modules'] as $definition) {
+                            $key = $definition['presentation_key'];
+                            $set("settings.presentation.labels.{$key}", $preset['labels'][$key] ?? null);
+                        }
+                    }
                 })
-                ->helperText('Le pack Luthier préconfigure le suivi client, les devis, l’atelier, les locations et le stock. Aucun pack ne modifie pas les modules déjà choisis.'),
+                ->helperText('Le pack applique immédiatement ses modules et ses noms de menu. Les ajustements manuels restent possibles ensuite.'),
             Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
             Select::make('settings.timezone')
                 ->label('Fuseau horaire')
@@ -112,9 +121,8 @@ class OrganizationResource extends Resource
 
         return array_map(
             function (array $group, string $groupKey) use ($definitions): Grid {
-                $singleModule = count($group['modules']) === 1;
-                $fields = $singleModule ? [] : [
-                    Text::make($group['label'])->columnSpan(4),
+                $fields = [
+                    Text::make(fn (Get $get): string => $get("settings.presentation.labels.{$groupKey}") ?: $group['label'])->columnSpan(4),
                     TextInput::make("settings.presentation.labels.{$groupKey}")
                         ->hiddenLabel()
                         ->placeholder('Nom de cette rubrique dans le menu')
@@ -129,17 +137,28 @@ class OrganizationResource extends Resource
                     );
                     $label = $definition['label'].(count($requiredLabels) ? ' · dépend de '.implode(', ', $requiredLabels) : '');
 
-                    $fields[] = Text::make($singleModule ? $definition['label'] : $label)
+                    $fields[] = Text::make(fn (Get $get): string => $get("settings.presentation.labels.{$definition['presentation_key']}") ?: $label)
                         ->tooltip($definition['description'])
                         ->columnSpan(4);
                     $fields[] = TextInput::make("settings.presentation.labels.{$definition['presentation_key']}")
                         ->hiddenLabel()
-                        ->placeholder($singleModule ? 'Nom affiché dans le menu (facultatif)' : 'Nom affiché (facultatif)')
+                        ->placeholder('Nom affiché (facultatif)')
                         ->maxLength(80)
                         ->columnSpan(5);
                     $fields[] = Toggle::make("modules.{$module}")
                         ->hiddenLabel()
                         ->default(false)
+                        ->live()
+                        ->afterStateUpdated(function (bool $state, Set $set) use ($definition): void {
+                            if (! $state) {
+                                return;
+                            }
+
+                            foreach ($definition['requires'] as $requiredModule) {
+                                $set("modules.{$requiredModule}", true);
+                            }
+                        })
+                        ->disabled(fn (Get $get): bool => static::isRequiredByAnEnabledModule($module, $get))
                         ->columnSpan(3);
                 }
 
@@ -150,5 +169,16 @@ class OrganizationResource extends Resource
             $registry->grouped(),
             array_keys($registry->grouped()),
         );
+    }
+
+    private static function isRequiredByAnEnabledModule(string $module, Get $get): bool
+    {
+        foreach (app(OrganizationModuleRegistry::class)->all() as $candidate => $definition) {
+            if (in_array($module, $definition['requires'], true) && $get("modules.{$candidate}") === true) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

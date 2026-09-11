@@ -109,9 +109,9 @@ class OrganizationModuleAccessTest extends TestCase
         $this->assertSame(['luthier_catalog', 'workshop'], app(OrganizationModuleRegistry::class)->enabledFor($organization));
     }
 
-    public function test_luthier_pack_adds_its_operational_modules_without_enabling_communications(): void
+    public function test_luthier_pack_defines_its_operational_modules_and_menu_names(): void
     {
-        $modules = app(OrganizationModuleRegistry::class)->forPack('luthier', []);
+        $preset = app(OrganizationModuleRegistry::class)->preset('luthier');
 
         $this->assertSame([
             'crm',
@@ -121,28 +121,24 @@ class OrganizationModuleAccessTest extends TestCase
             'workshop',
             'rentals',
             'inventory',
-        ], $modules);
+            'communications',
+        ], $preset['modules']);
+        $this->assertSame('Clients', $preset['labels']['customer_follow_up']);
+        $this->assertSame('Instruments et prestations', $preset['labels']['luthier_catalog']);
     }
 
-    public function test_no_pack_keeps_the_administrator_module_selection_unchanged(): void
+    public function test_no_pack_defines_a_generic_operational_preset(): void
     {
-        $modules = app(OrganizationModuleRegistry::class)->forPack(null, [
-            'crm',
-            'quotes',
-            'luthier_catalog',
-            'workshop',
-            'rentals',
-            'communications',
-        ]);
+        $preset = app(OrganizationModuleRegistry::class)->preset(null);
 
         $this->assertSame([
             'crm',
+            'appointments',
             'quotes',
-            'luthier_catalog',
-            'workshop',
-            'rentals',
+            'marketing',
             'communications',
-        ], $modules);
+        ], $preset['modules']);
+        $this->assertSame('Relation client', $preset['labels']['customer_follow_up']);
     }
 
     public function test_pack_selector_updates_module_toggles_immediately(): void
@@ -161,14 +157,22 @@ class OrganizationModuleAccessTest extends TestCase
                 'modules.luthier_catalog' => true,
                 'modules.workshop' => true,
                 'modules.rentals' => true,
-                'modules.communications' => false,
+                'modules.communications' => true,
+                'settings.presentation.labels.customer_follow_up' => 'Clients',
+                'settings.presentation.labels.luthier_catalog' => 'Instruments et prestations',
             ])
+            ->assertFormFieldIsDisabled('modules.luthier_catalog')
             ->fillForm(['vertical_pack' => '__none__'])
             ->assertFormSet([
-                'modules.luthier_catalog' => true,
-                'modules.workshop' => true,
-                'modules.rentals' => true,
-            ]);
+                'modules.luthier_catalog' => false,
+                'modules.workshop' => false,
+                'modules.rentals' => false,
+                'modules.marketing' => true,
+                'settings.presentation.labels.customer_follow_up' => 'Relation client',
+            ])
+            ->fillForm(['modules.workshop' => true])
+            ->assertFormSet(['modules.luthier_catalog' => true])
+            ->assertFormFieldIsDisabled('modules.luthier_catalog');
     }
 
     public function test_a_platform_administrator_can_create_an_organization_without_a_business_pack(): void
