@@ -76,7 +76,7 @@ class ContempoInstrumentPublisherTest extends TestCase
 
             return count($media) === 1
                 && $media[0]['caption'] === 'Table du violon'
-                && str_ends_with($media[0]['url'], '/storage/instruments/violon.jpg');
+                && str_ends_with($media[0]['url'], '/media/instruments/violon.jpg');
         });
     }
 }

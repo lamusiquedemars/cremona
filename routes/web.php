@@ -3,12 +3,19 @@
 use App\Http\Controllers\GoogleAdsAgencyOAuthController;
 use App\Http\Controllers\GoogleAdsOAuthController;
 use App\Http\Controllers\PrivateDocumentDownloadController;
+use App\Http\Controllers\PublicStorageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect('/platform/organizations');
 });
+
+// Public media is routed through Laravel because this LWS host does not allow
+// the usual public/storage symbolic link.
+Route::get('/media/{path}', PublicStorageController::class)
+    ->where('path', '.*')
+    ->name('public-storage');
 
 Route::middleware('auth')->get('/dashboard', function (Request $request) {
     $user = $request->user();
