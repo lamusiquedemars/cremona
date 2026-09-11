@@ -11,6 +11,7 @@ use App\Models\Appointment;
 use App\Models\Organization;
 use App\Models\Person;
 use App\Models\User;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LogicException;
@@ -23,6 +24,7 @@ class AppointmentTest extends TestCase
     public function test_an_appointment_is_a_tenant_scoped_crm_projection(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['appointments']);
         $member = User::factory()->create();
         $member->organizations()->attach($organization);
 
@@ -89,6 +91,7 @@ class AppointmentTest extends TestCase
     public function test_appointments_are_read_only_projections_for_crm_users(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
@@ -122,6 +125,7 @@ class AppointmentTest extends TestCase
     public function test_an_appointment_is_visible_from_its_contact_page(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
 

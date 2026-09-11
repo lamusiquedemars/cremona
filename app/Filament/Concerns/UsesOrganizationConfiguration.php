@@ -4,6 +4,7 @@ namespace App\Filament\Concerns;
 
 use App\Enums\OrganizationPermission;
 use App\Models\User;
+use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 
 trait UsesOrganizationConfiguration
@@ -27,7 +28,14 @@ trait UsesOrganizationConfiguration
 
         return $user instanceof User
             && $organization !== null
+            && static::organizationModuleIsEnabled()
             && $user->hasOrganizationPermission(static::configurationPermission(), $organization);
+    }
+
+    protected static function organizationModuleIsEnabled(): bool
+    {
+        return ! property_exists(static::class, 'organizationModule')
+            || app(OrganizationModuleAccess::class)->enabled(static::$organizationModule);
     }
 
     protected static function configurationPermission(): OrganizationPermission

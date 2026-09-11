@@ -32,7 +32,7 @@ class GoogleAdsConnectionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
+    protected static string|UnitEnum|null $navigationGroup = 'Marketing';
 
     protected static ?string $navigationLabel = 'Publicité';
 
@@ -41,6 +41,8 @@ class GoogleAdsConnectionResource extends Resource
     protected static ?string $pluralModelLabel = 'Compte Google Ads';
 
     protected static ?int $navigationSort = 100;
+
+    protected static string $organizationModule = 'marketing';
 
     protected static bool $isGloballySearchable = false;
 

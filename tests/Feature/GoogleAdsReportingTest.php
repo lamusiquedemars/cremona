@@ -13,6 +13,7 @@ use App\Services\GoogleAdsReportingClient;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -451,7 +452,7 @@ class GoogleAdsReportingTest extends TestCase
                 'configuration' => ['conversion_goal' => 'generate_lead', 'final_url' => 'https://atelierivoincidit.fr/contact', 'daily_budget' => 15, 'target_locations' => 'Rhône', 'languages' => 'fr', 'ad_groups' => [['name' => 'Archets', 'keywords' => 'archet violon', 'negative_keywords' => 'occasion', 'headlines' => "Archets artisanaux\nEssayer un archet\nConseil d’archetier", 'descriptions' => "Découvrez les archets de l’atelier.\nEssayez-les avec votre instrument."]]],
             ]);
 
-            $this->expectException(\Illuminate\Http\Client\RequestException::class);
+            $this->expectException(RequestException::class);
             app(GoogleAdsCampaignPublisher::class)->publishPaused($campaign, $integration);
         });
 

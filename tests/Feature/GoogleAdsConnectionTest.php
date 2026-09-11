@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\OrganizationIntegration;
 use App\Models\User;
 use App\Services\OrganizationIntegrationManager;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
@@ -45,6 +46,7 @@ class GoogleAdsConnectionTest extends TestCase
     public function test_only_integration_managers_can_open_google_ads_setup(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['marketing']);
         $owner = User::factory()->create();
         $administrator = User::factory()->create();
         $collaborator = User::factory()->create();
@@ -57,7 +59,7 @@ class GoogleAdsConnectionTest extends TestCase
         $url = GoogleAdsConnectionResource::getUrl('index', tenant: $organization);
 
         $this->assertSame('Publicité', GoogleAdsConnectionResource::getNavigationLabel());
-        $this->assertSame('Configuration de l’organisation', GoogleAdsConnectionResource::getNavigationGroup());
+        $this->assertSame('Marketing', GoogleAdsConnectionResource::getNavigationGroup());
         $this->actingAs($owner)->get($url)->assertOk()->assertSee('Compte Google Ads');
         $this->actingAs($administrator)->get($url)->assertOk()->assertSee('Compte Google Ads');
         $this->actingAs($collaborator)->get($url)->assertForbidden();
@@ -78,6 +80,7 @@ class GoogleAdsConnectionTest extends TestCase
     public function test_organization_screen_never_renders_google_ads_secrets(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['marketing']);
         $owner = User::factory()->create();
         $owner->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
 

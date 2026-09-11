@@ -12,14 +12,17 @@ use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\ConversationUserState;
+use App\Models\EmailMailbox;
 use App\Models\MessageAttachment;
 use App\Models\MessageParticipant;
 use App\Models\MessageReference;
 use App\Models\MessageThreadCandidate;
 use App\Models\Organization;
+use App\Models\OrganizationIntegration;
 use App\Models\User;
 use App\Services\CorrespondenceManager;
 use App\Services\IncomingRequestManager;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LogicException;
@@ -32,6 +35,7 @@ class CorrespondenceTest extends TestCase
     public function test_receiving_a_request_creates_an_idempotent_conversation_and_initial_message(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['communications']);
 
         app(OrganizationContext::class)->run($organization, function (): void {
             $request = app(IncomingRequestManager::class)->receive([
@@ -69,10 +73,22 @@ class CorrespondenceTest extends TestCase
     public function test_a_fake_transport_accepts_a_reply_without_claiming_delivery(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['communications']);
         $author = User::factory()->create();
         $author->organizations()->attach($organization);
 
         app(OrganizationContext::class)->run($organization, function () use ($author): void {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'imap_smtp',
+                'name' => 'Boîte de test',
+                'credentials' => [],
+                'status' => 'active',
+            ]);
+            EmailMailbox::query()->create([
+                'organization_integration_id' => $integration->id,
+                'address' => 'atelier@example.test',
+                'status' => 'active',
+            ]);
             $conversation = Conversation::query()->create(['initial_channel' => 'website']);
             $manager = app(CorrespondenceManager::class);
             $draft = $manager->createDraftReply($conversation, 'Bonjour Ada.', [[
@@ -133,6 +149,7 @@ class CorrespondenceTest extends TestCase
     public function test_the_correspondence_interface_obeys_the_validated_permissions(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm']);
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);

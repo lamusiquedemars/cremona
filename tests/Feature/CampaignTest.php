@@ -8,9 +8,10 @@ use App\Filament\Resources\Campaigns\CampaignResource;
 use App\Models\Campaign;
 use App\Models\Organization;
 use App\Models\User;
-use App\Services\IncomingRequestManager;
 use App\Services\GoogleAdsCampaignDraft;
+use App\Services\IncomingRequestManager;
 use App\Services\OrganizationIntegrationManager;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +24,7 @@ class CampaignTest extends TestCase
     public function test_campaign_costs_and_attributed_requests_stay_inside_the_organization(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['marketing']);
         $otherOrganization = Organization::factory()->create();
 
         $campaign = app(OrganizationContext::class)->run($organization, function (): Campaign {
@@ -68,6 +70,7 @@ class CampaignTest extends TestCase
     public function test_a_crm_collaborator_can_open_the_campaign_workspace(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['marketing']);
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -95,7 +98,7 @@ class CampaignTest extends TestCase
             ->assertOk()
             ->assertSee('Pilotage de la campagne')
             ->assertSee('Résultats — 30 derniers jours')
-            ->assertSee('Modifier la configuration');
+            ->assertSee('Modifier le brouillon');
     }
 
     public function test_site_summary_api_returns_only_aggregated_campaign_data(): void

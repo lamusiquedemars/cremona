@@ -21,6 +21,7 @@ use App\Models\IncomingRequest;
 use App\Models\Organization;
 use App\Models\Quote;
 use App\Models\User;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,6 +39,7 @@ class DashboardPrioritiesTest extends TestCase
         $organization = Organization::factory()->create([
             'settings' => ['timezone' => 'Europe/Paris'],
         ]);
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments', 'quotes', 'marketing']);
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -127,6 +129,7 @@ class DashboardPrioritiesTest extends TestCase
         $organization = Organization::factory()->create([
             'settings' => ['timezone' => 'Europe/Paris'],
         ]);
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments', 'quotes', 'marketing']);
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,

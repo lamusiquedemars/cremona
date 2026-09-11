@@ -25,7 +25,7 @@ class InboundChannelResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
+    protected static string|UnitEnum|null $navigationGroup = 'Canaux et intégrations';
 
     protected static ?string $navigationLabel = 'Canaux entrants';
 
@@ -36,6 +36,8 @@ class InboundChannelResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?int $navigationSort = 80;
+
+    protected static string $organizationModule = 'communications';
 
     public static function getEloquentQuery(): Builder
     {

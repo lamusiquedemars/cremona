@@ -48,6 +48,7 @@ final class OrganizationModuleRegistry
             'rentals' => ['label' => 'Locations', 'description' => 'Contrats et suivi des locations. Requiert le catalogue luthier.', 'group' => 'Atelier', 'group_key' => 'workshop', 'presentation_key' => 'rentals', 'requires' => ['luthier_catalog']],
             'inventory' => ['label' => 'Articles et stock', 'description' => 'Articles et niveaux de stock.', 'group' => 'Catalogue et stock', 'group_key' => 'catalog_inventory', 'presentation_key' => 'inventory', 'requires' => []],
             'marketing' => ['label' => 'Campagnes et publicité', 'description' => 'Campagnes et publicité Google.', 'group' => 'Marketing', 'group_key' => 'marketing', 'presentation_key' => 'marketing', 'requires' => []],
+            'communications' => ['label' => 'Canaux et intégrations', 'description' => 'Canaux entrants, boîtes email, Brevo Meetings et Contempo.', 'group' => 'Canaux et intégrations', 'group_key' => 'communications', 'presentation_key' => 'communications', 'requires' => []],
         ];
     }
 

@@ -65,7 +65,7 @@ class GoogleAdsCampaignKeywordPublisher
                     (bool) ($criterion['negative'] ?? false),
                 ));
 
-            foreach ([false => 'keywords', true => 'negative_keywords'] as $negative => $field) {
+            foreach (['keywords' => false, 'negative_keywords' => true] as $field => $negative) {
                 $desired = collect($this->keywords($group[$field] ?? null))
                     ->keyBy(fn (string $keyword): string => $this->criterionKey($keyword, $negative));
 

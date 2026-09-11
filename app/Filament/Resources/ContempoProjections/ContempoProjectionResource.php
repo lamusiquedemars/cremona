@@ -26,9 +26,11 @@ class ContempoProjectionResource extends Resource
 
     protected static ?string $pluralModelLabel = 'connecteurs de publication';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
+    protected static string|\UnitEnum|null $navigationGroup = 'Canaux et intégrations';
 
     protected static ?int $navigationSort = 85;
+
+    protected static string $organizationModule = 'communications';
 
     public static function getEloquentQuery(): Builder
     {

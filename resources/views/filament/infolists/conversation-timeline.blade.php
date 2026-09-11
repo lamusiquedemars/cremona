@@ -4,7 +4,7 @@
     use App\Support\EmailReplyComposer;
     use App\Support\EmailReplyExcerpt;
 
-    $messages = $getState();
+    $messages = collect($getState());
     $latest = $messages->last();
     $history = $messages->slice(0, -1)->reverse()->values();
 @endphp
