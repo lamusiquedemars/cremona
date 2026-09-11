@@ -8,6 +8,7 @@ use App\Filament\Resources\Organizations\Pages\ListOrganizations;
 use App\Filament\Resources\Organizations\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\Organizations\RelationManagers\SitesRelationManager;
 use App\Models\Organization;
+use App\Services\OrganizationModuleRegistry;
 use App\Services\OrganizationPresentation;
 use BackedEnum;
 use Filament\Actions\EditAction;
@@ -61,11 +62,28 @@ class OrganizationResource extends Resource
                 ->searchable()
                 ->required()
                 ->helperText('Utilisé pour afficher les rendez-vous, synchronisations et résultats de cette organisation.'),
+            Section::make('Modules actifs')
+                ->description('Une capacité inactive est absente du tableau de bord. Ses données restent conservées.')
+                ->columnSpanFull()
+                ->columns(2)
+                ->schema(static::moduleFields()),
             Section::make('Présentation métier')
                 ->description('Ces libellés adaptent l’interface sans modifier les données, les droits ni les intégrations.')
                 ->columnSpanFull()
                 ->schema(static::presentationGroups()),
         ]);
+    }
+
+    /** @return array<int, Toggle> */
+    private static function moduleFields(): array
+    {
+        return collect(app(OrganizationModuleRegistry::class)->all())
+            ->map(fn (array $module, string $key): Toggle => Toggle::make("modules.{$key}")
+                ->label($module['label'])
+                ->helperText($module['description'])
+                ->default(false))
+            ->values()
+            ->all();
     }
 
     public static function table(Table $table): Table

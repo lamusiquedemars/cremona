@@ -6,6 +6,7 @@ use App\Enums\AppointmentStatus;
 use App\Enums\OrganizationPermission;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Models\Appointment;
+use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
@@ -28,6 +29,11 @@ class UpcomingAppointments extends TableWidget
 
         return $organization !== null
             && $user !== null
+            && app(OrganizationModuleAccess::class)->enabled('appointments', $organization)
+            && Appointment::query()
+                ->where('status', AppointmentStatus::Scheduled)
+                ->where('starts_at', '>=', now())
+                ->exists()
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 

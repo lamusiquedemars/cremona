@@ -6,6 +6,7 @@ use App\Enums\CampaignStatus;
 use App\Enums\OrganizationPermission;
 use App\Filament\Resources\Campaigns\CampaignResource;
 use App\Models\Campaign;
+use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +16,7 @@ class ActiveCampaigns extends Widget
 {
     protected static bool $isLazy = false;
 
-    protected static ?int $sort = 20;
+    protected static ?int $sort = 10;
 
     protected int|string|array $columnSpan = 'full';
 
@@ -28,6 +29,8 @@ class ActiveCampaigns extends Widget
 
         return $organization !== null
             && $user !== null
+            && app(OrganizationModuleAccess::class)->enabled('marketing', $organization)
+            && Campaign::query()->where('status', CampaignStatus::Active)->exists()
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
     }
 
@@ -43,6 +46,14 @@ class ActiveCampaigns extends Widget
                 'dailyMetrics as spend_last_30_days' => fn (Builder $query): Builder => $query
                     ->where('metric_date', '>=', $since),
             ], 'spend')
+            ->withSum([
+                'dailyMetrics as impressions_last_30_days' => fn (Builder $query): Builder => $query
+                    ->where('metric_date', '>=', $since),
+            ], 'impressions')
+            ->withSum([
+                'dailyMetrics as clicks_last_30_days' => fn (Builder $query): Builder => $query
+                    ->where('metric_date', '>=', $since),
+            ], 'clicks')
             ->withCount([
                 'attributedIncomingRequests as recent_leads_count' => fn (Builder $query): Builder => $query
                     ->where('received_at', '>=', $since),
@@ -57,6 +68,12 @@ class ActiveCampaigns extends Widget
                 'spend' => $campaign->spend_last_30_days === null
                     ? 'Aucune dépense renseignée'
                     : Number::currency((float) $campaign->spend_last_30_days, $campaign->currency, 'fr'),
+                'impressions' => $campaign->impressions_last_30_days === null
+                    ? '—'
+                    : Number::format((int) $campaign->impressions_last_30_days, locale: 'fr'),
+                'clicks' => $campaign->clicks_last_30_days === null
+                    ? '—'
+                    : Number::format((int) $campaign->clicks_last_30_days, locale: 'fr'),
                 'leads' => $campaign->recent_leads_count.' demande'.($campaign->recent_leads_count > 1 ? 's' : '').' issue'.($campaign->recent_leads_count > 1 ? 's' : '').' de cette campagne',
                 'synced_at' => $campaign->google_ads_synced_at?->setTimezone($organization->timezone())->diffForHumans() ?? 'Google Ads non actualisé',
             ])

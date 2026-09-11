@@ -6,6 +6,7 @@ use App\Enums\ConversationStatus;
 use App\Enums\OrganizationPermission;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Conversation;
+use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
@@ -29,6 +30,14 @@ class ActiveConversations extends TableWidget
 
         return $organization !== null
             && $user !== null
+            && app(OrganizationModuleAccess::class)->enabled('crm', $organization)
+            && Conversation::query()
+                ->where('status', ConversationStatus::Open)
+                ->whereNotNull('last_inbound_at')
+                ->where(fn (Builder $query): Builder => $query
+                    ->whereNull('last_outbound_at')
+                    ->orWhereColumn('last_inbound_at', '>', 'last_outbound_at'))
+                ->exists()
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCorrespondence, $organization);
     }
 
