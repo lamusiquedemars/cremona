@@ -12,6 +12,28 @@ Route::get('/', function () {
     return redirect('/dashboard');
 });
 
+Route::get('/dashboard/logout', function (Request $request) {
+    if ($request->user() === null) {
+        return redirect('/dashboard/login');
+    }
+
+    return view('auth.logout-confirmation', [
+        'logoutAction' => route('filament.admin.auth.logout'),
+        'cancelUrl' => url('/dashboard'),
+    ]);
+})->name('logout.confirmation.admin');
+
+Route::get('/platform/logout', function (Request $request) {
+    if ($request->user() === null) {
+        return redirect('/platform/login');
+    }
+
+    return view('auth.logout-confirmation', [
+        'logoutAction' => route('filament.platform.auth.logout'),
+        'cancelUrl' => url('/platform'),
+    ]);
+})->name('logout.confirmation.platform');
+
 Route::middleware('auth')->get('/dashboard', function (Request $request) {
     $user = $request->user();
 
