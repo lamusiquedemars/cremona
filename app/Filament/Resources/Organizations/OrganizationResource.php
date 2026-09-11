@@ -131,7 +131,7 @@ class OrganizationResource extends Resource
                         ->columnSpan(4),
                     TextInput::make("settings.presentation.labels.{$groupKey}")
                         ->hiddenLabel()
-                        ->placeholder('Nom de cette rubrique dans le menu')
+                        ->placeholder('Nom de la catégorie (facultatif)')
                         ->maxLength(80)
                         ->columnSpan(8),
                 ];
@@ -145,6 +145,7 @@ class OrganizationResource extends Resource
 
                     $fields[] = Text::make(fn (Get $get): string => $get("settings.presentation.labels.{$definition['presentation_key']}") ?: $label)
                         ->tooltip($definition['description'])
+                        ->extraAttributes(['class' => 'pl-4'])
                         ->columnSpan(4);
                     $fields[] = TextInput::make("settings.presentation.labels.{$definition['presentation_key']}")
                         ->hiddenLabel()
@@ -170,6 +171,7 @@ class OrganizationResource extends Resource
 
                 return Grid::make(12)
                     ->columns(12)
+                    ->extraAttributes(['class' => 'border-t border-gray-200 pt-3 dark:border-white/10'])
                     ->schema($fields);
             },
             $registry->grouped(),
