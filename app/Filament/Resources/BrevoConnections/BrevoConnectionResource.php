@@ -31,7 +31,7 @@ class BrevoConnectionResource extends Resource
 
     protected static ?string $modelLabel = 'connexion Brevo';
 
-    protected static ?string $pluralModelLabel = 'connexion Brevo';
+    protected static ?string $pluralModelLabel = 'connexions Brevo';
 
     protected static ?int $navigationSort = 90;
 

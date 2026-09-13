@@ -34,6 +34,10 @@ class OrganizationResource extends Resource
 {
     protected static ?string $model = Organization::class;
 
+    protected static ?string $modelLabel = 'organisation';
+
+    protected static ?string $pluralModelLabel = 'organisations';
+
     protected static bool $isScopedToTenant = false;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;

@@ -38,7 +38,7 @@ class GoogleAdsConnectionResource extends Resource
 
     protected static ?string $modelLabel = 'compte Google Ads';
 
-    protected static ?string $pluralModelLabel = 'Compte Google Ads';
+    protected static ?string $pluralModelLabel = 'comptes Google Ads';
 
     protected static ?int $navigationSort = 100;
 

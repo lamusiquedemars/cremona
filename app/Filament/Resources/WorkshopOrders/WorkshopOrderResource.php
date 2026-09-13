@@ -34,6 +34,10 @@ class WorkshopOrderResource extends Resource
 
     protected static ?string $model = WorkshopOrder::class;
 
+    protected static ?string $modelLabel = 'dossier atelier';
+
+    protected static ?string $pluralModelLabel = 'dossiers atelier';
+
     protected static ?string $navigationLabel = 'Dossiers atelier';
 
     protected static ?string $presentationGroupKey = 'workshop';

@@ -24,6 +24,10 @@ class EmailMailboxResource extends Resource
 
     protected static ?string $model = EmailMailbox::class;
 
+    protected static ?string $modelLabel = 'boîte e-mail';
+
+    protected static ?string $pluralModelLabel = 'boîtes e-mail';
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
