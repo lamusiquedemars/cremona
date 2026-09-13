@@ -19,8 +19,15 @@ class EditWorkshopOrder extends EditRecord
     {
         return [
             Action::make('syncQuote')->label('Créer ou compléter le devis')->icon(Heroicon::OutlinedDocumentCurrencyEuro)->action(function (WorkshopOrderQuoteManager $manager): void {
-                $quote = $manager->sync($this->record);
-                Notification::make()->title('Devis mis à jour')->body("Les prestations sélectionnées sont dans le devis {$quote->reference}.")->success()->send();
+                try {
+                    $quote = $manager->sync($this->record);
+                } catch (LogicException $exception) {
+                    Notification::make()->title('Devis non modifié')->body($exception->getMessage())->danger()->send();
+
+                    return;
+                }
+
+                Notification::make()->title('Devis mis à jour')->body("Les prestations et articles sélectionnés sont dans le devis {$quote->reference}.")->success()->send();
             }),
             Action::make('applyStockConsumption')
                 ->label('Déduire le stock consommé')

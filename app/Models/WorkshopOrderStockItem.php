@@ -14,7 +14,7 @@ class WorkshopOrderStockItem extends Model
 
     protected function casts(): array
     {
-        return ['quantity' => 'decimal:2', 'applied_at' => 'immutable_datetime'];
+        return ['quantity' => 'decimal:2', 'unit_amount' => 'decimal:2', 'include_in_quote' => 'boolean', 'applied_at' => 'immutable_datetime'];
     }
 
     public function stockItem(): BelongsTo

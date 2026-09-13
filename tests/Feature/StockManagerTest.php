@@ -37,13 +37,27 @@ class StockManagerTest extends TestCase
 
         app(OrganizationContext::class)->run($organization, function (): void {
             $item = StockItem::query()->create(['name' => 'Âme de violon', 'quantity_on_hand' => 3]);
-            $order = WorkshopOrder::query()->create(['title' => 'Réglage du violon']);
+            $order = WorkshopOrder::query()->create(['title' => 'Réglage du violon', 'status' => \App\Enums\WorkshopOrderStatus::InProgress]);
             $order->stockItems()->create(['stock_item_id' => $item->id, 'label_snapshot' => $item->name, 'quantity' => 1]);
 
             $this->assertSame(1, app(StockManager::class)->applyWorkshopConsumption($order));
             $this->assertSame(0, app(StockManager::class)->applyWorkshopConsumption($order));
             $this->assertSame('2.00', $item->fresh()->quantity_on_hand);
             $this->assertSame(1, $item->movements()->count());
+        });
+    }
+
+    public function test_it_does_not_consume_stock_before_the_workshop_intervention_starts(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $item = StockItem::query()->create(['name' => 'Âme de violon', 'quantity_on_hand' => 3]);
+            $order = WorkshopOrder::query()->create(['title' => 'Réglage du violon']);
+            $order->stockItems()->create(['stock_item_id' => $item->id, 'label_snapshot' => $item->name, 'quantity' => 1]);
+
+            $this->expectException(LogicException::class);
+            app(StockManager::class)->applyWorkshopConsumption($order);
         });
     }
 }

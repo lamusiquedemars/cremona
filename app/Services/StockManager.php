@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\StockMovementType;
+use App\Enums\WorkshopOrderStatus;
 use App\Models\StockItem;
 use App\Models\StockMovement;
 use App\Models\WorkshopOrder;
@@ -39,6 +40,10 @@ class StockManager
     public function applyWorkshopConsumption(WorkshopOrder $order): int
     {
         return DB::transaction(function () use ($order): int {
+            if (! in_array($order->status, [WorkshopOrderStatus::InProgress, WorkshopOrderStatus::Ready, WorkshopOrderStatus::Returned], true)) {
+                throw new LogicException('Le stock ne peut être déduit qu’une fois l’intervention démarrée.');
+            }
+
             $lines = $order->stockItems()->whereNull('applied_at')->get();
 
             foreach ($lines as $line) {
