@@ -23,6 +23,8 @@ globalement des tables sur cet hébergement.
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://cremona.maracujadigital.fr
+APP_LOCALE=fr
+APP_FALLBACK_LOCALE=fr
 DB_CONNECTION=mysql
 DB_PREFIX=cremona_
 QUEUE_CONNECTION=database
