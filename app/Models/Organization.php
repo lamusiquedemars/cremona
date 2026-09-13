@@ -110,6 +110,15 @@ class Organization extends Model
             : config('app.timezone', 'UTC');
     }
 
+    public function interfaceLocale(): string
+    {
+        $locale = $this->settings['interface_locale'] ?? config('app.locale', 'fr');
+
+        return is_string($locale) && array_key_exists($locale, config('cremona.interface_locales', []))
+            ? $locale
+            : config('app.locale', 'fr');
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

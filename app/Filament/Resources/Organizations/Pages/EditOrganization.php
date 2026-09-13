@@ -17,6 +17,8 @@ class EditOrganization extends EditRecord
     {
         $data['modules'] = app(OrganizationModuleRegistry::class)->selectionFor($this->record);
         $data['vertical_pack'] ??= '__none__';
+        $data['settings'] ??= [];
+        $data['settings']['interface_locale'] ??= 'fr';
 
         return $data;
     }

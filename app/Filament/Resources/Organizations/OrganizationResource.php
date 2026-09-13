@@ -84,6 +84,12 @@ class OrganizationResource extends Resource
                 })
                 ->helperText('Le pack applique immédiatement ses modules et ses noms de menu. Les ajustements manuels restent possibles ensuite.'),
             Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
+            Select::make('settings.interface_locale')
+                ->label('Langue de l’interface')
+                ->options(config('cremona.interface_locales'))
+                ->default('fr')
+                ->required()
+                ->helperText('Détermine la langue de l’espace de travail de cette organisation.'),
             Select::make('settings.timezone')
                 ->label('Fuseau horaire')
                 ->options(array_combine(timezone_identifiers_list(), timezone_identifiers_list()))

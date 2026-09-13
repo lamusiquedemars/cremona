@@ -3,6 +3,21 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Langues d’interface des organisations
+    |--------------------------------------------------------------------------
+    |
+    | La langue est rattachée à l’organisation afin que chaque espace de
+    | travail conserve son interface, indépendamment de la langue de la
+    | plateforme Cremona.
+    |
+    */
+    'interface_locales' => [
+        'fr' => 'Français',
+        'pt_BR' => 'Português (Brasil)',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Identité PWA
     |--------------------------------------------------------------------------
     |
