@@ -223,28 +223,28 @@ class CampaignResource extends Resource
                 SelectFilter::make('channel')->label(__('common.channel'))->options(['google_ads' => 'Google Ads', 'meta_ads' => 'Meta Ads', 'linkedin_ads' => 'LinkedIn Ads', 'other' => 'Autre']),
             ])
             ->recordActions([
-                ViewAction::make()->label('Ouvrir le pilotage'),
+                ViewAction::make()->label(__('cremona.campaign.open_management')),
                 Action::make('preview_google_ads')
-                    ->label('Prévisualiser la création')
+                    ->label(__('cremona.campaign.preview_creation'))
                     ->icon(Heroicon::OutlinedEye)
                     ->visible(fn (Campaign $record): bool => $record->channel === 'google_ads' && blank($record->external_reference))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Fermer')
-                    ->modalHeading('Prévisualisation avant création Google Ads')
-                    ->modalDescription('Cet aperçu ne crée rien dans Google Ads. La campagne sera toujours créée en pause.')
+                    ->modalCancelActionLabel(__('common.close'))
+                    ->modalHeading(__('cremona.campaign.preview_before_creation'))
+                    ->modalDescription(__('cremona.campaign.preview_description'))
                     ->modalContent(fn (Campaign $record) => view('filament.campaigns.google-ads-preview', [
                         'preview' => app(GoogleAdsCampaignDraft::class)->preview($record),
                     ])),
                 Action::make('publish_google_ads_paused')
-                    ->label('Créer dans Google Ads en pause')
+                    ->label(__('cremona.campaign.create_paused'))
                     ->icon(Heroicon::OutlinedCloudArrowUp)
                     ->color('warning')
                     ->authorize('update')
                     ->visible(fn (Campaign $record): bool => $record->channel === 'google_ads' && blank($record->external_reference))
                     ->requiresConfirmation()
-                    ->modalHeading('Créer la campagne Google Ads en pause ?')
-                    ->modalDescription('Cette action crée le budget, la campagne, les groupes, mots-clés et annonces dans Google Ads. Rien ne sera diffusé : la campagne restera en pause jusqu’à une activation séparée.')
-                    ->modalSubmitActionLabel('Créer en pause')
+                    ->modalHeading(__('cremona.campaign.create_paused_heading'))
+                    ->modalDescription(__('cremona.campaign.create_paused_description'))
+                    ->modalSubmitActionLabel(__('cremona.campaign.create_paused_submit'))
                     ->action(function (Campaign $record): void {
                         $integration = OrganizationIntegration::query()
                             ->where('provider', 'google_ads')
@@ -252,7 +252,7 @@ class CampaignResource extends Resource
                             ->first();
 
                         if ($integration === null) {
-                            Notification::make()->title('Connexion Google Ads à préparer')->body('Renseigne d’abord le compte Google Ads dans « Marketing > Publicité ».')->warning()->send();
+                            Notification::make()->title(__('cremona.campaign.google_connection_to_prepare'))->body(__('cremona.campaign.google_connection_setup_body'))->warning()->send();
 
                             return;
                         }
@@ -261,7 +261,7 @@ class CampaignResource extends Resource
                             app(GoogleAdsCampaignPublisher::class)->publishPaused($record, $integration, auth()->user());
                         } catch (LogicException $exception) {
                             Notification::make()
-                                ->title('Création Google Ads arrêtée')
+                                ->title(__('cremona.campaign.google_creation_stopped'))
                                 ->body($exception->getMessage())
                                 ->danger()
                                 ->persistent()
@@ -272,8 +272,8 @@ class CampaignResource extends Resource
                             report($exception);
 
                             Notification::make()
-                                ->title('Création Google Ads interrompue')
-                                ->body('Google Ads a refusé une étape de création. Cremona a annulé les ressources créées pendant cette tentative ; la campagne locale reste en brouillon.')
+                                ->title(__('cremona.campaign.google_creation_interrupted'))
+                                ->body(__('cremona.campaign.google_creation_interrupted_body'))
                                 ->danger()
                                 ->persistent()
                                 ->send();
@@ -281,10 +281,10 @@ class CampaignResource extends Resource
                             return;
                         }
 
-                        Notification::make()->title('Campagne créée dans Google Ads')->body('Elle est en pause et ne diffuse aucune annonce.')->success()->send();
+                        Notification::make()->title(__('cremona.campaign.google_campaign_created'))->body(__('cremona.campaign.google_campaign_created_body'))->success()->send();
                     }),
                 Action::make('activate_google_ads')
-                    ->label('Activer dans Google Ads')
+                    ->label(__('cremona.campaign.activate_google'))
                     ->icon(Heroicon::OutlinedPlay)
                     ->color('success')
                     ->authorize('update')
@@ -292,9 +292,9 @@ class CampaignResource extends Resource
                         && filled($record->external_reference)
                         && $record->status === CampaignStatus::Paused)
                     ->requiresConfirmation()
-                    ->modalHeading('Activer la campagne Google Ads ?')
-                    ->modalDescription('Cette action rend la campagne diffusible dans Google Ads. Vérifie d’abord le budget, les annonces, les mots-clés et le suivi de conversion.')
-                    ->modalSubmitActionLabel('Activer la campagne')
+                    ->modalHeading(__('cremona.campaign.activate_google_heading'))
+                    ->modalDescription(__('cremona.campaign.activate_google_description'))
+                    ->modalSubmitActionLabel(__('cremona.campaign.activate_campaign'))
                     ->action(function (Campaign $record): void {
                         $integration = OrganizationIntegration::query()
                             ->where('provider', 'google_ads')
@@ -302,14 +302,14 @@ class CampaignResource extends Resource
                             ->first();
 
                         if ($integration === null) {
-                            Notification::make()->title('Connexion Google Ads introuvable')->warning()->send();
+                            Notification::make()->title(__('cremona.campaign.google_connection_not_found'))->warning()->send();
 
                             return;
                         }
 
                         app(GoogleAdsCampaignPublisher::class)->activate($record, $integration, auth()->user());
 
-                        Notification::make()->title('Campagne activée dans Google Ads')->success()->send();
+                        Notification::make()->title(__('cremona.campaign.google_campaign_activated'))->success()->send();
                     }),
                 Action::make('discard_google_ads_paused')
                     ->label('Retirer de Google Ads')
