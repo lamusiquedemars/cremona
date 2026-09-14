@@ -148,6 +148,12 @@ return [
         'event_person_linked' => 'Contact rattaché', 'event_person_created' => 'Contact créé et rattaché', 'event_company_linked' => 'Entreprise rattachée', 'event_note_added' => 'Note ajoutée',
         'by' => 'Par', 'system' => 'Système', 'details' => 'Détail', 'history' => 'Historique', 'unread' => 'Non lues', 'unassigned' => 'Non attribuées',
     ],
+    'person' => [
+        'edit_contact' => 'Modifier le contact', 'archive' => 'Archiver', 'archive_contact' => 'Archiver ce contact ?', 'archive_description' => 'Ses demandes, notes et relations resteront conservées.', 'reactivate' => 'Réactiver',
+        'contact_details' => 'Coordonnées', 'identity' => 'Identité', 'identity_description' => 'Les informations stables de la personne, indépendantes de ses demandes.', 'display_name_help' => 'Calculé à partir du prénom et du nom si laissé vide.',
+        'reference_points' => 'Repères', 'language' => 'Langue', 'country' => 'Pays', 'contact_details_description' => 'Une personne peut avoir plusieurs adresses e-mail ou numéros de téléphone.',
+        'contact_methods' => 'Moyens de contact', 'type' => 'Type', 'label' => 'Libellé', 'label_placeholder' => 'Professionnel, mobile…', 'contact_detail' => 'Coordonnée', 'primary' => 'Principal', 'add_contact_detail' => 'Ajouter une coordonnée',
+    ],
     'platform' => [
         'all_organizations' => 'Toutes les organisations',
         'administration' => 'Administration',

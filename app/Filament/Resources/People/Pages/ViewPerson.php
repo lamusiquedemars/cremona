@@ -16,19 +16,19 @@ class ViewPerson extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make()->label('Modifier le contact'),
+            EditAction::make()->label(__('cremona.person.edit_contact')),
             Action::make('archive')
-                ->label('Archiver')
+                ->label(__('cremona.person.archive'))
                 ->icon(Heroicon::OutlinedArchiveBox)
                 ->color('gray')
                 ->authorize('update')
                 ->visible(fn (): bool => $this->record->status === 'active')
                 ->requiresConfirmation()
-                ->modalHeading('Archiver ce contact ?')
-                ->modalDescription('Ses demandes, notes et relations resteront conservées.')
+                ->modalHeading(__('cremona.person.archive_contact'))
+                ->modalDescription(__('cremona.person.archive_description'))
                 ->action(fn () => app(CrmRecordManager::class)->archive($this->record)),
             Action::make('reactivate')
-                ->label('Réactiver')
+                ->label(__('cremona.person.reactivate'))
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->color('success')
                 ->authorize('reactivate')

@@ -88,8 +88,8 @@ class PersonResource extends Resource
     {
         /** @var Person $record */
         return array_filter([
-            'Coordonnées' => $record->contactMethods->pluck('value')->take(2)->implode(' · '),
-            'Entreprise' => $record->companies->first()?->name,
+            __('cremona.person.contact_details') => $record->contactMethods->pluck('value')->take(2)->implode(' · '),
+            __('cremona.navigation.items.companies') => $record->companies->first()?->name,
         ]);
     }
 
@@ -98,65 +98,65 @@ class PersonResource extends Resource
         return $schema
             ->columns(3)
             ->components([
-                Section::make('Identité')
-                    ->description('Les informations stables de la personne, indépendantes de ses demandes.')
+                Section::make(__('cremona.person.identity'))
+                    ->description(__('cremona.person.identity_description'))
                     ->columnSpan(2)
                     ->schema([
                         Grid::make(2)->schema([
                             TextInput::make('first_name')
-                                ->label('Prénom')
+                                ->label(__('cremona.request.first_name'))
                                 ->maxLength(255),
                             TextInput::make('last_name')
-                                ->label('Nom')
+                                ->label(__('cremona.request.last_name'))
                                 ->maxLength(255),
                             TextInput::make('display_name')
-                                ->label('Nom affiché')
-                                ->helperText('Calculé à partir du prénom et du nom si laissé vide.')
+                                ->label(__('cremona.request.display_name'))
+                                ->helperText(__('cremona.person.display_name_help'))
                                 ->maxLength(255)
                                 ->columnSpanFull(),
                         ]),
                     ]),
-                Section::make('Repères')
+                Section::make(__('cremona.person.reference_points'))
                     ->columnSpan(1)
                     ->schema([
                         TextInput::make('locale')
-                            ->label('Langue')
+                            ->label(__('cremona.person.language'))
                             ->placeholder('fr')
                             ->maxLength(16),
                         TextInput::make('country_code')
-                            ->label('Pays')
+                            ->label(__('cremona.person.country'))
                             ->placeholder('FR')
                             ->length(2),
                         TextInput::make('source')
-                            ->label('Origine')
+                            ->label(__('cremona.request.origin'))
                             ->maxLength(40),
                     ]),
-                Section::make('Coordonnées')
-                    ->description('Une personne peut avoir plusieurs adresses e-mail ou numéros de téléphone.')
+                Section::make(__('cremona.person.contact_details'))
+                    ->description(__('cremona.person.contact_details_description'))
                     ->columnSpanFull()
                     ->schema([
                         Repeater::make('contactMethods')
-                            ->label('Moyens de contact')
+                            ->label(__('cremona.person.contact_methods'))
                             ->relationship()
                             ->schema([
                                 Select::make('type')
-                                    ->label('Type')
+                                    ->label(__('cremona.person.type'))
                                     ->options(ContactMethodType::class)
                                     ->required(),
                                 TextInput::make('label')
-                                    ->label('Libellé')
-                                    ->placeholder('Professionnel, mobile…')
+                                    ->label(__('cremona.person.label'))
+                                    ->placeholder(__('cremona.person.label_placeholder'))
                                     ->maxLength(255),
                                 TextInput::make('value')
-                                    ->label('Coordonnée')
+                                    ->label(__('cremona.person.contact_detail'))
                                     ->required()
                                     ->maxLength(255),
                                 Toggle::make('is_primary')
-                                    ->label('Principal'),
+                                    ->label(__('cremona.person.primary')),
                             ])
                             ->columns(4)
                             ->defaultItems(0)
-                            ->addActionLabel('Ajouter une coordonnée'),
+                            ->addActionLabel(__('cremona.person.add_contact_detail')),
                     ]),
             ]);
     }
