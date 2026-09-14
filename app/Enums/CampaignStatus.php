@@ -15,13 +15,7 @@ enum CampaignStatus: string implements HasColor, HasLabel
 
     public function getLabel(): string
     {
-        return match ($this) {
-            self::Draft => 'Brouillon',
-            self::Active => 'Active',
-            self::Paused => 'En pause',
-            self::Completed => 'Terminée',
-            self::Archived => 'Archivée',
-        };
+        return __('cremona.campaign.status.'.$this->value);
     }
 
     public function getColor(): string

@@ -478,52 +478,23 @@ class CampaignResource extends Resource
 
     private static function googleAdsPrimaryStatusLabel(?string $status): string
     {
-        return match ($status) {
-            'ELIGIBLE' => 'Éligible',
-            'LEARNING' => 'En apprentissage',
-            'LIMITED' => 'Limitée',
-            'MISCONFIGURED' => 'À corriger',
-            'NOT_ELIGIBLE' => 'Non éligible',
-            'PAUSED' => 'En pause',
-            'PENDING' => 'En attente',
-            'ENDED' => 'Terminée',
-            'REMOVED' => 'Supprimée',
-            default => $status ?? 'À synchroniser',
-        };
+        return __('cremona.campaign.google_primary_status.'.strtolower($status ?? 'to_sync'));
     }
 
     private static function googleAdsServingStatusLabel(?string $status): string
     {
-        return match ($status) {
-            'SERVING' => 'Diffuse',
-            'NONE' => 'Ne diffuse pas',
-            'ENDED' => 'Terminée',
-            'PENDING' => 'En attente',
-            'SUSPENDED' => 'Suspendue',
-            default => $status ?? '—',
-        };
+        return __('cremona.campaign.google_serving_status.'.strtolower($status ?? 'unknown'));
     }
 
     private static function googleAdsBiddingStatusLabel(?string $status): string
     {
-        return match ($status) {
-            'LEARNING' => 'En apprentissage',
-            'ENABLED' => 'Active',
-            'LIMITED' => 'Limitée',
-            default => $status ?? '—',
-        };
+        return __('cremona.campaign.google_bidding_status.'.strtolower($status ?? 'unknown'));
     }
 
     private static function googleAdsPrimaryStatusReasonLabel(mixed $reasons): string
     {
         $reasons = is_array($reasons) ? $reasons : [$reasons];
-        $labels = collect($reasons)->filter()->map(fn (string $reason): string => match ($reason) {
-            'BIDDING_STRATEGY_LEARNING' => 'Les enchères automatiques s’ajustent après une modification.',
-            'CAMPAIGN_PAUSED' => 'La campagne a été mise en pause.',
-            'CAMPAIGN_ENDED' => 'La date de fin est atteinte.',
-            'CAMPAIGN_PENDING' => 'La campagne attend sa date de diffusion.',
-            default => 'Google Ads signale un point à examiner.',
-        })->unique()->values();
+        $labels = collect($reasons)->filter()->map(fn (string $reason): string => __('cremona.campaign.google_status_reason.'.strtolower($reason)))->unique()->values();
 
         return $labels->isNotEmpty() ? $labels->implode(' ') : '—';
     }

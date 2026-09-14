@@ -43,6 +43,9 @@ class InterfaceTranslationTest extends TestCase
             $this->assertSame('2 possíveis correspondências encontradas. Verifique antes de criar um novo cadastro.', trans_choice('cremona.request.possible_matches', 2, ['count' => 2]));
             $this->assertSame('Aquisição', __('cremona.request.acquisition'));
             $this->assertSame('Histórico', __('cremona.request.history'));
+            $this->assertSame('Qualificada', __('cremona.campaign.google_primary_status.eligible'));
+            $this->assertSame('Em veiculação', __('cremona.campaign.google_serving_status.serving'));
+            $this->assertSame('Ativa', __('cremona.campaign.google_bidding_status.enabled'));
         } finally {
             app()->setLocale('fr');
         }
