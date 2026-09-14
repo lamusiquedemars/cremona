@@ -20,4 +20,6 @@ return [
     'current_name' => 'Nome atual', 'function' => 'Cargo', 'linked_contacts' => 'Contatos vinculados',
     'linked_requests' => 'Solicitações vinculadas', 'request_origin' => 'Solicitação de origem', 'google_connection' => 'Conexão do Google Ads',
     'close' => 'Fechar', 'remove' => 'Remover', 'attach' => 'Vincular', 'revoke' => 'Revogar',
+    'contact_details' => 'Dados de contato', 'contact_methods' => 'Meios de contato', 'contact_label_placeholder' => 'Recepção, faturamento…', 'contact_detail' => 'Contato', 'add_contact_detail' => 'Adicionar contato',
+    'reference_points' => 'Referências', 'overview' => 'Visão geral', 'active' => 'Ativa', 'archived' => 'Arquivada',
 ];

@@ -20,4 +20,6 @@ return [
     'current_name' => 'Nom courant', 'function' => 'Fonction', 'linked_contacts' => 'Contacts liés',
     'linked_requests' => 'Demandes liées', 'request_origin' => 'Demande d’origine', 'google_connection' => 'Connexion Google Ads',
     'close' => 'Fermer', 'remove' => 'Retirer', 'attach' => 'Rattacher', 'revoke' => 'Révoquer',
+    'contact_details' => 'Coordonnées', 'contact_methods' => 'Moyens de contact', 'contact_label_placeholder' => 'Accueil, facturation…', 'contact_detail' => 'Coordonnée', 'add_contact_detail' => 'Ajouter une coordonnée',
+    'reference_points' => 'Repères', 'overview' => 'Vue d’ensemble', 'active' => 'Active', 'archived' => 'Archivée',
 ];

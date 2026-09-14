@@ -88,8 +88,8 @@ class CompanyResource extends Resource
     {
         /** @var Company $record */
         return array_filter([
-            'Raison sociale' => $record->legal_name,
-            'Coordonnées' => $record->contactMethods->pluck('value')->take(2)->implode(' · '),
+            __('common.legal_name') => $record->legal_name,
+            __('common.contact_details') => $record->contactMethods->pluck('value')->take(2)->implode(' · '),
         ]);
     }
 
@@ -116,7 +116,7 @@ class CompanyResource extends Resource
                                 ->columnSpanFull(),
                         ]),
                     ]),
-                Section::make('Repères')
+                Section::make(__('common.reference_points'))
                     ->columnSpan(1)
                     ->schema([
                         TextInput::make('industry')
@@ -126,11 +126,11 @@ class CompanyResource extends Resource
                             ->label(__('common.source'))
                             ->maxLength(40),
                     ]),
-                Section::make('Coordonnées')
+                Section::make(__('common.contact_details'))
                     ->columnSpanFull()
                     ->schema([
                         Repeater::make('contactMethods')
-                            ->label('Moyens de contact')
+                            ->label(__('common.contact_methods'))
                             ->relationship()
                             ->schema([
                                 Select::make('type')
@@ -139,10 +139,10 @@ class CompanyResource extends Resource
                                     ->required(),
                                 TextInput::make('label')
                                     ->label(__('common.label'))
-                                    ->placeholder('Accueil, facturation…')
+                                    ->placeholder(__('common.contact_label_placeholder'))
                                     ->maxLength(255),
                                 TextInput::make('value')
-                                    ->label('Coordonnée')
+                                    ->label(__('common.contact_detail'))
                                     ->required()
                                     ->maxLength(255),
                                 Toggle::make('is_primary')
@@ -150,7 +150,7 @@ class CompanyResource extends Resource
                             ])
                             ->columns(4)
                             ->defaultItems(0)
-                            ->addActionLabel('Ajouter une coordonnée'),
+                            ->addActionLabel(__('common.add_contact_detail')),
                     ]),
             ]);
     }
@@ -182,7 +182,7 @@ class CompanyResource extends Resource
                         TextEntry::make('status')
                             ->label(__('common.status'))
                             ->badge()
-                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Active' : 'Archivée')
+                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
                             ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
                     ]),
                 Section::make('Coordonnées')
@@ -192,13 +192,13 @@ class CompanyResource extends Resource
                             ->label('')
                             ->schema([
                                 TextEntry::make('type')->label(__('common.type'))->badge(),
-                                TextEntry::make('value')->label('Coordonnée')->copyable()->weight('medium'),
+                                TextEntry::make('value')->label(__('common.contact_detail'))->copyable()->weight('medium'),
                                 TextEntry::make('label')->label(__('common.label'))->placeholder('—'),
-                                IconEntry::make('is_primary')->label('Principale')->boolean(),
+                                IconEntry::make('is_primary')->label(__('common.primary'))->boolean(),
                             ])
                             ->columns(4),
                     ]),
-                Section::make('Vue d’ensemble')
+                Section::make(__('common.overview'))
                     ->columnSpan(1)
                     ->schema([
                         TextEntry::make('people_count')
@@ -216,7 +216,7 @@ class CompanyResource extends Resource
                             ->since()
                             ->placeholder(__('common.no_activity')),
                         TextEntry::make('created_at')
-                            ->label('Créée le')
+                            ->label(__('common.created_at'))
                             ->dateTime('d/m/Y H:i'),
                     ]),
             ]);
@@ -243,22 +243,22 @@ class CompanyResource extends Resource
                     ->separator(',')
                     ->placeholder('—'),
                 TextColumn::make('contactMethods.value')
-                    ->label('Coordonnées')
+                    ->label(__('common.contact_details'))
                     ->listWithLineBreaks()
                     ->limitList(2)
                     ->expandableLimitedList(),
                 TextColumn::make('status')
                     ->label(__('common.status'))
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Active' : 'Archivée')
+                    ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
                     ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
             ])
             ->filters([
                 SelectFilter::make('status')
                     ->label(__('common.status'))
                     ->options([
-                        'active' => 'Active',
-                        'archived' => 'Archivée',
+                        'active' => __('common.active'),
+                        'archived' => __('common.archived'),
                     ]),
             ])
             ->recordActions([
