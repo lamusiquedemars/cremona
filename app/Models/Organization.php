@@ -16,6 +16,9 @@ class Organization extends Model
 {
     use HasFactory;
 
+    /** @var array<int, string> */
+    private const INTERFACE_LOCALES = ['fr', 'pt_BR'];
+
     protected static function booted(): void
     {
         static::saved(function (self $organization): void {
@@ -114,7 +117,7 @@ class Organization extends Model
     {
         $locale = $this->settings['interface_locale'] ?? config('app.locale', 'fr');
 
-        return is_string($locale) && array_key_exists($locale, config('cremona.interface_locales', []))
+        return is_string($locale) && in_array($locale, self::INTERFACE_LOCALES, true)
             ? $locale
             : config('app.locale', 'fr');
     }
