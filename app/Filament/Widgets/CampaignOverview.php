@@ -24,10 +24,6 @@ class CampaignOverview extends StatsOverviewWidget
 
     protected static ?int $sort = 30;
 
-    protected ?string $heading = 'Pilotage des campagnes';
-
-    protected ?string $description = 'Les 30 derniers jours : dépenses renseignées et demandes réellement reçues par les sites.';
-
     public static function canView(): bool
     {
         $organization = app(OrganizationContext::class)->current();
@@ -50,7 +46,7 @@ class CampaignOverview extends StatsOverviewWidget
             ->groupBy('currency')
             ->pluck('total', 'currency');
         $spend = $spendByCurrency
-            ->map(fn (mixed $total, string $currency): string => Number::currency((float) $total, $currency, 'fr'))
+            ->map(fn (mixed $total, string $currency): string => Number::currency((float) $total, $currency, app()->getLocale()))
             ->implode(' · ');
         $windowStart = now()->setTimezone($organization->timezone())->subDays(30);
         $leads = IncomingRequest::query()
@@ -64,26 +60,36 @@ class CampaignOverview extends StatsOverviewWidget
             ->count();
 
         return [
-            Stat::make('Campagnes actives', $active)
-                ->description('Celles actuellement en diffusion')
+            Stat::make(__('cremona.dashboard.active_campaigns'), $active)
+                ->description(__('cremona.dashboard.active_campaigns_description'))
                 ->icon(Heroicon::OutlinedMegaphone)
                 ->color($active > 0 ? 'success' : 'gray')
                 ->url(CampaignResource::getUrl('index')),
-            Stat::make('Dépense renseignée', $spend !== '' ? $spend : '—')
+            Stat::make(__('cremona.dashboard.recorded_spend'), $spend !== '' ? $spend : '—')
                 ->description($spendByCurrency->count() > 1
-                    ? 'Totaux séparés par devise : aucune conversion artificielle.'
-                    : 'Somme des coûts journaliers observés.')
+                    ? __('cremona.dashboard.multiple_currencies')
+                    : __('cremona.dashboard.daily_costs_total'))
                 ->icon(Heroicon::OutlinedBanknotes)
                 ->color($spend !== '' ? 'warning' : 'gray')
                 ->url(CampaignResource::getUrl('index')),
-            Stat::make('Demandes attribuées', $leads)
-                ->description('Avec une clé de campagne reconnue')
+            Stat::make(__('cremona.dashboard.attributed_requests'), $leads)
+                ->description(__('cremona.dashboard.attributed_requests_description'))
                 ->icon(Heroicon::OutlinedArrowTrendingUp)
                 ->color($leads > 0 ? 'info' : 'gray'),
-            Stat::make('Demandes converties', $converted)
-                ->description('Résultat commercial confirmé')
+            Stat::make(__('cremona.dashboard.converted_requests'), $converted)
+                ->description(__('cremona.dashboard.converted_requests_description'))
                 ->icon(Heroicon::OutlinedCheckCircle)
                 ->color($converted > 0 ? 'success' : 'gray'),
         ];
+    }
+
+    protected function getHeading(): ?string
+    {
+        return __('cremona.dashboard.campaigns_heading');
+    }
+
+    protected function getDescription(): ?string
+    {
+        return __('cremona.dashboard.campaigns_description');
     }
 }

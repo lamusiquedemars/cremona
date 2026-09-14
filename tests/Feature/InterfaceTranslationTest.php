@@ -19,6 +19,8 @@ class InterfaceTranslationTest extends TestCase
 
             $this->assertSame('Contatos', __('cremona.navigation.items.contacts'));
             $this->assertSame('Prioridades de hoje', __('cremona.dashboard.priorities'));
+            $this->assertSame('Campanhas ativas', __('cremona.dashboard.active_campaigns'));
+            $this->assertSame('Despesa registrada', __('cremona.dashboard.recorded_spend'));
         } finally {
             app()->setLocale('fr');
         }
