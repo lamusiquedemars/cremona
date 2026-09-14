@@ -115,6 +115,16 @@ return [
             'removed' => 'Removida',
         ],
     ],
+    'crm' => [
+        'context' => 'Contexto do CRM', 'follow_up' => 'Acompanhamento', 'status' => 'Status', 'assignee' => 'Responsável', 'last_message' => 'Última mensagem',
+        'untitled' => 'Sem assunto', 'unlinked' => 'Não vinculado', 'unassigned' => 'Não atribuído', 'conversation_thread' => 'Histórico da conversa',
+        'reply' => 'Responder', 'recipient' => 'Destinatário', 'subject' => 'Assunto', 'message' => 'Mensagem',
+        'reply_accepted' => 'Resposta aceita pelo servidor SMTP.', 'reply_failed' => 'Não foi possível enviar a resposta.',
+        'mark_as_read' => 'Marcar como lida', 'conversation_marked_as_read' => 'Conversa marcada como lida.', 'close' => 'Encerrar', 'conversation_closed' => 'Conversa encerrada.',
+        'your_correspondent' => 'seu correspondente', 'wrote_on' => 'Em :date, :author escreveu:', 'unknown_sender' => 'Remetente desconhecido', 'you' => 'Você',
+        'from' => 'De: :name', 'to' => 'Para: :name', 'on_date' => 'Em :date', 'show_quoted_content' => 'Mostrar conteúdo citado',
+        'history' => 'Histórico (:count mensagem)|Histórico (:count mensagens)',
+    ],
     'platform' => [
         'all_organizations' => 'Todas as organizações',
         'administration' => 'Administração',

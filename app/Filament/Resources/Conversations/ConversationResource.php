@@ -63,18 +63,18 @@ class ConversationResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make('Contexte CRM')->columnSpan(2)->schema([
-                TextEntry::make('subject')->label('Objet')->placeholder('Sans objet')->weight('semibold'),
-                TextEntry::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder('Non rattaché'),
+            Section::make(__('cremona.crm.context'))->columnSpan(2)->schema([
+                TextEntry::make('subject')->label(__('cremona.crm.subject'))->placeholder(__('cremona.crm.untitled'))->weight('semibold'),
+                TextEntry::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder(__('cremona.crm.unlinked')),
                 TextEntry::make('company.name')->label(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))->placeholder('—'),
                 TextEntry::make('incomingRequest.subject')->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))->placeholder('—'),
             ]),
-            Section::make('Suivi')->columnSpan(1)->schema([
-                TextEntry::make('status')->label('Statut')->badge(),
-                TextEntry::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
-                TextEntry::make('last_message_at')->label('Dernier message')->dateTime('d/m/Y H:i')->placeholder('—'),
+            Section::make(__('cremona.crm.follow_up'))->columnSpan(1)->schema([
+                TextEntry::make('status')->label(__('cremona.crm.status'))->badge(),
+                TextEntry::make('assignedUser.name')->label(__('cremona.crm.assignee'))->placeholder(__('cremona.crm.unassigned')),
+                TextEntry::make('last_message_at')->label(__('cremona.crm.last_message'))->dateTime('d/m/Y H:i')->placeholder('—'),
             ]),
-            Section::make('Fil de discussion')->columnSpanFull()->schema([
+            Section::make(__('cremona.crm.conversation_thread'))->columnSpanFull()->schema([
                 ViewEntry::make('conversation_timeline')
                     ->hiddenLabel()
                     ->state(fn (Conversation $record) => $record->messages()
@@ -92,13 +92,13 @@ class ConversationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('last_message_at', 'desc')->columns([
-            TextColumn::make('subject')->label(fn (): string => app(OrganizationPresentation::class)->label('conversations', 'Correspondance'))->placeholder('Sans objet')->searchable()->weight('medium'),
-            TextColumn::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder('Non rattaché')->searchable(),
-            TextColumn::make('status')->label('Statut')->badge()->sortable(),
-            TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
-            TextColumn::make('last_message_at')->label('Dernier message')->dateTime('d/m/Y H:i')->sortable(),
+            TextColumn::make('subject')->label(fn (): string => app(OrganizationPresentation::class)->label('conversations', 'Correspondance'))->placeholder(__('cremona.crm.untitled'))->searchable()->weight('medium'),
+            TextColumn::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder(__('cremona.crm.unlinked'))->searchable(),
+            TextColumn::make('status')->label(__('cremona.crm.status'))->badge()->sortable(),
+            TextColumn::make('assignedUser.name')->label(__('cremona.crm.assignee'))->placeholder(__('cremona.crm.unassigned')),
+            TextColumn::make('last_message_at')->label(__('cremona.crm.last_message'))->dateTime('d/m/Y H:i')->sortable(),
         ])->filters([
-            SelectFilter::make('status')->label('Statut')->options(ConversationStatus::class),
+            SelectFilter::make('status')->label(__('cremona.crm.status'))->options(ConversationStatus::class),
         ])->recordActions([ViewAction::make()]);
     }
 

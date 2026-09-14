@@ -33,6 +33,9 @@ class InterfaceTranslationTest extends TestCase
             $this->assertSame('Impressões', __('cremona.dashboard.impressions'));
             $this->assertSame('Cliques', __('cremona.dashboard.clicks'));
             $this->assertSame('0 solicitações desta campanha', trans_choice('cremona.dashboard.requests_from_campaign', 0, ['count' => 0]));
+            $this->assertSame('Responder', __('cremona.crm.reply'));
+            $this->assertSame('Histórico (2 mensagens)', trans_choice('cremona.crm.history', 2, ['count' => 2]));
+            $this->assertSame('Em 14/09/2026 10:00, Marcos escreveu:', __('cremona.crm.wrote_on', ['date' => '14/09/2026 10:00', 'author' => 'Marcos']));
         } finally {
             app()->setLocale('fr');
         }

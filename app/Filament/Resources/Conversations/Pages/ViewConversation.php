@@ -25,22 +25,22 @@ class ViewConversation extends ViewRecord
     {
         return [
             Action::make('reply')
-                ->label('Répondre')
+                ->label(__('cremona.crm.reply'))
                 ->icon(Heroicon::OutlinedPaperAirplane)
                 ->color('primary')
                 ->visible(fn (): bool => Gate::allows('update', $this->record))
                 ->schema([
                     TextInput::make('to')
-                        ->label('Destinataire')
+                        ->label(__('cremona.crm.recipient'))
                         ->email()
                         ->default(fn (): ?string => $this->lastInboundAddress())
                         ->required()
                         ->maxLength(255),
                     TextInput::make('subject')
-                        ->label('Objet')
+                        ->label(__('cremona.crm.subject'))
                         ->default(fn (): string => $this->replySubject())
                         ->maxLength(255),
-                    Textarea::make('body')->label('Message')->required()->rows(8)->maxLength(10000),
+                    Textarea::make('body')->label(__('cremona.crm.message'))->required()->rows(8)->maxLength(10000),
                     ViewField::make('reply_context')
                         ->hiddenLabel()
                         ->view('filament.forms.reply-context', fn (): array => [
@@ -58,8 +58,8 @@ class ViewConversation extends ViewRecord
                     $this->reloadRecord();
                     $notification = Notification::make()
                         ->title($message->transport_status->value === 'accepted'
-                            ? 'Réponse acceptée par le serveur SMTP.'
-                            : 'La réponse n’a pas pu être envoyée.');
+                            ? __('cremona.crm.reply_accepted')
+                            : __('cremona.crm.reply_failed'));
 
                     $message->transport_status->value === 'accepted'
                         ? $notification->success()
@@ -67,15 +67,15 @@ class ViewConversation extends ViewRecord
                     $notification->send();
                 }),
             Action::make('markRead')
-                ->label('Marquer comme lue')
+                ->label(__('cremona.crm.mark_as_read'))
                 ->icon(Heroicon::OutlinedEnvelopeOpen)
                 ->visible(fn (): bool => Gate::allows('view', $this->record))
                 ->action(function (CorrespondenceManager $manager): void {
                     $manager->markRead($this->record, auth()->user());
-                    Notification::make()->title('Conversation marquée comme lue.')->success()->send();
+                    Notification::make()->title(__('cremona.crm.conversation_marked_as_read'))->success()->send();
                 }),
             Action::make('close')
-                ->label('Clôturer')
+                ->label(__('cremona.crm.close'))
                 ->icon(Heroicon::OutlinedCheckCircle)
                 ->color('gray')
                 ->requiresConfirmation()
@@ -83,7 +83,7 @@ class ViewConversation extends ViewRecord
                 ->action(function (CorrespondenceManager $manager): void {
                     $manager->closeConversation($this->record, auth()->user());
                     $this->reloadRecord();
-                    Notification::make()->title('Conversation clôturée.')->success()->send();
+                    Notification::make()->title(__('cremona.crm.conversation_closed'))->success()->send();
                 }),
         ];
     }

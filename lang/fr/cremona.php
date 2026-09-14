@@ -115,6 +115,16 @@ return [
             'removed' => 'Supprimée',
         ],
     ],
+    'crm' => [
+        'context' => 'Contexte CRM', 'follow_up' => 'Suivi', 'status' => 'Statut', 'assignee' => 'Responsable', 'last_message' => 'Dernier message',
+        'untitled' => 'Sans objet', 'unlinked' => 'Non rattaché', 'unassigned' => 'Non attribué', 'conversation_thread' => 'Fil de discussion',
+        'reply' => 'Répondre', 'recipient' => 'Destinataire', 'subject' => 'Objet', 'message' => 'Message',
+        'reply_accepted' => 'Réponse acceptée par le serveur SMTP.', 'reply_failed' => 'La réponse n’a pas pu être envoyée.',
+        'mark_as_read' => 'Marquer comme lue', 'conversation_marked_as_read' => 'Conversation marquée comme lue.', 'close' => 'Clôturer', 'conversation_closed' => 'Conversation clôturée.',
+        'your_correspondent' => 'votre correspondant', 'wrote_on' => 'Le :date, :author a écrit :', 'unknown_sender' => 'Expéditeur inconnu', 'you' => 'Vous',
+        'from' => 'De : :name', 'to' => 'À : :name', 'on_date' => 'Le :date', 'show_quoted_content' => 'Afficher le contenu cité',
+        'history' => 'Historique (:count message)|Historique (:count messages)',
+    ],
     'platform' => [
         'all_organizations' => 'Toutes les organisations',
         'administration' => 'Administration',
