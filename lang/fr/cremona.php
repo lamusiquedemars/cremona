@@ -125,6 +125,18 @@ return [
         'from' => 'De : :name', 'to' => 'À : :name', 'on_date' => 'Le :date', 'show_quoted_content' => 'Afficher le contenu cité',
         'history' => 'Historique (:count message)|Historique (:count messages)',
     ],
+    'request' => [
+        'marked_as_read' => 'Demande marquée comme lue.', 'change_status' => 'Changer le statut', 'new_status' => 'Nouveau statut', 'outcome' => 'Résultat',
+        'commercial_value' => 'Valeur commerciale attribuée', 'currency' => 'Devise', 'closing_reason' => 'Motif de perte ou de clôture', 'status_updated' => 'Statut mis à jour.',
+        'assign' => 'Attribuer', 'assignee_assigned' => 'Responsable attribué.', 'create_or_link_contact' => 'Créer ou rattacher le contact', 'qualify_contact' => 'Qualifier le contact',
+        'possible_matches' => ':count correspondance possible détectée. Vérifiez avant de créer une nouvelle fiche.|:count correspondances possibles détectées. Vérifiez avant de créer une nouvelle fiche.',
+        'no_exact_match' => 'Aucune correspondance exacte détectée. Vous pouvez rechercher un contact ou créer une nouvelle fiche.', 'action' => 'Action',
+        'link_existing_contact' => 'Rattacher un contact existant', 'create_contact' => 'Créer un nouveau contact', 'existing_contact' => 'Contact existant',
+        'display_name' => 'Nom affiché', 'first_name' => 'Prénom', 'last_name' => 'Nom', 'email' => 'E-mail', 'phone' => 'Téléphone',
+        'existing_contact_linked' => 'Contact existant rattaché.', 'contact_created_and_linked' => 'Contact créé et rattaché.', 'link_company' => 'Rattacher une entreprise',
+        'company' => 'Entreprise', 'company_linked' => 'Entreprise rattachée.', 'add_note' => 'Ajouter une note', 'internal_note' => 'Note interne', 'note_added' => 'Note ajoutée.',
+        'more' => 'Plus', 'possible_contacts' => 'Correspondances possibles', 'other_contacts' => 'Autres contacts',
+    ],
     'platform' => [
         'all_organizations' => 'Toutes les organisations',
         'administration' => 'Administration',

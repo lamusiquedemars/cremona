@@ -125,6 +125,18 @@ return [
         'from' => 'De: :name', 'to' => 'Para: :name', 'on_date' => 'Em :date', 'show_quoted_content' => 'Mostrar conteúdo citado',
         'history' => 'Histórico (:count mensagem)|Histórico (:count mensagens)',
     ],
+    'request' => [
+        'marked_as_read' => 'Solicitação marcada como lida.', 'change_status' => 'Alterar status', 'new_status' => 'Novo status', 'outcome' => 'Resultado',
+        'commercial_value' => 'Valor comercial atribuído', 'currency' => 'Moeda', 'closing_reason' => 'Motivo da perda ou encerramento', 'status_updated' => 'Status atualizado.',
+        'assign' => 'Atribuir', 'assignee_assigned' => 'Responsável atribuído.', 'create_or_link_contact' => 'Criar ou vincular contato', 'qualify_contact' => 'Qualificar contato',
+        'possible_matches' => ':count possível correspondência encontrada. Verifique antes de criar um novo cadastro.|:count possíveis correspondências encontradas. Verifique antes de criar um novo cadastro.',
+        'no_exact_match' => 'Nenhuma correspondência exata encontrada. Você pode procurar um contato ou criar um novo cadastro.', 'action' => 'Ação',
+        'link_existing_contact' => 'Vincular um contato existente', 'create_contact' => 'Criar novo contato', 'existing_contact' => 'Contato existente',
+        'display_name' => 'Nome exibido', 'first_name' => 'Nome', 'last_name' => 'Sobrenome', 'email' => 'E-mail', 'phone' => 'Telefone',
+        'existing_contact_linked' => 'Contato existente vinculado.', 'contact_created_and_linked' => 'Contato criado e vinculado.', 'link_company' => 'Vincular empresa',
+        'company' => 'Empresa', 'company_linked' => 'Empresa vinculada.', 'add_note' => 'Adicionar nota', 'internal_note' => 'Nota interna', 'note_added' => 'Nota adicionada.',
+        'more' => 'Mais', 'possible_contacts' => 'Possíveis correspondências', 'other_contacts' => 'Outros contatos',
+    ],
     'platform' => [
         'all_organizations' => 'Todas as organizações',
         'administration' => 'Administração',
