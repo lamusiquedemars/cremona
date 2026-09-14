@@ -69,21 +69,21 @@ class CrmTaskResource extends Resource
     {
         return $schema->columns(3)->components([
             Section::make(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâches'))->columnSpan(2)->schema([
-                TextInput::make('title')->label('À faire')->required()->maxLength(255),
-                Textarea::make('description')->label('Précisions internes')->rows(5)->maxLength(5000),
+                TextInput::make('title')->label(__('cremona.task.title'))->required()->maxLength(255),
+                Textarea::make('description')->label(__('cremona.task.internal_details'))->rows(5)->maxLength(5000),
                 Grid::make(2)->schema([
-                    DateTimePicker::make('due_at')->label('Échéance')->timezone(fn (): string => static::organizationTimezone())->seconds(false),
-                    Select::make('priority')->label('Priorité')->options(CrmTaskPriority::class)->default(CrmTaskPriority::Normal)->required(),
+                    DateTimePicker::make('due_at')->label(__('cremona.task.due_date'))->timezone(fn (): string => static::organizationTimezone())->seconds(false),
+                    Select::make('priority')->label(__('cremona.task.priority'))->options(CrmTaskPriority::class)->default(CrmTaskPriority::Normal)->required(),
                 ]),
             ]),
-            Section::make('Suivi')->columnSpan(1)->schema([
-                Select::make('status')->label('Statut')->options(CrmTaskStatus::class)->default(CrmTaskStatus::Open)->required(),
+            Section::make(__('cremona.crm.follow_up'))->columnSpan(1)->schema([
+                Select::make('status')->label(__('cremona.crm.status'))->options(CrmTaskStatus::class)->default(CrmTaskStatus::Open)->required(),
                 Select::make('assigned_user_id')
-                    ->label('Responsable')
+                    ->label(__('cremona.crm.assignee'))
                     ->options(fn (): array => app(OrganizationContext::class)->require()->users()->orderBy('name')->pluck('name', 'users.id')->all())
                     ->searchable()->preload(),
             ]),
-            Section::make('Rattachements')->columnSpanFull()->columns(2)->schema([
+            Section::make(__('cremona.task.links'))->columnSpanFull()->columns(2)->schema([
                 Select::make('person_id')->label('Contact')->relationship('person', 'display_name')->searchable()->preload(),
                 Select::make('company_id')->label('Entreprise')->relationship('company', 'name')->searchable()->preload(),
                 Select::make('incoming_request_id')
@@ -110,8 +110,8 @@ class CrmTaskResource extends Resource
     {
         return $schema->columns(3)->components([
             Section::make(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâche'))->columnSpan(2)->schema([
-                TextEntry::make('title')->label('À faire')->weight('semibold')->size('lg'),
-                TextEntry::make('description')->label('Précisions internes')->placeholder('—')->columnSpanFull(),
+                TextEntry::make('title')->label(__('cremona.task.title'))->weight('semibold')->size('lg'),
+                TextEntry::make('description')->label(__('cremona.task.internal_details'))->placeholder('—')->columnSpanFull(),
             ]),
             Section::make('Suivi')->columnSpan(1)->schema([
                 TextEntry::make('status')->label('Statut')->badge(),

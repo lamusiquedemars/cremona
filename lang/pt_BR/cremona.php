@@ -146,13 +146,16 @@ return [
         'additional_answers' => 'Respostas adicionais', 'question' => 'Pergunta', 'answer' => 'Resposta', 'consents' => 'Consentimentos', 'purpose' => 'Finalidade', 'displayed_text' => 'Texto apresentado',
         'event' => 'Evento', 'event_received' => 'Solicitação recebida', 'event_read' => 'Marcada como lida', 'event_status_changed' => 'Status alterado', 'event_assigned' => 'Responsável atribuído',
         'event_person_linked' => 'Contato vinculado', 'event_person_created' => 'Contato criado e vinculado', 'event_company_linked' => 'Empresa vinculada', 'event_note_added' => 'Nota adicionada',
-        'by' => 'Por', 'system' => 'Sistema', 'details' => 'Detalhe', 'history' => 'Histórico', 'unread' => 'Não lidas', 'unassigned' => 'Não atribuídas',
+        'by' => 'Por', 'system' => 'Sistema', 'details' => 'Detalhe', 'history' => 'Histórico', 'unread' => 'Não lidas', 'unassigned' => 'Não atribuídas', 'added_on' => 'Adicionada em', 'add_internal_note' => 'Adicionar nota interna', 'add' => 'Adicionar',
     ],
     'person' => [
         'edit_contact' => 'Editar contato', 'archive' => 'Arquivar', 'archive_contact' => 'Arquivar este contato?', 'archive_description' => 'Suas solicitações, notas e vínculos serão preservados.', 'reactivate' => 'Reativar',
         'contact_details' => 'Dados de contato', 'identity' => 'Identidade', 'identity_description' => 'Informações estáveis da pessoa, independentes de suas solicitações.', 'display_name_help' => 'Calculado a partir do nome e sobrenome se deixado em branco.',
         'reference_points' => 'Referências', 'language' => 'Idioma', 'country' => 'País', 'contact_details_description' => 'Uma pessoa pode ter vários endereços de e-mail ou números de telefone.',
         'contact_methods' => 'Meios de contato', 'type' => 'Tipo', 'label' => 'Rótulo', 'label_placeholder' => 'Profissional, celular…', 'contact_detail' => 'Contato', 'primary' => 'Principal', 'add_contact_detail' => 'Adicionar contato',
+    ],
+    'task' => [
+        'title' => 'A fazer', 'internal_details' => 'Detalhes internos', 'due_date' => 'Prazo', 'priority' => 'Prioridade', 'links' => 'Vínculos',
     ],
     'platform' => [
         'all_organizations' => 'Todas as organizações',

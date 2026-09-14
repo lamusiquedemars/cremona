@@ -146,13 +146,16 @@ return [
         'additional_answers' => 'Réponses complémentaires', 'question' => 'Question', 'answer' => 'Réponse', 'consents' => 'Consentements', 'purpose' => 'Finalité', 'displayed_text' => 'Texte présenté',
         'event' => 'Événement', 'event_received' => 'Demande reçue', 'event_read' => 'Marquée comme lue', 'event_status_changed' => 'Statut modifié', 'event_assigned' => 'Responsable attribué',
         'event_person_linked' => 'Contact rattaché', 'event_person_created' => 'Contact créé et rattaché', 'event_company_linked' => 'Entreprise rattachée', 'event_note_added' => 'Note ajoutée',
-        'by' => 'Par', 'system' => 'Système', 'details' => 'Détail', 'history' => 'Historique', 'unread' => 'Non lues', 'unassigned' => 'Non attribuées',
+        'by' => 'Par', 'system' => 'Système', 'details' => 'Détail', 'history' => 'Historique', 'unread' => 'Non lues', 'unassigned' => 'Non attribuées', 'added_on' => 'Ajoutée le', 'add_internal_note' => 'Ajouter une note interne', 'add' => 'Ajouter',
     ],
     'person' => [
         'edit_contact' => 'Modifier le contact', 'archive' => 'Archiver', 'archive_contact' => 'Archiver ce contact ?', 'archive_description' => 'Ses demandes, notes et relations resteront conservées.', 'reactivate' => 'Réactiver',
         'contact_details' => 'Coordonnées', 'identity' => 'Identité', 'identity_description' => 'Les informations stables de la personne, indépendantes de ses demandes.', 'display_name_help' => 'Calculé à partir du prénom et du nom si laissé vide.',
         'reference_points' => 'Repères', 'language' => 'Langue', 'country' => 'Pays', 'contact_details_description' => 'Une personne peut avoir plusieurs adresses e-mail ou numéros de téléphone.',
         'contact_methods' => 'Moyens de contact', 'type' => 'Type', 'label' => 'Libellé', 'label_placeholder' => 'Professionnel, mobile…', 'contact_detail' => 'Coordonnée', 'primary' => 'Principal', 'add_contact_detail' => 'Ajouter une coordonnée',
+    ],
+    'task' => [
+        'title' => 'À faire', 'internal_details' => 'Précisions internes', 'due_date' => 'Échéance', 'priority' => 'Priorité', 'links' => 'Rattachements',
     ],
     'platform' => [
         'all_organizations' => 'Toutes les organisations',

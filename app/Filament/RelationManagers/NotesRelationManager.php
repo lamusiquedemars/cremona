@@ -30,24 +30,24 @@ class NotesRelationManager extends RelationManager
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('body')
-                    ->label('Note')
+                    ->label(__('cremona.request.internal_note'))
                     ->wrap(),
                 TextColumn::make('author.name')
-                    ->label('Par'),
+                    ->label(__('cremona.request.by')),
                 TextColumn::make('created_at')
-                    ->label('Ajoutée le')
+                    ->label(__('cremona.request.added_on'))
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->headerActions([
                 CreateAction::make()
-                    ->label('Ajouter une note')
-                    ->modalHeading('Ajouter une note interne')
-                    ->modalSubmitActionLabel('Ajouter')
+                    ->label(__('cremona.request.add_note'))
+                    ->modalHeading(__('cremona.request.add_internal_note'))
+                    ->modalSubmitActionLabel(__('cremona.request.add'))
                     ->createAnother(false)
                     ->schema([
                         Textarea::make('body')
-                            ->label('Note')
+                            ->label(__('cremona.request.internal_note'))
                             ->required()
                             ->rows(5)
                             ->maxLength(5000),
