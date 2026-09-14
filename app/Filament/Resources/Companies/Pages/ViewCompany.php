@@ -18,7 +18,7 @@ class ViewCompany extends ViewRecord
         return [
             EditAction::make()->label('Modifier l’entreprise'),
             Action::make('archive')
-                ->label('Archiver')
+                ->label(__('common.archive'))
                 ->icon(Heroicon::OutlinedArchiveBox)
                 ->color('gray')
                 ->authorize('update')
@@ -28,7 +28,7 @@ class ViewCompany extends ViewRecord
                 ->modalDescription('Ses demandes, notes et relations resteront conservées.')
                 ->action(fn () => app(CrmRecordManager::class)->archive($this->record)),
             Action::make('reactivate')
-                ->label('Réactiver')
+                ->label(__('common.reactivate'))
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->color('success')
                 ->authorize('reactivate')

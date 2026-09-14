@@ -76,7 +76,7 @@ class WorkshopOrderResource extends Resource
                         $set('unit_amount', $service->suggested_unit_amount);
                     }),
                     TextInput::make('label_snapshot')->label('Intitulé')->required(),
-                    Textarea::make('description_snapshot')->label('Description')->rows(2),
+                    Textarea::make('description_snapshot')->label(__('common.description'))->rows(2),
                     TextInput::make('quantity')->label('Quantité')->numeric()->default(1),
                     TextInput::make('unit_amount')->label('Prix HT')->numeric()->prefix('€')->default(0),
                     Checkbox::make('include_in_quote')->label('À ajouter au devis'),
@@ -106,7 +106,7 @@ class WorkshopOrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('updated_at', 'desc')->columns([
-            TextColumn::make('reference')->label('Référence')->searchable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap(), TextColumn::make('person.display_name')->label('Client')->placeholder('—'), TextColumn::make('status')->label('Statut')->badge(), TextColumn::make('due_at')->label('Échéance')->dateTime('d/m/Y')->placeholder('—'),
+            TextColumn::make('reference')->label('Référence')->searchable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap(), TextColumn::make('person.display_name')->label('Client')->placeholder('—'), TextColumn::make('status')->label(__('common.status'))->badge(), TextColumn::make('due_at')->label('Échéance')->dateTime('d/m/Y')->placeholder('—'),
         ])->filters([SelectFilter::make('status')->options(WorkshopOrderStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouveau dossier atelier')]);
     }
 

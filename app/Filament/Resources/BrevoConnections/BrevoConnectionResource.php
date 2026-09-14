@@ -65,11 +65,11 @@ class BrevoConnectionResource extends Resource
                         default => 'Après validation',
                     }),
                 TextColumn::make('status')
-                    ->label('Statut')
+                    ->label(__('common.status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Connecté' : 'Révoqué')
                     ->color(fn (string $state): string => $state === 'active' ? 'success' : 'danger'),
-                TextColumn::make('updated_at')->label('Mis à jour')->since(),
+                TextColumn::make('updated_at')->label(__('common.updated_at'))->since(),
             ])
             ->recordActions([
                 Action::make('revoke')

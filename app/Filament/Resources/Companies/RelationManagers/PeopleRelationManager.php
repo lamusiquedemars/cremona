@@ -37,11 +37,11 @@ class PeopleRelationManager extends RelationManager
             ->defaultSort('display_name')
             ->columns([
                 TextColumn::make('display_name')
-                    ->label('Contact')
+                    ->label(__('common.contact'))
                     ->weight('medium')
                     ->searchable(),
                 TextColumn::make('pivot.job_title')->label('Fonction')->placeholder('—'),
-                IconColumn::make('pivot.is_primary')->label('Principal')->boolean(),
+                IconColumn::make('pivot.is_primary')->label(__('common.primary'))->boolean(),
                 TextColumn::make('contactMethods.value')
                     ->label('Coordonnées')
                     ->listWithLineBreaks()
@@ -55,7 +55,7 @@ class PeopleRelationManager extends RelationManager
                     ->attachAnother(false)
                     ->recordSelectSearchColumns(['display_name', 'first_name', 'last_name'])
                     ->schema(fn (AttachAction $action): array => [
-                        $action->getRecordSelect()->label('Contact'),
+                        $action->getRecordSelect()->label(__('common.contact')),
                         TextInput::make('job_title')
                             ->label('Fonction')
                             ->maxLength(255),

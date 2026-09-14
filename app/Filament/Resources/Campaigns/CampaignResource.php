@@ -73,37 +73,37 @@ class CampaignResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(2)->components([
-            Section::make('Campagne')
-                ->description('La clé de suivi doit correspondre exactement au paramètre utm_campaign utilisé dans les liens publicitaires.')
+            Section::make(__('cremona.campaign.campaign'))
+                ->description(__('cremona.campaign.tracking_key_description'))
                 ->schema([
-                    TextInput::make('name')->label('Nom lisible')->required()->maxLength(255),
-                    Select::make('channel')->label('Canal')->required()->options([
+                    TextInput::make('name')->label(__('cremona.campaign.display_name'))->required()->maxLength(255),
+                    Select::make('channel')->label(__('cremona.campaign.channel'))->required()->options([
                         'google_ads' => 'Google Ads',
                         'meta_ads' => 'Meta Ads',
                         'linkedin_ads' => 'LinkedIn Ads',
                         'other' => 'Autre',
                     ]),
                     TextInput::make('tracking_key')
-                        ->label('Clé UTM de la campagne')
-                        ->helperText('Exemple : criminal-cuiaba. Elle relie les demandes du site à cette campagne.')
+                        ->label(__('cremona.campaign.utm_key'))
+                        ->helperText(__('cremona.campaign.utm_key_help'))
                         ->required()
                         ->maxLength(255),
                     TextInput::make('external_reference')->label('Identifiant externe')->maxLength(255),
                     TextInput::make('site_reference')->label('Référence du site')->maxLength(255),
-                    Select::make('status')->label('Statut')->options(CampaignStatus::class)->default(CampaignStatus::Draft)->required(),
-                    TextInput::make('currency')->label('Devise (ISO)')->placeholder('EUR')->required()->length(3),
-                    Textarea::make('notes')->label('Notes')->rows(3)->columnSpanFull(),
+                    Select::make('status')->label(__('cremona.crm.status'))->options(CampaignStatus::class)->default(CampaignStatus::Draft)->required(),
+                    TextInput::make('currency')->label(__('cremona.campaign.currency'))->placeholder('EUR')->required()->length(3),
+                    Textarea::make('notes')->label(__('cremona.campaign.notes'))->rows(3)->columnSpanFull(),
                 ])->columns(2),
-            Section::make('Coûts et résultats par jour')
-                ->description('Les lignes Google Ads sont synchronisées automatiquement. La saisie manuelle reste disponible pour les autres canaux ou les corrections documentées.')
+            Section::make(__('cremona.campaign.daily_results'))
+                ->description(__('cremona.campaign.daily_results_description'))
                 ->schema([
                     Repeater::make('dailyMetrics')
                         ->relationship()
                         ->schema([
-                            DatePicker::make('metric_date')->label('Jour')->required()->native(false),
-                            TextInput::make('spend')->label('Dépense')->numeric()->default(0)->required(),
-                            TextInput::make('impressions')->label('Impressions')->numeric()->default(0)->required(),
-                            TextInput::make('clicks')->label('Clics')->numeric()->default(0)->required(),
+                            DatePicker::make('metric_date')->label(__('cremona.campaign.day'))->required()->native(false),
+                            TextInput::make('spend')->label(__('cremona.dashboard.recorded_spend'))->numeric()->default(0)->required(),
+                            TextInput::make('impressions')->label(__('cremona.dashboard.impressions'))->numeric()->default(0)->required(),
+                            TextInput::make('clicks')->label(__('cremona.dashboard.clicks'))->numeric()->default(0)->required(),
                             TextInput::make('platform_conversions')->label('Conversions plateforme')->numeric()->default(0)->required(),
                             Select::make('source')->label('Source')->options([
                                 'manual' => 'Saisie manuelle',
@@ -197,10 +197,10 @@ class CampaignResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('name')->label('Campagne')->description(fn (Campaign $record): string => $record->tracking_key)->searchable()->sortable()->weight('medium'),
-                TextColumn::make('channel')->label('Canal')->badge()->formatStateUsing(fn (string $state): string => match ($state) {
+                TextColumn::make('channel')->label(__('common.channel'))->badge()->formatStateUsing(fn (string $state): string => match ($state) {
                     'google_ads' => 'Google Ads', 'meta_ads' => 'Meta Ads', 'linkedin_ads' => 'LinkedIn Ads', default => 'Autre',
                 }),
-                TextColumn::make('status')->label('Statut')->badge(),
+                TextColumn::make('status')->label(__('common.status'))->badge(),
                 TextColumn::make('google_ads_primary_status')
                     ->label('État Google')
                     ->formatStateUsing(fn (?string $state): string => self::googleAdsPrimaryStatusLabel($state))
@@ -216,11 +216,11 @@ class CampaignResource extends Resource
                 TextColumn::make('daily_metrics_sum_spend')->label('Dépensé')->money(fn (Campaign $record): string => $record->currency)->sortable(),
                 TextColumn::make('attributed_incoming_requests_count')->label('Demandes site')->counts('attributedIncomingRequests')->badge()->color('success'),
                 TextColumn::make('google_ads_synced_at')->label('Google actualisé')->since()->placeholder('Jamais')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('starts_on')->label('Début')->date('d/m/Y')->placeholder('—'),
+                TextColumn::make('starts_on')->label(__('common.start'))->date('d/m/Y')->placeholder('—'),
             ])
             ->filters([
-                SelectFilter::make('status')->label('Statut')->options(CampaignStatus::class),
-                SelectFilter::make('channel')->label('Canal')->options(['google_ads' => 'Google Ads', 'meta_ads' => 'Meta Ads', 'linkedin_ads' => 'LinkedIn Ads', 'other' => 'Autre']),
+                SelectFilter::make('status')->label(__('common.status'))->options(CampaignStatus::class),
+                SelectFilter::make('channel')->label(__('common.channel'))->options(['google_ads' => 'Google Ads', 'meta_ads' => 'Meta Ads', 'linkedin_ads' => 'LinkedIn Ads', 'other' => 'Autre']),
             ])
             ->recordActions([
                 ViewAction::make()->label('Ouvrir le pilotage'),
@@ -417,10 +417,10 @@ class CampaignResource extends Resource
                 ->columnSpan(2)
                 ->schema([
                     TextEntry::make('name')->label('Campagne')->weight('semibold')->size('lg'),
-                    TextEntry::make('channel')->label('Canal')->formatStateUsing(fn (string $state): string => $state === 'google_ads' ? 'Google Ads' : $state)->badge(),
+                    TextEntry::make('channel')->label(__('common.channel'))->formatStateUsing(fn (string $state): string => $state === 'google_ads' ? 'Google Ads' : $state)->badge(),
                     TextEntry::make('tracking_key')->label('Clé UTM')->copyable(),
-                    TextEntry::make('starts_on')->label('Début')->date('d/m/Y')->placeholder('—'),
-                    TextEntry::make('ends_on')->label('Fin')->date('d/m/Y')->placeholder('—'),
+                    TextEntry::make('starts_on')->label(__('common.start'))->date('d/m/Y')->placeholder('—'),
+                    TextEntry::make('ends_on')->label(__('common.end'))->date('d/m/Y')->placeholder('—'),
                     TextEntry::make('planned_budget')->label('Budget prévu')->money(fn (Campaign $record): string => $record->currency)->placeholder('—'),
                 ])->columns(3),
             Section::make('État observé dans Google Ads')
@@ -438,7 +438,7 @@ class CampaignResource extends Resource
                         })
                         ->placeholder('À synchroniser'),
                     TextEntry::make('google_ads_primary_status_reasons')
-                        ->label('Détail')
+                        ->label(__('common.details'))
                         ->formatStateUsing(fn (mixed $state): string => static::googleAdsPrimaryStatusReasonLabel($state)),
                     TextEntry::make('google_ads_synced_at')->label('Dernière observation')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::getOrganizationTimezone())->placeholder('Jamais'),
                     TextEntry::make('google_ads_serving_status')->label('Diffusion')->formatStateUsing(fn (?string $state): string => static::googleAdsServingStatusLabel($state))->placeholder('—'),

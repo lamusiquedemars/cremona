@@ -36,13 +36,13 @@ class CompaniesRelationManager extends RelationManager
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')
-                    ->label('Entreprise')
+                    ->label(__('common.company'))
                     ->description(fn ($record): ?string => $record->legal_name)
                     ->weight('medium')
                     ->searchable(),
                 TextColumn::make('pivot.job_title')->label('Fonction')->placeholder('—'),
                 IconColumn::make('pivot.is_primary')->label('Principale')->boolean(),
-                TextColumn::make('industry')->label('Secteur')->placeholder('—'),
+                TextColumn::make('industry')->label(__('common.industry'))->placeholder('—'),
                 TextColumn::make('website')->label('Site')->url(fn (?string $state): ?string => $state)->openUrlInNewTab(),
             ])
             ->headerActions([
@@ -53,7 +53,7 @@ class CompaniesRelationManager extends RelationManager
                     ->attachAnother(false)
                     ->recordSelectSearchColumns(['name', 'legal_name'])
                     ->schema(fn (AttachAction $action): array => [
-                        $action->getRecordSelect()->label('Entreprise'),
+                        $action->getRecordSelect()->label(__('common.company')),
                         TextInput::make('job_title')
                             ->label('Fonction')
                             ->maxLength(255),

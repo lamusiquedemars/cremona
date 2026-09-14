@@ -53,7 +53,7 @@ class ServiceDefinitionResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([TextColumn::make('name')->label('Prestation')->searchable(), TextColumn::make('description')->label('Description')->limit(70), TextColumn::make('suggested_unit_amount')->label('Prix HT')->money('EUR'), ToggleColumn::make('is_active')->label('Active')])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle prestation')]);
+        return $table->columns([TextColumn::make('name')->label('Prestation')->searchable(), TextColumn::make('description')->label(__('common.description'))->limit(70), TextColumn::make('suggested_unit_amount')->label('Prix HT')->money('EUR'), ToggleColumn::make('is_active')->label('Active')])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle prestation')]);
     }
 
     public static function getPages(): array

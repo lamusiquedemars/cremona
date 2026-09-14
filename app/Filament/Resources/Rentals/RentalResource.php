@@ -52,7 +52,7 @@ class RentalResource extends Resource
         return $schema->columns(2)->components([
             Section::make('Location')->schema([
                 TextInput::make('reference')->label('Référence')->helperText('Générée automatiquement si laissée vide.'),
-                Select::make('status')->label('Statut')->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required(),
+                Select::make('status')->label(__('common.status'))->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required(),
                 Select::make('instrument_asset_id')->label('Instrument')->relationship('instrument', 'name')->getOptionLabelFromRecordUsing(fn (InstrumentAsset $instrument): string => trim($instrument->name.' — '.$instrument->status->label()))->preload()->searchable()->required(),
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable(),
                 DatePicker::make('starts_on')->label('Début prévu')->native(false),
@@ -71,10 +71,10 @@ class RentalResource extends Resource
             TextColumn::make('reference')->label('Référence')->searchable(),
             TextColumn::make('instrument.name')->label('Instrument')->searchable(),
             TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
-            TextColumn::make('status')->label('Statut')->badge(),
+            TextColumn::make('status')->label(__('common.status'))->badge(),
             TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
             TextColumn::make('unit_amount')->label('Loyer HT')->money('EUR'),
-        ])->filters([SelectFilter::make('status')->label('Statut')->options(RentalStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle location')]);
+        ])->filters([SelectFilter::make('status')->label(__('common.status'))->options(RentalStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle location')]);
     }
 
     public static function getPages(): array

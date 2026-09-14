@@ -58,7 +58,7 @@ class StockItemResource extends Resource
                 ->schema([
                     Select::make('type')->label('Nature')->options(StockMovementType::class)->default(StockMovementType::Receipt->value)->required(),
                     TextInput::make('quantity')->label('Quantité')->numeric()->required()->helperText('Positive, sauf pour une correction d’inventaire qui peut être négative.'),
-                    Textarea::make('note')->label('Note')->rows(2),
+                    Textarea::make('note')->label(__('common.note'))->rows(2),
                 ])
                 ->action(function (StockItem $record, array $data): void {
                     try {

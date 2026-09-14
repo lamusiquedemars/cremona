@@ -157,6 +157,11 @@ return [
     'task' => [
         'title' => 'À faire', 'internal_details' => 'Précisions internes', 'due_date' => 'Échéance', 'priority' => 'Priorité', 'links' => 'Rattachements',
     ],
+    'campaign' => [
+        'campaign' => 'Campagne', 'tracking_key_description' => 'La clé de suivi doit correspondre exactement au paramètre utm_campaign utilisé dans les liens publicitaires.',
+        'display_name' => 'Nom lisible', 'channel' => 'Canal', 'utm_key' => 'Clé UTM de la campagne', 'utm_key_help' => 'Exemple : criminal-cuiaba. Elle relie les demandes du site à cette campagne.',
+        'currency' => 'Devise (ISO)', 'notes' => 'Notes', 'daily_results' => 'Coûts et résultats par jour', 'daily_results_description' => 'Les lignes Google Ads sont synchronisées automatiquement. La saisie manuelle reste disponible pour les autres canaux ou les corrections documentées.', 'day' => 'Jour',
+    ],
     'platform' => [
         'all_organizations' => 'Toutes les organisations',
         'administration' => 'Administration',

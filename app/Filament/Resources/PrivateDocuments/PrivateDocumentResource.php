@@ -93,7 +93,7 @@ class PrivateDocumentResource extends Resource
                 TextEntry::make('title')->label('Intitulé interne')->placeholder('—'),
                 TextEntry::make('category')->label('Catégorie')->placeholder('—'),
                 TextEntry::make('size')->label('Taille')->formatStateUsing(fn (int $state): string => number_format($state / 1024 / 1024, 2, ',', ' ').' Mo'),
-                TextEntry::make('detected_mime_type')->label('Type')->placeholder('Non déterminé'),
+                TextEntry::make('detected_mime_type')->label(__('common.type'))->placeholder('Non déterminé'),
             ]),
             Section::make('Traçabilité')->columnSpan(1)->schema([
                 TextEntry::make('uploader.name')->label('Déposé par')->placeholder('Compte supprimé'),

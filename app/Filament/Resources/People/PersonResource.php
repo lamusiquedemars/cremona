@@ -182,14 +182,14 @@ class PersonResource extends Resource
                     ->columnSpan(1)
                     ->schema([
                         TextEntry::make('status')
-                            ->label('Statut')
+                            ->label(__('common.status'))
                             ->badge()
                             ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Actif' : 'Archivé')
                             ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
-                        TextEntry::make('source')->label('Origine')->placeholder('—'),
-                        TextEntry::make('locale')->label('Langue')->placeholder('—'),
-                        TextEntry::make('country_code')->label('Pays')->placeholder('—'),
-                        TextEntry::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
+                        TextEntry::make('source')->label(__('common.source'))->placeholder('—'),
+                        TextEntry::make('locale')->label(__('common.language'))->placeholder('—'),
+                        TextEntry::make('country_code')->label(__('common.country'))->placeholder('—'),
+                        TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
                     ]),
                 Section::make('Coordonnées')
                     ->columnSpan(2)
@@ -197,10 +197,10 @@ class PersonResource extends Resource
                         RepeatableEntry::make('contactMethods')
                             ->label('')
                             ->schema([
-                                TextEntry::make('type')->label('Type')->badge(),
+                                TextEntry::make('type')->label(__('common.type'))->badge(),
                                 TextEntry::make('value')->label('Coordonnée')->copyable()->weight('medium'),
-                                TextEntry::make('label')->label('Libellé')->placeholder('—'),
-                                IconEntry::make('is_primary')->label('Principal')->boolean(),
+                                TextEntry::make('label')->label(__('common.label'))->placeholder('—'),
+                                IconEntry::make('is_primary')->label(__('common.primary'))->boolean(),
                             ])
                             ->columns(4),
                     ]),
@@ -218,11 +218,11 @@ class PersonResource extends Resource
                             ->badge()
                             ->color('info'),
                         TextEntry::make('last_activity_at')
-                            ->label('Dernière activité')
+                            ->label(__('common.last_activity'))
                             ->since()
-                            ->placeholder('Aucune activité'),
+                            ->placeholder(__('common.no_activity')),
                         TextEntry::make('created_at')
-                            ->label('Créé le')
+                            ->label(__('common.created_at'))
                             ->dateTime('d/m/Y H:i'),
                     ]),
             ]);
@@ -234,7 +234,7 @@ class PersonResource extends Resource
             ->defaultSort('display_name')
             ->columns([
                 TextColumn::make('display_name')
-                    ->label('Contact')
+                    ->label(__('common.contact'))
                     ->searchable(['display_name', 'first_name', 'last_name'])
                     ->sortable()
                     ->weight('medium'),
@@ -245,23 +245,23 @@ class PersonResource extends Resource
                     ->expandableLimitedList()
                     ->searchable(),
                 TextColumn::make('companies.name')
-                    ->label('Entreprises')
+                    ->label(__('common.companies'))
                     ->badge()
                     ->separator(',')
                     ->placeholder('—'),
                 TextColumn::make('status')
-                    ->label('Statut')
+                    ->label(__('common.status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Actif' : 'Archivé')
                     ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
                 TextColumn::make('updated_at')
-                    ->label('Mis à jour')
+                    ->label(__('common.updated_at'))
                     ->since()
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Statut')
+                    ->label(__('common.status'))
                     ->options([
                         'active' => 'Actif',
                         'archived' => 'Archivé',

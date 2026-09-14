@@ -110,7 +110,7 @@ class CompanyResource extends Resource
                                 ->label('Raison sociale')
                                 ->maxLength(255),
                             TextInput::make('website')
-                                ->label('Site internet')
+                                ->label(__('common.website'))
                                 ->url()
                                 ->maxLength(2048)
                                 ->columnSpanFull(),
@@ -120,10 +120,10 @@ class CompanyResource extends Resource
                     ->columnSpan(1)
                     ->schema([
                         TextInput::make('industry')
-                            ->label('Secteur')
+                            ->label(__('common.industry'))
                             ->maxLength(255),
                         TextInput::make('source')
-                            ->label('Origine')
+                            ->label(__('common.source'))
                             ->maxLength(40),
                     ]),
                 Section::make('Coordonnées')
@@ -134,11 +134,11 @@ class CompanyResource extends Resource
                             ->relationship()
                             ->schema([
                                 Select::make('type')
-                                    ->label('Type')
+                                    ->label(__('common.type'))
                                     ->options(ContactMethodType::class)
                                     ->required(),
                                 TextInput::make('label')
-                                    ->label('Libellé')
+                                    ->label(__('common.label'))
                                     ->placeholder('Accueil, facturation…')
                                     ->maxLength(255),
                                 TextInput::make('value')
@@ -146,7 +146,7 @@ class CompanyResource extends Resource
                                     ->required()
                                     ->maxLength(255),
                                 Toggle::make('is_primary')
-                                    ->label('Principal'),
+                                    ->label(__('common.primary')),
                             ])
                             ->columns(4)
                             ->defaultItems(0)
@@ -171,7 +171,7 @@ class CompanyResource extends Resource
                             ->label('Raison sociale')
                             ->placeholder('—'),
                         TextEntry::make('website')
-                            ->label('Site internet')
+                            ->label(__('common.website'))
                             ->url(fn (?string $state): ?string => $state)
                             ->openUrlInNewTab()
                             ->placeholder('—'),
@@ -180,7 +180,7 @@ class CompanyResource extends Resource
                     ->columnSpan(1)
                     ->schema([
                         TextEntry::make('status')
-                            ->label('Statut')
+                            ->label(__('common.status'))
                             ->badge()
                             ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Active' : 'Archivée')
                             ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
@@ -191,9 +191,9 @@ class CompanyResource extends Resource
                         RepeatableEntry::make('contactMethods')
                             ->label('')
                             ->schema([
-                                TextEntry::make('type')->label('Type')->badge(),
+                                TextEntry::make('type')->label(__('common.type'))->badge(),
                                 TextEntry::make('value')->label('Coordonnée')->copyable()->weight('medium'),
-                                TextEntry::make('label')->label('Libellé')->placeholder('—'),
+                                TextEntry::make('label')->label(__('common.label'))->placeholder('—'),
                                 IconEntry::make('is_primary')->label('Principale')->boolean(),
                             ])
                             ->columns(4),
@@ -212,9 +212,9 @@ class CompanyResource extends Resource
                             ->badge()
                             ->color('info'),
                         TextEntry::make('last_activity_at')
-                            ->label('Dernière activité')
+                            ->label(__('common.last_activity'))
                             ->since()
-                            ->placeholder('Aucune activité'),
+                            ->placeholder(__('common.no_activity')),
                         TextEntry::make('created_at')
                             ->label('Créée le')
                             ->dateTime('d/m/Y H:i'),
@@ -228,17 +228,17 @@ class CompanyResource extends Resource
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')
-                    ->label('Entreprise')
+                    ->label(__('common.company'))
                     ->description(fn (Company $record): ?string => $record->legal_name)
                     ->searchable(['name', 'legal_name'])
                     ->sortable()
                     ->weight('medium'),
                 TextColumn::make('industry')
-                    ->label('Secteur')
+                    ->label(__('common.industry'))
                     ->placeholder('—')
                     ->searchable(),
                 TextColumn::make('people.display_name')
-                    ->label('Contacts')
+                    ->label(__('common.contacts'))
                     ->badge()
                     ->separator(',')
                     ->placeholder('—'),
@@ -248,14 +248,14 @@ class CompanyResource extends Resource
                     ->limitList(2)
                     ->expandableLimitedList(),
                 TextColumn::make('status')
-                    ->label('Statut')
+                    ->label(__('common.status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Active' : 'Archivée')
                     ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Statut')
+                    ->label(__('common.status'))
                     ->options([
                         'active' => 'Active',
                         'archived' => 'Archivée',

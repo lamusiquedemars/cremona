@@ -25,11 +25,11 @@ class AppointmentsRelationManager extends RelationManager
         return $table
             ->defaultSort('starts_at', 'desc')
             ->columns([
-                TextColumn::make('starts_at')->label('Date')->dateTime('d/m/Y H:i')->sortable(),
+                TextColumn::make('starts_at')->label(__('common.date'))->dateTime('d/m/Y H:i')->sortable(),
                 TextColumn::make('title')->label('Rendez-vous')->weight('medium'),
                 TextColumn::make('modality')->label('Modalité')->badge(),
-                TextColumn::make('status')->label('Statut')->badge(),
-                TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('—'),
+                TextColumn::make('status')->label(__('common.status'))->badge(),
+                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('—'),
             ])
             ->recordActions([
                 ViewAction::make()

@@ -83,7 +83,7 @@ class OrganizationResource extends Resource
                     }
                 })
                 ->helperText('Le pack applique immédiatement ses modules et ses noms de menu. Les ajustements manuels restent possibles ensuite.'),
-            Select::make('status')->label('Statut')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
+            Select::make('status')->label(__('common.status'))->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active')->required(),
             Select::make('settings.interface_locale')
                 ->label('Langue de l’interface')
                 ->options(config('cremona.interface_locales'))
@@ -110,9 +110,9 @@ class OrganizationResource extends Resource
             TextColumn::make('name')->label('Organisation')->searchable()->sortable()
                 ->url(fn (Organization $record): string => '/dashboard/'.$record->slug),
             TextColumn::make('vertical_pack')->label('Activité')->placeholder('—'),
-            TextColumn::make('status')->label('Statut')->badge(),
+            TextColumn::make('status')->label(__('common.status'))->badge(),
             TextColumn::make('users_count')->label('Membres')->counts('users'),
-            TextColumn::make('updated_at')->label('Mis à jour')->since(),
+            TextColumn::make('updated_at')->label(__('common.updated_at'))->since(),
         ])->recordActions([EditAction::make()->label('Modifier')]);
     }
 

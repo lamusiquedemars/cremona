@@ -25,9 +25,9 @@ class ConversationsRelationManager extends RelationManager
         return $table
             ->defaultSort('last_message_at', 'desc')
             ->columns([
-                TextColumn::make('subject')->label('Conversation')->placeholder('Sans objet')->weight('medium'),
-                TextColumn::make('status')->label('Statut')->badge(),
-                TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
+                TextColumn::make('subject')->label('Conversation')->placeholder(__('common.untitled'))->weight('medium'),
+                TextColumn::make('status')->label(__('common.status'))->badge(),
+                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
                 TextColumn::make('last_message_at')->label('Dernier message')->dateTime('d/m/Y H:i')->placeholder('—'),
             ])
             ->recordActions([

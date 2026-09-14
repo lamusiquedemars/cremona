@@ -27,13 +27,13 @@ class IncomingRequestsRelationManager extends RelationManager
             ->defaultSort('received_at', 'desc')
             ->columns([
                 TextColumn::make('subject')
-                    ->label('Demande')
+                    ->label(__('common.request'))
                     ->description(fn (IncomingRequest $record): string => str($record->message)->squish()->limit(70))
-                    ->placeholder('Sans objet')
+                    ->placeholder(__('common.untitled'))
                     ->wrap(),
-                TextColumn::make('status')->label('Statut')->badge(),
+                TextColumn::make('status')->label(__('common.status'))->badge(),
                 TextColumn::make('urgency')->label('Urgence')->badge(),
-                TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribuée'),
+                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('Non attribuée'),
                 TextColumn::make('received_at')->label('Reçue')->dateTime('d/m/Y H:i')->sortable(),
             ])
             ->recordActions([

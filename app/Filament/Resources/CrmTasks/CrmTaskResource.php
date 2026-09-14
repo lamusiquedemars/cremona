@@ -84,16 +84,16 @@ class CrmTaskResource extends Resource
                     ->searchable()->preload(),
             ]),
             Section::make(__('cremona.task.links'))->columnSpanFull()->columns(2)->schema([
-                Select::make('person_id')->label('Contact')->relationship('person', 'display_name')->searchable()->preload(),
-                Select::make('company_id')->label('Entreprise')->relationship('company', 'name')->searchable()->preload(),
+                Select::make('person_id')->label(__('common.contact'))->relationship('person', 'display_name')->searchable()->preload(),
+                Select::make('company_id')->label(__('common.company'))->relationship('company', 'name')->searchable()->preload(),
                 Select::make('incoming_request_id')
-                    ->label('Demande')
+                    ->label(__('common.request'))
                     ->relationship('incomingRequest', 'subject')
                     ->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')
                     ->searchable(['subject', 'name_snapshot'])
                     ->preload(),
                 Select::make('conversation_id')
-                    ->label('Correspondance')
+                    ->label(__('common.conversation'))
                     ->relationship('conversation', 'subject', modifyQueryUsing: fn (Builder $query): Builder => $query->with([
                         'person',
                         'incomingRequest',
@@ -113,14 +113,14 @@ class CrmTaskResource extends Resource
                 TextEntry::make('title')->label(__('cremona.task.title'))->weight('semibold')->size('lg'),
                 TextEntry::make('description')->label(__('cremona.task.internal_details'))->placeholder('—')->columnSpanFull(),
             ]),
-            Section::make('Suivi')->columnSpan(1)->schema([
-                TextEntry::make('status')->label('Statut')->badge(),
-                TextEntry::make('priority')->label('Priorité')->badge(),
-                TextEntry::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
+            Section::make(__('common.follow_up'))->columnSpan(1)->schema([
+                TextEntry::make('status')->label(__('common.status'))->badge(),
+                TextEntry::make('priority')->label(__('common.priority'))->badge(),
+                TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
                 TextEntry::make('due_at')->label('Échéance')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder('Sans échéance'),
                 TextEntry::make('completed_at')->label('Terminée le')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder('—'),
             ]),
-            Section::make('Rattachements')->columnSpanFull()->columns(4)->schema([
+            Section::make(__('common.links'))->columnSpanFull()->columns(4)->schema([
                 TextEntry::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder('—'),
                 TextEntry::make('company.name')->label(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))->placeholder('—'),
                 TextEntry::make('incomingRequest.subject')->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))->placeholder('—'),
@@ -133,13 +133,13 @@ class CrmTaskResource extends Resource
     {
         return $table->defaultSort('due_at')->columns([
             TextColumn::make('title')->label(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâche'))->searchable()->weight('medium')->wrap(),
-            TextColumn::make('status')->label('Statut')->badge()->sortable(),
-            TextColumn::make('priority')->label('Priorité')->badge()->sortable(),
+            TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
+            TextColumn::make('priority')->label(__('common.priority'))->badge()->sortable(),
             TextColumn::make('due_at')->label('Échéance')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->sortable()->placeholder('—'),
-            TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
+            TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
         ])->filters([
-            SelectFilter::make('status')->label('Statut')->options(CrmTaskStatus::class),
-            SelectFilter::make('priority')->label('Priorité')->options(CrmTaskPriority::class),
+            SelectFilter::make('status')->label(__('common.status'))->options(CrmTaskStatus::class),
+            SelectFilter::make('priority')->label(__('common.priority'))->options(CrmTaskPriority::class),
         ])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('tasks', 'Tâche'))]);
     }
 
