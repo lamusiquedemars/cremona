@@ -49,8 +49,75 @@
             background: var(--quote-accent);
         }
 
+        .quote-details {
+            padding-bottom: clamp(2rem, 4vw, 3.25rem) !important;
+        }
+
+        .quote-lines-container {
+            margin-top: 1.5rem;
+            overflow-x: auto;
+            border: 1px solid var(--quote-line);
+            border-radius: .625rem;
+        }
+
+        .quote-document .quote-lines {
+            width: 100%;
+            min-width: 44rem;
+            border-collapse: collapse;
+            font-size: .9375rem;
+            line-height: 1.55;
+        }
+
+        .quote-document .quote-lines th {
+            padding: .9rem 1rem;
+            color: #fff;
+            font-weight: 600;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .quote-document .quote-lines td {
+            padding: 1.1rem 1rem;
+            vertical-align: top;
+            border-bottom: 1px solid var(--quote-line);
+        }
+
+        .quote-document .quote-lines .quote-cell-type {
+            width: 10rem;
+            color: var(--quote-muted);
+        }
+
+        .quote-document .quote-lines .quote-cell-description {
+            min-width: 20rem;
+            white-space: pre-line;
+        }
+
+        .quote-document .quote-lines .quote-cell-amount,
+        .quote-document .quote-lines .quote-cell-quantity {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .quote-document .quote-lines .quote-cell-amount {
+            width: 9rem;
+        }
+
+        .quote-document .quote-lines .quote-cell-quantity {
+            width: 6.5rem;
+        }
+
+        .quote-document .quote-lines td:last-child {
+            font-weight: 600;
+        }
+
         .quote-document .quote-lines tbody tr:last-child td {
-            border-bottom-width: 0;
+            border-bottom: 0;
+        }
+
+        .quote-document .quote-empty-lines {
+            padding: 2rem !important;
+            color: var(--quote-muted);
+            text-align: center;
         }
 
         .quote-document .quote-total-final {
@@ -192,32 +259,39 @@
             </section>
         @endif
 
-        <section class="px-6 py-7 sm:px-8 md:px-10">
+        <section class="quote-details px-6 py-7 sm:px-8 md:px-10">
             <h3 class="text-xl font-semibold tracking-tight text-gray-950 dark:text-white">Détail</h3>
 
-            <div class="mt-5 overflow-x-auto rounded-lg border border-gray-200 dark:border-white/10">
-                <table class="quote-lines min-w-full divide-y divide-gray-200 text-sm dark:divide-white/10">
+            <div class="quote-lines-container">
+                <table class="quote-lines">
+                    <colgroup>
+                        <col class="quote-cell-type">
+                        <col class="quote-cell-description">
+                        <col class="quote-cell-amount">
+                        <col class="quote-cell-quantity">
+                        <col class="quote-cell-amount">
+                    </colgroup>
                     <thead class="bg-gray-800 text-left text-sm font-medium text-white dark:bg-black/30">
                         <tr>
-                            <th scope="col" class="w-28 px-4 py-3 font-medium">Type</th>
-                            <th scope="col" class="min-w-80 px-4 py-3 font-medium">Description</th>
-                            <th scope="col" class="w-32 px-4 py-3 text-right font-medium">Prix unitaire</th>
-                            <th scope="col" class="w-24 px-4 py-3 text-right font-medium">Quantité</th>
-                            <th scope="col" class="w-32 px-4 py-3 text-right font-medium">Total</th>
+                            <th scope="col" class="quote-cell-type">Type</th>
+                            <th scope="col" class="quote-cell-description">Description</th>
+                            <th scope="col" class="quote-cell-amount">Prix unitaire</th>
+                            <th scope="col" class="quote-cell-quantity">Quantité</th>
+                            <th scope="col" class="quote-cell-amount">Total</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-gray-900">
                         @forelse ($quote->lines as $line)
                             <tr>
-                                <td class="px-4 py-4 align-top text-gray-600 dark:text-gray-300">{{ $lineKinds[$line->kind] ?? $line->kind ?? '—' }}</td>
-                                <td class="whitespace-pre-line px-4 py-4 align-top leading-6 text-gray-900 dark:text-white">{{ $line->description }}</td>
-                                <td class="whitespace-nowrap px-4 py-4 text-right align-top text-gray-700 dark:text-gray-200">{{ $money($line->unit_amount) }}</td>
-                                <td class="whitespace-nowrap px-4 py-4 text-right align-top text-gray-700 dark:text-gray-200">{{ rtrim(rtrim(number_format((float) $line->quantity, 2, ',', ' '), '0'), ',') }}</td>
-                                <td class="whitespace-nowrap px-4 py-4 text-right align-top font-medium text-gray-950 dark:text-white">{{ $money($line->total_amount) }}</td>
+                                <td class="quote-cell-type">{{ $lineKinds[$line->kind] ?? $line->kind ?? '—' }}</td>
+                                <td class="quote-cell-description">{{ $line->description }}</td>
+                                <td class="quote-cell-amount">{{ $money($line->unit_amount) }}</td>
+                                <td class="quote-cell-quantity">{{ rtrim(rtrim(number_format((float) $line->quantity, 2, ',', ' '), '0'), ',') }}</td>
+                                <td class="quote-cell-amount font-medium">{{ $money($line->total_amount) }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">Aucune ligne dans ce devis.</td>
+                                <td colspan="5" class="quote-empty-lines">Aucune ligne dans ce devis.</td>
                             </tr>
                         @endforelse
                     </tbody>

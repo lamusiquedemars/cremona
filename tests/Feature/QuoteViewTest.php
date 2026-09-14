@@ -58,6 +58,8 @@ class QuoteViewTest extends TestCase
             ->assertSee('Total final')
             ->assertSee('quote-document')
             ->assertSee('quote-document-frame')
+            ->assertSee('quote-lines-container')
+            ->assertSee('text-align: right')
             ->assertSee('@media print')
             ->assertSee('Modifier le devis')
             ->assertSee('Supprimer le brouillon');
