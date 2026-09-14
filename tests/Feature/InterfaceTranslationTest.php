@@ -20,7 +20,19 @@ class InterfaceTranslationTest extends TestCase
             $this->assertSame('Contatos', __('cremona.navigation.items.contacts'));
             $this->assertSame('Prioridades de hoje', __('cremona.dashboard.priorities'));
             $this->assertSame('Campanhas ativas', __('cremona.dashboard.active_campaigns'));
-            $this->assertSame('Despesa registrada', __('cremona.dashboard.recorded_spend'));
+            $this->assertSame('Despesas', __('cremona.dashboard.recorded_spend'));
+            $this->assertSame('Olá', __('cremona.dashboard.greeting'));
+            $this->assertSame('Visão geral', __('cremona.dashboard.overview'));
+            $this->assertSame('Relacionamento com clientes', __('cremona.dashboard.client_follow_up'));
+            $this->assertSame('Agendamentos', __('cremona.dashboard.appointments'));
+            $this->assertSame('1 ativa', trans_choice('cremona.dashboard.active_campaigns_count', 1, ['count' => 1]));
+            $this->assertSame('atualizada há 6 minutos', __('cremona.dashboard.sync_updated', ['date' => 'há 6 minutos']));
+            $this->assertSame('Nenhuma ação urgente hoje.', __('cremona.dashboard.no_urgent_actions'));
+            $this->assertSame('Em veiculação', __('cremona.dashboard.campaign_status.serving'));
+            $this->assertSame('Solicitações', __('cremona.dashboard.requests'));
+            $this->assertSame('Impressões', __('cremona.dashboard.impressions'));
+            $this->assertSame('Cliques', __('cremona.dashboard.clicks'));
+            $this->assertSame('0 solicitações desta campanha', trans_choice('cremona.dashboard.requests_from_campaign', 0, ['count' => 0]));
         } finally {
             app()->setLocale('fr');
         }
