@@ -5,8 +5,10 @@ namespace App\Filament\Resources\Quotes\Pages;
 use App\Enums\QuoteStatus;
 use App\Filament\Resources\Quotes\QuoteResource;
 use App\Models\Quote;
+use App\Services\QuoteDocumentProfileManager;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
@@ -32,6 +34,12 @@ class ViewQuote extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('downloadPdf')
+                ->label('Télécharger le PDF')
+                ->url(fn (): string => route('quotes.pdf', ['publicId' => $this->record->public_id]))
+                ->disabled(fn (): bool => count(app(QuoteDocumentProfileManager::class)->missingIssuerFields($this->record->organization)) > 0)
+                ->tooltip(fn (): ?string => ($missing = app(QuoteDocumentProfileManager::class)->missingIssuerFields($this->record->organization)) === [] ? null : 'Complétez « Coordonnées et mentions légales » : '.implode(', ', $missing).'.')
+                ->openUrlInNewTab(),
             EditAction::make()->label('Modifier le devis')
                 ->visible(fn (): bool => $this->record->status === QuoteStatus::Draft),
             DeleteAction::make()->label('Supprimer le brouillon')

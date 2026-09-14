@@ -18,8 +18,10 @@ use App\Models\MessageReference;
 use App\Models\MessageThreadCandidate;
 use App\Models\Organization;
 use App\Models\OrganizationIntegration;
+use App\Models\OrganizationLegalProfile;
 use App\Models\OrganizationMembership;
 use App\Models\OrganizationModule;
+use App\Models\OrganizationQuoteSettings;
 use App\Models\Person;
 use App\Models\PrivateDocument;
 use App\Models\PrivateDocumentLink;
@@ -65,8 +67,10 @@ class AppServiceProvider extends ServiceProvider
             'incoming_request' => IncomingRequest::class,
             'organization' => Organization::class,
             'organization_integration' => OrganizationIntegration::class,
+            'organization_legal_profile' => OrganizationLegalProfile::class,
             'organization_membership' => OrganizationMembership::class,
             'organization_module' => OrganizationModule::class,
+            'organization_quote_settings' => OrganizationQuoteSettings::class,
             'message_attachment' => MessageAttachment::class,
             'message_participant' => MessageParticipant::class,
             'message_reference' => MessageReference::class,

@@ -130,6 +130,10 @@ class PersonResource extends Resource
                         TextInput::make('source')
                             ->label(__('cremona.request.origin'))
                             ->maxLength(40),
+                        TextInput::make('address_line_1')->label('Adresse')->maxLength(255),
+                        TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255),
+                        TextInput::make('postal_code')->label('Code postal')->maxLength(32),
+                        TextInput::make('city')->label('Ville')->maxLength(255),
                     ]),
                 Section::make(__('cremona.person.contact_details'))
                     ->description(__('cremona.person.contact_details_description'))

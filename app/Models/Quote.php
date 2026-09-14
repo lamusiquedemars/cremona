@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use LogicException;
 
-#[Fillable(['reference', 'pennylane_quote_id', 'pennylane_status', 'pennylane_pdf_url', 'pennylane_synced_at', 'pennylane_last_error', 'person_id', 'company_id', 'incoming_request_id', 'workshop_order_id', 'title', 'status', 'currency', 'issued_on', 'valid_until', 'introduction', 'discount_amount', 'tax_note', 'payment_terms', 'notes', 'sent_via'])]
+#[Fillable(['reference', 'pennylane_quote_id', 'pennylane_status', 'pennylane_pdf_url', 'pennylane_synced_at', 'pennylane_last_error', 'person_id', 'company_id', 'incoming_request_id', 'workshop_order_id', 'title', 'status', 'currency', 'issued_on', 'valid_until', 'introduction', 'discount_amount', 'tax_note', 'payment_terms', 'notes', 'sent_via', 'issuer_snapshot', 'recipient_snapshot'])]
 class Quote extends Model
 {
     use BelongsToOrganization;
@@ -21,6 +21,11 @@ class Quote extends Model
         static::creating(function (self $quote): void {
             $quote->public_id ??= (string) Str::ulid();
             $quote->reference ??= 'Q-'.str($quote->public_id)->substr(0, 8);
+            $settings = OrganizationQuoteSettings::query()->first();
+            $quote->issued_on ??= now()->toDateString();
+            $quote->valid_until ??= $settings?->default_validity_days ? now()->addDays($settings->default_validity_days)->toDateString() : null;
+            $quote->payment_terms ??= $settings?->default_payment_terms;
+            $quote->tax_note ??= $settings?->default_tax_note;
         });
         static::saving(function (self $quote): void {
             $quote->title = trim($quote->title);
@@ -40,7 +45,7 @@ class Quote extends Model
 
     protected function casts(): array
     {
-        return ['status' => QuoteStatus::class, 'issued_on' => 'immutable_date', 'valid_until' => 'immutable_date', 'sent_at' => 'immutable_datetime', 'accepted_at' => 'immutable_datetime', 'declined_at' => 'immutable_datetime', 'pennylane_synced_at' => 'immutable_datetime', 'discount_amount' => 'decimal:2', 'subtotal_amount' => 'decimal:2', 'total_amount' => 'decimal:2'];
+        return ['status' => QuoteStatus::class, 'issued_on' => 'immutable_date', 'valid_until' => 'immutable_date', 'sent_at' => 'immutable_datetime', 'accepted_at' => 'immutable_datetime', 'declined_at' => 'immutable_datetime', 'pennylane_synced_at' => 'immutable_datetime', 'discount_amount' => 'decimal:2', 'subtotal_amount' => 'decimal:2', 'total_amount' => 'decimal:2', 'issuer_snapshot' => 'array', 'recipient_snapshot' => 'array'];
     }
 
     public function person(): BelongsTo

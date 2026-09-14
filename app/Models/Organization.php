@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['name', 'slug', 'vertical_pack', 'status', 'settings'])]
 class Organization extends Model
@@ -67,6 +68,16 @@ class Organization extends Model
     public function sites(): HasMany
     {
         return $this->hasMany(OrganizationSite::class);
+    }
+
+    public function legalProfile(): HasOne
+    {
+        return $this->hasOne(OrganizationLegalProfile::class);
+    }
+
+    public function quoteSettings(): HasOne
+    {
+        return $this->hasOne(OrganizationQuoteSettings::class);
     }
 
     public function people(): HasMany

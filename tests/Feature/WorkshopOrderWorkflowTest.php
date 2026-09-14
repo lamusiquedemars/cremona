@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Enums\QuoteStatus;
 use App\Enums\WorkshopOrderStatus;
 use App\Models\Organization;
+use App\Models\OrganizationLegalProfile;
+use App\Models\Person;
 use App\Models\WorkshopOrder;
 use App\Services\QuoteWorkflowManager;
 use App\Services\WorkshopOrderQuoteManager;
@@ -22,6 +24,10 @@ class WorkshopOrderWorkflowTest extends TestCase
         $organization = Organization::factory()->create();
 
         app(OrganizationContext::class)->run($organization, function (): void {
+            OrganizationLegalProfile::query()->create([
+                'display_name' => 'Atelier test', 'legal_name' => 'Atelier test', 'email' => 'bonjour@example.test',
+                'address_line_1' => '1 rue du Test', 'postal_code' => '69000', 'city' => 'Lyon', 'country_code' => 'FR', 'registration_number' => '12345678900012',
+            ]);
             $order = WorkshopOrder::query()->create([
                 'title' => 'Révision du violon',
                 'diagnosis' => 'Âme à remplacer et cordes à renouveler.',
@@ -38,6 +44,9 @@ class WorkshopOrderWorkflowTest extends TestCase
                 'include_in_quote' => true,
             ]);
             $quote = app(WorkshopOrderQuoteManager::class)->sync($order);
+            $person = Person::query()->create(['display_name' => 'Camille Martin']);
+            $person->contactMethods()->create(['type' => 'email', 'value' => 'camille@example.test']);
+            $quote->update(['person_id' => $person->id]);
             app(QuoteWorkflowManager::class)->markSent($quote, 'email');
 
             $this->assertSame(WorkshopOrderStatus::AwaitingApproval, $order->fresh()->status);

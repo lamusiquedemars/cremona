@@ -4,6 +4,7 @@ use App\Http\Controllers\GoogleAdsAgencyOAuthController;
 use App\Http\Controllers\GoogleAdsOAuthController;
 use App\Http\Controllers\PrivateDocumentDownloadController;
 use App\Http\Controllers\PublicStorageController;
+use App\Http\Controllers\QuotePdfController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +41,7 @@ Route::middleware('auth')->get('/dashboard', function (Request $request) {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/quotes/{publicId}/pdf', QuotePdfController::class)->whereUlid('publicId')->name('quotes.pdf');
     Route::get('/documents/{publicId}/download', PrivateDocumentDownloadController::class)
         ->whereUlid('publicId')
         ->name('private-documents.download');

@@ -12,7 +12,7 @@ class QuoteWorkflowManager
     public function markSent(Quote $quote, string $via): Quote
     {
         return DB::transaction(function () use ($quote, $via): Quote {
-            $quote = Quote::query()->lockForUpdate()->with('workshopOrder')->findOrFail($quote->id);
+            $quote = Quote::query()->lockForUpdate()->with(['organization.legalProfile', 'workshopOrder', 'person.contactMethods', 'company.contactMethods'])->findOrFail($quote->id);
 
             if ($quote->status !== QuoteStatus::Draft) {
                 throw new LogicException('Seul un devis brouillon peut être marqué comme envoyé.');
@@ -21,7 +21,11 @@ class QuoteWorkflowManager
                 throw new LogicException('Ajoutez au moins une ligne avant l’envoi du devis.');
             }
 
-            $quote->update(['status' => QuoteStatus::Sent, 'sent_at' => now(), 'sent_via' => $via]);
+            $profiles = app(QuoteDocumentProfileManager::class);
+            $issuer = $profiles->assertIssuerIsReady($quote->organization);
+            $recipient = $profiles->recipientSnapshot($quote);
+
+            $quote->update(['status' => QuoteStatus::Sent, 'sent_at' => now(), 'sent_via' => $via, 'issuer_snapshot' => $issuer->snapshot(), 'recipient_snapshot' => $recipient]);
 
             if ($quote->workshopOrder !== null) {
                 app(WorkshopOrderWorkflowManager::class)->markAwaitingApproval($quote->workshopOrder);

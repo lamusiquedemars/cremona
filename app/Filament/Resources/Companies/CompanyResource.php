@@ -114,6 +114,11 @@ class CompanyResource extends Resource
                                 ->url()
                                 ->maxLength(2048)
                                 ->columnSpanFull(),
+                            TextInput::make('address_line_1')->label('Adresse')->maxLength(255),
+                            TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255),
+                            TextInput::make('postal_code')->label('Code postal')->maxLength(32),
+                            TextInput::make('city')->label('Ville')->maxLength(255),
+                            TextInput::make('country_code')->label('Pays')->placeholder('FR')->length(2),
                         ]),
                     ]),
                 Section::make(__('common.reference_points'))
