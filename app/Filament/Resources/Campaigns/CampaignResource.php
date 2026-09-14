@@ -88,8 +88,8 @@ class CampaignResource extends Resource
                         ->helperText(__('cremona.campaign.utm_key_help'))
                         ->required()
                         ->maxLength(255),
-                    TextInput::make('external_reference')->label('Identifiant externe')->maxLength(255),
-                    TextInput::make('site_reference')->label('Référence du site')->maxLength(255),
+                    TextInput::make('external_reference')->label(__('cremona.campaign.external_reference'))->maxLength(255),
+                    TextInput::make('site_reference')->label(__('cremona.campaign.site_reference'))->maxLength(255),
                     Select::make('status')->label(__('cremona.crm.status'))->options(CampaignStatus::class)->default(CampaignStatus::Draft)->required(),
                     TextInput::make('currency')->label(__('cremona.campaign.currency'))->placeholder('EUR')->required()->length(3),
                     Textarea::make('notes')->label(__('cremona.campaign.notes'))->rows(3)->columnSpanFull(),
@@ -104,37 +104,37 @@ class CampaignResource extends Resource
                             TextInput::make('spend')->label(__('cremona.dashboard.recorded_spend'))->numeric()->default(0)->required(),
                             TextInput::make('impressions')->label(__('cremona.dashboard.impressions'))->numeric()->default(0)->required(),
                             TextInput::make('clicks')->label(__('cremona.dashboard.clicks'))->numeric()->default(0)->required(),
-                            TextInput::make('platform_conversions')->label('Conversions plateforme')->numeric()->default(0)->required(),
-                            Select::make('source')->label('Source')->options([
-                                'manual' => 'Saisie manuelle',
+                            TextInput::make('platform_conversions')->label(__('cremona.campaign.platform_conversions'))->numeric()->default(0)->required(),
+                            Select::make('source')->label(__('cremona.campaign.source'))->options([
+                                'manual' => __('cremona.campaign.manual_entry'),
                                 'google_ads' => 'Google Ads',
                                 'meta_ads' => 'Meta Ads',
                             ])->default('manual')->required(),
-                            TextInput::make('currency')->label('Devise (ISO)')->required()->length(3),
-                        ])->columns(4)->defaultItems(0)->addActionLabel('Ajouter une journée'),
+                            TextInput::make('currency')->label(__('cremona.campaign.currency'))->required()->length(3),
+                        ])->columns(4)->defaultItems(0)->addActionLabel(__('cremona.campaign.add_day')),
                 ]),
-            Section::make('Préparation Google Ads')
-                ->description('Ce brouillon reste dans Cremona. Il servira à créer une campagne Google Search en pause, jamais à la diffuser automatiquement.')
+            Section::make(__('cremona.campaign.google_ads_preparation'))
+                ->description(__('cremona.campaign.google_ads_preparation_description'))
                 ->columnSpanFull()
                 ->schema([
                     Select::make('configuration.conversion_goal')
-                        ->label('Objectif de conversion')
-                        ->options(['generate_lead' => 'Demande de contact envoyée'])
+                        ->label(__('cremona.campaign.conversion_goal'))
+                        ->options(['generate_lead' => __('cremona.campaign.contact_request_sent')])
                         ->default('generate_lead'),
                     TextInput::make('configuration.final_url')
-                        ->label('URL finale')
+                        ->label(__('cremona.campaign.final_url'))
                         ->url()
                         ->maxLength(2048),
                     Select::make('configuration.budget_mode')
-                        ->label('Mode de budget')
+                        ->label(__('cremona.campaign.budget_mode'))
                         ->options([
-                            'daily' => 'Budget quotidien continu',
-                            'total' => 'Test borné : budget total et dates fixes',
+                            'daily' => __('cremona.campaign.daily_budget_mode'),
+                            'total' => __('cremona.campaign.total_budget_mode'),
                         ])
                         ->default('daily')
                         ->live()
                         ->required()
-                        ->helperText('Le budget total crée une campagne Google Ads limitée dans le temps ; il ne peut pas être ajouté après création.'),
+                        ->helperText(__('cremona.campaign.budget_mode_help')),
                     TextInput::make('configuration.daily_budget')
                         ->label('Budget quotidien prévu')
                         ->numeric()
@@ -148,45 +148,45 @@ class CampaignResource extends Resource
                         ->visible(fn (Get $get): bool => $get('configuration.budget_mode') === 'total')
                         ->required(fn (Get $get): bool => $get('configuration.budget_mode') === 'total'),
                     DatePicker::make('starts_on')
-                        ->label('Début de diffusion')
+                        ->label(__('cremona.campaign.start_date'))
                         ->native(false)
                         ->visible(fn (Get $get): bool => $get('configuration.budget_mode') === 'total')
                         ->required(fn (Get $get): bool => $get('configuration.budget_mode') === 'total'),
                     DatePicker::make('ends_on')
-                        ->label('Fin de diffusion')
+                        ->label(__('cremona.campaign.end_date'))
                         ->native(false)
                         ->visible(fn (Get $get): bool => $get('configuration.budget_mode') === 'total')
                         ->required(fn (Get $get): bool => $get('configuration.budget_mode') === 'total')
                         ->after('starts_on'),
                     Select::make('configuration.target_country')
-                        ->label('Pays ciblé')
-                        ->options(['BR' => 'Brésil', 'FR' => 'France'])
+                        ->label(__('cremona.campaign.target_country'))
+                        ->options(['BR' => __('cremona.campaign.brazil'), 'FR' => __('cremona.campaign.france')])
                         ->default('BR')
                         ->required(),
                     Textarea::make('configuration.target_locations')
-                        ->label('Zones ciblées')
-                        ->helperText('Une zone par ligne. Cremona la vérifie auprès de Google Ads dans le pays choisi avant publication.')
+                        ->label(__('cremona.campaign.target_locations'))
+                        ->helperText(__('cremona.campaign.target_locations_help'))
                         ->rows(3),
                     Textarea::make('configuration.languages')
-                        ->label('Langues')
-                        ->helperText('Une langue ISO par ligne, par exemple : pt ou fr.')
+                        ->label(__('cremona.campaign.languages'))
+                        ->helperText(__('cremona.campaign.languages_help'))
                         ->rows(2),
                     Repeater::make('configuration.ad_groups')
-                        ->label('Groupes d’annonces')
+                        ->label(__('cremona.campaign.ad_groups'))
                         ->columnSpanFull()
                         ->schema([
-                            TextInput::make('name')->label('Nom')->required()->maxLength(255)->columnSpanFull(),
+                            TextInput::make('name')->label(__('cremona.campaign.name'))->required()->maxLength(255)->columnSpanFull(),
                             Grid::make(['default' => 1, 'md' => 2])->schema([
                                 Group::make([
-                                    Textarea::make('keywords')->label('Mots-clés, un par ligne')->helperText('Sans signe : diffusion large ; “guillemets” : recherche proche de l’expression ; [crochets] : intention très précise. Google peut aussi utiliser des variantes proches.')->rows(4)->required(),
-                                    Textarea::make('negative_keywords')->label('Exclusions, une par ligne')->rows(3),
+                                    Textarea::make('keywords')->label(__('cremona.campaign.keywords'))->helperText(__('cremona.campaign.keywords_help'))->rows(4)->required(),
+                                    Textarea::make('negative_keywords')->label(__('cremona.campaign.negative_keywords'))->rows(3),
                                 ]),
                                 Group::make([
-                                    Textarea::make('headlines')->label('Titres, un par ligne')->rows(4)->required(),
-                                    Textarea::make('descriptions')->label('Descriptions, une par ligne')->rows(3)->required(),
+                                    Textarea::make('headlines')->label(__('cremona.campaign.headlines'))->rows(4)->required(),
+                                    Textarea::make('descriptions')->label(__('cremona.campaign.descriptions'))->rows(3)->required(),
                                 ]),
                             ]),
-                        ])->columns(1)->defaultItems(0)->addActionLabel('Ajouter un groupe'),
+                        ])->columns(1)->defaultItems(0)->addActionLabel(__('cremona.campaign.add_group')),
                 ])->columns(2),
         ]);
     }
@@ -196,13 +196,13 @@ class CampaignResource extends Resource
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('name')->label('Campagne')->description(fn (Campaign $record): string => $record->tracking_key)->searchable()->sortable()->weight('medium'),
+                TextColumn::make('name')->label(__('cremona.campaign.campaign'))->description(fn (Campaign $record): string => $record->tracking_key)->searchable()->sortable()->weight('medium'),
                 TextColumn::make('channel')->label(__('common.channel'))->badge()->formatStateUsing(fn (string $state): string => match ($state) {
                     'google_ads' => 'Google Ads', 'meta_ads' => 'Meta Ads', 'linkedin_ads' => 'LinkedIn Ads', default => 'Autre',
                 }),
                 TextColumn::make('status')->label(__('common.status'))->badge(),
                 TextColumn::make('google_ads_primary_status')
-                    ->label('État Google')
+                    ->label(__('cremona.campaign.google_status'))
                     ->formatStateUsing(fn (?string $state): string => self::googleAdsPrimaryStatusLabel($state))
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
@@ -211,10 +211,10 @@ class CampaignResource extends Resource
                         'MISCONFIGURED', 'NOT_ELIGIBLE' => 'danger',
                         default => 'gray',
                     })
-                    ->placeholder('À synchroniser')
+                    ->placeholder(__('cremona.campaign.to_sync'))
                     ->toggleable(),
-                TextColumn::make('daily_metrics_sum_spend')->label('Dépensé')->money(fn (Campaign $record): string => $record->currency)->sortable(),
-                TextColumn::make('attributed_incoming_requests_count')->label('Demandes site')->counts('attributedIncomingRequests')->badge()->color('success'),
+                TextColumn::make('daily_metrics_sum_spend')->label(__('cremona.campaign.spent'))->money(fn (Campaign $record): string => $record->currency)->sortable(),
+                TextColumn::make('attributed_incoming_requests_count')->label(__('cremona.campaign.site_requests'))->counts('attributedIncomingRequests')->badge()->color('success'),
                 TextColumn::make('google_ads_synced_at')->label('Google actualisé')->since()->placeholder('Jamais')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('starts_on')->label(__('common.start'))->date('d/m/Y')->placeholder('—'),
             ])
