@@ -1,3 +1,108 @@
+@push('styles')
+    <style>
+        .quote-document {
+            --quote-ink: #292724;
+            --quote-muted: #6b6863;
+            --quote-line: #dfdbd4;
+            --quote-paper: #fffefa;
+            --quote-accent: #353330;
+            color: var(--quote-ink);
+            background: var(--quote-paper);
+        }
+
+        .quote-document-header {
+            background: linear-gradient(135deg, #fffefa 0%, #f8f5ef 100%);
+        }
+
+        .quote-document .quote-eyebrow {
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .quote-document .quote-title,
+        .quote-document h3 {
+            font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+        }
+
+        .quote-document .quote-title {
+            letter-spacing: -.035em;
+        }
+
+        .quote-document .quote-lines thead {
+            background: var(--quote-accent);
+        }
+
+        .quote-document .quote-lines tbody tr:last-child td {
+            border-bottom-width: 0;
+        }
+
+        .quote-document .quote-total-final {
+            color: var(--quote-accent);
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 13mm;
+            }
+
+            .fi-topbar-ctn,
+            .fi-sidebar,
+            .fi-page-header-main-ctn,
+            .fi-breadcrumbs,
+            .fi-header-actions-ctn,
+            .fi-no {
+                display: none !important;
+            }
+
+            html,
+            body.fi-body,
+            .fi-layout,
+            .fi-main-ctn,
+            .fi-main,
+            .fi-page,
+            .fi-page-main,
+            .fi-page-content {
+                display: block !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+                color: #111 !important;
+            }
+
+            .quote-document {
+                max-width: none !important;
+                overflow: visible !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                color: #111 !important;
+                background: #fff !important;
+            }
+
+            .quote-document * {
+                color: #111 !important;
+                border-color: #bbb !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+
+            .quote-document .quote-lines thead,
+            .quote-document .quote-lines thead * {
+                color: #fff !important;
+                background: #353330 !important;
+            }
+
+            .quote-document .quote-lines,
+            .quote-document .quote-conditions,
+            .quote-document .quote-totals {
+                break-inside: avoid;
+            }
+        }
+    </style>
+@endpush
+
 <x-filament-panels::page>
     @php
         $recipient = $quote->person?->display_name ?? $quote->company?->legal_name ?? $quote->company?->name;
@@ -19,12 +124,12 @@
         $money = fn (mixed $amount): string => \Illuminate\Support\Number::currency((float) $amount, in: $quote->currency, locale: 'fr');
     @endphp
 
-    <article class="mx-auto max-w-6xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
-        <header class="border-b border-gray-200 px-6 py-6 sm:px-8 md:px-10 md:py-8 dark:border-white/10">
+    <article class="quote-document mx-auto max-w-6xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
+        <header class="quote-document-header border-b border-gray-200 px-6 py-6 sm:px-8 md:px-10 md:py-8 dark:border-white/10">
             <div class="flex flex-wrap items-start justify-between gap-5">
                 <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ $quote->organization->name }}</p>
-                    <h2 class="mt-1 text-2xl font-semibold tracking-tight text-gray-950 dark:text-white sm:text-3xl">Devis {{ $quote->reference }}</h2>
+                    <p class="quote-eyebrow text-sm font-medium text-gray-500 dark:text-gray-400">{{ $quote->organization->name }}</p>
+                    <h2 class="quote-title mt-1 text-2xl font-semibold tracking-tight text-gray-950 dark:text-white sm:text-3xl">Devis {{ $quote->reference }}</h2>
                     <p class="mt-1 text-base text-gray-600 dark:text-gray-300">{{ $quote->title }}</p>
                 </div>
                 <div class="text-left sm:text-right">
@@ -68,7 +173,7 @@
             <h3 class="text-xl font-semibold tracking-tight text-gray-950 dark:text-white">Détail</h3>
 
             <div class="mt-5 overflow-x-auto rounded-lg border border-gray-200 dark:border-white/10">
-                <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-white/10">
+                <table class="quote-lines min-w-full divide-y divide-gray-200 text-sm dark:divide-white/10">
                     <thead class="bg-gray-800 text-left text-sm font-medium text-white dark:bg-black/30">
                         <tr>
                             <th scope="col" class="w-28 px-4 py-3 font-medium">Type</th>
@@ -96,19 +201,19 @@
                 </table>
             </div>
 
-            <div class="mt-6 flex flex-col gap-6 border-t border-gray-200 pt-5 md:flex-row md:items-end md:justify-between dark:border-white/10">
+            <div class="quote-totals mt-6 flex flex-col gap-6 border-t border-gray-200 pt-5 md:flex-row md:items-end md:justify-between dark:border-white/10">
                 <p class="max-w-xl whitespace-pre-line text-sm leading-6 text-gray-600 dark:text-gray-300">{{ $quote->tax_note ?: 'TVA et conditions fiscales à préciser si nécessaire.' }}</p>
                 <dl class="w-full max-w-sm space-y-2 text-sm">
                     <div class="flex items-baseline justify-between gap-6"><dt class="font-medium text-gray-700 dark:text-gray-200">Total</dt><dd class="font-medium text-gray-950 dark:text-white">{{ $money($quote->subtotal_amount) }}</dd></div>
                     @if ((float) $quote->discount_amount > 0)
                         <div class="flex items-baseline justify-between gap-6"><dt class="font-medium text-gray-700 dark:text-gray-200">Remise globale</dt><dd class="font-medium text-gray-950 dark:text-white">− {{ $money($quote->discount_amount) }}</dd></div>
                     @endif
-                    <div class="flex items-baseline justify-between gap-6 border-t border-gray-300 pt-3 text-base dark:border-white/20"><dt class="font-semibold text-gray-950 dark:text-white">Total final</dt><dd class="text-lg font-semibold text-gray-950 dark:text-white">{{ $money($quote->total_amount) }}</dd></div>
+                    <div class="quote-total-final flex items-baseline justify-between gap-6 border-t border-gray-300 pt-3 text-base dark:border-white/20"><dt class="font-semibold text-gray-950 dark:text-white">Total final</dt><dd class="text-lg font-semibold text-gray-950 dark:text-white">{{ $money($quote->total_amount) }}</dd></div>
                 </dl>
             </div>
         </section>
 
-        <section class="grid gap-8 border-t border-gray-200 px-6 py-7 sm:px-8 md:grid-cols-2 md:px-10 dark:border-white/10">
+        <section class="quote-conditions grid gap-8 border-t border-gray-200 px-6 py-7 sm:px-8 md:grid-cols-2 md:px-10 dark:border-white/10">
             <div>
                 <h3 class="text-xl font-semibold tracking-tight text-gray-950 dark:text-white">Conditions</h3>
                 <dl class="mt-4 space-y-2 text-sm leading-6 text-gray-700 dark:text-gray-200">
