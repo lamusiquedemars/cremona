@@ -13,4 +13,11 @@ return [
     'updated_at' => 'Atualizado em', 'last_activity' => 'Última atividade', 'no_activity' => 'Nenhuma atividade',
     'follow_up' => 'Acompanhamento', 'links' => 'Vínculos', 'add_note' => 'Adicionar nota', 'internal_note' => 'Nota interna',
     'archive' => 'Arquivar', 'reactivate' => 'Reativar', 'view' => 'Ver', 'edit' => 'Editar',
+    'name' => 'Nome', 'reference' => 'Referência', 'internal_title' => 'Título interno', 'quantity' => 'Quantidade',
+    'category' => 'Categoria', 'family' => 'Família', 'role' => 'Função', 'version' => 'Versão',
+    'timezone' => 'Fuso horário', 'email' => 'E-mail', 'modality' => 'Modalidade', 'state' => 'Estado',
+    'never' => 'Nunca', 'internal_notes' => 'Notas internas', 'legal_name' => 'Razão social',
+    'current_name' => 'Nome atual', 'function' => 'Cargo', 'linked_contacts' => 'Contatos vinculados',
+    'linked_requests' => 'Solicitações vinculadas', 'request_origin' => 'Solicitação de origem', 'google_connection' => 'Conexão do Google Ads',
+    'close' => 'Fechar', 'remove' => 'Remover', 'attach' => 'Vincular', 'revoke' => 'Revogar',
 ];

@@ -69,10 +69,10 @@ class PrivateDocumentResource extends Resource
                     ->maxSize(25 * 1024)
                     ->helperText('25 Mo maximum. Le fichier reste exclusivement dans l’espace privé.'),
                 TextInput::make('title')
-                    ->label('Intitulé interne')
+                    ->label(__('common.internal_title'))
                     ->maxLength(255)
                     ->helperText('Facultatif : le nom du fichier reste toujours visible.'),
-                TextInput::make('category')->label('Catégorie')->maxLength(100),
+                TextInput::make('category')->label(__('common.category'))->maxLength(100),
             ]),
             Section::make('Rattachements facultatifs')->columnSpan(1)->schema([
                 Select::make('person_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contacts'))->multiple()->options(fn (): array => Person::query()->orderBy('display_name')->pluck('display_name', 'id')->all())->searchable(),
@@ -90,15 +90,15 @@ class PrivateDocumentResource extends Resource
         return $schema->columns(2)->components([
             Section::make(fn (): string => app(OrganizationPresentation::class)->label('documents', 'Document'))->columnSpan(1)->schema([
                 TextEntry::make('original_name')->label('Fichier')->weight('semibold'),
-                TextEntry::make('title')->label('Intitulé interne')->placeholder('—'),
-                TextEntry::make('category')->label('Catégorie')->placeholder('—'),
+                TextEntry::make('title')->label(__('common.internal_title'))->placeholder('—'),
+                TextEntry::make('category')->label(__('common.category'))->placeholder('—'),
                 TextEntry::make('size')->label('Taille')->formatStateUsing(fn (int $state): string => number_format($state / 1024 / 1024, 2, ',', ' ').' Mo'),
                 TextEntry::make('detected_mime_type')->label(__('common.type'))->placeholder('Non déterminé'),
             ]),
             Section::make('Traçabilité')->columnSpan(1)->schema([
                 TextEntry::make('uploader.name')->label('Déposé par')->placeholder('Compte supprimé'),
                 TextEntry::make('created_at')->label('Déposé le')->dateTime('d/m/Y H:i'),
-                TextEntry::make('version_number')->label('Version')->formatStateUsing(fn (int $state): string => 'v'.$state),
+                TextEntry::make('version_number')->label(__('common.version'))->formatStateUsing(fn (int $state): string => 'v'.$state),
                 TextEntry::make('previousVersion.original_name')->label('Version précédente')->placeholder('—'),
             ]),
         ]);
@@ -109,8 +109,8 @@ class PrivateDocumentResource extends Resource
         return $table->defaultSort('created_at', 'desc')->columns([
             TextColumn::make('original_name')->label('Fichier')->searchable()->weight('medium')->wrap(),
             TextColumn::make('title')->label('Intitulé')->searchable()->placeholder('—')->wrap(),
-            TextColumn::make('category')->label('Catégorie')->toggleable(),
-            TextColumn::make('version_number')->label('Version')->formatStateUsing(fn (int $state): string => 'v'.$state),
+            TextColumn::make('category')->label(__('common.category'))->toggleable(),
+            TextColumn::make('version_number')->label(__('common.version'))->formatStateUsing(fn (int $state): string => 'v'.$state),
             TextColumn::make('created_at')->label('Déposé le')->dateTime('d/m/Y H:i')->sortable(),
         ])->recordActions([ViewAction::make(), EditAction::make()])
             ->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('documents', 'Document'))]);

@@ -113,7 +113,7 @@ class AppointmentResource extends Resource
                             ->rows(4)
                             ->maxLength(5000),
                     ]),
-                Section::make('État')
+                Section::make(__('common.state'))
                     ->columnSpan(1)
                     ->schema([
                         Select::make('status')
@@ -132,7 +132,7 @@ class AppointmentResource extends Resource
                             ->searchable()
                             ->preload(),
                         TextInput::make('timezone')
-                            ->label('Fuseau horaire')
+                            ->label(__('common.timezone'))
                             ->default(fn (): string => static::getDefaultTimezone())
                             ->required()
                             ->maxLength(64),
@@ -151,16 +151,16 @@ class AppointmentResource extends Resource
                             ->searchable()
                             ->preload(),
                         Select::make('incoming_request_id')
-                            ->label('Demande d’origine')
+                            ->label(__('common.request_origin'))
                             ->relationship('incomingRequest', 'subject')
                             ->searchable(['subject', 'name_snapshot'])
                             ->preload(),
                     ]),
-                Section::make('Modalité')
+                Section::make(__('common.modality'))
                     ->columnSpan(1)
                     ->schema([
                         Select::make('modality')
-                            ->label('Modalité')
+                            ->label(__('common.modality'))
                             ->options(AppointmentModality::class)
                             ->default(AppointmentModality::Video)
                             ->required(),
@@ -211,7 +211,7 @@ class AppointmentResource extends Resource
                 Section::make(__('common.follow_up'))->columnSpan(1)->schema([
                     TextEntry::make('status')->label(__('common.status'))->badge(),
                     TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
-                    TextEntry::make('timezone')->label('Fuseau horaire'),
+                    TextEntry::make('timezone')->label(__('common.timezone')),
                 ]),
                 Section::make('Participants')->columnSpan(2)->schema([
                     TextEntry::make('person.display_name')
@@ -227,14 +227,14 @@ class AppointmentResource extends Resource
                             : null)
                         ->placeholder('—'),
                     TextEntry::make('incomingRequest.subject')
-                        ->label('Demande d’origine')
+                        ->label(__('common.request_origin'))
                         ->url(fn (Appointment $record): ?string => $record->incomingRequest
                             ? IncomingRequestResource::getUrl('view', ['record' => $record->incomingRequest])
                             : null)
                         ->placeholder('—'),
                 ]),
-                Section::make('Modalité')->columnSpan(1)->schema([
-                    TextEntry::make('modality')->label('Modalité')->badge(),
+                Section::make(__('common.modality'))->columnSpan(1)->schema([
+                    TextEntry::make('modality')->label(__('common.modality'))->badge(),
                     TextEntry::make('location')->label(__('common.location'))->placeholder('—'),
                     TextEntry::make('meeting_url')->label('Connexion')->url(fn (?string $state): ?string => $state)->openUrlInNewTab()->placeholder('—'),
                     TextEntry::make('provider')
@@ -252,13 +252,13 @@ class AppointmentResource extends Resource
                 TextColumn::make('starts_at')->label(__('common.date'))->dateTime('d/m/Y H:i')->sortable(),
                 TextColumn::make('title')->label('Rendez-vous')->searchable()->weight('medium'),
                 TextColumn::make('person.display_name')->label(__('common.contact'))->placeholder('—')->searchable(),
-                TextColumn::make('modality')->label('Modalité')->badge(),
+                TextColumn::make('modality')->label(__('common.modality'))->badge(),
                 TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
                 TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('—'),
             ])
             ->filters([
                 SelectFilter::make('status')->label(__('common.status'))->options(AppointmentStatus::class),
-                SelectFilter::make('modality')->label('Modalité')->options(AppointmentModality::class),
+                SelectFilter::make('modality')->label(__('common.modality'))->options(AppointmentModality::class),
             ])
             ->recordActions([ViewAction::make()]);
     }

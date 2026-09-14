@@ -58,7 +58,7 @@ class InstrumentAssetResource extends Resource
             Section::make('Fiche instrument')->schema([
                 TextInput::make('name')->label('Intitulé')->required()->columnSpan(9),
                 TextInput::make('reference')->label('Référence interne')->columnSpan(3),
-                Select::make('family')->label('Famille')->options(['violon' => 'Violon', 'alto' => 'Alto', 'violoncelle' => 'Violoncelle', 'contrebasse' => 'Contrebasse', 'archet' => 'Archet', 'autre' => 'Autre'])->columnSpan(4),
+                Select::make('family')->label(__('common.family'))->options(['violon' => 'Violon', 'alto' => 'Alto', 'violoncelle' => 'Violoncelle', 'contrebasse' => 'Contrebasse', 'archet' => 'Archet', 'autre' => 'Autre'])->columnSpan(4),
                 TextInput::make('maker')->label('Luthier / fabricant')->columnSpan(4),
                 TextInput::make('year')->label('Année')->columnSpan(4),
                 Select::make('ownership')->label('Provenance')->options(['owned' => 'Propriété de l’atelier', 'deposit' => 'Dépôt-vente', 'consignment' => 'Confié par un tiers'])->default('owned')->required()->columnSpan(6),
@@ -117,13 +117,13 @@ class InstrumentAssetResource extends Resource
     {
         return $table->defaultSort('updated_at', 'desc')->columns([
             TextColumn::make('name')->label('Instrument')->searchable()->description(fn (InstrumentAsset $record): ?string => $record->maker),
-            TextColumn::make('family')->label('Famille')->formatStateUsing(fn (?string $state): string => match ($state) {
+            TextColumn::make('family')->label(__('common.family'))->formatStateUsing(fn (?string $state): string => match ($state) {
                 'violon' => 'Violon', 'alto' => 'Alto', 'violoncelle' => 'Violoncelle', 'contrebasse' => 'Contrebasse', 'archet' => 'Archet', default => 'Autre'
             })->placeholder('—'),
-            TextColumn::make('status')->label('État')->badge(),
+            TextColumn::make('status')->label(__('common.state'))->badge(),
             IconColumn::make('available_for_sale')->label('Vente')->boolean(),
             IconColumn::make('available_for_rental')->label('Location')->boolean(),
-        ])->filters([SelectFilter::make('status')->label('État')->options(InstrumentAssetStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvel instrument')]);
+        ])->filters([SelectFilter::make('status')->label(__('common.state'))->options(InstrumentAssetStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvel instrument')]);
     }
 
     public static function getPages(): array

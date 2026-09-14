@@ -59,9 +59,9 @@ class WorkshopOrderResource extends Resource
             Section::make('Dossier atelier')->columns(12)->columnSpanFull()->schema([
                 TextInput::make('title')->label('Intitulé')->required()->columnSpan(6),
                 Placeholder::make('workflow_status')->label('Étape du dossier')->content(fn (?WorkshopOrder $record): string => $record?->status->getLabel() ?? WorkshopOrderStatus::Received->getLabel())->columnSpan(3),
-                TextInput::make('reference')->label('Référence')->helperText('Générée automatiquement si laissée vide.')->columnSpan(3),
+                TextInput::make('reference')->label(__('common.reference'))->helperText('Générée automatiquement si laissée vide.')->columnSpan(3),
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable()->preload()->columnSpan(6),
-                Select::make('incoming_request_id')->label('Demande d’origine')->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->columnSpan(6),
+                Select::make('incoming_request_id')->label(__('common.request_origin'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->columnSpan(6),
                 Textarea::make('instrument_description')->label('Instrument confié')->rows(3)->columnSpan(6),
                 Textarea::make('customer_instructions')->label('Demande du client')->rows(3)->columnSpan(6),
                 Textarea::make('diagnosis')->label('Diagnostic atelier')->rows(4)->columnSpanFull(),
@@ -77,7 +77,7 @@ class WorkshopOrderResource extends Resource
                     }),
                     TextInput::make('label_snapshot')->label('Intitulé')->required(),
                     Textarea::make('description_snapshot')->label(__('common.description'))->rows(2),
-                    TextInput::make('quantity')->label('Quantité')->numeric()->default(1),
+                    TextInput::make('quantity')->label(__('common.quantity'))->numeric()->default(1),
                     TextInput::make('unit_amount')->label('Prix HT')->numeric()->prefix('€')->default(0),
                     Checkbox::make('include_in_quote')->label('À ajouter au devis'),
                 ])->columns(3)->columnSpanFull(),
@@ -98,7 +98,7 @@ class WorkshopOrderResource extends Resource
                 DateTimePicker::make('due_at')->label('Intervention prévue le')->seconds(false)->disabled()->columnSpan(3),
                 DateTimePicker::make('ready_at')->label('Prêt le')->seconds(false)->disabled()->columnSpan(3),
                 DateTimePicker::make('returned_at')->label('Restitué le')->seconds(false)->disabled()->columnSpan(3),
-                Textarea::make('notes')->label('Notes internes')->rows(3)->columnSpanFull(),
+                Textarea::make('notes')->label(__('common.internal_notes'))->rows(3)->columnSpanFull(),
             ]),
         ]);
     }
@@ -106,7 +106,7 @@ class WorkshopOrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('updated_at', 'desc')->columns([
-            TextColumn::make('reference')->label('Référence')->searchable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap(), TextColumn::make('person.display_name')->label('Client')->placeholder('—'), TextColumn::make('status')->label(__('common.status'))->badge(), TextColumn::make('due_at')->label('Échéance')->dateTime('d/m/Y')->placeholder('—'),
+            TextColumn::make('reference')->label(__('common.reference'))->searchable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap(), TextColumn::make('person.display_name')->label('Client')->placeholder('—'), TextColumn::make('status')->label(__('common.status'))->badge(), TextColumn::make('due_at')->label('Échéance')->dateTime('d/m/Y')->placeholder('—'),
         ])->filters([SelectFilter::make('status')->options(WorkshopOrderStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouveau dossier atelier')]);
     }
 

@@ -20,9 +20,9 @@ class MembersRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('Nom')->searchable(),
+                TextColumn::make('name')->label(__('common.name'))->searchable(),
                 TextColumn::make('email')->label('Email')->searchable()->copyable(),
-                TextColumn::make('pivot.role')->label('Rôle')->badge()->formatStateUsing(fn (OrganizationRole|string $state): string => $state instanceof OrganizationRole ? $state->label() : OrganizationRole::from($state)->label()),
+                TextColumn::make('pivot.role')->label(__('common.role'))->badge()->formatStateUsing(fn (OrganizationRole|string $state): string => $state instanceof OrganizationRole ? $state->label() : OrganizationRole::from($state)->label()),
             ])
             ->headerActions([
                 AttachAction::make()
@@ -31,9 +31,9 @@ class MembersRelationManager extends RelationManager
                     ->recordSelectSearchColumns(['name', 'email'])
                     ->schema(fn (AttachAction $action): array => [
                         $action->getRecordSelect()->label('Compte'),
-                        Select::make('role')->label('Rôle')->options(OrganizationRole::class)->default(OrganizationRole::Collaborator->value)->required(),
+                        Select::make('role')->label(__('common.role'))->options(OrganizationRole::class)->default(OrganizationRole::Collaborator->value)->required(),
                     ]),
             ])
-            ->recordActions([DetachAction::make()->label('Retirer')]);
+            ->recordActions([DetachAction::make()->label(__('common.remove'))]);
     }
 }

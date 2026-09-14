@@ -81,7 +81,7 @@ class InboundChannelResource extends Resource
             ])
             ->recordActions([
                 Action::make('revoke')
-                    ->label('Révoquer')
+                    ->label(__('common.revoke'))
                     ->icon(Heroicon::OutlinedNoSymbol)
                     ->color('danger')
                     ->requiresConfirmation()

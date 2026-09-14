@@ -175,7 +175,7 @@ class PersonResource extends Resource
                             ->size('lg'),
                         Grid::make(2)->schema([
                             TextEntry::make('first_name')->label('Prénom')->placeholder('—'),
-                            TextEntry::make('last_name')->label('Nom')->placeholder('—'),
+                            TextEntry::make('last_name')->label(__('common.name'))->placeholder('—'),
                         ]),
                     ]),
                 Section::make('Repères')
@@ -213,7 +213,7 @@ class PersonResource extends Resource
                             ->badge()
                             ->color('gray'),
                         TextEntry::make('incoming_requests_count')
-                            ->label('Demandes liées')
+                            ->label(__('common.linked_requests'))
                             ->state(fn (Person $record): int => $record->incomingRequests()->count())
                             ->badge()
                             ->color('info'),

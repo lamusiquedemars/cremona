@@ -27,7 +27,7 @@ class AppointmentsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('starts_at')->label(__('common.date'))->dateTime('d/m/Y H:i')->sortable(),
                 TextColumn::make('title')->label('Rendez-vous')->weight('medium'),
-                TextColumn::make('modality')->label('Modalité')->badge(),
+                TextColumn::make('modality')->label(__('common.modality'))->badge(),
                 TextColumn::make('status')->label(__('common.status'))->badge(),
                 TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('—'),
             ])

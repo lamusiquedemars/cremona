@@ -40,7 +40,7 @@ class PeopleRelationManager extends RelationManager
                     ->label(__('common.contact'))
                     ->weight('medium')
                     ->searchable(),
-                TextColumn::make('pivot.job_title')->label('Fonction')->placeholder('—'),
+                TextColumn::make('pivot.job_title')->label(__('common.function'))->placeholder('—'),
                 IconColumn::make('pivot.is_primary')->label(__('common.primary'))->boolean(),
                 TextColumn::make('contactMethods.value')
                     ->label('Coordonnées')
@@ -51,13 +51,13 @@ class PeopleRelationManager extends RelationManager
                 AttachAction::make()
                     ->label('Rattacher un contact')
                     ->modalHeading('Rattacher un contact existant')
-                    ->modalSubmitActionLabel('Rattacher')
+                    ->modalSubmitActionLabel(__('common.attach'))
                     ->attachAnother(false)
                     ->recordSelectSearchColumns(['display_name', 'first_name', 'last_name'])
                     ->schema(fn (AttachAction $action): array => [
                         $action->getRecordSelect()->label(__('common.contact')),
                         TextInput::make('job_title')
-                            ->label('Fonction')
+                            ->label(__('common.function'))
                             ->maxLength(255),
                         Toggle::make('is_primary')
                             ->label('Contact principal'),

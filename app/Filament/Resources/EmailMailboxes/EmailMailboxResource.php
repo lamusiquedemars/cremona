@@ -63,8 +63,8 @@ class EmailMailboxResource extends Resource
     {
         return $table->columns([
             TextColumn::make('address')->label('Boîte')->searchable(),
-            TextColumn::make('status')->label('État')->badge(),
-            TextColumn::make('last_synced_at')->label('Dernière relève')->dateTime('d/m/Y H:i')->placeholder('Jamais'),
+            TextColumn::make('status')->label(__('common.state'))->badge(),
+            TextColumn::make('last_synced_at')->label('Dernière relève')->dateTime('d/m/Y H:i')->placeholder(__('common.never')),
             TextColumn::make('last_error')->label('Dernier incident')->limit(80)->placeholder('Aucun'),
         ])->recordActions([
             Action::make('test_imap')

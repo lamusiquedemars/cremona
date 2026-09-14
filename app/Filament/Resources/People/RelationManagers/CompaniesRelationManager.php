@@ -40,7 +40,7 @@ class CompaniesRelationManager extends RelationManager
                     ->description(fn ($record): ?string => $record->legal_name)
                     ->weight('medium')
                     ->searchable(),
-                TextColumn::make('pivot.job_title')->label('Fonction')->placeholder('—'),
+                TextColumn::make('pivot.job_title')->label(__('common.function'))->placeholder('—'),
                 IconColumn::make('pivot.is_primary')->label('Principale')->boolean(),
                 TextColumn::make('industry')->label(__('common.industry'))->placeholder('—'),
                 TextColumn::make('website')->label('Site')->url(fn (?string $state): ?string => $state)->openUrlInNewTab(),
@@ -49,13 +49,13 @@ class CompaniesRelationManager extends RelationManager
                 AttachAction::make()
                     ->label('Rattacher une entreprise')
                     ->modalHeading('Rattacher une entreprise existante')
-                    ->modalSubmitActionLabel('Rattacher')
+                    ->modalSubmitActionLabel(__('common.attach'))
                     ->attachAnother(false)
                     ->recordSelectSearchColumns(['name', 'legal_name'])
                     ->schema(fn (AttachAction $action): array => [
                         $action->getRecordSelect()->label(__('common.company')),
                         TextInput::make('job_title')
-                            ->label('Fonction')
+                            ->label(__('common.function'))
                             ->maxLength(255),
                         Toggle::make('is_primary')
                             ->label('Entreprise principale'),

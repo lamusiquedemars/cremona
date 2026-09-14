@@ -37,7 +37,7 @@ class ContempoProjectionResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([TextColumn::make('status')->label('État')->badge(), TextColumn::make('created_at')->label('Configurée le')->dateTime('d/m/Y H:i')])->headerActions([Action::make('configure')->label('Configurer le connecteur')->schema([TextInput::make('endpoint')->label('Adresse de réception du site')->url()->required(), TextInput::make('token')->label('Jeton du connecteur')->password()->revealable()->required()])->action(function (array $data): void {
+        return $table->columns([TextColumn::make('status')->label(__('common.state'))->badge(), TextColumn::make('created_at')->label('Configurée le')->dateTime('d/m/Y H:i')])->headerActions([Action::make('configure')->label('Configurer le connecteur')->schema([TextInput::make('endpoint')->label('Adresse de réception du site')->url()->required(), TextInput::make('token')->label('Jeton du connecteur')->password()->revealable()->required()])->action(function (array $data): void {
             app(OrganizationIntegrationManager::class)->configure('contempo_cms', 'instrument_projection', $data, auth()->user());
             Notification::make()->title('Connecteur de publication configuré')->success()->send();
         })]);

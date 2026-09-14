@@ -51,7 +51,7 @@ class RentalResource extends Resource
     {
         return $schema->columns(2)->components([
             Section::make('Location')->schema([
-                TextInput::make('reference')->label('Référence')->helperText('Générée automatiquement si laissée vide.'),
+                TextInput::make('reference')->label(__('common.reference'))->helperText('Générée automatiquement si laissée vide.'),
                 Select::make('status')->label(__('common.status'))->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required(),
                 Select::make('instrument_asset_id')->label('Instrument')->relationship('instrument', 'name')->getOptionLabelFromRecordUsing(fn (InstrumentAsset $instrument): string => trim($instrument->name.' — '.$instrument->status->label()))->preload()->searchable()->required(),
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable(),
@@ -60,7 +60,7 @@ class RentalResource extends Resource
                 DatePicker::make('returned_on')->label('Restitué le')->native(false),
                 TextInput::make('unit_amount')->label('Loyer HT')->numeric()->prefix('€')->default(0),
                 TextInput::make('deposit_amount')->label('Dépôt de garantie')->numeric()->prefix('€')->default(0),
-                Textarea::make('notes')->label('Notes internes')->rows(4)->columnSpanFull(),
+                Textarea::make('notes')->label(__('common.internal_notes'))->rows(4)->columnSpanFull(),
             ])->columns(2),
         ]);
     }
@@ -68,7 +68,7 @@ class RentalResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('updated_at', 'desc')->columns([
-            TextColumn::make('reference')->label('Référence')->searchable(),
+            TextColumn::make('reference')->label(__('common.reference'))->searchable(),
             TextColumn::make('instrument.name')->label('Instrument')->searchable(),
             TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
             TextColumn::make('status')->label(__('common.status'))->badge(),

@@ -38,7 +38,7 @@ class UserResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('name')->label('Nom')->required(),
+            TextInput::make('name')->label(__('common.name'))->required(),
             TextInput::make('email')->label('Email')->email()->required()->unique(ignoreRecord: true),
             TextInput::make('password')->label('Mot de passe')->password()->required(fn (string $operation) => $operation === 'create')->dehydrated(fn ($state) => filled($state)),
             Toggle::make('is_platform_admin')->label('Super-admin'),
@@ -48,7 +48,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('name')->label('Nom')->searchable(),
+            TextColumn::make('name')->label(__('common.name'))->searchable(),
             TextColumn::make('email')->label('Email')->searchable(),
             IconColumn::make('is_platform_admin')->label('Super-admin')->boolean(),
             TextColumn::make('organizations_count')->label('Organisations')->counts('organizations'),

@@ -74,7 +74,7 @@ class GoogleAdsConnectionResource extends Resource
                 ->state(fn (OrganizationIntegration $record): ?string => $record->credentials['last_synced_at'] ?? null)
                 ->dateTime('d/m/Y H:i')
                 ->timezone(fn (): string => static::getOrganizationTimezone())
-                ->placeholder('Jamais'),
+                ->placeholder(__('common.never')),
         ])->recordActions([
             Action::make('sync')
                 ->label('Synchroniser les résultats')

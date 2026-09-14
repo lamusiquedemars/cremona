@@ -54,7 +54,7 @@ class OrganizationResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('name')->label('Nom')->required()->maxLength(255),
+            TextInput::make('name')->label(__('common.name'))->required()->maxLength(255),
             TextInput::make('slug')->label('Identifiant URL')->required()->maxLength(255)->unique(ignoreRecord: true),
             Select::make('vertical_pack')
                 ->label('Pack métier')
@@ -91,7 +91,7 @@ class OrganizationResource extends Resource
                 ->required()
                 ->helperText('Détermine la langue de l’espace de travail de cette organisation.'),
             Select::make('settings.timezone')
-                ->label('Fuseau horaire')
+                ->label(__('common.timezone'))
                 ->options(array_combine(timezone_identifiers_list(), timezone_identifiers_list()))
                 ->default(config('app.timezone', 'UTC'))
                 ->searchable()

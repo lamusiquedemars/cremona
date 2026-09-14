@@ -58,7 +58,7 @@ class QuoteResource extends Resource
     {
         return $schema->columns(3)->components([
             Section::make(fn (): string => app(OrganizationPresentation::class)->label('quotes', 'Devis'))->columnSpan(2)->schema([
-                TextInput::make('reference')->label('Référence')->required()->maxLength(80),
+                TextInput::make('reference')->label(__('common.reference'))->required()->maxLength(80),
                 TextInput::make('title')->label(__('common.subject'))->required()->maxLength(255),
                 Textarea::make('introduction')->label('Introduction')->rows(3),
                 Repeater::make('lines')->label('Lignes')->relationship()->orderColumn('position')->schema([
@@ -69,7 +69,7 @@ class QuoteResource extends Resource
                         'fee' => 'Frais',
                     ]),
                     Textarea::make('description')->label(__('common.description'))->required()->rows(2)->columnSpan(2),
-                    TextInput::make('quantity')->label('Quantité')->numeric()->default(1)->minValue(0.01),
+                    TextInput::make('quantity')->label(__('common.quantity'))->numeric()->default(1)->minValue(0.01),
                     TextInput::make('unit_amount')->label('Prix unitaire')->numeric()->prefix('€')->default(0),
                 ])->columns(4)->addActionLabel('Ajouter une ligne')->columnSpanFull(),
             ]),
@@ -83,7 +83,7 @@ class QuoteResource extends Resource
                 Select::make('person_id')->label(__('common.contact'))->relationship('person', 'display_name')->searchable()->preload(),
                 Select::make('company_id')->label(__('common.company'))->relationship('company', 'name')->searchable()->preload(),
                 Select::make('incoming_request_id')->label(__('common.request'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->preload(),
-                Textarea::make('tax_note')->label('Note fiscale')->rows(2), Textarea::make('payment_terms')->label('Conditions de règlement')->rows(2), Textarea::make('notes')->label('Notes internes')->rows(2),
+                Textarea::make('tax_note')->label('Note fiscale')->rows(2), Textarea::make('payment_terms')->label('Conditions de règlement')->rows(2), Textarea::make('notes')->label(__('common.internal_notes'))->rows(2),
             ]),
         ]);
     }
@@ -91,7 +91,7 @@ class QuoteResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make('Devis')->columnSpan(2)->schema([TextEntry::make('reference')->label('Référence')->weight('semibold'), TextEntry::make('title')->label(__('common.subject'))->size('lg'), TextEntry::make('introduction')->label('Introduction')->columnSpanFull(), RepeatableEntry::make('lines')->label(__('common.details'))->schema([TextEntry::make('kind')->label(__('common.type')), TextEntry::make('description')->label(__('common.description')), TextEntry::make('quantity')->label('Qté'), TextEntry::make('unit_amount')->label('Prix')->money(fn (QuoteLine $record) => $record->quote->currency), TextEntry::make('total_amount')->label('Total')->money(fn (QuoteLine $record) => $record->quote->currency)])->columns(5)->columnSpanFull()]),
+            Section::make('Devis')->columnSpan(2)->schema([TextEntry::make('reference')->label(__('common.reference'))->weight('semibold'), TextEntry::make('title')->label(__('common.subject'))->size('lg'), TextEntry::make('introduction')->label('Introduction')->columnSpanFull(), RepeatableEntry::make('lines')->label(__('common.details'))->schema([TextEntry::make('kind')->label(__('common.type')), TextEntry::make('description')->label(__('common.description')), TextEntry::make('quantity')->label('Qté'), TextEntry::make('unit_amount')->label('Prix')->money(fn (QuoteLine $record) => $record->quote->currency), TextEntry::make('total_amount')->label('Total')->money(fn (QuoteLine $record) => $record->quote->currency)])->columns(5)->columnSpanFull()]),
             Section::make('Total')->columnSpan(1)->schema([TextEntry::make('status')->label(__('common.status'))->badge(), TextEntry::make('subtotal_amount')->label('Sous-total')->money(fn (Quote $record) => $record->currency), TextEntry::make('discount_amount')->label('Remise')->money(fn (Quote $record) => $record->currency), TextEntry::make('total_amount')->label('Total final')->money(fn (Quote $record) => $record->currency)->weight('bold')]),
             Section::make('Conditions')->columnSpanFull()->columns(3)->schema([TextEntry::make('tax_note')->label('Note fiscale')->placeholder('—'), TextEntry::make('payment_terms')->label('Règlement')->placeholder('—'), TextEntry::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')]),
         ]);
@@ -99,7 +99,7 @@ class QuoteResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->defaultSort('created_at', 'desc')->columns([TextColumn::make('reference')->label('Référence')->searchable(), TextColumn::make('title')->label(__('common.subject'))->searchable()->wrap(), TextColumn::make('status')->label(__('common.status'))->badge(), TextColumn::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)->sortable(), TextColumn::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')])->filters([SelectFilter::make('status')->options(QuoteStatus::class)])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('quotes', 'Devis'))]);
+        return $table->defaultSort('created_at', 'desc')->columns([TextColumn::make('reference')->label(__('common.reference'))->searchable(), TextColumn::make('title')->label(__('common.subject'))->searchable()->wrap(), TextColumn::make('status')->label(__('common.status'))->badge(), TextColumn::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)->sortable(), TextColumn::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')])->filters([SelectFilter::make('status')->options(QuoteStatus::class)])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('quotes', 'Devis'))]);
     }
 
     public static function getPages(): array

@@ -215,7 +215,7 @@ class CampaignResource extends Resource
                     ->toggleable(),
                 TextColumn::make('daily_metrics_sum_spend')->label(__('cremona.campaign.spent'))->money(fn (Campaign $record): string => $record->currency)->sortable(),
                 TextColumn::make('attributed_incoming_requests_count')->label(__('cremona.campaign.site_requests'))->counts('attributedIncomingRequests')->badge()->color('success'),
-                TextColumn::make('google_ads_synced_at')->label('Google actualisé')->since()->placeholder('Jamais')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('google_ads_synced_at')->label('Google actualisé')->since()->placeholder(__('common.never'))->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('starts_on')->label(__('common.start'))->date('d/m/Y')->placeholder('—'),
             ])
             ->filters([
@@ -427,7 +427,7 @@ class CampaignResource extends Resource
                 ->columnSpan(1)
                 ->schema([
                     TextEntry::make('google_ads_primary_status')
-                        ->label('État')
+                        ->label(__('common.state'))
                         ->formatStateUsing(fn (?string $state): string => self::googleAdsPrimaryStatusLabel($state))
                         ->badge()
                         ->color(fn (?string $state): string => match ($state) {
@@ -440,7 +440,7 @@ class CampaignResource extends Resource
                     TextEntry::make('google_ads_primary_status_reasons')
                         ->label(__('common.details'))
                         ->formatStateUsing(fn (mixed $state): string => static::googleAdsPrimaryStatusReasonLabel($state)),
-                    TextEntry::make('google_ads_synced_at')->label('Dernière observation')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::getOrganizationTimezone())->placeholder('Jamais'),
+                    TextEntry::make('google_ads_synced_at')->label('Dernière observation')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::getOrganizationTimezone())->placeholder(__('common.never')),
                     TextEntry::make('google_ads_serving_status')->label('Diffusion')->formatStateUsing(fn (?string $state): string => static::googleAdsServingStatusLabel($state))->placeholder('—'),
                     TextEntry::make('google_ads_bidding_status')->label('Enchères')->formatStateUsing(fn (?string $state): string => static::googleAdsBiddingStatusLabel($state))->placeholder('—'),
                 ]),

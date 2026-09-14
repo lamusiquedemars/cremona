@@ -32,8 +32,8 @@ class ViewPrivateDocument extends ViewRecord
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->schema([
                     FileUpload::make('file')->label('Nouveau fichier')->storeFiles(false)->required()->maxSize(25 * 1024),
-                    TextInput::make('title')->label('Intitulé interne')->default(fn (): ?string => $this->record->title)->maxLength(255),
-                    TextInput::make('category')->label('Catégorie')->default(fn (): ?string => $this->record->category)->maxLength(100),
+                    TextInput::make('title')->label(__('common.internal_title'))->default(fn (): ?string => $this->record->title)->maxLength(255),
+                    TextInput::make('category')->label(__('common.category'))->default(fn (): ?string => $this->record->category)->maxLength(100),
                 ])
                 ->action(function (array $data): void {
                     $file = $data['file'] ?? null;

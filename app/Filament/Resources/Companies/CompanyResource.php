@@ -103,11 +103,11 @@ class CompanyResource extends Resource
                     ->schema([
                         Grid::make(2)->schema([
                             TextInput::make('name')
-                                ->label('Nom courant')
+                                ->label(__('common.current_name'))
                                 ->required()
                                 ->maxLength(255),
                             TextInput::make('legal_name')
-                                ->label('Raison sociale')
+                                ->label(__('common.legal_name'))
                                 ->maxLength(255),
                             TextInput::make('website')
                                 ->label(__('common.website'))
@@ -164,11 +164,11 @@ class CompanyResource extends Resource
                     ->columnSpan(2)
                     ->schema([
                         TextEntry::make('name')
-                            ->label('Nom courant')
+                            ->label(__('common.current_name'))
                             ->weight('semibold')
                             ->size('lg'),
                         TextEntry::make('legal_name')
-                            ->label('Raison sociale')
+                            ->label(__('common.legal_name'))
                             ->placeholder('—'),
                         TextEntry::make('website')
                             ->label(__('common.website'))
@@ -202,12 +202,12 @@ class CompanyResource extends Resource
                     ->columnSpan(1)
                     ->schema([
                         TextEntry::make('people_count')
-                            ->label('Contacts liés')
+                            ->label(__('common.linked_contacts'))
                             ->state(fn (Company $record): int => $record->people()->count())
                             ->badge()
                             ->color('gray'),
                         TextEntry::make('incoming_requests_count')
-                            ->label('Demandes liées')
+                            ->label(__('common.linked_requests'))
                             ->state(fn (Company $record): int => $record->incomingRequests()->count())
                             ->badge()
                             ->color('info'),
