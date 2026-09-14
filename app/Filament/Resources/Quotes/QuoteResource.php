@@ -74,7 +74,7 @@ class QuoteResource extends Resource
                 ])->columns(4)->addActionLabel('Ajouter une ligne')->columnSpanFull(),
             ]),
             Section::make('Suivi')->columnSpan(1)->schema([
-                Select::make('status')->label('Statut')->options(QuoteStatus::class)->default(QuoteStatus::Draft)->required(),
+                Select::make('status')->label('Statut')->options(QuoteStatus::class)->default(QuoteStatus::Draft)->disabled()->dehydrated()->required(),
                 TextInput::make('currency')->label('Devise')->default('EUR')->required()->length(3),
                 DatePicker::make('issued_on')->label('Date du devis'), DatePicker::make('valid_until')->label('Valable jusqu’au'),
                 TextInput::make('discount_amount')->label('Remise globale')->numeric()->prefix('€')->default(0),

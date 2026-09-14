@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use LogicException;
 
-#[Fillable(['reference', 'person_id', 'incoming_request_id', 'title', 'instrument_description', 'customer_instructions', 'diagnosis', 'status', 'received_at', 'due_at', 'ready_at', 'returned_at', 'notes'])]
+#[Fillable(['reference', 'person_id', 'incoming_request_id', 'title', 'instrument_description', 'customer_instructions', 'diagnosis', 'status', 'received_at', 'diagnosed_at', 'authorized_at', 'authorization_note', 'due_at', 'scheduled_at', 'started_at', 'ready_at', 'returned_at', 'notes'])]
 class WorkshopOrder extends Model
 {
     use BelongsToOrganization;
@@ -41,7 +42,7 @@ class WorkshopOrder extends Model
 
     protected function casts(): array
     {
-        return ['status' => WorkshopOrderStatus::class, 'received_at' => 'immutable_datetime', 'due_at' => 'immutable_datetime', 'ready_at' => 'immutable_datetime', 'returned_at' => 'immutable_datetime'];
+        return ['status' => WorkshopOrderStatus::class, 'received_at' => 'immutable_datetime', 'diagnosed_at' => 'immutable_datetime', 'authorized_at' => 'immutable_datetime', 'due_at' => 'immutable_datetime', 'scheduled_at' => 'immutable_datetime', 'started_at' => 'immutable_datetime', 'ready_at' => 'immutable_datetime', 'returned_at' => 'immutable_datetime'];
     }
 
     public function person(): BelongsTo
@@ -62,6 +63,11 @@ class WorkshopOrder extends Model
     public function stockItems(): HasMany
     {
         return $this->hasMany(WorkshopOrderStockItem::class);
+    }
+
+    public function quote(): HasOne
+    {
+        return $this->hasOne(Quote::class);
     }
 
     public function getRouteKeyName(): string

@@ -53,7 +53,7 @@ class RentalResource extends Resource
             Section::make('Location')->schema([
                 TextInput::make('reference')->label('Référence')->helperText('Générée automatiquement si laissée vide.'),
                 Select::make('status')->label('Statut')->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required(),
-                Select::make('instrument_asset_id')->label('Instrument')->relationship('instrument', 'name')->getOptionLabelFromRecordUsing(fn (InstrumentAsset $instrument): string => trim($instrument->name.' — '.$instrument->status->label()))->searchable()->required(),
+                Select::make('instrument_asset_id')->label('Instrument')->relationship('instrument', 'name')->getOptionLabelFromRecordUsing(fn (InstrumentAsset $instrument): string => trim($instrument->name.' — '.$instrument->status->label()))->preload()->searchable()->required(),
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable(),
                 DatePicker::make('starts_on')->label('Début prévu')->native(false),
                 DatePicker::make('expected_return_on')->label('Retour prévu')->native(false),

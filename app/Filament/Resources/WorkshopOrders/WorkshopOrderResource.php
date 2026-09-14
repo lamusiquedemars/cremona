@@ -15,6 +15,7 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -57,7 +58,7 @@ class WorkshopOrderResource extends Resource
         return $schema->columns(12)->components([
             Section::make('Dossier atelier')->columns(12)->columnSpanFull()->schema([
                 TextInput::make('title')->label('Intitulé')->required()->columnSpan(6),
-                Select::make('status')->label('Statut')->options(WorkshopOrderStatus::class)->default(WorkshopOrderStatus::Received)->required()->columnSpan(3),
+                Placeholder::make('workflow_status')->label('Étape du dossier')->content(fn (?WorkshopOrder $record): string => $record?->status->getLabel() ?? WorkshopOrderStatus::Received->getLabel())->columnSpan(3),
                 TextInput::make('reference')->label('Référence')->helperText('Générée automatiquement si laissée vide.')->columnSpan(3),
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable()->preload()->columnSpan(6),
                 Select::make('incoming_request_id')->label('Demande d’origine')->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->columnSpan(6),
@@ -93,10 +94,10 @@ class WorkshopOrderResource extends Resource
                     TextInput::make('unit_amount')->label('Prix HT')->numeric()->prefix('€')->default(0),
                     Checkbox::make('include_in_quote')->label('À ajouter au devis'),
                 ])->columns(3)->columnSpanFull()->helperText('Prépare les consommables nécessaires. Cochez « À ajouter au devis » lorsqu’ils doivent être facturés. Ils ne sont retirés du stock qu’avec l’action « Déduire le stock consommé », une fois l’intervention commencée.'),
-                DateTimePicker::make('received_at')->label('Reçu le')->seconds(false)->columnSpan(3),
-                DateTimePicker::make('due_at')->label('Échéance prévue')->seconds(false)->columnSpan(3),
-                DateTimePicker::make('ready_at')->label('Prêt le')->seconds(false)->columnSpan(3),
-                DateTimePicker::make('returned_at')->label('Restitué le')->seconds(false)->columnSpan(3),
+                DateTimePicker::make('received_at')->label('Reçu le')->seconds(false)->disabled()->columnSpan(3),
+                DateTimePicker::make('due_at')->label('Intervention prévue le')->seconds(false)->disabled()->columnSpan(3),
+                DateTimePicker::make('ready_at')->label('Prêt le')->seconds(false)->disabled()->columnSpan(3),
+                DateTimePicker::make('returned_at')->label('Restitué le')->seconds(false)->disabled()->columnSpan(3),
                 Textarea::make('notes')->label('Notes internes')->rows(3)->columnSpanFull(),
             ]),
         ]);

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use LogicException;
 
-#[Fillable(['reference', 'pennylane_quote_id', 'pennylane_status', 'pennylane_pdf_url', 'pennylane_synced_at', 'pennylane_last_error', 'person_id', 'company_id', 'incoming_request_id', 'workshop_order_id', 'title', 'status', 'currency', 'issued_on', 'valid_until', 'introduction', 'discount_amount', 'tax_note', 'payment_terms', 'notes'])]
+#[Fillable(['reference', 'pennylane_quote_id', 'pennylane_status', 'pennylane_pdf_url', 'pennylane_synced_at', 'pennylane_last_error', 'person_id', 'company_id', 'incoming_request_id', 'workshop_order_id', 'title', 'status', 'currency', 'issued_on', 'valid_until', 'introduction', 'discount_amount', 'tax_note', 'payment_terms', 'notes', 'sent_via'])]
 class Quote extends Model
 {
     use BelongsToOrganization;
@@ -56,6 +56,11 @@ class Quote extends Model
     public function incomingRequest(): BelongsTo
     {
         return $this->belongsTo(IncomingRequest::class);
+    }
+
+    public function workshopOrder(): BelongsTo
+    {
+        return $this->belongsTo(WorkshopOrder::class);
     }
 
     public function lines(): HasMany
