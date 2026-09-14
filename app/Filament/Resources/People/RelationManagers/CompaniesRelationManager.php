@@ -23,6 +23,11 @@ class CompaniesRelationManager extends RelationManager
 
     protected static ?string $title = 'Entreprises';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('common.companies');
+    }
+
     protected static string|\BackedEnum|null $icon = Heroicon::OutlinedBuildingOffice2;
 
     public function isReadOnly(): bool
@@ -41,14 +46,14 @@ class CompaniesRelationManager extends RelationManager
                     ->weight('medium')
                     ->searchable(),
                 TextColumn::make('pivot.job_title')->label(__('common.function'))->placeholder('—'),
-                IconColumn::make('pivot.is_primary')->label('Principale')->boolean(),
+                IconColumn::make('pivot.is_primary')->label(__('common.primary'))->boolean(),
                 TextColumn::make('industry')->label(__('common.industry'))->placeholder('—'),
-                TextColumn::make('website')->label('Site')->url(fn (?string $state): ?string => $state)->openUrlInNewTab(),
+                TextColumn::make('website')->label(__('common.website'))->url(fn (?string $state): ?string => $state)->openUrlInNewTab(),
             ])
             ->headerActions([
                 AttachAction::make()
-                    ->label('Rattacher une entreprise')
-                    ->modalHeading('Rattacher une entreprise existante')
+                    ->label(__('common.attach_company'))
+                    ->modalHeading(__('common.attach_existing_company'))
                     ->modalSubmitActionLabel(__('common.attach'))
                     ->attachAnother(false)
                     ->recordSelectSearchColumns(['name', 'legal_name'])
@@ -58,7 +63,7 @@ class CompaniesRelationManager extends RelationManager
                             ->label(__('common.function'))
                             ->maxLength(255),
                         Toggle::make('is_primary')
-                            ->label('Entreprise principale'),
+                            ->label(__('common.primary_company')),
                     ])
                     ->mutateDataUsing(fn (array $data): array => [
                         ...$data,

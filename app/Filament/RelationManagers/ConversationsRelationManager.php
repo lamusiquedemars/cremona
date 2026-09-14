@@ -18,6 +18,11 @@ class ConversationsRelationManager extends RelationManager
 
     protected static ?string $title = 'Correspondances';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('common.conversations');
+    }
+
     protected static string|\BackedEnum|null $icon = Heroicon::OutlinedChatBubbleLeftRight;
 
     public function table(Table $table): Table

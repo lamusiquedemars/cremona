@@ -16,16 +16,16 @@ class ListCampaigns extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('Toutes'),
-            'attention' => Tab::make('À vérifier')
+            'all' => Tab::make(__('common.all')),
+            'attention' => Tab::make(__('common.to_check'))
                 ->badge(fn (): int => $this->attentionQuery(Campaign::query())->count())
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $this->attentionQuery($query)),
-            'active' => Tab::make('Actives')
+            'active' => Tab::make(__('common.active_plural'))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', CampaignStatus::Active)),
-            'draft' => Tab::make('Brouillons')
+            'draft' => Tab::make(__('common.drafts'))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', CampaignStatus::Draft)),
-            'archived' => Tab::make('Archivées')
+            'archived' => Tab::make(__('common.archived_plural'))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', CampaignStatus::Archived)),
         ];
     }

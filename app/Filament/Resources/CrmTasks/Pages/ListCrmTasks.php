@@ -20,8 +20,8 @@ class ListCrmTasks extends ListRecords
         $endOfDay = now(app(OrganizationContext::class)->require()->timezone())->endOfDay()->utc();
 
         return [
-            'all' => Tab::make('Toutes'),
-            'due' => Tab::make('À échéance')
+            'all' => Tab::make(__('common.all')),
+            'due' => Tab::make(__('common.due'))
                 ->badge(fn (): int => CrmTask::query()
                     ->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])
                     ->whereNotNull('due_at')
@@ -32,7 +32,7 @@ class ListCrmTasks extends ListRecords
                     ->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])
                     ->whereNotNull('due_at')
                     ->where('due_at', '<=', $endOfDay)),
-            'overdue' => Tab::make('En retard')
+            'overdue' => Tab::make(__('common.overdue'))
                 ->badge(fn (): int => CrmTask::query()
                     ->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])
                     ->where('due_at', '<', $now)
@@ -41,10 +41,10 @@ class ListCrmTasks extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query
                     ->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])
                     ->where('due_at', '<', $now)),
-            'open' => Tab::make('Ouvertes')
+            'open' => Tab::make(__('common.open_plural'))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query
                     ->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])),
-            'completed' => Tab::make('Terminées')
+            'completed' => Tab::make(__('common.completed_plural'))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query
                     ->where('status', CrmTaskStatus::Completed)),
         ];

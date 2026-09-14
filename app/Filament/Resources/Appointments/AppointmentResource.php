@@ -70,9 +70,9 @@ class AppointmentResource extends Resource
     {
         /** @var Appointment $record */
         return array_filter([
-            'Contact' => $record->person?->display_name,
-            'Date' => $record->starts_at->format('d/m/Y H:i'),
-            'Statut' => $record->status->getLabel(),
+            __('common.contact') => $record->person?->display_name,
+            __('common.date') => $record->starts_at->format('d/m/Y H:i'),
+            __('common.status') => $record->status->getLabel(),
         ]);
     }
 
@@ -137,7 +137,7 @@ class AppointmentResource extends Resource
                             ->required()
                             ->maxLength(64),
                     ]),
-                Section::make('Participants et origine')
+                Section::make(__('common.participants_and_origin'))
                     ->columnSpan(2)
                     ->schema([
                         Select::make('person_id')
@@ -168,19 +168,19 @@ class AppointmentResource extends Resource
                             ->label(__('common.location_or_instructions'))
                             ->maxLength(255),
                         TextInput::make('meeting_url')
-                            ->label('Lien de connexion')
+                            ->label(__('common.connection_link'))
                             ->url()
                             ->maxLength(2048),
                     ]),
-                Section::make('Synchronisation externe')
-                    ->description('Ces informations identifient le rendez-vous chez Brevo ou un autre fournisseur. Cremona ne gère pas les disponibilités.')
+                Section::make(__('common.external_sync'))
+                    ->description(__('common.external_sync_description'))
                     ->columnSpanFull()
                     ->collapsible()
                     ->collapsed()
                     ->schema([
                         Grid::make(2)->schema([
                             Select::make('provider')
-                                ->label('Fournisseur')
+                                ->label(__('common.provider'))
                                 ->options([
                                     'manual' => 'Saisie manuelle',
                                     'brevo' => 'Brevo Meetings',
@@ -188,7 +188,7 @@ class AppointmentResource extends Resource
                                 ->default('manual')
                                 ->required(),
                             TextInput::make('external_reference')
-                                ->label('Référence externe')
+                                ->label(__('common.external_reference'))
                                 ->maxLength(255),
                         ]),
                     ]),
@@ -213,7 +213,7 @@ class AppointmentResource extends Resource
                     TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
                     TextEntry::make('timezone')->label(__('common.timezone')),
                 ]),
-                Section::make('Participants')->columnSpan(2)->schema([
+                Section::make(__('common.participants'))->columnSpan(2)->schema([
                     TextEntry::make('person.display_name')
                         ->label(__('common.contact'))
                         ->url(fn (Appointment $record): ?string => $record->person
@@ -236,10 +236,10 @@ class AppointmentResource extends Resource
                 Section::make(__('common.modality'))->columnSpan(1)->schema([
                     TextEntry::make('modality')->label(__('common.modality'))->badge(),
                     TextEntry::make('location')->label(__('common.location'))->placeholder('—'),
-                    TextEntry::make('meeting_url')->label('Connexion')->url(fn (?string $state): ?string => $state)->openUrlInNewTab()->placeholder('—'),
+                    TextEntry::make('meeting_url')->label(__('common.connection'))->url(fn (?string $state): ?string => $state)->openUrlInNewTab()->placeholder('—'),
                     TextEntry::make('provider')
                         ->label(__('common.source'))
-                        ->formatStateUsing(fn (string $state): string => $state === 'brevo' ? 'Synchronisé par Brevo' : 'Importé'),
+                        ->formatStateUsing(fn (string $state): string => $state === 'brevo' ? __('common.synced_by_brevo') : __('common.imported')),
                 ]),
             ]);
     }

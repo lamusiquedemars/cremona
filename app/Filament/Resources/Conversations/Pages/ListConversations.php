@@ -22,13 +22,13 @@ class ListConversations extends ListRecords
     {
         return [
             Action::make('sync_email')
-                ->label('Relever les emails')
+                ->label(__('cremona.email.sync_emails'))
                 ->icon('heroicon-o-arrow-path')
                 ->action(function (): void {
                     $mailboxes = EmailMailbox::query()->where('status', 'active')->get();
                     if ($mailboxes->isEmpty()) {
                         Notification::make()
-                            ->title('Aucune boîte email active')
+                            ->title(__('cremona.email.no_active_mailbox'))
                             ->warning()
                             ->send();
 
@@ -46,8 +46,8 @@ class ListConversations extends ListRecords
                     } catch (Throwable $exception) {
                         report($exception);
                         Notification::make()
-                            ->title('La relève a échoué')
-                            ->body('Le détail est visible dans Boîtes email.')
+                            ->title(__('cremona.email.sync_failed'))
+                            ->body(__('cremona.email.sync_failed_body'))
                             ->danger()
                             ->send();
 
@@ -55,8 +55,8 @@ class ListConversations extends ListRecords
                     }
 
                     Notification::make()
-                        ->title('Relève terminée')
-                        ->body("{$imported} message(s) importé(s), {$skipped} déjà connu(s).")
+                        ->title(__('cremona.email.sync_complete'))
+                        ->body(__('cremona.email.sync_complete_body', ['imported' => $imported, 'skipped' => $skipped]))
                         ->success()
                         ->send();
                 }),
@@ -66,14 +66,14 @@ class ListConversations extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('Toutes'),
-            'open' => Tab::make('À traiter')
+            'all' => Tab::make(__('common.all')),
+            'open' => Tab::make(__('common.to_process'))
                 ->badge(fn (): int => $this->count(ConversationStatus::Open))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', ConversationStatus::Open)),
-            'waiting' => Tab::make('En attente du client')
+            'waiting' => Tab::make(__('cremona.crm.waiting_customer'))
                 ->badge(fn (): int => $this->count(ConversationStatus::WaitingCustomer))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', ConversationStatus::WaitingCustomer)),
-            'closed' => Tab::make('Clôturées')
+            'closed' => Tab::make(__('cremona.crm.closed_plural'))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', ConversationStatus::Closed)),
         ];
     }

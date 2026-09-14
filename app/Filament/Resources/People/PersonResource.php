@@ -170,45 +170,45 @@ class PersonResource extends Resource
                     ->columnSpan(2)
                     ->schema([
                         TextEntry::make('display_name')
-                            ->label('Nom affiché')
+                            ->label(__('common.display_name'))
                             ->weight('semibold')
                             ->size('lg'),
                         Grid::make(2)->schema([
-                            TextEntry::make('first_name')->label('Prénom')->placeholder('—'),
+                            TextEntry::make('first_name')->label(__('common.first_name'))->placeholder('—'),
                             TextEntry::make('last_name')->label(__('common.name'))->placeholder('—'),
                         ]),
                     ]),
-                Section::make('Repères')
+                Section::make(__('common.reference_points'))
                     ->columnSpan(1)
                     ->schema([
                         TextEntry::make('status')
                             ->label(__('common.status'))
                             ->badge()
-                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Actif' : 'Archivé')
+                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
                             ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
                         TextEntry::make('source')->label(__('common.source'))->placeholder('—'),
                         TextEntry::make('locale')->label(__('common.language'))->placeholder('—'),
                         TextEntry::make('country_code')->label(__('common.country'))->placeholder('—'),
                         TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
                     ]),
-                Section::make('Coordonnées')
+                Section::make(__('common.contact_details'))
                     ->columnSpan(2)
                     ->schema([
                         RepeatableEntry::make('contactMethods')
                             ->label('')
                             ->schema([
                                 TextEntry::make('type')->label(__('common.type'))->badge(),
-                                TextEntry::make('value')->label('Coordonnée')->copyable()->weight('medium'),
+                                TextEntry::make('value')->label(__('common.contact_detail'))->copyable()->weight('medium'),
                                 TextEntry::make('label')->label(__('common.label'))->placeholder('—'),
                                 IconEntry::make('is_primary')->label(__('common.primary'))->boolean(),
                             ])
                             ->columns(4),
                     ]),
-                Section::make('Vue d’ensemble')
+                Section::make(__('common.overview'))
                     ->columnSpan(1)
                     ->schema([
                         TextEntry::make('companies_count')
-                            ->label('Entreprises liées')
+                            ->label(__('common.linked_companies'))
                             ->state(fn (Person $record): int => $record->companies()->count())
                             ->badge()
                             ->color('gray'),
@@ -239,7 +239,7 @@ class PersonResource extends Resource
                     ->sortable()
                     ->weight('medium'),
                 TextColumn::make('contactMethods.value')
-                    ->label('Coordonnées')
+                    ->label(__('common.contact_details'))
                     ->listWithLineBreaks()
                     ->limitList(2)
                     ->expandableLimitedList()
@@ -252,7 +252,7 @@ class PersonResource extends Resource
                 TextColumn::make('status')
                     ->label(__('common.status'))
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Actif' : 'Archivé')
+                    ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
                     ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
                 TextColumn::make('updated_at')
                     ->label(__('common.updated_at'))
@@ -263,8 +263,8 @@ class PersonResource extends Resource
                 SelectFilter::make('status')
                     ->label(__('common.status'))
                     ->options([
-                        'active' => 'Actif',
-                        'archived' => 'Archivé',
+                        'active' => __('common.active'),
+                        'archived' => __('common.archived'),
                     ]),
             ])
             ->recordActions([

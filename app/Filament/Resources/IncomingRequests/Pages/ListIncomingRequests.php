@@ -17,9 +17,9 @@ class ListIncomingRequests extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('Toutes')
+            'all' => Tab::make(__('common.all'))
                 ->icon(Heroicon::OutlinedInboxStack),
-            'new' => Tab::make('Nouvelles')
+            'new' => Tab::make(__('common.new_plural'))
                 ->icon(Heroicon::OutlinedSparkles)
                 ->badge(fn (): int => $this->countRequests(
                     fn (Builder $query): Builder => $query->where('status', IncomingRequestStatus::New),
@@ -27,7 +27,7 @@ class ListIncomingRequests extends ListRecords
                 ->badgeColor('info')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query
                     ->where('status', IncomingRequestStatus::New)),
-            'mine' => Tab::make('À moi')
+            'mine' => Tab::make(__('common.assigned_to_me'))
                 ->icon(Heroicon::OutlinedUserCircle)
                 ->badge(fn (): int => $this->countRequests(
                     fn (Builder $query): Builder => $query
@@ -37,7 +37,7 @@ class ListIncomingRequests extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query
                     ->where('assigned_user_id', auth()->id())
                     ->where('status', '!=', IncomingRequestStatus::Closed)),
-            'unassigned' => Tab::make('Non attribuées')
+            'unassigned' => Tab::make(__('common.unassigned_plural'))
                 ->icon(Heroicon::OutlinedUserMinus)
                 ->badge(fn (): int => $this->countRequests(
                     fn (Builder $query): Builder => $query
@@ -48,14 +48,14 @@ class ListIncomingRequests extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query
                     ->whereNull('assigned_user_id')
                     ->where('status', '!=', IncomingRequestStatus::Closed)),
-            'waiting' => Tab::make('En attente')
+            'waiting' => Tab::make(__('common.waiting'))
                 ->icon(Heroicon::OutlinedClock)
                 ->badge(fn (): int => $this->countRequests(
                     fn (Builder $query): Builder => $query->where('status', IncomingRequestStatus::WaitingCustomer),
                 ))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query
                     ->where('status', IncomingRequestStatus::WaitingCustomer)),
-            'closed' => Tab::make('Clôturées')
+            'closed' => Tab::make(__('common.closed_plural'))
                 ->icon(Heroicon::OutlinedArchiveBox)
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query
                     ->where('status', IncomingRequestStatus::Closed)),

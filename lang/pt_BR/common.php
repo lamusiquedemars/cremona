@@ -26,4 +26,10 @@ return [
     'internal_information' => 'Informações internas', 'location_or_instructions' => 'Local ou indicação', 'due_date' => 'Prazo', 'completed_on' => 'Concluída em',
     'daily_budget' => 'Orçamento diário previsto', 'maximum_total_budget' => 'Orçamento total máximo', 'new_campaign' => 'Nova campanha', 'google_updated' => 'Google atualizado',
     'remove_from_google' => 'Remover do Google Ads', 'ctr' => 'CTR',
+    'all' => 'Todas', 'to_process' => 'Para tratar', 'attach_company' => 'Vincular empresa', 'attach_existing_company' => 'Vincular uma empresa existente',
+    'primary_company' => 'Empresa principal', 'edit_company' => 'Editar empresa', 'archive_company_heading' => 'Arquivar esta empresa?', 'archive_company_description' => 'Suas solicitações, notas e vínculos serão preservados.',
+    'display_name' => 'Nome exibido', 'first_name' => 'Nome', 'linked_companies' => 'Empresas vinculadas', 'attach_contact' => 'Vincular contato', 'attach_existing_contact' => 'Vincular um contato existente', 'primary_contact' => 'Contato principal',
+    'participants_and_origin' => 'Participantes e origem', 'participants' => 'Participantes', 'connection_link' => 'Link de acesso', 'connection' => 'Acesso', 'external_sync' => 'Sincronização externa', 'external_sync_description' => 'Estas informações identificam o agendamento no Brevo ou em outro fornecedor. O Cremona não gerencia disponibilidades.',
+    'provider' => 'Fornecedor', 'external_reference' => 'Referência externa', 'synced_by_brevo' => 'Sincronizado pelo Brevo', 'imported' => 'Importado',
+    'to_check' => 'Para verificar', 'active_plural' => 'Ativas', 'drafts' => 'Rascunhos', 'archived_plural' => 'Arquivadas', 'due' => 'Com prazo', 'overdue' => 'Atrasadas', 'open_plural' => 'Abertas', 'completed_plural' => 'Concluídas', 'new_plural' => 'Novas', 'assigned_to_me' => 'Atribuídas a mim', 'unassigned_plural' => 'Não atribuídas', 'waiting' => 'Em espera', 'closed_plural' => 'Encerradas', 'no_due_date' => 'Sem prazo',
 ];

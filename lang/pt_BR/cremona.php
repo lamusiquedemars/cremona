@@ -23,6 +23,7 @@ return [
             'tasks' => 'Tarefas',
         ],
     ],
+    'actions' => ['create' => 'Criar :item'],
     'dashboard' => [
         'priorities' => 'Prioridades de hoje',
         'new_requests' => 'Novas solicitações',
@@ -123,7 +124,11 @@ return [
         'mark_as_read' => 'Marcar como lida', 'conversation_marked_as_read' => 'Conversa marcada como lida.', 'close' => 'Encerrar', 'conversation_closed' => 'Conversa encerrada.',
         'your_correspondent' => 'seu correspondente', 'wrote_on' => 'Em :date, :author escreveu:', 'unknown_sender' => 'Remetente desconhecido', 'you' => 'Você',
         'from' => 'De: :name', 'to' => 'Para: :name', 'on_date' => 'Em :date', 'show_quoted_content' => 'Mostrar conteúdo citado',
-        'history' => 'Histórico (:count mensagem)|Histórico (:count mensagens)',
+        'history' => 'Histórico (:count mensagem)|Histórico (:count mensagens)', 'waiting_customer' => 'Aguardando o cliente', 'closed_plural' => 'Encerradas',
+    ],
+    'email' => [
+        'sync_emails' => 'Buscar e-mails', 'no_active_mailbox' => 'Nenhuma caixa de e-mail ativa', 'sync_failed' => 'A busca falhou', 'sync_failed_body' => 'Os detalhes estão disponíveis em Caixas de e-mail.',
+        'sync_complete' => 'Busca concluída', 'sync_complete_body' => ':imported mensagem(ns) importada(s), :skipped já conhecida(s).',
     ],
     'request' => [
         'marked_as_read' => 'Solicitação marcada como lida.', 'change_status' => 'Alterar status', 'new_status' => 'Novo status', 'outcome' => 'Resultado',
@@ -177,6 +182,7 @@ return [
         'refresh_now' => 'Atualizar agora', 'edit_preparation' => 'Editar preparação do Cremona', 'edit_draft' => 'Editar rascunho', 'adopt_google_keywords' => 'Adotar palavras-chave do Google', 'adopt_google_keywords_heading' => 'Adotar as palavras-chave do Google no Cremona?', 'adopt_google_keywords_description' => 'As palavras-chave e negativas dos grupos correspondentes substituirão a preparação do Cremona. O Google Ads não será modificado; os anúncios e textos do Cremona serão preservados.', 'preparation_updated' => 'Preparação do Cremona atualizada.', 'groups_adopted' => ':count grupo adotado do Google Ads.|:count grupos adotados do Google Ads.',
         'apply_keywords_to_google' => 'Aplicar palavras-chave do Cremona ao Google', 'apply_keywords_heading' => 'Aplicar a preparação do Cremona no Google Ads?', 'apply_keywords_description' => 'O Cremona relerá o Google Ads antes do envio e adicionará ou removerá somente as palavras-chave e negativas dos grupos com exatamente o mesmo nome. Os anúncios, orçamentos, segmentações e grupos não serão alterados.', 'google_update_connection_body' => 'A atualização exige uma conexão pronta em « Configuração da organização > Publicidade ».', 'google_update_stopped' => 'Atualização do Google Ads interrompida', 'google_update_interrupted' => 'Atualização do Google Ads falhou', 'google_update_interrupted_body' => 'O Google Ads não confirmou a alteração. Tente novamente em alguns minutos.', 'google_keywords_updated' => 'Palavras-chave do Google Ads atualizadas.',
         'google_sync_connection_body' => 'A sincronização exige uma conexão pronta em « Configuração da organização > Publicidade ».', 'google_sync_stopped' => 'Sincronização do Google Ads interrompida', 'google_sync_interrupted' => 'Sincronização do Google Ads falhou', 'google_sync_interrupted_body' => 'O Google Ads não conseguiu fornecer os resultados. Tente novamente em alguns minutos.', 'google_campaign_refreshed' => 'Campanha do Google Ads atualizada', 'google_campaign_refreshed_body' => 'O status, os resultados e as palavras-chave observadas foram registrados.',
+        'remove_google_heading' => 'Remover esta campanha do Google Ads?', 'remove_google_description' => 'A campanha remota pausada será removida do Google Ads. O rascunho, as palavras-chave, os anúncios, o orçamento e as datas serão preservados no Cremona para que ela possa ser recriada.', 'google_removal_stopped' => 'Remoção do Google Ads interrompida', 'google_removal_interrupted' => 'Remoção do Google Ads falhou', 'google_removal_interrupted_body' => 'O Google Ads recusou a remoção; a campanha local não foi modificada.', 'google_campaign_removed' => 'Campanha removida do Google Ads', 'google_campaign_removed_body' => 'O rascunho do Cremona foi preservado e está pronto para ser recriado.',
     ],
     'platform' => [
         'all_organizations' => 'Todas as organizações',

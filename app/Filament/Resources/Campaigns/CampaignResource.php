@@ -321,8 +321,8 @@ class CampaignResource extends Resource
                         && $record->status === CampaignStatus::Paused
                         && ! $record->dailyMetrics()->exists())
                     ->requiresConfirmation()
-                    ->modalHeading('Retirer cette campagne Google Ads ?')
-                    ->modalDescription('La campagne distante en pause sera retirée de Google Ads. Le brouillon, les mots-clés, annonces, budget et dates restent conservés dans Cremona afin de pouvoir la recréer.')
+                    ->modalHeading(__('cremona.campaign.remove_google_heading'))
+                    ->modalDescription(__('cremona.campaign.remove_google_description'))
                     ->modalSubmitActionLabel(__('common.remove_from_google'))
                     ->action(function (Campaign $record): void {
                         $integration = OrganizationIntegration::query()
@@ -331,7 +331,7 @@ class CampaignResource extends Resource
                             ->first();
 
                         if ($integration === null) {
-                            Notification::make()->title('Connexion Google Ads à préparer')->body('Renseigne d’abord le compte Google Ads dans « Marketing > Publicité ».')->warning()->send();
+                            Notification::make()->title(__('cremona.campaign.google_connection_to_prepare'))->body(__('cremona.campaign.google_connection_setup_body'))->warning()->send();
 
                             return;
                         }
@@ -339,17 +339,17 @@ class CampaignResource extends Resource
                         try {
                             app(GoogleAdsCampaignPublisher::class)->discardPaused($record, $integration, auth()->user());
                         } catch (LogicException $exception) {
-                            Notification::make()->title('Retrait Google Ads arrêté')->body($exception->getMessage())->danger()->persistent()->send();
+                            Notification::make()->title(__('cremona.campaign.google_removal_stopped'))->body($exception->getMessage())->danger()->persistent()->send();
 
                             return;
                         } catch (Throwable $exception) {
                             report($exception);
-                            Notification::make()->title('Retrait Google Ads interrompu')->body('Google Ads a refusé le retrait ; la campagne locale n’a pas été modifiée.')->danger()->persistent()->send();
+                            Notification::make()->title(__('cremona.campaign.google_removal_interrupted'))->body(__('cremona.campaign.google_removal_interrupted_body'))->danger()->persistent()->send();
 
                             return;
                         }
 
-                        Notification::make()->title('Campagne retirée de Google Ads')->body('Le brouillon Cremona est conservé et prêt à être recréé.')->success()->send();
+                        Notification::make()->title(__('cremona.campaign.google_campaign_removed'))->body(__('cremona.campaign.google_campaign_removed_body'))->success()->send();
                     }),
                 EditAction::make(),
             ])

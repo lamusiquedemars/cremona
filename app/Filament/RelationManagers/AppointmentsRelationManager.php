@@ -18,6 +18,11 @@ class AppointmentsRelationManager extends RelationManager
 
     protected static ?string $title = 'Rendez-vous';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('common.appointment');
+    }
+
     protected static string|\BackedEnum|null $icon = Heroicon::OutlinedCalendarDays;
 
     public function table(Table $table): Table

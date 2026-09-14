@@ -18,6 +18,11 @@ class IncomingRequestsRelationManager extends RelationManager
 
     protected static ?string $title = 'Demandes';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('common.requests');
+    }
+
     protected static string|\BackedEnum|null $icon = Heroicon::OutlinedInboxStack;
 
     public function table(Table $table): Table
@@ -32,7 +37,7 @@ class IncomingRequestsRelationManager extends RelationManager
                     ->wrap(),
                 TextColumn::make('status')->label(__('common.status'))->badge(),
                 TextColumn::make('urgency')->label(__('common.urgency'))->badge(),
-                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('Non attribuée'),
+                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
                 TextColumn::make('received_at')->label(__('common.received'))->dateTime('d/m/Y H:i')->sortable(),
             ])
             ->recordActions([

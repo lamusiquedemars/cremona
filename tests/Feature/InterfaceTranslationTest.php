@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Services\OrganizationPresentation;
+use App\Models\Organization;
+use App\Tenancy\OrganizationContext;
 use Tests\TestCase;
 
 class InterfaceTranslationTest extends TestCase
@@ -55,6 +57,37 @@ class InterfaceTranslationTest extends TestCase
 
             $this->assertSame('Relacionamento com clientes', $presentation->navigationGroupLabel('customer_follow_up', 'Suivi client'));
             $this->assertSame('Contatos', $presentation->navigationLabel('contacts', 'Contacts'));
+        } finally {
+            app()->setLocale('fr');
+        }
+    }
+
+    public function test_brazilian_portuguese_ignores_french_presentation_overrides(): void
+    {
+        $organization = new Organization([
+            'settings' => [
+                'presentation' => [
+                    'labels' => [
+                        'customer_follow_up' => 'Suivi client',
+                        'contacts' => 'Contacts',
+                        'requests' => 'Demandes',
+                        'campaigns' => 'Campagnes',
+                    ],
+                ],
+            ],
+        ]);
+
+        try {
+            app()->setLocale('pt_BR');
+
+            app(OrganizationContext::class)->run($organization, function (): void {
+                $presentation = app(OrganizationPresentation::class);
+
+                $this->assertSame('Relacionamento com clientes', $presentation->navigationGroupLabel('customer_follow_up', 'Suivi client'));
+                $this->assertSame('Contatos', $presentation->navigationLabel('contacts', 'Contacts'));
+                $this->assertSame('Solicitações', $presentation->navigationLabel('requests', 'Demandes'));
+                $this->assertSame('Campanhas', $presentation->navigationLabel('campaigns', 'Campagnes'));
+            });
         } finally {
             app()->setLocale('fr');
         }

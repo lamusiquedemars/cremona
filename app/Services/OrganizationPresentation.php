@@ -70,7 +70,13 @@ class OrganizationPresentation
 
         $value = data_get(app(OrganizationContext::class)->current()?->settings ?? [], "presentation.labels.{$key}");
 
-        return is_string($value) && trim($value) !== '' ? trim($value) : $fallback;
+        if (app()->getLocale() === 'fr' && is_string($value) && trim($value) !== '') {
+            return trim($value);
+        }
+
+        $translated = __('cremona.navigation.items.'.$key, [], app()->getLocale());
+
+        return $translated !== 'cremona.navigation.items.'.$key ? $translated : $fallback;
     }
 
     public function navigationLabel(string $key, string $fallback): string
@@ -84,16 +90,20 @@ class OrganizationPresentation
 
     public function navigationGroupLabel(string $key, string $fallback): string
     {
-        $configured = $this->label($key, '');
+        $configured = data_get(app(OrganizationContext::class)->current()?->settings ?? [], "presentation.labels.{$key}");
 
-        return $configured !== ''
-            ? $configured
-            : __('cremona.navigation.groups.'.$key, [], app()->getLocale());
+        if (app()->getLocale() === 'fr' && is_string($configured) && trim($configured) !== '') {
+            return trim($configured);
+        }
+
+        $translated = __('cremona.navigation.groups.'.$key, [], app()->getLocale());
+
+        return $translated !== 'cremona.navigation.groups.'.$key ? $translated : $fallback;
     }
 
     public function createActionLabel(string $key, string $fallback): string
     {
-        return 'Créer : '.$this->label($key, $fallback);
+        return __('cremona.actions.create', ['item' => $this->label($key, $fallback)]);
     }
 
     /** @return array<string, array{label: string, items: array<string, string>}> */

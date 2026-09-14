@@ -26,4 +26,10 @@ return [
     'internal_information' => 'Informations internes', 'location_or_instructions' => 'Lieu ou indication', 'due_date' => 'Échéance', 'completed_on' => 'Terminée le',
     'daily_budget' => 'Budget quotidien prévu', 'maximum_total_budget' => 'Budget total maximal', 'new_campaign' => 'Nouvelle campagne', 'google_updated' => 'Google actualisé',
     'remove_from_google' => 'Retirer de Google Ads', 'ctr' => 'CTR',
+    'all' => 'Toutes', 'to_process' => 'À traiter', 'attach_company' => 'Rattacher une entreprise', 'attach_existing_company' => 'Rattacher une entreprise existante',
+    'primary_company' => 'Entreprise principale', 'edit_company' => 'Modifier l’entreprise', 'archive_company_heading' => 'Archiver cette entreprise ?', 'archive_company_description' => 'Ses demandes, notes et relations resteront conservées.',
+    'display_name' => 'Nom affiché', 'first_name' => 'Prénom', 'linked_companies' => 'Entreprises liées', 'attach_contact' => 'Rattacher un contact', 'attach_existing_contact' => 'Rattacher un contact existant', 'primary_contact' => 'Contact principal',
+    'participants_and_origin' => 'Participants et origine', 'participants' => 'Participants', 'connection_link' => 'Lien de connexion', 'connection' => 'Connexion', 'external_sync' => 'Synchronisation externe', 'external_sync_description' => 'Ces informations identifient le rendez-vous chez Brevo ou un autre fournisseur. Cremona ne gère pas les disponibilités.',
+    'provider' => 'Fournisseur', 'external_reference' => 'Référence externe', 'synced_by_brevo' => 'Synchronisé par Brevo', 'imported' => 'Importé',
+    'to_check' => 'À vérifier', 'active_plural' => 'Actives', 'drafts' => 'Brouillons', 'archived_plural' => 'Archivées', 'due' => 'À échéance', 'overdue' => 'En retard', 'open_plural' => 'Ouvertes', 'completed_plural' => 'Terminées', 'new_plural' => 'Nouvelles', 'assigned_to_me' => 'À moi', 'unassigned_plural' => 'Non attribuées', 'waiting' => 'En attente', 'closed_plural' => 'Clôturées', 'no_due_date' => 'Sans échéance',
 ];

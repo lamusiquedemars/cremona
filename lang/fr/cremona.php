@@ -23,6 +23,7 @@ return [
             'tasks' => 'Tâches',
         ],
     ],
+    'actions' => ['create' => 'Créer : :item'],
     'dashboard' => [
         'priorities' => 'Priorités du jour',
         'new_requests' => 'Nouvelles demandes',
@@ -123,7 +124,11 @@ return [
         'mark_as_read' => 'Marquer comme lue', 'conversation_marked_as_read' => 'Conversation marquée comme lue.', 'close' => 'Clôturer', 'conversation_closed' => 'Conversation clôturée.',
         'your_correspondent' => 'votre correspondant', 'wrote_on' => 'Le :date, :author a écrit :', 'unknown_sender' => 'Expéditeur inconnu', 'you' => 'Vous',
         'from' => 'De : :name', 'to' => 'À : :name', 'on_date' => 'Le :date', 'show_quoted_content' => 'Afficher le contenu cité',
-        'history' => 'Historique (:count message)|Historique (:count messages)',
+        'history' => 'Historique (:count message)|Historique (:count messages)', 'waiting_customer' => 'En attente du client', 'closed_plural' => 'Clôturées',
+    ],
+    'email' => [
+        'sync_emails' => 'Relever les e-mails', 'no_active_mailbox' => 'Aucune boîte e-mail active', 'sync_failed' => 'La relève a échoué', 'sync_failed_body' => 'Le détail est visible dans Boîtes e-mail.',
+        'sync_complete' => 'Relève terminée', 'sync_complete_body' => ':imported message(s) importé(s), :skipped déjà connu(s).',
     ],
     'request' => [
         'marked_as_read' => 'Demande marquée comme lue.', 'change_status' => 'Changer le statut', 'new_status' => 'Nouveau statut', 'outcome' => 'Résultat',
@@ -177,6 +182,7 @@ return [
         'refresh_now' => 'Actualiser maintenant', 'edit_preparation' => 'Modifier la préparation Cremona', 'edit_draft' => 'Modifier le brouillon', 'adopt_google_keywords' => 'Adopter les mots-clés Google', 'adopt_google_keywords_heading' => 'Adopter les mots-clés Google dans Cremona ?', 'adopt_google_keywords_description' => 'Les mots-clés et exclusions des groupes correspondants remplaceront la préparation Cremona. Google Ads ne sera pas modifié ; les annonces et textes Cremona sont conservés.', 'preparation_updated' => 'Préparation Cremona mise à jour.', 'groups_adopted' => ':count groupe adopté depuis Google Ads.|:count groupes adoptés depuis Google Ads.',
         'apply_keywords_to_google' => 'Appliquer les mots-clés Cremona à Google', 'apply_keywords_heading' => 'Appliquer la préparation Cremona dans Google Ads ?', 'apply_keywords_description' => 'Cremona relira Google Ads juste avant l’envoi, puis ajoutera ou supprimera uniquement les mots-clés et exclusions des groupes portant exactement le même nom. Les annonces, budgets, ciblages et groupes restent inchangés.', 'google_update_connection_body' => 'La mise à jour nécessite une connexion prête dans « Configuration de l’organisation > Publicité ».', 'google_update_stopped' => 'Mise à jour Google Ads arrêtée', 'google_update_interrupted' => 'Mise à jour Google Ads interrompue', 'google_update_interrupted_body' => 'Google Ads n’a pas confirmé la modification. Réessaie dans quelques minutes.', 'google_keywords_updated' => 'Mots-clés Google Ads mis à jour.',
         'google_sync_connection_body' => 'La synchronisation nécessite une connexion prête dans « Configuration de l’organisation > Publicité ».', 'google_sync_stopped' => 'Synchronisation Google Ads arrêtée', 'google_sync_interrupted' => 'Synchronisation Google Ads interrompue', 'google_sync_interrupted_body' => 'Google Ads n’a pas pu fournir les résultats. Réessaie dans quelques minutes.', 'google_campaign_refreshed' => 'Campagne Google Ads actualisée', 'google_campaign_refreshed_body' => 'État, résultats et mots-clés observés ont été enregistrés.',
+        'remove_google_heading' => 'Retirer cette campagne Google Ads ?', 'remove_google_description' => 'La campagne distante en pause sera retirée de Google Ads. Le brouillon, les mots-clés, annonces, budget et dates restent conservés dans Cremona afin de pouvoir la recréer.', 'google_removal_stopped' => 'Retrait Google Ads arrêté', 'google_removal_interrupted' => 'Retrait Google Ads interrompu', 'google_removal_interrupted_body' => 'Google Ads a refusé le retrait ; la campagne locale n’a pas été modifiée.', 'google_campaign_removed' => 'Campagne retirée de Google Ads', 'google_campaign_removed_body' => 'Le brouillon Cremona est conservé et prêt à être recréé.',
     ],
     'platform' => [
         'all_organizations' => 'Toutes les organisations',

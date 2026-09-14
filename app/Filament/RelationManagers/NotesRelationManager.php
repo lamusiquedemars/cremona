@@ -17,6 +17,11 @@ class NotesRelationManager extends RelationManager
 
     protected static ?string $title = 'Notes';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('common.notes');
+    }
+
     protected static string|\BackedEnum|null $icon = Heroicon::OutlinedChatBubbleBottomCenterText;
 
     public function isReadOnly(): bool

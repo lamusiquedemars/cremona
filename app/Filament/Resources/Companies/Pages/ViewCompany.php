@@ -16,7 +16,7 @@ class ViewCompany extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make()->label('Modifier l’entreprise'),
+            EditAction::make()->label(__('common.edit_company')),
             Action::make('archive')
                 ->label(__('common.archive'))
                 ->icon(Heroicon::OutlinedArchiveBox)
@@ -24,8 +24,8 @@ class ViewCompany extends ViewRecord
                 ->authorize('update')
                 ->visible(fn (): bool => $this->record->status === 'active')
                 ->requiresConfirmation()
-                ->modalHeading('Archiver cette entreprise ?')
-                ->modalDescription('Ses demandes, notes et relations resteront conservées.')
+                ->modalHeading(__('common.archive_company_heading'))
+                ->modalDescription(__('common.archive_company_description'))
                 ->action(fn () => app(CrmRecordManager::class)->archive($this->record)),
             Action::make('reactivate')
                 ->label(__('common.reactivate'))

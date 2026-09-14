@@ -117,7 +117,7 @@ class CrmTaskResource extends Resource
                 TextEntry::make('status')->label(__('common.status'))->badge(),
                 TextEntry::make('priority')->label(__('common.priority'))->badge(),
                 TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
-                TextEntry::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder('Sans échéance'),
+                TextEntry::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder(__('common.no_due_date')),
                 TextEntry::make('completed_at')->label(__('common.completed_on'))->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder('—'),
             ]),
             Section::make(__('common.links'))->columnSpanFull()->columns(4)->schema([
