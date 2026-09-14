@@ -10,7 +10,7 @@ trait UsesOrganizationPresentation
 {
     public static function getNavigationLabel(): string
     {
-        return app(OrganizationPresentation::class)->label(static::$presentationKey ?? '', static::$navigationLabel ?? parent::getNavigationLabel());
+        return app(OrganizationPresentation::class)->navigationLabel(static::$presentationKey ?? '', static::$navigationLabel ?? parent::getNavigationLabel());
     }
 
     public static function getModelLabel(): string
@@ -28,7 +28,7 @@ trait UsesOrganizationPresentation
         $group = static::$navigationGroup;
 
         return is_string($group)
-            ? app(OrganizationPresentation::class)->label(static::$presentationGroupKey ?? '', $group)
+            ? app(OrganizationPresentation::class)->navigationGroupLabel(static::$presentationGroupKey ?? '', $group)
             : $group;
     }
 

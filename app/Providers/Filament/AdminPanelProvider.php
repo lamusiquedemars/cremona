@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ->searchableTenantMenu()
             ->tenantMenuItems([
                 MenuItem::make()
-                    ->label('Toutes les organisations')
+                    ->label(__('cremona.platform.all_organizations'))
                     ->icon(Heroicon::OutlinedBuildingOffice2)
                     ->url('/platform/organizations'),
             ])

@@ -38,8 +38,8 @@ class OpenCrmTasks extends TableWidget
         $timezone = app(OrganizationContext::class)->require()->timezone();
 
         return $table
-            ->heading('Tâches à faire')
-            ->description('Les retards en premier, puis les prochaines échéances.')
+            ->heading(__('cremona.dashboard.tasks_heading'))
+            ->description(__('cremona.dashboard.tasks_description'))
             ->query(
                 CrmTask::query()
                     ->whereIn('status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress])
@@ -48,20 +48,20 @@ class OpenCrmTasks extends TableWidget
                     ->limit(8),
             )
             ->columns([
-                TextColumn::make('title')->label('Tâche')->weight('medium')->wrap(),
-                TextColumn::make('priority')->label('Priorité')->badge(),
+                TextColumn::make('title')->label(__('cremona.dashboard.task'))->weight('medium')->wrap(),
+                TextColumn::make('priority')->label(__('cremona.dashboard.priority'))->badge(),
                 TextColumn::make('due_at')
-                    ->label('Échéance')
+                    ->label(__('cremona.dashboard.due_date'))
                     ->dateTime('d/m/Y H:i')
                     ->timezone($timezone)
                     ->color(fn (CrmTask $record): string => $record->due_at?->isPast() ? 'danger' : 'gray')
-                    ->placeholder('Sans échéance'),
-                TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribué'),
+                    ->placeholder(__('cremona.dashboard.no_due_date')),
+                TextColumn::make('assignedUser.name')->label(__('cremona.dashboard.assignee'))->placeholder(__('cremona.dashboard.unassigned')),
             ])
             ->recordUrl(fn (CrmTask $record): string => CrmTaskResource::getUrl('view', ['record' => $record]))
             ->headerActions([
                 Action::make('seeAll')
-                    ->label('Voir toutes les tâches')
+                    ->label(__('cremona.dashboard.see_all_tasks'))
                     ->icon(Heroicon::OutlinedArrowRight)
                     ->url(CrmTaskResource::getUrl('index')),
             ])

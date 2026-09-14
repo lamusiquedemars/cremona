@@ -37,8 +37,8 @@ class ActiveConversations extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->heading('Correspondances à traiter')
-            ->description('Les échanges dont le dernier message vient du contact.')
+            ->heading(__('cremona.dashboard.conversations_heading'))
+            ->description(__('cremona.dashboard.conversations_description_table'))
             ->query(
                 Conversation::query()
                     ->where('status', ConversationStatus::Open)
@@ -51,24 +51,24 @@ class ActiveConversations extends TableWidget
             )
             ->columns([
                 TextColumn::make('subject')
-                    ->label('Conversation')
-                    ->placeholder('Sans objet')
+                    ->label(__('cremona.dashboard.conversation'))
+                    ->placeholder(__('cremona.dashboard.untitled'))
                     ->weight('medium')
                     ->wrap(),
                 TextColumn::make('person.display_name')
-                    ->label('Contact')
-                    ->placeholder('Non rattaché'),
+                    ->label(__('cremona.dashboard.contact'))
+                    ->placeholder(__('cremona.dashboard.unlinked')),
                 TextColumn::make('assignedUser.name')
-                    ->label('Responsable')
-                    ->placeholder('Non attribué'),
+                    ->label(__('cremona.dashboard.assignee'))
+                    ->placeholder(__('cremona.dashboard.unassigned')),
                 TextColumn::make('last_inbound_at')
-                    ->label('Dernier message reçu')
+                    ->label(__('cremona.dashboard.last_received_message'))
                     ->since(),
             ])
             ->recordUrl(fn (Conversation $record): string => ConversationResource::getUrl('view', ['record' => $record]))
             ->headerActions([
                 Action::make('seeAll')
-                    ->label('Voir toutes les correspondances')
+                    ->label(__('cremona.dashboard.see_all_conversations'))
                     ->icon(Heroicon::OutlinedArrowRight)
                     ->url(ConversationResource::getUrl('index')),
             ])

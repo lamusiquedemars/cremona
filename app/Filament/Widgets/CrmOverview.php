@@ -37,8 +37,6 @@ class CrmOverview extends StatsOverviewWidget
 
     protected static ?int $sort = 10;
 
-    protected ?string $heading = 'Priorités du jour';
-
     public static function canView(): bool
     {
         $organization = app(OrganizationContext::class)->current();
@@ -108,54 +106,59 @@ class CrmOverview extends StatsOverviewWidget
             ->where('channel', 'google_ads')
             ->max('google_ads_synced_at');
         $campaignSource = $lastCampaignSync === null
-            ? 'Google Ads · jamais synchronisé'
-            : 'Google Ads · synchro '.Carbon::parse($lastCampaignSync)->setTimezone($timezone)->format('d/m H:i');
+            ? __('cremona.dashboard.campaign_never_synced')
+            : __('cremona.dashboard.campaign_synced', ['date' => Carbon::parse($lastCampaignSync)->setTimezone($timezone)->format('d/m H:i')]);
 
         $moduleAccess = app(OrganizationModuleAccess::class);
         $stats = [];
 
         if ($moduleAccess->enabled('crm', $organization)) {
-            $stats[] = Stat::make('Nouvelles demandes', $new)
-                ->description("{$unread} non lue".($unread > 1 ? 's' : '').' · Voir les demandes')
+            $stats[] = Stat::make(__('cremona.dashboard.new_requests'), $new)
+                ->description(trans_choice('cremona.dashboard.new_requests_description', $unread, ['count' => $unread]))
                 ->descriptionIcon(Heroicon::OutlinedEnvelopeOpen)
                 ->color($new > 0 ? 'info' : 'gray')
                 ->url(IncomingRequestResource::getUrl('index', ['tab' => 'new']));
-            $stats[] = Stat::make('Correspondances à traiter', $conversations)
-                ->description('Dernier message reçu · Voir les correspondances')
+            $stats[] = Stat::make(__('cremona.dashboard.conversations'), $conversations)
+                ->description(__('cremona.dashboard.conversations_description'))
                 ->descriptionIcon(Heroicon::OutlinedChatBubbleLeftRight)
                 ->color($conversations > 0 ? 'warning' : 'gray')
                 ->url(ConversationResource::getUrl('index', ['tab' => 'open']));
-            $stats[] = Stat::make('Tâches à échéance', $tasksDue)
-                ->description("{$overdueTasks} en retard · Voir les tâches")
+            $stats[] = Stat::make(__('cremona.dashboard.tasks_due'), $tasksDue)
+                ->description(trans_choice('cremona.dashboard.tasks_due_description', $overdueTasks, ['count' => $overdueTasks]))
                 ->descriptionIcon(Heroicon::OutlinedCheckCircle)
                 ->color($overdueTasks > 0 ? 'danger' : ($tasksDue > 0 ? 'warning' : 'gray'))
                 ->url(CrmTaskResource::getUrl('index', ['tab' => 'due']));
         }
 
         if ($moduleAccess->enabled('appointments', $organization)) {
-            $stats[] = Stat::make('Rendez-vous aujourd’hui', $appointmentsToday)
-                ->description('À venir · Voir les rendez-vous')
+            $stats[] = Stat::make(__('cremona.dashboard.appointments_today'), $appointmentsToday)
+                ->description(__('cremona.dashboard.appointments_today_description'))
                 ->descriptionIcon(Heroicon::OutlinedCalendarDays)
                 ->color($appointmentsToday > 0 ? 'info' : 'gray')
                 ->url(AppointmentResource::getUrl('index', ['tab' => 'today']));
         }
 
         if ($moduleAccess->enabled('quotes', $organization)) {
-            $stats[] = Stat::make('Devis à suivre', $quotesToFollow)
-                ->description("{$expiredQuotes} hors validité · Voir les devis")
+            $stats[] = Stat::make(__('cremona.dashboard.quotes_to_follow'), $quotesToFollow)
+                ->description(trans_choice('cremona.dashboard.quotes_to_follow_description', $expiredQuotes, ['count' => $expiredQuotes]))
                 ->descriptionIcon(Heroicon::OutlinedDocumentCurrencyEuro)
                 ->color($expiredQuotes > 0 ? 'danger' : ($quotesToFollow > 0 ? 'warning' : 'gray'))
                 ->url(QuoteResource::getUrl('index', ['tab' => 'follow_up']));
         }
 
         if ($moduleAccess->enabled('marketing', $organization)) {
-            $stats[] = Stat::make('Campagnes à vérifier', $campaignsToCheck)
-                ->description($campaignSource.' · Voir les campagnes')
+            $stats[] = Stat::make(__('cremona.dashboard.campaigns_to_check'), $campaignsToCheck)
+                ->description(__('cremona.dashboard.campaigns_to_check_description', ['source' => $campaignSource]))
                 ->descriptionIcon(Heroicon::OutlinedMegaphone)
                 ->color($campaignsToCheck > 0 ? 'warning' : 'gray')
                 ->url(CampaignResource::getUrl('index', ['tab' => 'attention']));
         }
 
         return $stats;
+    }
+
+    protected function getHeading(): ?string
+    {
+        return __('cremona.dashboard.priorities');
     }
 }

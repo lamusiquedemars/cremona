@@ -73,6 +73,24 @@ class OrganizationPresentation
         return is_string($value) && trim($value) !== '' ? trim($value) : $fallback;
     }
 
+    public function navigationLabel(string $key, string $fallback): string
+    {
+        $configured = $this->label($key, '');
+
+        return $configured !== ''
+            ? $configured
+            : __('cremona.navigation.items.'.$key, [], app()->getLocale());
+    }
+
+    public function navigationGroupLabel(string $key, string $fallback): string
+    {
+        $configured = $this->label($key, '');
+
+        return $configured !== ''
+            ? $configured
+            : __('cremona.navigation.groups.'.$key, [], app()->getLocale());
+    }
+
     public function createActionLabel(string $key, string $fallback): string
     {
         return 'Créer : '.$this->label($key, $fallback);

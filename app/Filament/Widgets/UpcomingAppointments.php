@@ -38,8 +38,8 @@ class UpcomingAppointments extends TableWidget
         $timezone = app(OrganizationContext::class)->require()->timezone();
 
         return $table
-            ->heading('Prochains rendez-vous')
-            ->description('Les rendez-vous planifiés à partir de maintenant.')
+            ->heading(__('cremona.dashboard.appointments_heading'))
+            ->description(__('cremona.dashboard.appointments_description'))
             ->query(
                 Appointment::query()
                     ->where('status', AppointmentStatus::Scheduled)
@@ -49,27 +49,27 @@ class UpcomingAppointments extends TableWidget
             )
             ->columns([
                 TextColumn::make('starts_at')
-                    ->label('Date')
+                    ->label(__('cremona.dashboard.date'))
                     ->dateTime('d/m/Y H:i')
                     ->timezone($timezone),
                 TextColumn::make('title')
-                    ->label('Rendez-vous')
+                    ->label(__('cremona.navigation.items.appointments'))
                     ->weight('medium')
                     ->wrap(),
                 TextColumn::make('person.display_name')
-                    ->label('Contact')
+                    ->label(__('cremona.dashboard.contact'))
                     ->placeholder('—'),
                 TextColumn::make('modality')
-                    ->label('Modalité')
+                    ->label(__('cremona.dashboard.modality'))
                     ->badge(),
                 TextColumn::make('assignedUser.name')
-                    ->label('Responsable')
-                    ->placeholder('Non attribué'),
+                    ->label(__('cremona.dashboard.assignee'))
+                    ->placeholder(__('cremona.dashboard.unassigned')),
             ])
             ->recordUrl(fn (Appointment $record): string => AppointmentResource::getUrl('view', ['record' => $record]))
             ->headerActions([
                 Action::make('seeAll')
-                    ->label('Voir tous les rendez-vous')
+                    ->label(__('cremona.dashboard.see_all_appointments'))
                     ->icon(Heroicon::OutlinedArrowRight)
                     ->url(AppointmentResource::getUrl('index')),
             ])

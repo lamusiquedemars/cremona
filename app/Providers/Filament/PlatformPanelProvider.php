@@ -31,7 +31,7 @@ class PlatformPanelProvider extends PanelProvider
             ->id('platform')
             ->path('platform')
             ->login(CremonaLogin::class)
-            ->brandName(fn (): string => config('cremona.pwa.name').' — Administration')
+            ->brandName(fn (): string => config('cremona.pwa.name').' — '.__('cremona.platform.administration'))
             ->favicon(fn (): string => asset(config('cremona.pwa.icon_192')))
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('pwa.head')->render())
             ->renderHook(PanelsRenderHook::BODY_END, fn (): string => view('pwa.service-worker')->render())

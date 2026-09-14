@@ -13,10 +13,6 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class PlatformOverview extends StatsOverviewWidget
 {
-    protected ?string $heading = 'Vue globale Cremona';
-
-    protected ?string $description = 'Administration transversale des organisations et de leurs sites.';
-
     protected ?string $pollingInterval = null;
 
     public static function canView(): bool
@@ -27,19 +23,29 @@ class PlatformOverview extends StatsOverviewWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('Organisations actives', Organization::query()->where('status', 'active')->count())
+            Stat::make(__('cremona.platform.active_organizations'), Organization::query()->where('status', 'active')->count())
                 ->icon(Heroicon::OutlinedBuildingOffice2)
                 ->color('primary')
                 ->url(OrganizationResource::getUrl('index')),
-            Stat::make('Sites rattachés', OrganizationSite::query()->where('status', 'active')->count())
+            Stat::make(__('cremona.platform.linked_sites'), OrganizationSite::query()->where('status', 'active')->count())
                 ->icon(Heroicon::OutlinedGlobeAlt)
                 ->color('info'),
-            Stat::make('Comptes utilisateurs', User::query()->count())
+            Stat::make(__('cremona.platform.user_accounts'), User::query()->count())
                 ->icon(Heroicon::OutlinedUsers)
                 ->color('gray'),
-            Stat::make('Campagnes actives', Campaign::withoutGlobalScopes()->where('status', 'active')->count())
+            Stat::make(__('cremona.platform.active_campaigns'), Campaign::withoutGlobalScopes()->where('status', 'active')->count())
                 ->icon(Heroicon::OutlinedMegaphone)
                 ->color('success'),
         ];
+    }
+
+    protected function getHeading(): ?string
+    {
+        return __('cremona.platform.overview');
+    }
+
+    protected function getDescription(): ?string
+    {
+        return __('cremona.platform.overview_description');
     }
 }

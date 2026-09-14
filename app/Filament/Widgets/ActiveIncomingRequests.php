@@ -36,8 +36,8 @@ class ActiveIncomingRequests extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->heading('Demandes à traiter')
-            ->description('Les demandes nouvelles, en cours ou qualifiées qui nécessitent une suite.')
+            ->heading(__('cremona.dashboard.requests_heading'))
+            ->description(__('cremona.dashboard.requests_description'))
             ->query(
                 IncomingRequest::query()
                     ->whereIn('status', [
@@ -51,29 +51,29 @@ class ActiveIncomingRequests extends TableWidget
             )
             ->columns([
                 TextColumn::make('name_snapshot')
-                    ->label('Contact')
-                    ->placeholder('Anonyme')
+                    ->label(__('cremona.dashboard.contact'))
+                    ->placeholder(__('cremona.dashboard.anonymous'))
                     ->weight('medium'),
                 TextColumn::make('subject')
-                    ->label('Demande')
+                    ->label(__('cremona.dashboard.request'))
                     ->description(fn (IncomingRequest $record): string => str($record->message)->squish()->limit(60))
-                    ->placeholder('Sans objet')
+                    ->placeholder(__('cremona.dashboard.untitled'))
                     ->wrap(),
                 TextColumn::make('status')
-                    ->label('Statut')
+                    ->label(__('cremona.dashboard.status'))
                     ->badge(),
                 TextColumn::make('assignedUser.name')
-                    ->label('Responsable')
-                    ->placeholder('Non attribuée'),
+                    ->label(__('cremona.dashboard.assignee'))
+                    ->placeholder(__('cremona.dashboard.unassigned')),
                 TextColumn::make('received_at')
-                    ->label('Reçue')
+                    ->label(__('cremona.dashboard.received'))
                     ->since(),
             ])
             ->recordUrl(fn (IncomingRequest $record): string => IncomingRequestResource::getUrl('view', ['record' => $record]))
             ->recordClasses(fn (IncomingRequest $record): ?string => $record->read_at === null ? 'crm-record-unread' : null)
             ->headerActions([
                 Action::make('seeAll')
-                    ->label('Voir toutes les demandes')
+                    ->label(__('cremona.dashboard.see_all_requests'))
                     ->icon(Heroicon::OutlinedArrowRight)
                     ->url(IncomingRequestResource::getUrl('index')),
             ])
