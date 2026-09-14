@@ -117,8 +117,8 @@ class CrmTaskResource extends Resource
                 TextEntry::make('status')->label(__('common.status'))->badge(),
                 TextEntry::make('priority')->label(__('common.priority'))->badge(),
                 TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
-                TextEntry::make('due_at')->label('Échéance')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder('Sans échéance'),
-                TextEntry::make('completed_at')->label('Terminée le')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder('—'),
+                TextEntry::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder('Sans échéance'),
+                TextEntry::make('completed_at')->label(__('common.completed_on'))->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->placeholder('—'),
             ]),
             Section::make(__('common.links'))->columnSpanFull()->columns(4)->schema([
                 TextEntry::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder('—'),
@@ -135,7 +135,7 @@ class CrmTaskResource extends Resource
             TextColumn::make('title')->label(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâche'))->searchable()->weight('medium')->wrap(),
             TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
             TextColumn::make('priority')->label(__('common.priority'))->badge()->sortable(),
-            TextColumn::make('due_at')->label('Échéance')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->sortable()->placeholder('—'),
+            TextColumn::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->sortable()->placeholder('—'),
             TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
         ])->filters([
             SelectFilter::make('status')->label(__('common.status'))->options(CrmTaskStatus::class),

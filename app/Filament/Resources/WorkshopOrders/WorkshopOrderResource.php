@@ -106,7 +106,7 @@ class WorkshopOrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('updated_at', 'desc')->columns([
-            TextColumn::make('reference')->label(__('common.reference'))->searchable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap(), TextColumn::make('person.display_name')->label('Client')->placeholder('—'), TextColumn::make('status')->label(__('common.status'))->badge(), TextColumn::make('due_at')->label('Échéance')->dateTime('d/m/Y')->placeholder('—'),
+            TextColumn::make('reference')->label(__('common.reference'))->searchable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap(), TextColumn::make('person.display_name')->label('Client')->placeholder('—'), TextColumn::make('status')->label(__('common.status'))->badge(), TextColumn::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y')->placeholder('—'),
         ])->filters([SelectFilter::make('status')->options(WorkshopOrderStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouveau dossier atelier')]);
     }
 

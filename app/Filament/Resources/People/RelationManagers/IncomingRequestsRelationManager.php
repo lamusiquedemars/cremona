@@ -31,9 +31,9 @@ class IncomingRequestsRelationManager extends RelationManager
                     ->placeholder(__('common.untitled'))
                     ->wrap(),
                 TextColumn::make('status')->label(__('common.status'))->badge(),
-                TextColumn::make('urgency')->label('Urgence')->badge(),
+                TextColumn::make('urgency')->label(__('common.urgency'))->badge(),
                 TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('Non attribuée'),
-                TextColumn::make('received_at')->label('Reçue')->dateTime('d/m/Y H:i')->sortable(),
+                TextColumn::make('received_at')->label(__('common.received'))->dateTime('d/m/Y H:i')->sortable(),
             ])
             ->recordActions([
                 ViewAction::make()

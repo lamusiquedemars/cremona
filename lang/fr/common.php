@@ -22,4 +22,8 @@ return [
     'close' => 'Fermer', 'remove' => 'Retirer', 'attach' => 'Rattacher', 'revoke' => 'Révoquer',
     'contact_details' => 'Coordonnées', 'contact_methods' => 'Moyens de contact', 'contact_label_placeholder' => 'Accueil, facturation…', 'contact_detail' => 'Coordonnée', 'add_contact_detail' => 'Ajouter une coordonnée',
     'reference_points' => 'Repères', 'overview' => 'Vue d’ensemble', 'active' => 'Active', 'archived' => 'Archivée',
+    'appointment' => 'Rendez-vous', 'conversation' => 'Conversation', 'last_message' => 'Dernier message', 'urgency' => 'Urgence', 'received' => 'Reçue',
+    'internal_information' => 'Informations internes', 'location_or_instructions' => 'Lieu ou indication', 'due_date' => 'Échéance', 'completed_on' => 'Terminée le',
+    'daily_budget' => 'Budget quotidien prévu', 'maximum_total_budget' => 'Budget total maximal', 'new_campaign' => 'Nouvelle campagne', 'google_updated' => 'Google actualisé',
+    'remove_from_google' => 'Retirer de Google Ads', 'ctr' => 'CTR',
 ];

@@ -109,7 +109,7 @@ class AppointmentResource extends Resource
                                 ->after('starts_at'),
                         ]),
                         Textarea::make('description')
-                            ->label('Informations internes')
+                            ->label(__('common.internal_information'))
                             ->rows(4)
                             ->maxLength(5000),
                     ]),
@@ -165,7 +165,7 @@ class AppointmentResource extends Resource
                             ->default(AppointmentModality::Video)
                             ->required(),
                         TextInput::make('location')
-                            ->label('Lieu ou indication')
+                            ->label(__('common.location_or_instructions'))
                             ->maxLength(255),
                         TextInput::make('meeting_url')
                             ->label('Lien de connexion')
@@ -202,7 +202,7 @@ class AppointmentResource extends Resource
             ->components([
                 Section::make(fn (): string => app(OrganizationPresentation::class)->label('appointments', 'Rendez-vous'))->columnSpan(2)->schema([
                     TextEntry::make('title')->label(__('common.subject'))->weight('semibold')->size('lg'),
-                    TextEntry::make('description')->label('Informations internes')->placeholder('—'),
+                    TextEntry::make('description')->label(__('common.internal_information'))->placeholder('—'),
                     Grid::make(2)->schema([
                         TextEntry::make('starts_at')->label(__('common.start'))->dateTime('d/m/Y H:i'),
                         TextEntry::make('ends_at')->label(__('common.end'))->dateTime('d/m/Y H:i'),
@@ -250,7 +250,7 @@ class AppointmentResource extends Resource
             ->defaultSort('starts_at', 'desc')
             ->columns([
                 TextColumn::make('starts_at')->label(__('common.date'))->dateTime('d/m/Y H:i')->sortable(),
-                TextColumn::make('title')->label('Rendez-vous')->searchable()->weight('medium'),
+                TextColumn::make('title')->label(__('common.appointment'))->searchable()->weight('medium'),
                 TextColumn::make('person.display_name')->label(__('common.contact'))->placeholder('—')->searchable(),
                 TextColumn::make('modality')->label(__('common.modality'))->badge(),
                 TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),

@@ -22,4 +22,8 @@ return [
     'close' => 'Fechar', 'remove' => 'Remover', 'attach' => 'Vincular', 'revoke' => 'Revogar',
     'contact_details' => 'Dados de contato', 'contact_methods' => 'Meios de contato', 'contact_label_placeholder' => 'Recepção, faturamento…', 'contact_detail' => 'Contato', 'add_contact_detail' => 'Adicionar contato',
     'reference_points' => 'Referências', 'overview' => 'Visão geral', 'active' => 'Ativa', 'archived' => 'Arquivada',
+    'appointment' => 'Agendamento', 'conversation' => 'Conversa', 'last_message' => 'Última mensagem', 'urgency' => 'Urgência', 'received' => 'Recebida',
+    'internal_information' => 'Informações internas', 'location_or_instructions' => 'Local ou indicação', 'due_date' => 'Prazo', 'completed_on' => 'Concluída em',
+    'daily_budget' => 'Orçamento diário previsto', 'maximum_total_budget' => 'Orçamento total máximo', 'new_campaign' => 'Nova campanha', 'google_updated' => 'Google atualizado',
+    'remove_from_google' => 'Remover do Google Ads', 'ctr' => 'CTR',
 ];

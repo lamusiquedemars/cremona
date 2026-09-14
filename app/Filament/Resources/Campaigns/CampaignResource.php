@@ -136,13 +136,13 @@ class CampaignResource extends Resource
                         ->required()
                         ->helperText(__('cremona.campaign.budget_mode_help')),
                     TextInput::make('configuration.daily_budget')
-                        ->label('Budget quotidien prévu')
+                        ->label(__('common.daily_budget'))
                         ->numeric()
                         ->minValue(0.01)
                         ->visible(fn (Get $get): bool => in_array($get('configuration.budget_mode'), [null, 'daily'], true))
                         ->required(fn (Get $get): bool => in_array($get('configuration.budget_mode'), [null, 'daily'], true)),
                     TextInput::make('planned_budget')
-                        ->label('Budget total maximal')
+                        ->label(__('common.maximum_total_budget'))
                         ->numeric()
                         ->minValue(0.01)
                         ->visible(fn (Get $get): bool => $get('configuration.budget_mode') === 'total')
@@ -215,7 +215,7 @@ class CampaignResource extends Resource
                     ->toggleable(),
                 TextColumn::make('daily_metrics_sum_spend')->label(__('cremona.campaign.spent'))->money(fn (Campaign $record): string => $record->currency)->sortable(),
                 TextColumn::make('attributed_incoming_requests_count')->label(__('cremona.campaign.site_requests'))->counts('attributedIncomingRequests')->badge()->color('success'),
-                TextColumn::make('google_ads_synced_at')->label('Google actualisé')->since()->placeholder(__('common.never'))->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('google_ads_synced_at')->label(__('common.google_updated'))->since()->placeholder(__('common.never'))->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('starts_on')->label(__('common.start'))->date('d/m/Y')->placeholder('—'),
             ])
             ->filters([
@@ -312,7 +312,7 @@ class CampaignResource extends Resource
                         Notification::make()->title(__('cremona.campaign.google_campaign_activated'))->success()->send();
                     }),
                 Action::make('discard_google_ads_paused')
-                    ->label('Retirer de Google Ads')
+                    ->label(__('common.remove_from_google'))
                     ->icon(Heroicon::OutlinedTrash)
                     ->color('danger')
                     ->authorize('update')
@@ -323,7 +323,7 @@ class CampaignResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Retirer cette campagne Google Ads ?')
                     ->modalDescription('La campagne distante en pause sera retirée de Google Ads. Le brouillon, les mots-clés, annonces, budget et dates restent conservés dans Cremona afin de pouvoir la recréer.')
-                    ->modalSubmitActionLabel('Retirer de Google Ads')
+                    ->modalSubmitActionLabel(__('common.remove_from_google'))
                     ->action(function (Campaign $record): void {
                         $integration = OrganizationIntegration::query()
                             ->where('provider', 'google_ads')
@@ -354,7 +354,7 @@ class CampaignResource extends Resource
                 EditAction::make(),
             ])
             ->recordUrl(fn (Campaign $record): string => self::getUrl('view', ['record' => $record]))
-            ->headerActions([CreateAction::make()->label('Nouvelle campagne')]);
+            ->headerActions([CreateAction::make()->label(__('common.new_campaign'))]);
     }
 
     public static function infolist(Schema $schema): Schema
@@ -396,7 +396,7 @@ class CampaignResource extends Resource
                         ->icon(Heroicon::OutlinedEye)
                         ->color('gray'),
                     TextEntry::make('performance_ctr')
-                        ->label('CTR')
+                        ->label(__('common.ctr'))
                         ->state(fn (Campaign $record): string => static::rate($record, 'clicks', 'impressions'))
                         ->icon(Heroicon::OutlinedChartBar)
                         ->color('info'),

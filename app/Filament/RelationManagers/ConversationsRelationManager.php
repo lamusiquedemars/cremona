@@ -25,10 +25,10 @@ class ConversationsRelationManager extends RelationManager
         return $table
             ->defaultSort('last_message_at', 'desc')
             ->columns([
-                TextColumn::make('subject')->label('Conversation')->placeholder(__('common.untitled'))->weight('medium'),
+                TextColumn::make('subject')->label(__('common.conversation'))->placeholder(__('common.untitled'))->weight('medium'),
                 TextColumn::make('status')->label(__('common.status'))->badge(),
                 TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
-                TextColumn::make('last_message_at')->label('Dernier message')->dateTime('d/m/Y H:i')->placeholder('—'),
+                TextColumn::make('last_message_at')->label(__('common.last_message'))->dateTime('d/m/Y H:i')->placeholder('—'),
             ])
             ->recordActions([
                 ViewAction::make()->url(fn (Conversation $record): string => ConversationResource::getUrl('view', ['record' => $record])),
