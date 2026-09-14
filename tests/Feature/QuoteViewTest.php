@@ -57,6 +57,7 @@ class QuoteViewTest extends TestCase
             ->assertSee('Bon pour accord')
             ->assertSee('Total final')
             ->assertSee('quote-document')
+            ->assertSee('quote-document-frame')
             ->assertSee('@media print')
             ->assertSee('Modifier le devis')
             ->assertSee('Supprimer le brouillon');

@@ -8,6 +8,23 @@
             --quote-accent: #353330;
             color: var(--quote-ink);
             background: var(--quote-paper);
+            padding: clamp(1.25rem, 3vw, 2.75rem);
+        }
+
+        .quote-document-frame {
+            padding: clamp(.75rem, 2vw, 2rem);
+        }
+
+        .quote-document > .quote-document-header {
+            padding: 0 0 clamp(1.5rem, 3vw, 2.5rem) !important;
+        }
+
+        .quote-document > section {
+            padding: clamp(1.5rem, 3vw, 2.5rem) 0 !important;
+        }
+
+        .quote-document > footer {
+            padding: clamp(1.25rem, 2vw, 1.75rem) 0 0 !important;
         }
 
         .quote-document-header {
@@ -74,11 +91,16 @@
             .quote-document {
                 max-width: none !important;
                 overflow: visible !important;
+                padding: 0 !important;
                 border: 0 !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 color: #111 !important;
                 background: #fff !important;
+            }
+
+            .quote-document-frame {
+                padding: 0 !important;
             }
 
             .quote-document * {
@@ -124,6 +146,7 @@
         $money = fn (mixed $amount): string => \Illuminate\Support\Number::currency((float) $amount, in: $quote->currency, locale: 'fr');
     @endphp
 
+    <div class="quote-document-frame">
     <article class="quote-document mx-auto max-w-6xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
         <header class="quote-document-header border-b border-gray-200 px-6 py-6 sm:px-8 md:px-10 md:py-8 dark:border-white/10">
             <div class="flex flex-wrap items-start justify-between gap-5">
@@ -235,4 +258,5 @@
             {{ $quote->reference }} · Document préparé le {{ $quote->updated_at->translatedFormat('d F Y') }}
         </footer>
     </article>
+    </div>
 </x-filament-panels::page>
