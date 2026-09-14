@@ -34,7 +34,7 @@ class ViewCampaign extends ViewRecord
     {
         return [
             Action::make('sync_google_ads')
-                ->label('Actualiser maintenant')
+                ->label(__('cremona.campaign.refresh_now'))
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->color('success')
                 ->visible(fn (): bool => $this->record->channel === 'google_ads' && filled($this->record->external_reference))
@@ -43,24 +43,24 @@ class ViewCampaign extends ViewRecord
                     $this->synchronizeGoogleAds(true);
                 }),
             EditAction::make()->label(fn (): string => filled($this->record->external_reference)
-                ? 'Modifier la préparation Cremona'
-                : 'Modifier le brouillon'),
+                ? __('cremona.campaign.edit_preparation')
+                : __('cremona.campaign.edit_draft')),
             Action::make('adopt_google_keywords')
-                ->label('Adopter les mots-clés Google')
+                ->label(__('cremona.campaign.adopt_google_keywords'))
                 ->icon(Heroicon::OutlinedArrowDownTray)
                 ->color('warning')
                 ->visible(fn (): bool => filled($this->record->google_ads_configuration))
                 ->authorize('update')
                 ->requiresConfirmation()
-                ->modalHeading('Adopter les mots-clés Google dans Cremona ?')
-                ->modalDescription('Les mots-clés et exclusions des groupes correspondants remplaceront la préparation Cremona. Google Ads ne sera pas modifié ; les annonces et textes Cremona sont conservés.')
+                ->modalHeading(__('cremona.campaign.adopt_google_keywords_heading'))
+                ->modalDescription(__('cremona.campaign.adopt_google_keywords_description'))
                 ->action(function (GoogleAdsCampaignConfigurationAdopter $adopter): void {
                     $count = $adopter->adoptKeywords($this->record, auth()->user());
                     $this->record->refresh();
-                    Notification::make()->title('Préparation Cremona mise à jour.')->body($count.' groupe(s) adopté(s) depuis Google Ads.')->success()->send();
+                    Notification::make()->title(__('cremona.campaign.preparation_updated'))->body(trans_choice('cremona.campaign.groups_adopted', $count, ['count' => $count]))->success()->send();
                 }),
             Action::make('apply_prepared_keywords')
-                ->label('Appliquer les mots-clés Cremona à Google')
+                ->label(__('cremona.campaign.apply_keywords_to_google'))
                 ->icon(Heroicon::OutlinedArrowUpTray)
                 ->color('danger')
                 ->visible(fn (): bool => $this->record->channel === 'google_ads'
@@ -68,15 +68,15 @@ class ViewCampaign extends ViewRecord
                     && filled($this->record->google_ads_configuration))
                 ->authorize('update')
                 ->requiresConfirmation()
-                ->modalHeading('Appliquer la préparation Cremona dans Google Ads ?')
-                ->modalDescription('Cremona relira Google Ads juste avant l’envoi, puis ajoutera ou supprimera uniquement les mots-clés et exclusions des groupes portant exactement le même nom. Les annonces, budgets, ciblages et groupes restent inchangés.')
+                ->modalHeading(__('cremona.campaign.apply_keywords_heading'))
+                ->modalDescription(__('cremona.campaign.apply_keywords_description'))
                 ->action(function (GoogleAdsCampaignKeywordPublisher $publisher): void {
                     $integration = $this->googleAdsIntegration();
 
                     if ($integration === null) {
                         Notification::make()
-                            ->title('Connexion Google Ads à préparer')
-                            ->body('La mise à jour nécessite une connexion prête dans « Configuration de l’organisation > Publicité ».')
+                            ->title(__('cremona.campaign.google_connection_to_prepare'))
+                            ->body(__('cremona.campaign.google_update_connection_body'))
                             ->warning()
                             ->persistent()
                             ->send();
@@ -88,12 +88,12 @@ class ViewCampaign extends ViewRecord
                         $result = $publisher->apply($this->record, $integration, auth()->user());
                         $this->record->refresh();
                     } catch (LogicException $exception) {
-                        Notification::make()->title('Mise à jour Google Ads arrêtée')->body($exception->getMessage())->danger()->persistent()->send();
+                        Notification::make()->title(__('cremona.campaign.google_update_stopped'))->body($exception->getMessage())->danger()->persistent()->send();
 
                         return;
                     } catch (Throwable $exception) {
                         report($exception);
-                        Notification::make()->title('Mise à jour Google Ads interrompue')->body('Google Ads n’a pas confirmé la modification. Réessaie dans quelques minutes.')->danger()->persistent()->send();
+                        Notification::make()->title(__('cremona.campaign.google_update_interrupted'))->body(__('cremona.campaign.google_update_interrupted_body'))->danger()->persistent()->send();
 
                         return;
                     }
@@ -101,7 +101,7 @@ class ViewCampaign extends ViewRecord
                     $this->synchronizeGoogleAds(false);
                     $this->record->refresh();
                     $message = $result['created'].' ajout(s), '.$result['removed'].' retrait(s), dans '.$result['groups'].' groupe(s) correspondant(s).';
-                    Notification::make()->title('Mots-clés Google Ads mis à jour.')->body($message)->success()->send();
+                    Notification::make()->title(__('cremona.campaign.google_keywords_updated'))->body($message)->success()->send();
                 }),
         ];
     }
@@ -121,8 +121,8 @@ class ViewCampaign extends ViewRecord
         if ($integration === null || ! GoogleAdsConnectionResource::isReady($integration->credentials)) {
             if ($announce) {
                 Notification::make()
-                    ->title('Connexion Google Ads à préparer')
-                    ->body('La synchronisation nécessite une connexion prête dans « Configuration de l’organisation > Publicité ».')
+                    ->title(__('cremona.campaign.google_connection_to_prepare'))
+                    ->body(__('cremona.campaign.google_sync_connection_body'))
                     ->warning()
                     ->persistent()
                     ->send();
@@ -136,7 +136,7 @@ class ViewCampaign extends ViewRecord
             $this->record->refresh();
         } catch (LogicException $exception) {
             if ($announce) {
-                Notification::make()->title('Synchronisation Google Ads arrêtée')->body($exception->getMessage())->danger()->persistent()->send();
+                Notification::make()->title(__('cremona.campaign.google_sync_stopped'))->body($exception->getMessage())->danger()->persistent()->send();
             }
 
             return;
@@ -144,14 +144,14 @@ class ViewCampaign extends ViewRecord
             report($exception);
 
             if ($announce) {
-                Notification::make()->title('Synchronisation Google Ads interrompue')->body('Google Ads n’a pas pu fournir les résultats. Réessaie dans quelques minutes.')->danger()->persistent()->send();
+                Notification::make()->title(__('cremona.campaign.google_sync_interrupted'))->body(__('cremona.campaign.google_sync_interrupted_body'))->danger()->persistent()->send();
             }
 
             return;
         }
 
         if ($announce) {
-            Notification::make()->title('Campagne Google Ads actualisée')->body('État, résultats et mots-clés observés ont été enregistrés.')->success()->send();
+            Notification::make()->title(__('cremona.campaign.google_campaign_refreshed'))->body(__('cremona.campaign.google_campaign_refreshed_body'))->success()->send();
         }
     }
 
