@@ -59,6 +59,8 @@ class QuoteViewTest extends TestCase
             ->assertSee('quote-document')
             ->assertSee('quote-document-frame')
             ->assertSee('quote-lines-container')
+            ->assertSee('quote-summary')
+            ->assertSee('grid-template-columns: minmax(0, 1fr) 9rem')
             ->assertSee('text-align: right')
             ->assertSee('@media print')
             ->assertSee('Modifier le devis')

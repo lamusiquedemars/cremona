@@ -120,8 +120,53 @@
             text-align: center;
         }
 
+        .quote-totals {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 24.5rem;
+            gap: 2rem;
+            align-items: end;
+        }
+
+        .quote-summary {
+            width: 100%;
+            margin: 0;
+            padding-right: 1rem;
+        }
+
+        .quote-total-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 9rem;
+            gap: 1rem;
+            align-items: baseline;
+            padding: .3rem 0;
+        }
+
+        .quote-total-row dt,
+        .quote-total-row dd {
+            margin: 0;
+            text-align: right;
+        }
+
+        .quote-total-row dd {
+            white-space: nowrap;
+        }
+
         .quote-document .quote-total-final {
             color: var(--quote-accent);
+            margin-top: .45rem;
+            padding-top: .85rem;
+            border-top: 1px solid var(--quote-line);
+        }
+
+        @media (max-width: 48rem) {
+            .quote-totals {
+                grid-template-columns: 1fr;
+            }
+
+            .quote-summary {
+                max-width: 24.5rem;
+                margin-left: auto;
+            }
         }
 
         @media print {
@@ -300,12 +345,12 @@
 
             <div class="quote-totals mt-6 flex flex-col gap-6 border-t border-gray-200 pt-5 md:flex-row md:items-end md:justify-between dark:border-white/10">
                 <p class="max-w-xl whitespace-pre-line text-sm leading-6 text-gray-600 dark:text-gray-300">{{ $quote->tax_note ?: 'TVA et conditions fiscales à préciser si nécessaire.' }}</p>
-                <dl class="w-full max-w-sm space-y-2 text-sm">
-                    <div class="flex items-baseline justify-between gap-6"><dt class="font-medium text-gray-700 dark:text-gray-200">Total</dt><dd class="font-medium text-gray-950 dark:text-white">{{ $money($quote->subtotal_amount) }}</dd></div>
+                <dl class="quote-summary w-full max-w-sm space-y-2 text-sm">
+                    <div class="quote-total-row"><dt class="font-medium text-gray-700 dark:text-gray-200">Total</dt><dd class="font-medium text-gray-950 dark:text-white">{{ $money($quote->subtotal_amount) }}</dd></div>
                     @if ((float) $quote->discount_amount > 0)
-                        <div class="flex items-baseline justify-between gap-6"><dt class="font-medium text-gray-700 dark:text-gray-200">Remise globale</dt><dd class="font-medium text-gray-950 dark:text-white">− {{ $money($quote->discount_amount) }}</dd></div>
+                        <div class="quote-total-row"><dt class="font-medium text-gray-700 dark:text-gray-200">Remise globale</dt><dd class="font-medium text-gray-950 dark:text-white">− {{ $money($quote->discount_amount) }}</dd></div>
                     @endif
-                    <div class="quote-total-final flex items-baseline justify-between gap-6 border-t border-gray-300 pt-3 text-base dark:border-white/20"><dt class="font-semibold text-gray-950 dark:text-white">Total final</dt><dd class="text-lg font-semibold text-gray-950 dark:text-white">{{ $money($quote->total_amount) }}</dd></div>
+                    <div class="quote-total-row quote-total-final text-base"><dt class="font-semibold text-gray-950 dark:text-white">Total final</dt><dd class="text-lg font-semibold text-gray-950 dark:text-white">{{ $money($quote->total_amount) }}</dd></div>
                 </dl>
             </div>
         </section>
