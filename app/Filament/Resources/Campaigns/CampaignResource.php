@@ -360,37 +360,37 @@ class CampaignResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make('Résultats — 30 derniers jours')
-                ->description('Données Google Ads observées et demandes réellement reçues par le site.')
+            Section::make(__('cremona.campaign.results_last_30_days'))
+                ->description(__('cremona.campaign.results_last_30_days_description'))
                 ->columnSpanFull()
                 ->columns(4)
                 ->schema([
                     TextEntry::make('performance_spend')
-                        ->label('Dépensé')
+                        ->label(__('cremona.campaign.spent'))
                         ->state(fn (Campaign $record): float => static::performanceSum($record, 'spend'))
                         ->money(fn (Campaign $record): string => $record->currency)
                         ->icon(Heroicon::OutlinedBanknotes)
                         ->color('warning'),
                     TextEntry::make('performance_clicks')
-                        ->label('Clics')
+                        ->label(__('cremona.dashboard.clicks'))
                         ->state(fn (Campaign $record): int => (int) static::performanceSum($record, 'clicks'))
                         ->numeric()
                         ->icon(Heroicon::OutlinedCursorArrowRays)
                         ->color('info'),
                     TextEntry::make('performance_conversions')
-                        ->label('Conversions Google')
+                        ->label(__('cremona.campaign.google_conversions'))
                         ->state(fn (Campaign $record): float => static::performanceSum($record, 'platform_conversions'))
                         ->numeric(decimalPlaces: 2)
                         ->icon(Heroicon::OutlinedArrowTrendingUp)
                         ->color('success'),
                     TextEntry::make('performance_leads')
-                        ->label('Demandes du site')
+                        ->label(__('cremona.campaign.site_requests'))
                         ->state(fn (Campaign $record): int => $record->attributedIncomingRequests()->where('received_at', '>=', now()->subDays(30))->count())
                         ->numeric()
                         ->icon(Heroicon::OutlinedInboxArrowDown)
                         ->color('success'),
                     TextEntry::make('performance_impressions')
-                        ->label('Impressions')
+                        ->label(__('cremona.dashboard.impressions'))
                         ->state(fn (Campaign $record): int => (int) static::performanceSum($record, 'impressions'))
                         ->numeric()
                         ->icon(Heroicon::OutlinedEye)
@@ -401,29 +401,29 @@ class CampaignResource extends Resource
                         ->icon(Heroicon::OutlinedChartBar)
                         ->color('info'),
                     TextEntry::make('performance_cpc')
-                        ->label('CPC moyen')
+                        ->label(__('cremona.campaign.average_cpc'))
                         ->state(fn (Campaign $record): string => static::costPerClick($record))
                         ->icon(Heroicon::OutlinedCurrencyEuro)
                         ->color('warning'),
                     TextEntry::make('performance_converted_leads')
-                        ->label('Demandes converties')
+                        ->label(__('cremona.campaign.converted_requests'))
                         ->state(fn (Campaign $record): int => $record->attributedIncomingRequests()->where('received_at', '>=', now()->subDays(30))->whereNotNull('converted_at')->count())
                         ->numeric()
                         ->icon(Heroicon::OutlinedCheckCircle)
                         ->color('success'),
                 ]),
-            Section::make('Pilotage de la campagne')
-                ->description('Les chiffres récents peuvent évoluer avec le délai de conversion de Google Ads.')
+            Section::make(__('cremona.campaign.campaign_management'))
+                ->description(__('cremona.campaign.campaign_management_description'))
                 ->columnSpan(2)
                 ->schema([
-                    TextEntry::make('name')->label('Campagne')->weight('semibold')->size('lg'),
+                    TextEntry::make('name')->label(__('cremona.campaign.campaign'))->weight('semibold')->size('lg'),
                     TextEntry::make('channel')->label(__('common.channel'))->formatStateUsing(fn (string $state): string => $state === 'google_ads' ? 'Google Ads' : $state)->badge(),
-                    TextEntry::make('tracking_key')->label('Clé UTM')->copyable(),
+                    TextEntry::make('tracking_key')->label(__('cremona.campaign.utm_key'))->copyable(),
                     TextEntry::make('starts_on')->label(__('common.start'))->date('d/m/Y')->placeholder('—'),
                     TextEntry::make('ends_on')->label(__('common.end'))->date('d/m/Y')->placeholder('—'),
-                    TextEntry::make('planned_budget')->label('Budget prévu')->money(fn (Campaign $record): string => $record->currency)->placeholder('—'),
+                    TextEntry::make('planned_budget')->label(__('cremona.campaign.planned_budget'))->money(fn (Campaign $record): string => $record->currency)->placeholder('—'),
                 ])->columns(3),
-            Section::make('État observé dans Google Ads')
+            Section::make(__('cremona.campaign.google_observed_status'))
                 ->columnSpan(1)
                 ->schema([
                     TextEntry::make('google_ads_primary_status')
@@ -436,16 +436,16 @@ class CampaignResource extends Resource
                             'MISCONFIGURED', 'NOT_ELIGIBLE' => 'danger',
                             default => 'gray',
                         })
-                        ->placeholder('À synchroniser'),
+                        ->placeholder(__('cremona.campaign.to_sync')),
                     TextEntry::make('google_ads_primary_status_reasons')
                         ->label(__('common.details'))
                         ->formatStateUsing(fn (mixed $state): string => static::googleAdsPrimaryStatusReasonLabel($state)),
-                    TextEntry::make('google_ads_synced_at')->label('Dernière observation')->dateTime('d/m/Y H:i')->timezone(fn (): string => static::getOrganizationTimezone())->placeholder(__('common.never')),
-                    TextEntry::make('google_ads_serving_status')->label('Diffusion')->formatStateUsing(fn (?string $state): string => static::googleAdsServingStatusLabel($state))->placeholder('—'),
-                    TextEntry::make('google_ads_bidding_status')->label('Enchères')->formatStateUsing(fn (?string $state): string => static::googleAdsBiddingStatusLabel($state))->placeholder('—'),
+                    TextEntry::make('google_ads_synced_at')->label(__('cremona.campaign.last_observation'))->dateTime('d/m/Y H:i')->timezone(fn (): string => static::getOrganizationTimezone())->placeholder(__('common.never')),
+                    TextEntry::make('google_ads_serving_status')->label(__('cremona.campaign.serving'))->formatStateUsing(fn (?string $state): string => static::googleAdsServingStatusLabel($state))->placeholder('—'),
+                    TextEntry::make('google_ads_bidding_status')->label(__('cremona.campaign.bidding'))->formatStateUsing(fn (?string $state): string => static::googleAdsBiddingStatusLabel($state))->placeholder('—'),
                 ]),
-            Section::make('Configuration observée dans Google Ads')
-                ->description('Lecture seule : les écarts sont visibles sans remplacer la préparation enregistrée dans Cremona.')
+            Section::make(__('cremona.campaign.google_observed_configuration'))
+                ->description(__('cremona.campaign.google_observed_configuration_description'))
                 ->columnSpanFull()
                 ->schema([
                     ViewEntry::make('google_ads_configuration_comparison')
