@@ -107,10 +107,10 @@ sélectionnés. Elle est active pour le catalogue public Contempo. Le CMS gère
 la présentation, le SEO et la mise en page mais ne modifie ni stock ni
 disponibilité métier.
 
-Le formulaire du CMS est ensuite basculé en mode connecté : il ne crée plus une
-seconde boîte `Inquiries`, il crée un événement dans Cremona. Les emails directs
-sont relevés par l'IMAP de l'organisation Cremona et apparaissent dans la même
-file commerciale.
+Le formulaire du CMS sera basculé en mode connecté : il ne créera plus une
+seconde boîte `Inquiries`, mais un événement dans Cremona. La relève IMAP des
+emails directs est disponible, mais son intégration dans la file de traitement
+des demandes doit d’abord être terminée au niveau du produit Relation client.
 
 ## État de construction et reste à faire
 
@@ -126,9 +126,10 @@ Livré :
 
 1. un parcours réel de réparation/reméchage, puis les sorties de location et
    de vente, sans inventer de règles avant les usages de Giovanni ;
-2. le bridge des demandes du formulaire Contempo vers Cremona, pour supprimer
+2. la consolidation globale des emails directs et demandes dans Cremona ;
+3. le bridge des demandes du formulaire Contempo vers Cremona, pour supprimer
    la seconde file locale seulement après validation ;
-3. la décision Pennylane, uniquement si son intégration est autonome et
+4. la décision Pennylane, uniquement si son intégration est autonome et
    réellement utile. Aucun import Dynamics n’est prévu.
 
 Chaque étape ajoute ses migrations, politiques d'organisation, tests

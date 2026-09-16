@@ -46,11 +46,13 @@ Rencontre ──────┘
 
 - Le formulaire appelle une API Cremona versionnée par une outbox rejouable ;
   la clé d'idempotence empêche un doublon lors d'une nouvelle tentative.
-- Cremona crée ou rapproche le contact, puis crée la demande et le message
-  initial avec la source exacte (`site`, `email`, `telephone`, `rencontre`,
-  etc.).
-- Les emails écrits directement à l'entreprise sont relevés par la boîte IMAP
-  de l'organisation dans Cremona ; les réponses partent de cette même boîte.
+- Le formulaire CMS crée ou rapproche le contact, puis crée la demande et le
+  message initial avec la source exacte (`site`, `email`, `telephone`,
+  `rencontre`, etc.).
+- La relève IMAP actuelle importe les emails directs comme correspondances.
+  La transformation ou le rattachement explicite en demande relève du chantier
+  Relation client : la suppression d’un email dans la boîte distante ne doit
+  jamais supprimer ni fermer une donnée Cremona.
 - Un lien « Gestion commerciale » dans l'admin CMS ouvre l'organisation
   Cremona concernée. Il n'encastre pas une seconde application dans Filament.
 - La connexion unique entre CMS et gestion est une évolution explicite ; elle
@@ -132,14 +134,16 @@ Livré :
 
 Reste à faire :
 
-1. vérifier le bridge avec deux organisations et une soumission réelle, sans
+1. terminer d’abord la file Relation client : visibilité de la relève IMAP,
+   règles de rapprochement et traitement explicite des emails directs ;
+2. vérifier le bridge avec deux organisations et une soumission réelle, sans
    fuite ni doublon, puis finaliser la bascule Atelier Ivo sans supprimer Arcus
    ni les historiques locaux ;
-2. valider les parcours réels réparation/reméchage, location et vente avec
+3. valider les parcours réels réparation/reméchage, location et vente avec
    Contempo avant toute automatisation supplémentaire ;
-3. raccorder le formulaire Contempo au bridge seulement après cette validation,
+4. raccorder le formulaire Contempo au bridge seulement après cette validation,
    afin de supprimer la seconde file locale de demandes ;
-4. évaluer Pennylane séparément, seulement si l’intégration est autonome et
+5. évaluer Pennylane séparément, seulement si l’intégration est autonome et
    utile. Aucun import ni connecteur Dynamics n’est prévu.
 
 Chaque étape a un plan de migration, un test de reprise et un retour arrière

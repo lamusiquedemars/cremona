@@ -12,7 +12,10 @@
 - Groupes canoniques `Relation client` et `Acquisition` utilisés par les capacités déjà disponibles.
 - Aucun groupe vide `Offre`, `Présence en ligne`, `Résultats` ou `Référencement` n’est affiché.
 
-État : **en cours**. Le registre de capacités n’est pas encore la source unique et les ressources techniques ne sont pas encore toutes réunies sous `Paramètres`.
+État : **en cours**. Le registre de capacités n’est pas encore la source unique,
+et des libellés techniques ou en CamelCase subsistent dans des pages, actions,
+fils d’Ariane et statuts. Leur remplacement cohérent est une priorité produit,
+pas un simple travail de traduction.
 
 ### B. Accueil et priorités quotidiennes
 
@@ -38,8 +41,8 @@
   frontière CMS/Cremona, sont validés dans le
   [Blueprint — sites autonomes et gestion connectée](blueprint-sites-connectes.md).
 - Une demande site reste captée par le CMS mais est traitée dans Cremona pour
-  un site connecté ; les emails directs, demandes téléphoniques et rencontres
-  y rejoignent la même file.
+  un site connecté. Le rapprochement des emails directs, appels et rencontres
+  dans une même file reste à terminer.
 - Atelier Ivo conserve Arcus/CMS comme propriétaire de son catalogue ; Contempo
   est le pilote du futur pack Luthier propriétaire de son parc et de son stock.
 - Le contrat du bridge CMS ↔ Cremona est écrit : outbox, idempotence,
@@ -84,20 +87,41 @@ aucune donnée commerciale fictive ne doit être créée pour ce test.
 réparation/reméchage, location et vente restent à éprouver avec Giovanni avant
 de définir des automatisations ou des règles supplémentaires.
 
+### G. Correspondances et boîtes email
+
+- IMAP/SMTP permet de tester une boîte, relever ses messages et envoyer des
+  réponses depuis Cremona.
+- La relève actuelle est une capture d’historique en lecture seule : elle lit
+  les 50 messages récents d’INBOX et, si configuré, des Envoyés.
+- Elle ne suit ni la suppression, ni l’archivage, ni l’état lu d’un message
+  dans la boîte distante. Supprimer un email ne doit donc ni effacer ni clore
+  une demande ou une correspondance Cremona.
+- Un email direct importé crée une correspondance ; il ne crée pas encore une
+  demande liée dans la file de traitement commune.
+
+État : **partiel**. La connexion technique ne suffit pas encore à offrir la
+file unique attendue pour la relation client.
+
 ## Reste à faire prioritaire
 
-1. Vérifier le bridge CMS ↔ Cremona avec deux organisations et une soumission
-   réelle, sans fuite ni doublon sur reprise.
-2. Finaliser la bascule fonctionnelle Atelier Ivo, sans supprimer Arcus ni les
-   historiques locaux avant vérification.
+1. Rendre l’interface entièrement métier : audit des libellés, CamelCase,
+   titres, fils d’Ariane, statuts et actions ; corriger par familles d’écrans,
+   sans masquer un mot technique isolé ni créer de nouveaux doublons.
+2. Terminer le produit Relation client : auditer la boîte Atelier Ivo, rendre
+   l’état de relève compréhensible et réunir emails directs, demandes du site,
+   appels et rencontres dans une file de travail cohérente. La suppression
+   distante ne devra jamais fermer une demande automatiquement.
 3. Confirmer la numérotation lors de la prochaine création réelle de devis,
    puis conserver ce résultat dans le journal de livraison.
 4. Construire l’administration documentaire par organisation : réglages de
    numérotation, aperçu, droits, coordonnées, conditions et mentions ; voir
    [Numérotation et administration commerciale](numerotation-et-administration-commerciale.md).
-5. Consolider le parcours réel réparation/reméchage puis les sorties location
-   et vente du pack Luthier, sans connecteur Dynamics.
-6. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
+5. Attendre les retours de Giovanni sur réparation/reméchage, location et vente
+   avant de compléter le pack Luthier ou d’ajouter des automatisations.
+6. Vérifier le bridge CMS ↔ Cremona avec deux organisations et une soumission
+   réelle, sans fuite ni doublon sur reprise ; basculer ensuite Atelier Ivo,
+   puis Contempo, sans supprimer les historiques locaux.
+7. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
 
 ## Dette de contrôle connue
 
