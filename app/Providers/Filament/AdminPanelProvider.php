@@ -10,6 +10,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -56,6 +57,14 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->navigationGroups([
+                NavigationGroup::make(fn (): string => app(\App\Services\OrganizationPresentation::class)->navigationGroupLabel('customer_follow_up', 'Suivi client')),
+                NavigationGroup::make(fn (): string => app(\App\Services\OrganizationPresentation::class)->navigationGroupLabel('commercial_activity', 'Activité commerciale')),
+                NavigationGroup::make(fn (): string => app(\App\Services\OrganizationPresentation::class)->navigationGroupLabel('workshop', 'Atelier')),
+                NavigationGroup::make('Catalogue et stock'),
+                NavigationGroup::make(fn (): string => app(\App\Services\OrganizationPresentation::class)->navigationGroupLabel('marketing', 'Marketing')),
+                NavigationGroup::make('Configuration de l’organisation'),
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

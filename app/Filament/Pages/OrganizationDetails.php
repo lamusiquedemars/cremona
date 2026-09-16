@@ -10,8 +10,8 @@ use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Validation\Rule;
 
 class OrganizationDetails extends Page
 {
@@ -26,6 +26,8 @@ class OrganizationDetails extends Page
     protected static ?string $title = 'Coordonnées et mentions légales';
 
     protected static ?int $navigationSort = 10;
+
+    protected Width|string|null $maxContentWidth = Width::Full;
 
     /** @var array<string, mixed> */
     public array $identity = [];
