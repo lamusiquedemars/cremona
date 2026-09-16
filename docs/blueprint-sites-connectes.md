@@ -2,7 +2,7 @@
 
 > Statut : décision d'architecture validée pour le prochain cycle de construction.
 >
-> Dernière mise à jour : 8 septembre 2026.
+> Dernière mise à jour : 16 septembre 2026.
 
 ## 1. But produit
 
@@ -65,7 +65,8 @@ Rencontre ──────┘
 | Formulaire public, validation, anti-spam | CMS | événement de demande vers Cremona |
 | Demande, contact CRM, conversation, email direct, tâche, rendez-vous, devis | Cremona | lien ou résumé non éditable dans le CMS |
 | Consentement newsletter, segments et campagnes Brevo | CMS + Brevo | signal ciblé depuis Cremona après consentement explicite |
-| Devis envoyé, facture, paiement | Pennylane | identifiant, PDF/lien et statut dans Cremona |
+| Devis et son PDF | Cremona | identifiant, PDF/lien et statut vers un outil comptable, si une intégration est décidée |
+| Facture, paiement | outil comptable choisi, notamment Pennylane si retenu | identifiant, PDF/lien et statut dans Cremona |
 | Catalogue métier | **un seul propriétaire choisi par objet** | projection publique ou commerciale en lecture seule |
 
 Le CMS et Cremona ne synchronisent jamais l'ensemble de leurs contacts. Un
@@ -121,19 +122,25 @@ départ : activation explicite, contrôle des prérequis, migrations et tests.
 
 ## 7. Ordre de réalisation
 
-1. Écrire les contrats du bridge CMS ↔ Cremona et les scénarios de reprise :
-   [contrat du bridge](contrat-bridge-cms-cremona.md).
-2. Tester le bridge en local avec deux organisations et deux sites simulés,
-   sans fuite ; puis le déployer de façon limitée sur le premier site de
-   production et le vérifier sur des données réelles.
-3. Basculer le traitement des demandes d'Atelier Ivo sans supprimer son
-   catalogue Arcus ni ses historiques locaux.
-4. Construire le socle commercial réutilisable dans Cremona : modèles de lignes
-   de devis, références externes et statut de synchronisation Pennylane.
-5. Construire et tester le pack Luthier sur Contempo : parc, stock,
-   prestations, dossier atelier, devis et location.
-6. Ajouter la projection publique Contempo vers le CMS, puis seulement importer
-   les données Dynamics et raccorder Pennylane.
+Livré :
+
+1. le contrat du bridge CMS ↔ Cremona et le socle du bridge ;
+2. le socle commercial de Cremona : modèles de lignes, devis, PDF,
+   coordonnées légales et numérotation ;
+3. le pack Luthier : parc, stock, prestations, dossier atelier, location et
+   projection publique des instruments vers Contempo.
+
+Reste à faire :
+
+1. vérifier le bridge avec deux organisations et une soumission réelle, sans
+   fuite ni doublon, puis finaliser la bascule Atelier Ivo sans supprimer Arcus
+   ni les historiques locaux ;
+2. valider les parcours réels réparation/reméchage, location et vente avec
+   Contempo avant toute automatisation supplémentaire ;
+3. raccorder le formulaire Contempo au bridge seulement après cette validation,
+   afin de supprimer la seconde file locale de demandes ;
+4. évaluer Pennylane séparément, seulement si l’intégration est autonome et
+   utile. Aucun import ni connecteur Dynamics n’est prévu.
 
 Chaque étape a un plan de migration, un test de reprise et un retour arrière
 documenté. Aucun site existant n'est basculé ou nettoyé par une suppression

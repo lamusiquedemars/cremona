@@ -9,7 +9,7 @@ Le lot corrige les lignes absentes du PDF en restaurant le contexte d’organisa
 
 Validation locale : 14 tests ciblés, 85 assertions, build frontend et Pint réussis. PDF d’une page et PDF de 30 lignes sur quatre pages contrôlés visuellement et par extraction de texte. Les artefacts de contrôle et sauvegardes SFTP sont temporaires sur la machine d’origine et ne sont pas dans Git.
 
-## Production : fichiers publiés, activation à confirmer
+## Production : activée et téléchargement confirmé
 
 Six fichiers ont été envoyés par SFTP dans `/htdocs/cremona.maracujadigital.fr` et leur contenu relu pour vérifier leur intégrité :
 
@@ -22,9 +22,12 @@ Six fichiers ont été envoyés par SFTP dans `/htdocs/cremona.maracujadigital.f
 
 Les anciens fichiers ont été sauvegardés dans `/private/tmp/cremona-quotes-backup` sur la machine d’origine. Le formulaire distant conservait quelques libellés français littéraux, là où la branche emploie les clés de traduction : le fichier publié a conservé ces libellés et reçu uniquement la modification du champ référence. Cette différence est volontaire ; ne pas en déduire que la publication est incomplète.
 
-`.env`, `vendor`, `storage` et les données n’ont pas été modifiés par le transfert. `/up` répondait HTTP 200 après publication. Cela ne valide ni la migration ni l’export PDF authentifié en production.
+`.env`, `vendor`, `storage` et les données n’ont pas été modifiés par le transfert. `/up` répondait HTTP 200 après publication.
 
-**Aucune confirmation d’exécution des commandes SSH ci-dessous n’a été reçue.** Ne pas considérer le déploiement comme terminé et ne pas créer de devis avant activation du compteur.
+Le 16 septembre, Ivo a confirmé l’exécution des commandes d’activation
+ci-dessous. La migration du compteur et les caches sont donc actifs. Il a aussi
+téléchargé un devis existant depuis Cremona : le parcours PDF authentifié est
+confirmé en production.
 
 Conformément à `docs/deploiement-lws.md`, l’agent publie par SFTP ; Ivo exécute les commandes Laravel dans le terminal SSH LWS :
 
@@ -38,7 +41,10 @@ php artisan route:cache &&
 php artisan view:cache
 ```
 
-À la reprise : obtenir le résultat de ces commandes, puis vérifier le téléchargement d’un devis existant et la numérotation lors de la prochaine création réelle. Ne pas créer de données commerciales fictives en production. Ne jamais lancer `migrate:fresh`, `db:wipe` ou régénérer `APP_KEY`.
+À la reprise : ne pas réexécuter ces commandes pour ce lot. Vérifier seulement
+la numérotation lors de la prochaine création réelle de devis. Ne pas créer de
+données commerciales fictives en production. Ne jamais lancer `migrate:fresh`,
+`db:wipe` ou régénérer `APP_KEY`.
 
 ## Synchronisation sur le Mac mini
 

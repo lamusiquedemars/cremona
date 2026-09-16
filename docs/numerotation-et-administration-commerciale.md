@@ -11,7 +11,11 @@ Décision du 16 septembre 2026. Le nom de la rubrique d’administration reste �
 - Blocage explicite à 9999, sans allongement silencieux du format.
 - Les références existantes sont conservées. Les références importées qui correspondent au format sont prises en compte pour poursuivre au-delà du plus grand numéro.
 - Dans le formulaire, la référence est attribuée automatiquement et n’est pas modifiable.
-- Migration `2026_09_16_000000_create_quote_number_sequences` à appliquer avant utilisation du nouveau code.
+- La migration `2026_09_16_000000_create_quote_number_sequences` et les
+  caches ont été appliqués en production le 16 septembre 2026.
+- Le téléchargement d’un devis existant a été vérifié en production. La
+  prochaine création réelle doit confirmer l’attribution de la référence
+  automatique ; aucun devis fictif ne doit être créé à cette fin.
 
 ## Administration à implémenter ultérieurement
 
@@ -26,5 +30,10 @@ Regrouper ou relier dans cette future administration les coordonnées de l’ém
 Le PDF reprend la référence, l’intitulé, les dates, l’introduction, les coordonnées émetteur/destinataire, les lignes ordonnées (type, description multiligne, prix, quantité, total), la remise, les totaux et la devise, la note fiscale, le lien CGV, les conditions de règlement, les mentions légales et le bloc d’accord/signature. Téléphone et site de l’émetteur sont inclus lorsqu’ils sont renseignés. Les coordonnées figées à l’envoi restent prioritaires.
 
 Les champs facultatifs non remplis ne sont pas inventés. La validité, les conditions fiscales et les conditions de règlement sont signalées comme à préciser lorsqu’elles sont absentes. Les champs obligatoires de l’émetteur et la présence d’un destinataire restent contrôlés avant export. Les notes internes ne sont jamais imprimées.
+
+Le téléchargement d’un devis existant a été confirmé en production le
+16 septembre 2026. Cette vérification confirme l’accès au document après
+activation ; elle ne remplace pas le contrôle métier du prochain nouveau devis
+numéroté.
 
 Limites du modèle actuel : pas de calcul de TVA détaillée par ligne, pas de coordonnées bancaires structurées, pas de snapshot du lien CGV. Ces évolutions relèvent du futur paramétrage documentaire ; la correction ne prétend pas les implémenter ni constituer un audit juridique.

@@ -1,6 +1,8 @@
 # Pack Luthier — pilote Contempo
 
-> Statut : modèle cible avant migration Dynamics ou import de stock.
+> Statut : socle livré dans Cremona et projection publique Contempo active ;
+> validation des parcours réels à poursuivre. Ni import Dynamics ni connecteur
+> Pennylane ne sont planifiés à ce stade.
 >
 > Le pack vit dans Cremona. Le CMS Contempo indépendant ne reçoit qu'une
 > projection publique contrôlée.
@@ -9,9 +11,9 @@
 
 Contempo doit pouvoir traiter dans une seule chronologie une demande reçue du
 site, un email direct, un appel ou une visite : qualifier le besoin, planifier
-le travail, utiliser des articles de stock, produire un devis, l'envoyer à
-Pennylane puis suivre location, réparation ou vente. Le CRM Dynamics existant
-reste une source de reprise, pas une dépendance de la cible.
+le travail, utiliser des articles de stock, produire un devis puis suivre
+location, réparation ou vente. Le CRM Dynamics existant n’est pas une
+dépendance de la cible et ne doit pas recevoir de connecteur.
 
 ## Objets et propriétaire
 
@@ -64,16 +66,17 @@ interne et ne peut pas générer une ligne par accident. La ligne conserve un
 snapshot de libellé, prix et taxe : modifier ultérieurement le tarif catalogue
 ne réécrit jamais un devis déjà envoyé.
 
-Après validation commerciale, Cremona transmet le devis à Pennylane et conserve
-la référence externe, le statut de synchronisation et le PDF/lien. Pennylane
-reste propriétaire du document émis, de la facture et du paiement.
+Une intégration Pennylane pourra être étudiée ultérieurement si elle est
+simple, indépendante de Giovanni et apporte un bénéfice concret. Elle ne fait
+pas partie du socle actuel ; Cremona reste pour l’instant propriétaire du devis
+et de son PDF.
 
 ## Trois parcours pilotes
 
 ### Réparation / reméchage
 
 `Demande ou email → WorkshopOrder → diagnostic → devis de prestations/pièces
-→ accord → tâches atelier → prêt à rendre → facture/Pennylane → retour`.
+→ accord → tâches atelier → prêt à rendre → retour`.
 
 Les pièces consommées sortent du stock uniquement au moment validé par
 l'atelier. Le client peut refuser le devis sans effacer le diagnostic ni les
@@ -91,33 +94,42 @@ l'instrument.
 ### Vente d'accessoire ou d'instrument
 
 `Demande ou vente comptoir → devis → validation → mouvement de stock ou statut
-sold → Pennylane`.
+sold`.
 
 Le passage à `sold` dépend du résultat commercial confirmé, pas de la simple
 création d'un devis.
 
 ## Projection vers le CMS Contempo
 
-La projection est à sens unique pour la première version : Cremona publie les
-instruments ou catégories autorisés, leur statut public, prix/mention de prix,
-texte et médias explicitement sélectionnés. Le CMS gère leur présentation,
-SEO et mise en page mais ne modifie ni stock ni disponibilité métier.
+La projection est à sens unique : Cremona publie les instruments autorisés,
+leur statut public, prix/mention de prix, texte et médias explicitement
+sélectionnés. Elle est active pour le catalogue public Contempo. Le CMS gère
+la présentation, le SEO et la mise en page mais ne modifie ni stock ni
+disponibilité métier.
 
 Le formulaire du CMS est ensuite basculé en mode connecté : il ne crée plus une
 seconde boîte `Inquiries`, il crée un événement dans Cremona. Les emails directs
 sont relevés par l'IMAP de l'organisation Cremona et apparaissent dans la même
 file commerciale.
 
-## Ordre de construction
+## État de construction et reste à faire
 
-1. Socle commercial : modèles de lignes, provenance d'une ligne, référence et
-   statut Pennylane.
-2. `ServiceDefinition`, `StockItem` et mouvements de stock.
-3. `InstrumentAsset` et `WorkshopOrder`, avec une intervention complète.
-4. `RentalContract`, blocage de disponibilité et échéances.
-5. Projection publique CMS et bridge Contempo.
-6. Inventaire et import Dynamics idempotent, en lecture seule d'abord, avec
-   rapprochement manuel des conflits.
+Livré :
+
+1. socle commercial : modèles de lignes, provenance d’une ligne et références
+   automatiques de devis ;
+2. `ServiceDefinition`, `StockItem`, mouvements de stock, `InstrumentAsset`,
+   `WorkshopOrder` et location ;
+3. projection publique des instruments de Cremona vers Contempo.
+
+À valider ou construire :
+
+1. un parcours réel de réparation/reméchage, puis les sorties de location et
+   de vente, sans inventer de règles avant les usages de Giovanni ;
+2. le bridge des demandes du formulaire Contempo vers Cremona, pour supprimer
+   la seconde file locale seulement après validation ;
+3. la décision Pennylane, uniquement si son intégration est autonome et
+   réellement utile. Aucun import Dynamics n’est prévu.
 
 Chaque étape ajoute ses migrations, politiques d'organisation, tests
 d'isolation, journal d'activité et procédure de reprise. Aucun import Dynamics
