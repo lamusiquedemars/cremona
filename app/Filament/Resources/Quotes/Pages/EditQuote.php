@@ -83,7 +83,7 @@ class EditQuote extends EditRecord
                             ->all())
                         ->searchable()
                         ->required(),
-                    TextInput::make('quantity')->label('Quantité')->numeric()->minValue(0.01),
+                    TextInput::make('quantity')->label(__('common.quantity'))->numeric()->minValue(0.01),
                 ])
                 ->action(function (array $data, QuoteLineTemplateManager $manager): void {
                     $manager->addToQuote(

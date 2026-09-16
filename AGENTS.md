@@ -9,3 +9,7 @@
   volontairement non commencés ou non livrés, tests, commits/push/déploiements
   et prochain lot. Les messages intermédiaires ne servent qu'à signaler un vrai
   blocage ou une décision produit nécessaire.
+- Pour chaque bilan de lot, indiquer explicitement : **Avancement global** avec
+  un pourcentage estimé par rapport au programme recadré, **Reste à faire** et
+  **Étape suivante**. Le pourcentage porte sur le résultat produit, pas sur le
+  nombre de fichiers modifiés.
