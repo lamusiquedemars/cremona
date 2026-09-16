@@ -58,7 +58,7 @@ class QuoteResource extends Resource
     {
         return $schema->columns(3)->components([
             Section::make(fn (): string => app(OrganizationPresentation::class)->label('quotes', 'Devis'))->columnSpan(2)->schema([
-                TextInput::make('reference')->label(__('common.reference'))->required()->maxLength(80),
+                TextInput::make('reference')->label(__('common.reference'))->disabled()->dehydrated(false)->placeholder(fn (): string => 'Attribuée automatiquement : D'.now()->format('y').'0001')->helperText('D + année sur 2 chiffres + compteur annuel sur 4 chiffres.'),
                 TextInput::make('title')->label(__('common.subject'))->required()->maxLength(255),
                 Textarea::make('introduction')->label('Introduction')->rows(3),
                 Repeater::make('lines')->label('Lignes')->relationship()->orderColumn('position')->schema([

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\OrganizationQuoteSettings;
 use App\Models\Quote;
+use App\Tenancy\OrganizationContext;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use LogicException;
@@ -12,7 +13,12 @@ class QuotePdfRenderer
 {
     public function render(Quote $quote): string
     {
-        $quote->loadMissing(['organization', 'person.contactMethods', 'company.contactMethods', 'lines']);
+        return app(OrganizationContext::class)->run($quote->organization, fn (): string => $this->renderForOrganization($quote));
+    }
+
+    private function renderForOrganization(Quote $quote): string
+    {
+        $quote->load(['person.contactMethods', 'company.contactMethods', 'lines']);
         $profiles = app(QuoteDocumentProfileManager::class);
         $issuer = $quote->issuer_snapshot ?: $profiles->assertIssuerIsReady($quote->organization)->snapshot();
         $recipient = $quote->recipient_snapshot ?: $profiles->recipientSnapshot($quote);

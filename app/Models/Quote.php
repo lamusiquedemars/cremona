@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\QuoteStatus;
+use App\Services\QuoteNumberGenerator;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,9 @@ class Quote extends Model
     {
         static::creating(function (self $quote): void {
             $quote->public_id ??= (string) Str::ulid();
-            $quote->reference ??= 'Q-'.str($quote->public_id)->substr(0, 8);
+            if (blank($quote->reference)) {
+                $quote->reference = app(QuoteNumberGenerator::class)->next((int) $quote->organization_id);
+            }
             $settings = OrganizationQuoteSettings::query()->first();
             $quote->issued_on ??= now()->toDateString();
             $quote->valid_until ??= $settings?->default_validity_days ? now()->addDays($settings->default_validity_days)->toDateString() : null;

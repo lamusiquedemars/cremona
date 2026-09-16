@@ -66,3 +66,7 @@
 ## Dette de contrôle connue
 
 La suite globale comporte quatre échecs préexistants, reproductibles isolément, dans les tests de campagne Google Ads et de correspondance. Ils ne sont pas causés par le lot B1, mais doivent être corrigés avant de pouvoir exiger une suite globale entièrement verte comme garde de livraison.
+
+### Devis et administration des numérotations — 16 septembre 2026
+
+Correction de l’export PDF et numérotation des nouveaux devis au format `D260003` : voir [règles et administration à prévoir](numerotation-et-administration-commerciale.md). La future rubrique d’administration (nom à définir) devra couvrir les devis et les autres objets numérotés ; la numérotation des dossiers reste un lot distinct.
