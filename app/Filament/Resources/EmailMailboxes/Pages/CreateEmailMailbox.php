@@ -5,10 +5,10 @@ namespace App\Filament\Resources\EmailMailboxes\Pages;
 use App\Filament\Resources\EmailMailboxes\EmailMailboxResource;
 use App\Models\EmailMailbox;
 use App\Services\OrganizationIntegrationManager;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Pages\BusinessCreateRecord;
 use Illuminate\Database\Eloquent\Model;
 
-class CreateEmailMailbox extends CreateRecord
+class CreateEmailMailbox extends BusinessCreateRecord
 {
     protected static string $resource = EmailMailboxResource::class;
 

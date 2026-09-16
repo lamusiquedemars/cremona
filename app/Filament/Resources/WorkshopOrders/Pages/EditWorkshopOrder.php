@@ -12,12 +12,12 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Pages\BusinessEditRecord;
 use Filament\Support\Icons\Heroicon;
 use LogicException;
 use Illuminate\Support\HtmlString;
 
-class EditWorkshopOrder extends EditRecord
+class EditWorkshopOrder extends BusinessEditRecord
 {
     protected static string $resource = WorkshopOrderResource::class;
 

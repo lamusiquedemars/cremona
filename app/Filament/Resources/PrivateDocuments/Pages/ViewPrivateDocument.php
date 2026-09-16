@@ -10,12 +10,12 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Pages\BusinessViewRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Http\UploadedFile;
 use LogicException;
 
-class ViewPrivateDocument extends ViewRecord
+class ViewPrivateDocument extends BusinessViewRecord
 {
     protected static string $resource = PrivateDocumentResource::class;
 

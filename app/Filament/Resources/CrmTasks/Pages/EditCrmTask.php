@@ -4,9 +4,9 @@ namespace App\Filament\Resources\CrmTasks\Pages;
 
 use App\Filament\Resources\CrmTasks\CrmTaskResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Pages\BusinessEditRecord;
 
-class EditCrmTask extends EditRecord
+class EditCrmTask extends BusinessEditRecord
 {
     protected static string $resource = CrmTaskResource::class;
 

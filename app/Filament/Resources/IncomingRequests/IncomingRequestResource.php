@@ -154,6 +154,7 @@ class IncomingRequestResource extends Resource
                             ->placeholder(__('cremona.crm.unlinked')),
                         TextEntry::make('source')
                             ->label(__('cremona.request.origin'))
+                            ->formatStateUsing(fn (?string $state): string => static::sourceLabel($state))
                             ->placeholder('—'),
                         TextEntry::make('source_channel')
                             ->label(__('cremona.request.channel'))
@@ -262,6 +263,15 @@ class IncomingRequestResource extends Resource
                             ->columns(4),
                     ]),
             ]);
+    }
+
+    public static function sourceLabel(?string $source): string
+    {
+        return match ($source) {
+            'maracuja-cms' => 'Formulaire du site',
+            null, '' => '—',
+            default => $source,
+        };
     }
 
     public static function table(Table $table): Table

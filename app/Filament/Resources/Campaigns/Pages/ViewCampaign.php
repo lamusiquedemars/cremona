@@ -11,13 +11,13 @@ use App\Services\GoogleAdsReportingClient;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Pages\BusinessViewRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
 use LogicException;
 use Throwable;
 
-class ViewCampaign extends ViewRecord
+class ViewCampaign extends BusinessViewRecord
 {
     protected static string $resource = CampaignResource::class;
 

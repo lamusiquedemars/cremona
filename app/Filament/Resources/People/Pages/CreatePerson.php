@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\People\Pages;
 
 use App\Filament\Resources\People\PersonResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Pages\BusinessCreateRecord;
 
-class CreatePerson extends CreateRecord
+class CreatePerson extends BusinessCreateRecord
 {
     protected static string $resource = PersonResource::class;
 }

@@ -11,11 +11,19 @@
 - Adaptation par organisation des groupes, libellés et capacités visibles livrée.
 - Groupes canoniques `Relation client` et `Acquisition` utilisés par les capacités déjà disponibles.
 - Aucun groupe vide `Offre`, `Présence en ligne`, `Résultats` ou `Référencement` n’est affiché.
+- Les créations, modifications et consultations des dossiers métier utilisent
+  désormais des titres et fils d’Ariane orientés vers l’objet réel :
+  `Nouveau devis`, `Modifier · D260001`, ou simplement la référence du dossier
+  consulté. Les intitulés génériques de type « Afficher … » ne servent plus de
+  titre métier.
+- Une demande provenant de `maracuja-cms` affiche désormais « Formulaire du
+  site ». L’identifiant technique est conservé en base pour le bridge, sans
+  être imposé à l’utilisateur.
 
-État : **en cours**. Le registre de capacités n’est pas encore la source unique,
-et des libellés techniques ou en CamelCase subsistent dans des pages, actions,
-fils d’Ariane et statuts. Leur remplacement cohérent est une priorité produit,
-pas un simple travail de traduction.
+État : **en cours**. Le registre de capacités n’est pas encore la source unique.
+Le lot transversal des titres et fils d’Ariane est livré ; restent les libellés
+spécifiques de certains réglages d’administration et le contrôle des écrans
+rarement utilisés.
 
 ### B. Accueil et priorités quotidiennes
 
@@ -104,24 +112,23 @@ file unique attendue pour la relation client.
 
 ## Reste à faire prioritaire
 
-1. Rendre l’interface entièrement métier : audit des libellés, CamelCase,
-   titres, fils d’Ariane, statuts et actions ; corriger par familles d’écrans,
-   sans masquer un mot technique isolé ni créer de nouveaux doublons.
-2. Terminer le produit Relation client : auditer la boîte Atelier Ivo, rendre
+1. Terminer le produit Relation client : auditer la boîte Atelier Ivo, rendre
    l’état de relève compréhensible et réunir emails directs, demandes du site,
    appels et rencontres dans une file de travail cohérente. La suppression
    distante ne devra jamais fermer une demande automatiquement.
-3. Confirmer la numérotation lors de la prochaine création réelle de devis,
+2. Confirmer la numérotation lors de la prochaine création réelle de devis,
    puis conserver ce résultat dans le journal de livraison.
-4. Construire l’administration documentaire par organisation : réglages de
+3. Construire l’administration documentaire par organisation : réglages de
    numérotation, aperçu, droits, coordonnées, conditions et mentions ; voir
    [Numérotation et administration commerciale](numerotation-et-administration-commerciale.md).
-5. Attendre les retours de Giovanni sur réparation/reméchage, location et vente
+4. Attendre les retours de Giovanni sur réparation/reméchage, location et vente
    avant de compléter le pack Luthier ou d’ajouter des automatisations.
-6. Vérifier le bridge CMS ↔ Cremona avec deux organisations et une soumission
+5. Vérifier le bridge CMS ↔ Cremona avec deux organisations et une soumission
    réelle, sans fuite ni doublon sur reprise ; basculer ensuite Atelier Ivo,
    puis Contempo, sans supprimer les historiques locaux.
-7. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
+6. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
+7. Poursuivre l’audit des libellés sur les réglages et écrans d’administration
+   peu fréquents, après les parcours opérationnels ci-dessus.
 
 ## Dette de contrôle connue
 

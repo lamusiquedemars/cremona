@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\StockItems\Pages;
 
 use App\Filament\Resources\StockItems\StockItemResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Pages\BusinessCreateRecord;
 
-class CreateStockItem extends CreateRecord
+class CreateStockItem extends BusinessCreateRecord
 {
     protected static string $resource = StockItemResource::class;
 }

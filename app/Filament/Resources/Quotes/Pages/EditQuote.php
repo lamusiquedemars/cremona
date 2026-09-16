@@ -11,11 +11,11 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Pages\BusinessEditRecord;
 use Filament\Support\Icons\Heroicon;
 use LogicException;
 
-class EditQuote extends EditRecord
+class EditQuote extends BusinessEditRecord
 {
     protected static string $resource = QuoteResource::class;
 

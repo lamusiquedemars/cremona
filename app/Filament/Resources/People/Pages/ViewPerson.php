@@ -6,10 +6,10 @@ use App\Filament\Resources\People\PersonResource;
 use App\Services\CrmRecordManager;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Pages\BusinessViewRecord;
 use Filament\Support\Icons\Heroicon;
 
-class ViewPerson extends ViewRecord
+class ViewPerson extends BusinessViewRecord
 {
     protected static string $resource = PersonResource::class;
 

@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\ServiceDefinitions\Pages;
 
 use App\Filament\Resources\ServiceDefinitions\ServiceDefinitionResource;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Pages\BusinessEditRecord;
 
-class EditServiceDefinition extends EditRecord
+class EditServiceDefinition extends BusinessEditRecord
 {
     protected static string $resource = ServiceDefinitionResource::class;
 }

@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Campaigns\Pages;
 
 use App\Filament\Resources\Campaigns\CampaignResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Pages\BusinessCreateRecord;
 
-class CreateCampaign extends CreateRecord
+class CreateCampaign extends BusinessCreateRecord
 {
     protected static string $resource = CampaignResource::class;
 }

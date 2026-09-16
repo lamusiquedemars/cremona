@@ -4,9 +4,9 @@ namespace App\Filament\Resources\Organizations\Pages;
 
 use App\Filament\Resources\Organizations\OrganizationResource;
 use App\Services\OrganizationModuleRegistry;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Pages\BusinessCreateRecord;
 
-class CreateOrganization extends CreateRecord
+class CreateOrganization extends BusinessCreateRecord
 {
     protected static string $resource = OrganizationResource::class;
 

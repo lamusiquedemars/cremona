@@ -24,6 +24,9 @@ use App\Filament\Resources\ServiceDefinitions\ServiceDefinitionResource;
 use App\Filament\Resources\StockItems\StockItemResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
+use App\Filament\Pages\BusinessCreateRecord;
+use App\Filament\Pages\BusinessEditRecord;
+use App\Filament\Pages\BusinessViewRecord;
 use Tests\TestCase;
 
 class DefaultInterfaceLocaleTest extends TestCase
@@ -71,5 +74,17 @@ class DefaultInterfaceLocaleTest extends TestCase
             $this->assertSame($modelLabel, $resource::getModelLabel());
             $this->assertSame($pluralModelLabel, $resource::getPluralModelLabel());
         }
+    }
+
+    public function test_record_pages_use_business_titles_instead_of_generic_filament_titles(): void
+    {
+        $this->assertTrue(is_subclass_of(\App\Filament\Resources\Quotes\Pages\CreateQuote::class, BusinessCreateRecord::class));
+        $this->assertTrue(is_subclass_of(\App\Filament\Resources\Rentals\Pages\EditRental::class, BusinessEditRecord::class));
+        $this->assertTrue(is_subclass_of(\App\Filament\Resources\IncomingRequests\Pages\ViewIncomingRequest::class, BusinessViewRecord::class));
+    }
+
+    public function test_a_technical_cms_origin_has_a_business_label(): void
+    {
+        $this->assertSame('Formulaire du site', IncomingRequestResource::sourceLabel('maracuja-cms'));
     }
 }

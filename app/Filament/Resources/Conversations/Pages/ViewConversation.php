@@ -13,11 +13,11 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Pages\BusinessViewRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
 
-class ViewConversation extends ViewRecord
+class ViewConversation extends BusinessViewRecord
 {
     protected static string $resource = ConversationResource::class;
 

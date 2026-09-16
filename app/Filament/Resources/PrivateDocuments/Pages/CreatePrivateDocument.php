@@ -5,12 +5,12 @@ namespace App\Filament\Resources\PrivateDocuments\Pages;
 use App\Filament\Resources\PrivateDocuments\PrivateDocumentResource;
 use App\Models\PrivateDocument;
 use App\Services\PrivateDocumentManager;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Pages\BusinessCreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use LogicException;
 
-class CreatePrivateDocument extends CreateRecord
+class CreatePrivateDocument extends BusinessCreateRecord
 {
     protected static string $resource = PrivateDocumentResource::class;
 

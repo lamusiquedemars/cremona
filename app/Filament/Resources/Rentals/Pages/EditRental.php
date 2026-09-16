@@ -7,11 +7,11 @@ use App\Filament\Resources\Rentals\RentalResource;
 use App\Services\RentalManager;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Pages\BusinessEditRecord;
 use Filament\Support\Icons\Heroicon;
 use LogicException;
 
-class EditRental extends EditRecord
+class EditRental extends BusinessEditRecord
 {
     protected static string $resource = RentalResource::class;
 

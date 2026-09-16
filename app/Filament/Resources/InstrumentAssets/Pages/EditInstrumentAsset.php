@@ -5,10 +5,10 @@ namespace App\Filament\Resources\InstrumentAssets\Pages;
 use App\Filament\Resources\InstrumentAssets\InstrumentAssetResource;
 use App\Services\ContempoInstrumentPublisher;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Pages\BusinessEditRecord;
 use LogicException;
 
-class EditInstrumentAsset extends EditRecord
+class EditInstrumentAsset extends BusinessEditRecord
 {
     protected static string $resource = InstrumentAssetResource::class;
 

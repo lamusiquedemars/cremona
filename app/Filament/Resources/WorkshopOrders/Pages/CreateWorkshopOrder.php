@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\WorkshopOrders\Pages;
 
 use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Pages\BusinessCreateRecord;
 
-class CreateWorkshopOrder extends CreateRecord
+class CreateWorkshopOrder extends BusinessCreateRecord
 {
     protected static string $resource = WorkshopOrderResource::class;
 }

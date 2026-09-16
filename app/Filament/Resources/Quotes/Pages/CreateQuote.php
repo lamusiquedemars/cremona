@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Quotes\Pages;
 
 use App\Filament\Resources\Quotes\QuoteResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Pages\BusinessCreateRecord;
 
-class CreateQuote extends CreateRecord
+class CreateQuote extends BusinessCreateRecord
 {
     protected static string $resource = QuoteResource::class;
 }

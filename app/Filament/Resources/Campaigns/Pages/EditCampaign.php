@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Campaigns\Pages;
 
 use App\Filament\Resources\Campaigns\CampaignResource;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Pages\BusinessEditRecord;
 
-class EditCampaign extends EditRecord
+class EditCampaign extends BusinessEditRecord
 {
     protected static string $resource = CampaignResource::class;
 }

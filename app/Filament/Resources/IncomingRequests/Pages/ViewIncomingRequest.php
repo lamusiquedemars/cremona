@@ -18,12 +18,12 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Pages\BusinessViewRecord;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Gate;
 
-class ViewIncomingRequest extends ViewRecord
+class ViewIncomingRequest extends BusinessViewRecord
 {
     protected static string $resource = IncomingRequestResource::class;
 

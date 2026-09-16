@@ -4,9 +4,9 @@ namespace App\Filament\Resources\CrmTasks\Pages;
 
 use App\Filament\Resources\CrmTasks\CrmTaskResource;
 use Filament\Actions\EditAction;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Pages\BusinessViewRecord;
 
-class ViewCrmTask extends ViewRecord
+class ViewCrmTask extends BusinessViewRecord
 {
     protected static string $resource = CrmTaskResource::class;
 

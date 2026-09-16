@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\InstrumentAssets\Pages;
 
 use App\Filament\Resources\InstrumentAssets\InstrumentAssetResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Pages\BusinessCreateRecord;
 
-class CreateInstrumentAsset extends CreateRecord
+class CreateInstrumentAsset extends BusinessCreateRecord
 {
     protected static string $resource = InstrumentAssetResource::class;
 }

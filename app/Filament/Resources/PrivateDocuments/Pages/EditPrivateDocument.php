@@ -5,10 +5,10 @@ namespace App\Filament\Resources\PrivateDocuments\Pages;
 use App\Filament\Resources\PrivateDocuments\PrivateDocumentResource;
 use App\Models\PrivateDocument;
 use App\Services\PrivateDocumentManager;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Pages\BusinessEditRecord;
 use Illuminate\Database\Eloquent\Model;
 
-class EditPrivateDocument extends EditRecord
+class EditPrivateDocument extends BusinessEditRecord
 {
     protected static string $resource = PrivateDocumentResource::class;
 

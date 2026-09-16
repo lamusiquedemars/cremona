@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\QuoteLineTemplates\Pages;
 
 use App\Filament\Resources\QuoteLineTemplates\QuoteLineTemplateResource;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Pages\BusinessEditRecord;
 
-class EditQuoteLineTemplate extends EditRecord
+class EditQuoteLineTemplate extends BusinessEditRecord
 {
     protected static string $resource = QuoteLineTemplateResource::class;
 }
