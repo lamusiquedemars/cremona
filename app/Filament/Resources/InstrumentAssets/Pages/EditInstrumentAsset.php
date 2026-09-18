@@ -19,9 +19,17 @@ class EditInstrumentAsset extends BusinessEditRecord
             DeleteAction::make()
                 ->label('Supprimer l’instrument')
                 ->modalHeading('Supprimer cet instrument ?')
-                ->modalDescription('Cette suppression est définitive. Elle reste indisponible tant que l’instrument est lié à une location, afin de préserver l’historique.')
-                ->disabled(fn (): bool => $this->record->rentals()->exists())
-                ->tooltip(fn (): ?string => $this->record->rentals()->exists() ? 'Cet instrument est lié à une ou plusieurs locations et ne peut pas être supprimé.' : null),
+                ->modalDescription('Cette suppression est définitive. Elle reste indisponible tant que l’instrument est publié sur le site ou lié à une location, afin de préserver la cohérence des données.')
+                ->disabled(fn (): bool => $this->record->is_site_published || $this->record->rentals()->exists())
+                ->tooltip(function (): ?string {
+                    if ($this->record->is_site_published) {
+                        return 'Retirez d’abord cet instrument du site, puis enregistrez la fiche avant de le supprimer.';
+                    }
+
+                    return $this->record->rentals()->exists()
+                        ? 'Cet instrument est lié à une ou plusieurs locations et ne peut pas être supprimé.'
+                        : null;
+                }),
         ];
     }
 
