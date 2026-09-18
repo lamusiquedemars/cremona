@@ -4,6 +4,7 @@ namespace App\Filament\Resources\InstrumentAssets\Pages;
 
 use App\Filament\Resources\InstrumentAssets\InstrumentAssetResource;
 use App\Services\ContempoInstrumentPublisher;
+use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use App\Filament\Pages\BusinessEditRecord;
 use LogicException;
@@ -11,6 +12,18 @@ use LogicException;
 class EditInstrumentAsset extends BusinessEditRecord
 {
     protected static string $resource = InstrumentAssetResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            DeleteAction::make()
+                ->label('Supprimer l’instrument')
+                ->modalHeading('Supprimer cet instrument ?')
+                ->modalDescription('Cette suppression est définitive. Elle reste indisponible tant que l’instrument est lié à une location, afin de préserver l’historique.')
+                ->disabled(fn (): bool => $this->record->rentals()->exists())
+                ->tooltip(fn (): ?string => $this->record->rentals()->exists() ? 'Cet instrument est lié à une ou plusieurs locations et ne peut pas être supprimé.' : null),
+        ];
+    }
 
     protected function afterSave(): void
     {
