@@ -2,7 +2,9 @@
 
 namespace App\Enums;
 
-enum InstrumentAssetStatus: string
+use Filament\Support\Contracts\HasLabel;
+
+enum InstrumentAssetStatus: string implements HasLabel
 {
     case Available = 'available';
     case Reserved = 'reserved';
@@ -11,15 +13,13 @@ enum InstrumentAssetStatus: string
     case Sold = 'sold';
     case Archived = 'archived';
 
+    public function getLabel(): string
+    {
+        return __('cremona.instrument.status.'.$this->value);
+    }
+
     public function label(): string
     {
-        return match ($this) {
-            self::Available => 'Disponible',
-            self::Reserved => 'Réservé',
-            self::Rented => 'En location',
-            self::InWorkshop => 'À l’atelier',
-            self::Sold => 'Vendu',
-            self::Archived => 'Archivé',
-        };
+        return $this->getLabel();
     }
 }

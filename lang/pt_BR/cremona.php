@@ -199,4 +199,22 @@ return [
         'user_accounts' => 'Contas de usuários',
         'active_campaigns' => 'Campanhas ativas',
     ],
+    'instrument' => [
+        'status' => [
+            'available' => 'Disponível',
+            'reserved' => 'Reservado',
+            'rented' => 'Em locação',
+            'in_workshop' => 'Na oficina',
+            'sold' => 'Vendido',
+            'archived' => 'Arquivado',
+        ],
+    ],
+    'rental' => [
+        'status' => [
+            'draft' => 'A preparar',
+            'active' => 'Em andamento',
+            'returned' => 'Devolvida',
+            'cancelled' => 'Cancelada',
+        ],
+    ],
 ];

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Services\OrganizationPresentation;
+use App\Enums\InstrumentAssetStatus;
+use App\Enums\RentalStatus;
 use App\Models\Organization;
 use App\Tenancy\OrganizationContext;
 use Tests\TestCase;
@@ -60,6 +62,25 @@ class InterfaceTranslationTest extends TestCase
 
             $this->assertSame('Relacionamento com clientes', $presentation->navigationGroupLabel('customer_follow_up', 'Suivi client'));
             $this->assertSame('Contatos', $presentation->navigationLabel('contacts', 'Contacts'));
+        } finally {
+            app()->setLocale('fr');
+        }
+    }
+
+    public function test_instrument_and_rental_statuses_are_localized_for_filament_selects(): void
+    {
+        try {
+            app()->setLocale('fr');
+
+            $this->assertSame('Disponible', InstrumentAssetStatus::Available->getLabel());
+            $this->assertSame('Réservé', InstrumentAssetStatus::Reserved->getLabel());
+            $this->assertSame('À préparer', RentalStatus::Draft->getLabel());
+
+            app()->setLocale('pt_BR');
+
+            $this->assertSame('Disponível', InstrumentAssetStatus::Available->getLabel());
+            $this->assertSame('Reservado', InstrumentAssetStatus::Reserved->getLabel());
+            $this->assertSame('A preparar', RentalStatus::Draft->getLabel());
         } finally {
             app()->setLocale('fr');
         }

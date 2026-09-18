@@ -13,11 +13,6 @@ enum RentalStatus: string implements HasLabel
 
     public function getLabel(): string
     {
-        return match ($this) {
-            self::Draft => 'À préparer',
-            self::Active => 'En cours',
-            self::Returned => 'Restituée',
-            self::Cancelled => 'Annulée',
-        };
+        return __('cremona.rental.status.'.$this->value);
     }
 }
