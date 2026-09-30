@@ -95,6 +95,12 @@ aucune donnée commerciale fictive ne doit être créée pour ce test.
 réparation/reméchage, location et vente restent à éprouver avec Giovanni avant
 de définir des automatisations ou des règles supplémentaires.
 
+La décision de conception Location est désormais prise : `Rental` reste la
+racine existante mais devient le domaine Location dédié, sans table contrat
+parallèle ni accumulation prématurée de champs assurance, signature ou banque.
+Le détail de l'audit et de la séquence de conception est conservé dans
+[Audit — domaine Location Luthier](audit-location-luthier-2026-09-30.md).
+
 ### G. Correspondances et boîtes email
 
 - IMAP/SMTP permet de tester une boîte, relever ses messages et envoyer des
@@ -123,6 +129,9 @@ file unique attendue pour la relation client.
    [Numérotation et administration commerciale](numerotation-et-administration-commerciale.md).
 4. Attendre les retours de Giovanni sur réparation/reméchage, location et vente
    avant de compléter le pack Luthier ou d’ajouter des automatisations.
+   Le prochain lot Location est toutefois cadré : cycle de vie, tarifs par
+   catégorie, restitution et rattachements documentaires ; assurance, SEPA,
+   signature et import bancaire ne sont pas engagés.
 5. Vérifier le bridge CMS ↔ Cremona avec deux organisations et une soumission
    réelle, sans fuite ni doublon sur reprise ; basculer ensuite Atelier Ivo,
    puis Contempo, sans supprimer les historiques locaux.

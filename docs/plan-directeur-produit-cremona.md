@@ -151,6 +151,32 @@ Un archet, une intervention de lutherie, un dossier juridique ou un chantier ne 
 Le contrat complet des sites autonomes et connectés est documenté dans le
 [Blueprint — sites autonomes et gestion connectée](blueprint-sites-connectes.md).
 
+### D.1. Domaine Location Luthier
+
+Le pilote Contempo confirme qu'une location n'est pas un simple attribut d'un
+instrument ni une ligne de devis : c'est un domaine métier avec son cycle de
+vie, ses preuves et ses conséquences sur le parc. L'état réellement livré et
+la décision de conception sont consignés dans l’
+[Audit — domaine Location Luthier](audit-location-luthier-2026-09-30.md).
+
+**Décision :** conserver `Rental` comme racine historique et fonctionnelle de
+la location, puis l'élever en domaine dédié. Ne pas créer un second `Contract`
+concurrent, et ne pas accumuler assurance, mandat, signature, banque et
+restitution dans une table unique.
+
+Le premier lot ne suppose pas que tous les besoins envisagés seront construits.
+Il doit d'abord stabiliser le cycle de location, une tarification mensuelle par
+catégorie d'instrument et la preuve de restitution. Les montants sont figés au
+moment de la location ; une exception par instrument, une assurance, le suivi
+manuel des prélèvements, la signature électronique et l'import/export bancaire
+restent des décisions distinctes, prises seulement après observation du
+processus réel.
+
+**Fin :** une location active ou restituée est compréhensible sans ambiguïté,
+le tarif historique est conservé, les documents privés peuvent être rattachés
+au bon dossier, et aucun mécanisme bancaire ou de signature n'est prétendu
+exister sans preuve adaptée.
+
 ### E. Présence en ligne
 
 **But :** donner une vue métier de ce que les clients voient, sans transformer Cremona en CMS.
