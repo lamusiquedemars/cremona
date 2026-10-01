@@ -8,7 +8,7 @@ use App\Filament\Resources\InstrumentAssets\Pages\CreateInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\EditInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\ListInstrumentAssets;
 use App\Models\InstrumentAsset;
-use App\Models\InstrumentCategory;
+use App\Support\InstrumentRentalCatalog;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Checkbox;
@@ -59,14 +59,20 @@ class InstrumentAssetResource extends Resource
             Section::make('Fiche instrument')->schema([
                 TextInput::make('name')->label('Intitulé')->required()->columnSpan(9),
                 TextInput::make('reference')->label('Référence interne')->columnSpan(3),
-                Select::make('family')->label(__('common.family'))->options(['violon' => 'Violon', 'alto' => 'Alto', 'violoncelle' => 'Violoncelle', 'contrebasse' => 'Contrebasse', 'archet' => 'Archet', 'autre' => 'Autre'])->columnSpan(4),
-                Select::make('instrument_category_id')->label('Catégorie et tarif de location')->relationship('category', 'name', fn ($query) => $query->where('is_active', true))->searchable()->preload()->columnSpan(4),
-                TextInput::make('maker')->label('Luthier / fabricant')->columnSpan(4),
+                Select::make('family')->label(__('common.family'))->options(InstrumentRentalCatalog::families())->live()->afterStateUpdated(function ($set): void {
+                    $set('rental_size', null);
+                    $set('instrument_category_id', null);
+                })->columnSpan(3),
+                Select::make('rental_size')->label('Taille')->options(fn (Get $get): array => InstrumentRentalCatalog::sizesFor($get('family')))->required(fn (Get $get): bool => (bool) $get('available_for_rental'))->searchable()->columnSpan(3),
+                Select::make('rental_tier_id')->label('Gamme de location')->relationship('rentalTier', 'name', fn ($query) => $query->where('is_active', true))->required(fn (Get $get): bool => (bool) $get('available_for_rental'))->searchable()->preload()->columnSpan(3),
+                TextInput::make('maker')->label('Luthier / fabricant')->columnSpan(3),
                 TextInput::make('year')->label('Année')->columnSpan(4),
                 Select::make('ownership')->label('Provenance')->options(['owned' => 'Propriété de l’atelier', 'deposit' => 'Dépôt-vente', 'consignment' => 'Confié par un tiers'])->default('owned')->required()->columnSpan(6),
                 Select::make('status')->label('Disponibilité actuelle')->options(InstrumentAssetStatus::class)->default(InstrumentAssetStatus::Available)->required()->columnSpan(6),
                 Textarea::make('description')->label('Description interne')->rows(4)->columnSpanFull(),
                 Textarea::make('commercial_notes')->label('Note commerciale interne')->rows(2)->helperText('Par exemple : instrument à vendre qui peut aussi être proposé à la location. Cette note ne paraît jamais sur le site.')->columnSpanFull(),
+                Select::make('rental_pricing_mode')->label('Tarification de location')->options(['automatic' => 'Grille automatique', 'override' => 'Tarif exceptionnel'])->default('automatic')->required()->live()->visible(fn (Get $get): bool => (bool) $get('available_for_rental'))->columnSpan(4)->helperText('La grille est trouvée à partir de la famille, de la taille et de la gamme.'),
+                TextInput::make('rental_amount_override')->label('Loyer mensuel HT exceptionnel')->numeric()->prefix('€')->required(fn (Get $get): bool => $get('available_for_rental') && $get('rental_pricing_mode') === 'override')->visible(fn (Get $get): bool => $get('available_for_rental') && $get('rental_pricing_mode') === 'override')->columnSpan(4)->helperText('Ce montant remplace la grille uniquement pour cet instrument.'),
                 Repeater::make('attributes')->label('Caractéristiques de l’instrument')->schema([
                     Select::make('label')->label('Caractéristique')->options([
                         'Instrument' => 'Instrument',
@@ -100,8 +106,8 @@ class InstrumentAssetResource extends Resource
                     TextInput::make('suggested_sale_amount')->label('Prix de vente HT indicatif')->numeric()->prefix('€')->default(0)->columnSpan(6),
                 ])->columns(12)->columnSpan(6),
                 Group::make([
-                    Checkbox::make('available_for_rental')->label('Proposer à la location')->columnSpan(6),
-                    TextInput::make('suggested_rental_amount')->label('Loyer HT indicatif')->numeric()->prefix('€')->default(0)->columnSpan(6),
+                    Checkbox::make('available_for_rental')->label('Proposer à la location')->live()->columnSpan(6),
+                    TextInput::make('suggested_rental_amount')->label('Ancien loyer indicatif')->numeric()->prefix('€')->disabled()->dehydrated(false)->visible(fn (?InstrumentAsset $record): bool => (float) ($record?->suggested_rental_amount ?? 0) > 0)->columnSpan(6)->helperText('Conservé pour l’historique. Utilisez désormais la grille ou le tarif exceptionnel.'),
                 ])->columns(12)->columnSpan(6)->extraAttributes(['class' => 'border-s border-gray-200 ps-6 dark:border-white/10']),
             ])->columns(12)->columnSpanFull(),
             Section::make('Visibilité sur le site')->description('Ces informations sont celles que le site public peut afficher. Elles ne modifient ni la location, ni la vente, ni le suivi atelier.')->schema([
@@ -123,7 +129,8 @@ class InstrumentAssetResource extends Resource
             TextColumn::make('family')->label(__('common.family'))->formatStateUsing(fn (?string $state): string => match ($state) {
                 'violon' => 'Violon', 'alto' => 'Alto', 'violoncelle' => 'Violoncelle', 'contrebasse' => 'Contrebasse', 'archet' => 'Archet', default => 'Autre'
             })->placeholder('—'),
-            TextColumn::make('category.name')->label('Catégorie tarifaire')->placeholder('—')->toggleable(),
+            TextColumn::make('rentalTier.name')->label('Gamme')->placeholder('—')->toggleable(),
+            TextColumn::make('category.name')->label('Grille tarifaire')->placeholder('—')->toggleable(),
             TextColumn::make('status')->label(__('common.state'))->badge(),
             IconColumn::make('available_for_sale')->label('Vente')->boolean(),
             IconColumn::make('available_for_rental')->label('Location')->boolean(),

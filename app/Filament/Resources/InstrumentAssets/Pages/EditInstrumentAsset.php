@@ -4,6 +4,7 @@ namespace App\Filament\Resources\InstrumentAssets\Pages;
 
 use App\Filament\Resources\InstrumentAssets\InstrumentAssetResource;
 use App\Services\ContempoInstrumentPublisher;
+use App\Services\InstrumentRentalPricing;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use App\Filament\Pages\BusinessEditRecord;
@@ -12,6 +13,14 @@ use LogicException;
 class EditInstrumentAsset extends BusinessEditRecord
 {
     protected static string $resource = InstrumentAssetResource::class;
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $this->record->fill($data);
+        app(InstrumentRentalPricing::class)->applyToInstrument($this->record);
+
+        return $this->record->getAttributes();
+    }
 
     protected function getHeaderActions(): array
     {
@@ -38,6 +47,7 @@ class EditInstrumentAsset extends BusinessEditRecord
         $publicFields = [
             'name', 'reference', 'family', 'maker', 'description', 'attributes', 'media', 'status',
             'available_for_sale', 'suggested_sale_amount', 'available_for_rental', 'suggested_rental_amount',
+            'rental_size', 'rental_tier_id', 'rental_pricing_mode', 'rental_amount_override', 'instrument_category_id',
             'is_site_published', 'public_slug', 'public_title', 'public_description', 'public_price_label',
         ];
 

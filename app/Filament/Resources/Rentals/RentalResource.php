@@ -55,7 +55,8 @@ class RentalResource extends Resource
                 TextInput::make('reference')->label(__('common.reference'))->helperText('Générée automatiquement si laissée vide.'),
                 Select::make('status')->label(__('common.status'))->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required(),
                 Select::make('instrument_asset_id')->label('Instrument')->relationship('instrument', 'name')->getOptionLabelFromRecordUsing(fn (InstrumentAsset $instrument): string => trim($instrument->name.' — '.$instrument->status->label()))->preload()->searchable()->live()->afterStateUpdated(function (?int $state, Set $set): void {
-                    $amount = InstrumentAsset::query()->with('category')->find($state)?->category?->rental_monthly_amount;
+                    $instrument = InstrumentAsset::query()->with('category')->find($state);
+                    $amount = $instrument?->rentalMonthlyAmount();
                     if ($amount !== null) $set('unit_amount', $amount);
                 })->required(),
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable(),
@@ -63,7 +64,7 @@ class RentalResource extends Resource
                 DatePicker::make('expected_return_on')->label('Retour prévu')->native(false),
                 DatePicker::make('returned_on')->label('Restitué le')->native(false),
                 Textarea::make('return_notes')->label('Constat de restitution')->rows(3)->columnSpanFull(),
-                TextInput::make('unit_amount')->label('Loyer HT')->numeric()->prefix('€')->default(0),
+                TextInput::make('unit_amount')->label('Loyer mensuel HT')->numeric()->prefix('€')->default(0)->helperText('Proposé depuis la grille de l’instrument, puis figé dans cette location.'),
                 TextInput::make('deposit_amount')->label('Dépôt de garantie')->numeric()->prefix('€')->default(0),
                 Textarea::make('notes')->label(__('common.internal_notes'))->rows(4)->columnSpanFull(),
             ])->columns(2),
@@ -78,7 +79,7 @@ class RentalResource extends Resource
             TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
             TextColumn::make('status')->label(__('common.status'))->badge(),
             TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
-            TextColumn::make('unit_amount')->label('Loyer HT')->money('EUR'),
+            TextColumn::make('unit_amount')->label('Loyer mensuel HT')->money('EUR'),
         ])->filters([SelectFilter::make('status')->label(__('common.status'))->options(RentalStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle location')]);
     }
 

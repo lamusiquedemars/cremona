@@ -111,8 +111,10 @@ Ordre de conception, avant toute migration :
 
 1. formaliser le cycle de vie de `Rental` et la restitution, avec les seules
    étapes réellement nécessaires ;
-2. concevoir une catégorie d'instrument administrable et une grille de tarifs
-   mensuels par catégorie, avec montant figé dans la location au démarrage ;
+2. concevoir une grille de location administrable : famille, une ou plusieurs
+   tailles, gamme configurable et tarif mensuel. L'instrument porte sa famille,
+   sa taille et sa gamme ; Cremona lui attribue automatiquement l'unique grille
+   correspondante, avec montant figé dans la location au démarrage ;
 3. décider si une exception de prix par instrument est autorisée et, si oui,
    la rendre explicite plutôt que silencieuse ;
 4. rattacher documents privés, constats et éventuellement photos privées à la
@@ -122,3 +124,32 @@ Ordre de conception, avant toute migration :
    puis d'un suivi manuel de mandat/prélèvement ;
 7. laisser signature qualifiée, automatisation bancaire et import/export
    comptable hors du premier lot.
+
+## 6. Évolution validée — parc supérieur à 100 instruments
+
+Une étiquette libre liée manuellement à chaque instrument ne permettrait pas
+d'importer ni de maintenir un parc important. Le terme « catégorie » désigne
+donc désormais dans l'interface une **grille de location** : une règle de prix,
+et non une taxonomie générale du parc.
+
+| Entité | Données structurées | Rôle |
+| --- | --- | --- |
+| Instrument | famille, taille, gamme de location, mode automatique ou tarif exceptionnel | Décrit le bien physique. Une taille ne reste plus seulement une caractéristique libre. |
+| Gamme de location | libellé actif par organisation | Vocabulaire métier configurable, par exemple Étude, Avancé, Professionnel. Aucun prix ici. |
+| Grille de location | libellé, famille, tailles cochées, gamme, loyer mensuel, active | Décrit une règle tarifaire ; une combinaison famille + taille + gamme ne peut être couverte que par une seule grille active. |
+| Location | montant mensuel recopié à sa création | Conserve le prix réellement appliqué, même après modification de la grille. |
+
+La relation instrument → grille est calculée lors de l'enregistrement de la
+fiche. Un instrument exceptionnel peut conserver sa qualification mais recevoir
+un tarif mensuel dérogatoire explicite. Il ne faut pas le placer dans une grille
+inexacte pour contourner le modèle.
+
+Les tailles sont une liste contrôlée par famille (fractions pour violon,
+violoncelle et contrebasse ; pouces pour alto), avec une valeur non standard.
+Cela couvre notamment les altos dont les tailles ne suivent pas les fractions.
+Les caractéristiques libres restent disponibles pour la fiche et le site, mais
+ne déterminent plus le tarif.
+
+Avant l'import initial, l'organisation configure ses gammes puis ses grilles.
+L'import ne crée aucune grille implicite : toute ligne sans famille, taille,
+gamme ou grille univoque doit être signalée et corrigée.

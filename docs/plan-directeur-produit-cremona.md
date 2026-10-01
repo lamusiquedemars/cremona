@@ -166,11 +166,11 @@ restitution dans une table unique.
 
 Le premier lot ne suppose pas que tous les besoins envisagés seront construits.
 Il doit d'abord stabiliser le cycle de location, une tarification mensuelle par
-catégorie d'instrument et la preuve de restitution. Les montants sont figés au
-moment de la location ; une exception par instrument, une assurance, le suivi
-manuel des prélèvements, la signature électronique et l'import/export bancaire
-restent des décisions distinctes, prises seulement après observation du
-processus réel.
+grille (famille, taille et gamme) et la preuve de restitution. Les montants sont
+figés au moment de la location ; une exception par instrument reste explicite.
+L'assurance, le suivi manuel des prélèvements, la signature électronique et
+l'import/export bancaire restent des décisions distinctes, prises seulement
+après observation du processus réel.
 
 **Fin :** une location active ou restituée est compréhensible sans ambiguïté,
 le tarif historique est conservé, les documents privés peuvent être rattachés

@@ -101,9 +101,11 @@ parallèle ni accumulation prématurée de champs assurance, signature ou banque
 Le détail de l'audit et de la séquence de conception est conservé dans
 [Audit — domaine Location Luthier](audit-location-luthier-2026-09-30.md).
 
-Le premier lot de fondation est livré : catégories d'instruments administrables
-avec loyer mensuel, montant recopié dans chaque nouvelle location sans réécrire
-l'historique, note commerciale interne et restitution datée/commentée/tracée.
+Le premier lot de fondation est livré : grilles de location administrables
+(famille, tailles, gamme et loyer mensuel), qualification structurée de
+l'instrument, tarif exceptionnel explicite et montant recopié dans chaque
+nouvelle location sans réécrire l'historique. Les grilles actives ne peuvent pas
+se chevaucher. La restitution est datée, commentée et tracée.
 L'acceptation d'un devis fait aussi désormais passer le dossier atelier lié à
 « Accord reçu » avant sa planification.
 

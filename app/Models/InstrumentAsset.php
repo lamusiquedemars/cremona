@@ -35,6 +35,7 @@ class InstrumentAsset extends Model
             'site_last_published_at' => 'immutable_datetime',
             'suggested_sale_amount' => 'decimal:2',
             'suggested_rental_amount' => 'decimal:2',
+            'rental_amount_override' => 'decimal:2',
             'attributes' => 'array',
             'media' => 'array',
         ];
@@ -48,5 +49,19 @@ class InstrumentAsset extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(InstrumentCategory::class, 'instrument_category_id');
+    }
+
+    public function rentalTier(): BelongsTo
+    {
+        return $this->belongsTo(RentalTier::class);
+    }
+
+    public function rentalMonthlyAmount(): float
+    {
+        if ($this->rental_pricing_mode === 'override') {
+            return (float) ($this->rental_amount_override ?? 0);
+        }
+
+        return (float) ($this->category?->rental_monthly_amount ?? 0);
     }
 }

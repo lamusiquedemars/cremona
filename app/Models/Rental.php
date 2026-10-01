@@ -18,7 +18,19 @@ class Rental extends Model
             $rental->public_id ??= (string) Str::ulid();
             $rental->reference ??= 'LOC-'.str($rental->public_id)->substr(0, 8);
             if ((float) $rental->unit_amount === 0.0 && $rental->instrument_asset_id !== null) {
-                $rental->unit_amount = InstrumentAsset::query()->with('category')->find($rental->instrument_asset_id)?->category?->rental_monthly_amount ?? 0;
+                $instrument = InstrumentAsset::query()->with('category')->find($rental->instrument_asset_id);
+
+                if ($instrument?->available_for_rental
+                    && $instrument->rental_pricing_mode !== 'override'
+                    && (filled($instrument->family) || filled($instrument->rental_size) || filled($instrument->rental_tier_id))) {
+                    app(\App\Services\InstrumentRentalPricing::class)->applyToInstrument($instrument);
+                    if ($instrument->isDirty('instrument_category_id')) {
+                        $instrument->save();
+                    }
+                    $instrument->load('category');
+                }
+
+                $rental->unit_amount = $instrument?->rentalMonthlyAmount() ?? 0;
             }
         });
     }
