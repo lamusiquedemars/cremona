@@ -14,6 +14,20 @@ class EditInstrumentAsset extends BusinessEditRecord
 {
     protected static string $resource = InstrumentAssetResource::class;
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        foreach (['attributes', 'media'] as $field) {
+            if (! is_string($data[$field] ?? null)) {
+                continue;
+            }
+
+            $decoded = json_decode($data[$field], true);
+            $data[$field] = is_array($decoded) ? $decoded : [];
+        }
+
+        return $data;
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $this->record->fill($data);
