@@ -127,4 +127,27 @@ class InstrumentCategoryRentalRateTest extends TestCase
             $this->assertNull($instrument->fresh()->instrument_category_id);
         });
     }
+
+    public function test_a_legacy_qualified_instrument_can_be_saved_before_its_grid_exists(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $tier = RentalTier::query()->create(['name' => 'Étude']);
+            $instrument = InstrumentAsset::query()->create([
+                'name' => 'Alto d’étude',
+                'family' => 'alto',
+                'rental_size' => '16in',
+                'rental_tier_id' => $tier->id,
+                'available_for_rental' => true,
+            ]);
+
+            $instrument->description = 'Fiche conservée avant la création des grilles.';
+            app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
+            $instrument->save();
+
+            $this->assertSame('Fiche conservée avant la création des grilles.', $instrument->fresh()->description);
+            $this->assertNull($instrument->fresh()->instrument_category_id);
+        });
+    }
 }

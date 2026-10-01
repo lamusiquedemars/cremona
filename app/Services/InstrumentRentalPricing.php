@@ -40,12 +40,20 @@ class InstrumentRentalPricing
         $matches = $this->matchingCategories($instrument->family, $instrument->rental_size, (int) $instrument->rental_tier_id);
 
         if ($matches->count() > 1) {
+            if (! $requireProfile) {
+                return;
+            }
+
             throw ValidationException::withMessages([
                 'rental_size' => 'Plusieurs grilles de location correspondent à cet instrument. Corrigez les grilles avant de continuer.',
             ]);
         }
 
         if ($matches->isEmpty()) {
+            if (! $requireProfile) {
+                return;
+            }
+
             throw ValidationException::withMessages([
                 'rental_size' => 'Aucune grille de location active ne correspond à cette famille, cette taille et cette gamme.',
             ]);
