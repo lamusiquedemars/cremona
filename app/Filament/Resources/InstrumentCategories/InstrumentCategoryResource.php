@@ -52,7 +52,16 @@ class InstrumentCategoryResource extends Resource
             TextColumn::make('name')->label('Grille')->searchable(),
             TextColumn::make('family')->label('Famille')->formatStateUsing(fn (?string $state): string => InstrumentRentalCatalog::families()[$state] ?? '—'),
             TextColumn::make('rentalTier.name')->label('Gamme')->placeholder('—'),
-            TextColumn::make('eligible_sizes')->label('Tailles')->formatStateUsing(fn (?array $state, InstrumentCategory $record): string => collect($state)->map(fn (string $size): ?string => InstrumentRentalCatalog::sizeLabel($record->family, $size))->filter()->join(', ')),
+            TextColumn::make('eligible_sizes')->label('Tailles')->formatStateUsing(function (string|array|null $state, InstrumentCategory $record): string {
+                if (is_array($state)) {
+                    return collect($state)
+                        ->map(fn (string $size): ?string => InstrumentRentalCatalog::sizeLabel($record->family, $size))
+                        ->filter()
+                        ->join(', ');
+                }
+
+                return InstrumentRentalCatalog::sizeLabel($record->family, $state) ?? '—';
+            }),
             TextColumn::make('rental_monthly_amount')->label('Loyer mensuel HT')->money('EUR')->placeholder('À définir'),
             TextColumn::make('instruments_count')->label('Instruments tarifés')->counts('instruments'),
             ToggleColumn::make('is_active')->label('Active'),
