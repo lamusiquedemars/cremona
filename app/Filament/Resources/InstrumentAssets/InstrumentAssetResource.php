@@ -63,8 +63,8 @@ class InstrumentAssetResource extends Resource
                     $set('rental_size', null);
                     $set('instrument_category_id', null);
                 })->columnSpan(3),
-                Select::make('rental_size')->label('Taille')->options(fn (Get $get): array => InstrumentRentalCatalog::sizesFor($get('family')))->required(fn (Get $get): bool => (bool) $get('available_for_rental'))->searchable()->columnSpan(3),
-                Select::make('rental_tier_id')->label('Gamme de location')->relationship('rentalTier', 'name', fn ($query) => $query->where('is_active', true))->required(fn (Get $get): bool => (bool) $get('available_for_rental'))->searchable()->preload()->columnSpan(3),
+                Select::make('rental_size')->label('Taille')->options(fn (Get $get): array => InstrumentRentalCatalog::sizesFor($get('family')))->required(fn (Get $get, string $operation): bool => $operation === 'create' && (bool) $get('available_for_rental'))->searchable()->columnSpan(3),
+                Select::make('rental_tier_id')->label('Gamme de location')->relationship('rentalTier', 'name', fn ($query) => $query->where('is_active', true))->required(fn (Get $get, string $operation): bool => $operation === 'create' && (bool) $get('available_for_rental'))->searchable()->preload()->columnSpan(3),
                 TextInput::make('maker')->label('Luthier / fabricant')->columnSpan(3),
                 TextInput::make('year')->label('Année')->columnSpan(4),
                 Select::make('ownership')->label('Provenance')->options(['owned' => 'Propriété de l’atelier', 'deposit' => 'Dépôt-vente', 'consignment' => 'Confié par un tiers'])->default('owned')->required()->columnSpan(6),

@@ -16,7 +16,7 @@ class CreateInstrumentAsset extends BusinessCreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $instrument = new \App\Models\InstrumentAsset($data);
-        app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
+        app(InstrumentRentalPricing::class)->applyToInstrument($instrument, requireProfile: true);
 
         return $instrument->getAttributes();
     }

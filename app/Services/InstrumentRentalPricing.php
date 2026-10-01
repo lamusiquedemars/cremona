@@ -21,13 +21,17 @@ class InstrumentRentalPricing
             ->values();
     }
 
-    public function applyToInstrument(InstrumentAsset $instrument): void
+    public function applyToInstrument(InstrumentAsset $instrument, bool $requireProfile = false): void
     {
         if (! $instrument->available_for_rental || $instrument->rental_pricing_mode === 'override') {
             return;
         }
 
         if (blank($instrument->family) || blank($instrument->rental_size) || blank($instrument->rental_tier_id)) {
+            if (! $requireProfile) {
+                return;
+            }
+
             throw ValidationException::withMessages([
                 'rental_size' => 'Une famille, une taille et une gamme sont nécessaires pour proposer un instrument à la location.',
             ]);
