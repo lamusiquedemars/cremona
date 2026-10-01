@@ -54,7 +54,11 @@ class QuoteWorkflowManager
                 throw new LogicException("Cette action est disponible uniquement lorsque le devis est « {$from->getLabel()} ».");
             }
 
+            $quote->load('workshopOrder');
             $quote->update(['status' => $to]);
+            if ($to === QuoteStatus::Accepted && $quote->workshopOrder !== null) {
+                app(WorkshopOrderWorkflowManager::class)->markApproved($quote->workshopOrder);
+            }
 
             return $quote->fresh();
         });

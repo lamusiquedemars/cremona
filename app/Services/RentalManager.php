@@ -6,6 +6,8 @@ use App\Enums\InstrumentAssetStatus;
 use App\Enums\RentalStatus;
 use App\Models\InstrumentAsset;
 use App\Models\Rental;
+use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 
@@ -28,9 +30,9 @@ class RentalManager
         });
     }
 
-    public function return(Rental $rental): Rental
+    public function return(Rental $rental, Carbon $returnedOn, ?string $notes, ?User $actor = null): Rental
     {
-        return DB::transaction(function () use ($rental): Rental {
+        return DB::transaction(function () use ($rental, $returnedOn, $notes, $actor): Rental {
             $rental = Rental::query()->lockForUpdate()->findOrFail($rental->getKey());
             if ($rental->status !== RentalStatus::Active) {
                 throw new LogicException('Seule une location en cours peut être restituée.');
@@ -38,7 +40,17 @@ class RentalManager
 
             $instrument = InstrumentAsset::query()->lockForUpdate()->findOrFail($rental->instrument_asset_id);
             $instrument->update(['status' => InstrumentAssetStatus::Available]);
-            $rental->update(['status' => RentalStatus::Returned, 'returned_on' => today()]);
+            $rental->update([
+                'status' => RentalStatus::Returned,
+                'returned_on' => $returnedOn->toDateString(),
+                'returned_at' => now(),
+                'returned_by_user_id' => $actor?->getKey(),
+                'return_notes' => filled($notes) ? trim($notes) : null,
+            ]);
+
+            app(AuditLogger::class)->record('rental.returned', $rental, $actor, [
+                'returned_on' => $rental->returned_on?->toDateString(),
+            ]);
 
             return $rental->fresh();
         });

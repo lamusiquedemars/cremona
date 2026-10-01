@@ -6,6 +6,8 @@ use App\Enums\RentalStatus;
 use App\Filament\Resources\Rentals\RentalResource;
 use App\Services\RentalManager;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use App\Filament\Pages\BusinessEditRecord;
 use Filament\Support\Icons\Heroicon;
@@ -38,16 +40,19 @@ class EditRental extends BusinessEditRecord
                 ->label('Enregistrer le retour')
                 ->icon(Heroicon::OutlinedArrowUturnLeft)
                 ->visible(fn (): bool => $this->record->status === RentalStatus::Active)
-                ->requiresConfirmation()
-                ->action(function (RentalManager $manager): void {
+                ->schema([
+                    DatePicker::make('returned_on')->label('Date de restitution')->default(today())->native(false)->required(),
+                    Textarea::make('return_notes')->label('Constat ou observations')->rows(3),
+                ])
+                ->action(function (array $data, RentalManager $manager): void {
                     try {
-                        $manager->return($this->record);
+                        $manager->return($this->record, \Illuminate\Support\Carbon::parse($data['returned_on']), $data['return_notes'] ?? null, auth()->user());
                     } catch (LogicException $exception) {
                         Notification::make()->title('Retour non enregistré')->body($exception->getMessage())->danger()->send();
 
                         return;
                     }
-                    Notification::make()->title('Retour enregistré')->body('L’instrument redevient disponible.')->success()->send();
+                    Notification::make()->title('Restitution enregistrée')->body('L’instrument redevient disponible. Le constat est conservé avec la location.')->success()->send();
                 }),
         ];
     }

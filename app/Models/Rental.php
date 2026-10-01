@@ -17,6 +17,9 @@ class Rental extends Model
         static::creating(function (self $rental): void {
             $rental->public_id ??= (string) Str::ulid();
             $rental->reference ??= 'LOC-'.str($rental->public_id)->substr(0, 8);
+            if ((float) $rental->unit_amount === 0.0 && $rental->instrument_asset_id !== null) {
+                $rental->unit_amount = InstrumentAsset::query()->with('category')->find($rental->instrument_asset_id)?->category?->rental_monthly_amount ?? 0;
+            }
         });
     }
 
@@ -31,6 +34,7 @@ class Rental extends Model
             'returned_on' => 'immutable_date',
             'unit_amount' => 'decimal:2',
             'deposit_amount' => 'decimal:2',
+            'returned_at' => 'immutable_datetime',
         ];
     }
 
@@ -42,6 +46,11 @@ class Rental extends Model
     public function person(): BelongsTo
     {
         return $this->belongsTo(Person::class);
+    }
+
+    public function returnedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'returned_by_user_id');
     }
 
     public function getRouteKeyName(): string

@@ -41,7 +41,7 @@ class WorkshopOrderWorkflowManager
             if ($quote === null && blank($authorizationNote)) {
                 throw new LogicException('Sans devis, indiquez le motif de l’accord avant de planifier.');
             }
-            if (! in_array($order->status, [WorkshopOrderStatus::Diagnosed, WorkshopOrderStatus::AwaitingApproval], true)) {
+            if (! in_array($order->status, [WorkshopOrderStatus::Diagnosed, WorkshopOrderStatus::AwaitingApproval, WorkshopOrderStatus::Approved], true)) {
                 throw new LogicException('Le dossier doit avoir un diagnostic validé et, s’il existe, un devis traité avant sa planification.');
             }
 
@@ -82,6 +82,19 @@ class WorkshopOrderWorkflowManager
             }
 
             $order->update(['status' => WorkshopOrderStatus::AwaitingApproval]);
+
+            return $order->fresh();
+        });
+    }
+
+    public function markApproved(WorkshopOrder $order): WorkshopOrder
+    {
+        return DB::transaction(function () use ($order): WorkshopOrder {
+            $order = WorkshopOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($order->status !== WorkshopOrderStatus::AwaitingApproval) {
+                throw new LogicException('Le dossier n’attend pas l’accord du client.');
+            }
+            $order->update(['status' => WorkshopOrderStatus::Approved, 'authorized_at' => now()]);
 
             return $order->fresh();
         });

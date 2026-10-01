@@ -53,6 +53,7 @@ class WorkshopOrderWorkflowTest extends TestCase
 
             app(QuoteWorkflowManager::class)->markAccepted($quote);
             $this->assertSame(QuoteStatus::Accepted, $quote->fresh()->status);
+            $this->assertSame(WorkshopOrderStatus::Approved, $order->fresh()->status);
 
             $workflow->schedule($order, now()->addWeek());
             $workflow->start($order);

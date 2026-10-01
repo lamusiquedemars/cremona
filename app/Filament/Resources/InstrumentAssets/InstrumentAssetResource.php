@@ -8,6 +8,7 @@ use App\Filament\Resources\InstrumentAssets\Pages\CreateInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\EditInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\ListInstrumentAssets;
 use App\Models\InstrumentAsset;
+use App\Models\InstrumentCategory;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Checkbox;
@@ -59,11 +60,13 @@ class InstrumentAssetResource extends Resource
                 TextInput::make('name')->label('Intitulé')->required()->columnSpan(9),
                 TextInput::make('reference')->label('Référence interne')->columnSpan(3),
                 Select::make('family')->label(__('common.family'))->options(['violon' => 'Violon', 'alto' => 'Alto', 'violoncelle' => 'Violoncelle', 'contrebasse' => 'Contrebasse', 'archet' => 'Archet', 'autre' => 'Autre'])->columnSpan(4),
+                Select::make('instrument_category_id')->label('Catégorie et tarif de location')->relationship('category', 'name', fn ($query) => $query->where('is_active', true))->searchable()->preload()->columnSpan(4),
                 TextInput::make('maker')->label('Luthier / fabricant')->columnSpan(4),
                 TextInput::make('year')->label('Année')->columnSpan(4),
                 Select::make('ownership')->label('Provenance')->options(['owned' => 'Propriété de l’atelier', 'deposit' => 'Dépôt-vente', 'consignment' => 'Confié par un tiers'])->default('owned')->required()->columnSpan(6),
                 Select::make('status')->label('Disponibilité actuelle')->options(InstrumentAssetStatus::class)->default(InstrumentAssetStatus::Available)->required()->columnSpan(6),
                 Textarea::make('description')->label('Description interne')->rows(4)->columnSpanFull(),
+                Textarea::make('commercial_notes')->label('Note commerciale interne')->rows(2)->helperText('Par exemple : instrument à vendre qui peut aussi être proposé à la location. Cette note ne paraît jamais sur le site.')->columnSpanFull(),
                 Repeater::make('attributes')->label('Caractéristiques de l’instrument')->schema([
                     Select::make('label')->label('Caractéristique')->options([
                         'Instrument' => 'Instrument',
@@ -120,6 +123,7 @@ class InstrumentAssetResource extends Resource
             TextColumn::make('family')->label(__('common.family'))->formatStateUsing(fn (?string $state): string => match ($state) {
                 'violon' => 'Violon', 'alto' => 'Alto', 'violoncelle' => 'Violoncelle', 'contrebasse' => 'Contrebasse', 'archet' => 'Archet', default => 'Autre'
             })->placeholder('—'),
+            TextColumn::make('category.name')->label('Catégorie tarifaire')->placeholder('—')->toggleable(),
             TextColumn::make('status')->label(__('common.state'))->badge(),
             IconColumn::make('available_for_sale')->label('Vente')->boolean(),
             IconColumn::make('available_for_rental')->label('Location')->boolean(),

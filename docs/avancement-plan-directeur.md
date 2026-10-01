@@ -101,6 +101,12 @@ parallèle ni accumulation prématurée de champs assurance, signature ou banque
 Le détail de l'audit et de la séquence de conception est conservé dans
 [Audit — domaine Location Luthier](audit-location-luthier-2026-09-30.md).
 
+Le premier lot de fondation est livré : catégories d'instruments administrables
+avec loyer mensuel, montant recopié dans chaque nouvelle location sans réécrire
+l'historique, note commerciale interne et restitution datée/commentée/tracée.
+L'acceptation d'un devis fait aussi désormais passer le dossier atelier lié à
+« Accord reçu » avant sa planification.
+
 ### G. Correspondances et boîtes email
 
 - IMAP/SMTP permet de tester une boîte, relever ses messages et envoyer des

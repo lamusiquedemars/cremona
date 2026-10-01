@@ -6,6 +6,7 @@ use App\Enums\InstrumentAssetStatus;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class InstrumentAsset extends Model
@@ -42,5 +43,10 @@ class InstrumentAsset extends Model
     public function rentals(): HasMany
     {
         return $this->hasMany(Rental::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(InstrumentCategory::class, 'instrument_category_id');
     }
 }

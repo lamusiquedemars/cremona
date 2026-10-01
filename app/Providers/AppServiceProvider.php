@@ -12,6 +12,8 @@ use App\Models\ConversationMessage;
 use App\Models\ConversationUserState;
 use App\Models\CrmTask;
 use App\Models\IncomingRequest;
+use App\Models\InstrumentAsset;
+use App\Models\InstrumentCategory;
 use App\Models\MessageAttachment;
 use App\Models\MessageParticipant;
 use App\Models\MessageReference;
@@ -27,6 +29,7 @@ use App\Models\PrivateDocument;
 use App\Models\PrivateDocumentLink;
 use App\Models\Quote;
 use App\Models\QuoteLine;
+use App\Models\Rental;
 use App\Models\User;
 use App\Services\FakeCorrespondenceTransport;
 use App\Services\SmtpCorrespondenceTransport;
@@ -65,6 +68,8 @@ class AppServiceProvider extends ServiceProvider
             'crm_task' => CrmTask::class,
             'contact_method' => ContactMethod::class,
             'incoming_request' => IncomingRequest::class,
+            'instrument_asset' => InstrumentAsset::class,
+            'instrument_category' => InstrumentCategory::class,
             'organization' => Organization::class,
             'organization_integration' => OrganizationIntegration::class,
             'organization_legal_profile' => OrganizationLegalProfile::class,
@@ -79,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
             'private_document_link' => PrivateDocumentLink::class,
             'quote' => Quote::class,
             'quote_line' => QuoteLine::class,
+            'rental' => Rental::class,
             'user' => User::class,
         ]);
 
