@@ -22,6 +22,8 @@ class PrivateDocumentLink extends Model
         'conversation' => Conversation::class,
         'crm_task' => CrmTask::class,
         'appointment' => Appointment::class,
+        'instrument_asset' => InstrumentAsset::class,
+        'rental' => Rental::class,
     ];
 
     protected static function booted(): void

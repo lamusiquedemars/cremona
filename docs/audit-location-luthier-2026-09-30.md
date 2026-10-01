@@ -118,7 +118,9 @@ Ordre de conception, avant toute migration :
 3. décider si une exception de prix par instrument est autorisée et, si oui,
    la rendre explicite plutôt que silencieuse ;
 4. rattacher documents privés, constats et éventuellement photos privées à la
-   location ;
+   location ; **livré :** les documents privés peuvent désormais être liés à
+   un instrument ou à une location, avec stockage privé, versionnement et
+   contrôle d'organisation existants ;
 5. corriger séparément la cohérence devis accepté ↔ dossier atelier ;
 6. seulement après observation du travail réel, décider d'un module assurance,
    puis d'un suivi manuel de mandat/prélèvement ;

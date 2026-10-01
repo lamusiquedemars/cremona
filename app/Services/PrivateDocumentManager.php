@@ -7,9 +7,11 @@ use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\CrmTask;
 use App\Models\IncomingRequest;
+use App\Models\InstrumentAsset;
 use App\Models\Person;
 use App\Models\PrivateDocument;
 use App\Models\PrivateDocumentLink;
+use App\Models\Rental;
 use App\Models\User;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -30,6 +32,8 @@ class PrivateDocumentManager
         'conversation_ids' => Conversation::class,
         'crm_task_ids' => CrmTask::class,
         'appointment_ids' => Appointment::class,
+        'instrument_asset_ids' => InstrumentAsset::class,
+        'rental_ids' => Rental::class,
     ];
 
     public function __construct(private readonly OrganizationContext $context) {}

@@ -12,8 +12,10 @@ use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\CrmTask;
 use App\Models\IncomingRequest;
+use App\Models\InstrumentAsset;
 use App\Models\Person;
 use App\Models\PrivateDocument;
+use App\Models\Rental;
 use App\Services\OrganizationPresentation;
 use BackedEnum;
 use Filament\Actions\CreateAction;
@@ -81,6 +83,8 @@ class PrivateDocumentResource extends Resource
                 Select::make('conversation_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('conversations', 'Correspondances'))->multiple()->options(fn (): array => Conversation::query()->orderByDesc('last_message_at')->limit(100)->get()->mapWithKeys(fn (Conversation $conversation): array => [$conversation->getKey() => $conversation->subject ?: 'Correspondance sans objet'])->all())->searchable(),
                 Select::make('crm_task_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâches'))->multiple()->options(fn (): array => CrmTask::query()->orderByDesc('created_at')->limit(100)->pluck('title', 'id')->all())->searchable(),
                 Select::make('appointment_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('appointments', 'Rendez-vous'))->multiple()->options(fn (): array => Appointment::query()->orderByDesc('starts_at')->limit(100)->get()->mapWithKeys(fn (Appointment $appointment): array => [$appointment->getKey() => $appointment->title.' — '.$appointment->starts_at->format('d/m/Y H:i')])->all())->searchable(),
+                Select::make('instrument_asset_ids')->label('Instruments')->multiple()->options(fn (): array => InstrumentAsset::query()->orderBy('reference')->orderBy('name')->get()->mapWithKeys(fn (InstrumentAsset $instrument): array => [$instrument->getKey() => trim(($instrument->reference ? $instrument->reference.' — ' : '').$instrument->name)])->all())->searchable()->helperText('Ex. expertise, photographie privée ou document de propriété.'),
+                Select::make('rental_ids')->label('Locations')->multiple()->options(fn (): array => Rental::query()->with('instrument')->orderByDesc('created_at')->limit(100)->get()->mapWithKeys(fn (Rental $rental): array => [$rental->getKey() => trim($rental->reference.' — '.($rental->instrument?->name ?? 'Instrument non disponible'))])->all())->searchable()->helperText('Ex. constat de départ, retour ou contrat scanné.'),
             ]),
         ]);
     }
