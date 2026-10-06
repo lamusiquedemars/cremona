@@ -8,6 +8,7 @@ use App\Enums\IncomingRequestOutcome;
 use App\Enums\IncomingRequestStatus;
 use App\Exceptions\IdempotencyConflictException;
 use App\Models\Company;
+use App\Models\Conversation;
 use App\Models\IncomingRequest;
 use App\Models\Person;
 use App\Models\User;
@@ -144,6 +145,26 @@ class IncomingRequestManager
             app(CorrespondenceManager::class)->createForIncomingRequest($request);
 
             return $request->load(['answers', 'consents', 'activities', 'conversation']);
+        });
+    }
+
+    public function createFromConversation(Conversation $conversation, ?User $actor = null): IncomingRequest
+    {
+        $this->assertOwned($conversation);
+        if ($conversation->incoming_request_id !== null) return $conversation->incomingRequest;
+        $message = $conversation->messages()->where('direction', 'inbound')->oldest('authored_at')->with('participants')->first()
+            ?? throw new LogicException('Une correspondance sans message entrant ne peut pas créer de demande.');
+        $from = $message->participants->firstWhere('role', 'from');
+        return DB::transaction(function () use ($conversation, $message, $from, $actor): IncomingRequest {
+            $request = IncomingRequest::query()->create([
+                'source_channel' => 'email', 'source' => 'direct_email', 'person_id' => $conversation->person_id,
+                'company_id' => $conversation->company_id, 'assigned_user_id' => $conversation->assigned_user_id,
+                'name_snapshot' => $from?->name, 'email_snapshot' => $from?->address, 'subject' => $conversation->subject,
+                'message' => $message->body_text, 'urgency' => 'unknown', 'status' => IncomingRequestStatus::New, 'received_at' => $message->authored_at,
+            ]);
+            $conversation->update(['incoming_request_id' => $request->id]);
+            $this->activity($request, 'received', actor: $actor);
+            return $request;
         });
     }
 

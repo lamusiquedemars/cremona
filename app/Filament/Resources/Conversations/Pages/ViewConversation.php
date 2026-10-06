@@ -8,6 +8,8 @@ use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Services\CorrespondenceManager;
+use App\Services\IncomingRequestManager;
+use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -24,6 +26,17 @@ class ViewConversation extends BusinessViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('createRequest')
+                ->label('Créer une demande de suivi')
+                ->icon(Heroicon::OutlinedInboxArrowDown)
+                ->visible(fn (): bool => Gate::allows('update', $this->record) && $this->record->incoming_request_id === null)
+                ->requiresConfirmation()
+                ->modalHeading('Créer une demande à partir de cet email ?')
+                ->modalDescription('Le message et le contact seront repris. La correspondance restera liée à cette demande.')
+                ->action(function (IncomingRequestManager $manager): void {
+                    $request = $manager->createFromConversation($this->record, auth()->user());
+                    $this->redirect(IncomingRequestResource::getUrl('view', ['record' => $request]));
+                }),
             Action::make('reply')
                 ->label(__('cremona.crm.reply'))
                 ->icon(Heroicon::OutlinedPaperAirplane)
