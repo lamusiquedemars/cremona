@@ -7,12 +7,14 @@ use App\Enums\MessageParticipantRole;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Models\IncomingRequest;
 use App\Services\CorrespondenceManager;
 use App\Services\IncomingRequestManager;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;
 use App\Filament\Pages\BusinessViewRecord;
@@ -26,6 +28,19 @@ class ViewConversation extends BusinessViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('attachRequest')
+                ->label('Rattacher à une demande')
+                ->icon(Heroicon::OutlinedLink)
+                ->visible(fn (): bool => Gate::allows('update', $this->record) && $this->record->incoming_request_id === null)
+                ->schema([
+                    Select::make('incoming_request_id')->label('Demande')->searchable()->required()
+                        ->options(fn (): array => IncomingRequest::query()->where('status', '!=', 'closed')->orderByDesc('received_at')->limit(100)->get()->mapWithKeys(fn (IncomingRequest $request): array => [$request->id => trim(($request->subject ?: 'Demande sans objet').' — '.($request->name_snapshot ?: $request->email_snapshot ?: ''))])->all()),
+                ])
+                ->action(function (array $data, IncomingRequestManager $manager): void {
+                    $manager->attachConversation($this->record, IncomingRequest::query()->findOrFail($data['incoming_request_id']));
+                    $this->reloadRecord();
+                    Notification::make()->title('Correspondance rattachée à la demande')->success()->send();
+                }),
             Action::make('createRequest')
                 ->label('Créer une demande de suivi')
                 ->icon(Heroicon::OutlinedInboxArrowDown)

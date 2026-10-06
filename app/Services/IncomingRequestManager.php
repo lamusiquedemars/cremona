@@ -168,6 +168,16 @@ class IncomingRequestManager
         });
     }
 
+    public function attachConversation(Conversation $conversation, IncomingRequest $request): void
+    {
+        $this->assertOwned($conversation);
+        $this->assertOwned($request);
+        if ($conversation->incoming_request_id !== null && $conversation->incoming_request_id !== $request->id) {
+            throw new LogicException('Cette correspondance est déjà liée à une autre demande.');
+        }
+        $conversation->update(['incoming_request_id' => $request->id]);
+    }
+
     public function markRead(IncomingRequest $request, ?User $actor = null): void
     {
         $this->assertOwned($request);
