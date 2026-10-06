@@ -4,6 +4,7 @@ namespace App\Filament\Resources\InstrumentAssets;
 
 use App\Enums\InstrumentAssetStatus;
 use App\Filament\Concerns\UsesOrganizationPresentation;
+use App\Filament\Imports\InstrumentAssetImporter;
 use App\Filament\Resources\InstrumentAssets\Pages\CreateInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\EditInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\ListInstrumentAssets;
@@ -11,6 +12,7 @@ use App\Models\InstrumentAsset;
 use App\Support\InstrumentRentalCatalog;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ImportAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -28,6 +30,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use App\Tenancy\OrganizationContext;
 
 class InstrumentAssetResource extends Resource
 {
@@ -134,7 +137,10 @@ class InstrumentAssetResource extends Resource
             TextColumn::make('status')->label(__('common.state'))->badge(),
             IconColumn::make('available_for_sale')->label('Vente')->boolean(),
             IconColumn::make('available_for_rental')->label('Location')->boolean(),
-        ])->filters([SelectFilter::make('status')->label(__('common.state'))->options(InstrumentAssetStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvel instrument')]);
+        ])->filters([SelectFilter::make('status')->label(__('common.state'))->options(InstrumentAssetStatus::class)])->recordActions([EditAction::make()])->headerActions([
+            ImportAction::make()->label('Importer un parc')->importer(InstrumentAssetImporter::class)->options(fn (): array => ['organization_id' => app(OrganizationContext::class)->require()->getKey()])->maxRows(500)->chunkSize(50),
+            CreateAction::make()->label('Nouvel instrument'),
+        ]);
     }
 
     public static function getPages(): array
