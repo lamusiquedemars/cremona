@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Enums\RentalStatus;
+use App\Services\InstrumentRentalPricing;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Rental extends Model
@@ -23,7 +25,7 @@ class Rental extends Model
                 if ($instrument?->available_for_rental
                     && $instrument->rental_pricing_mode !== 'override'
                     && (filled($instrument->family) || filled($instrument->rental_size) || filled($instrument->rental_tier_id))) {
-                    app(\App\Services\InstrumentRentalPricing::class)->applyToInstrument($instrument);
+                    app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
                     if ($instrument->isDirty('instrument_category_id')) {
                         $instrument->save();
                     }
@@ -63,6 +65,11 @@ class Rental extends Model
     public function returnedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'returned_by_user_id');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(RentalDocument::class);
     }
 
     public function getRouteKeyName(): string

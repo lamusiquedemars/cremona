@@ -28,7 +28,7 @@ class PrivateDocumentLink extends Model
 
     protected static function booted(): void
     {
-        static::saving(function (self $link): void {
+        static::creating(function (self $link): void {
             $document = PrivateDocument::query()->whereKey($link->private_document_id)->first();
             $model = Relation::getMorphedModel($link->linkable_type);
 

@@ -30,6 +30,7 @@ use App\Models\PrivateDocumentLink;
 use App\Models\Quote;
 use App\Models\QuoteLine;
 use App\Models\Rental;
+use App\Models\RentalDocument;
 use App\Models\User;
 use App\Services\FakeCorrespondenceTransport;
 use App\Services\SmtpCorrespondenceTransport;
@@ -85,6 +86,7 @@ class AppServiceProvider extends ServiceProvider
             'quote' => Quote::class,
             'quote_line' => QuoteLine::class,
             'rental' => Rental::class,
+            'rental_document' => RentalDocument::class,
             'user' => User::class,
         ]);
 

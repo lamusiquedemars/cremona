@@ -1,6 +1,6 @@
 # Plan Location — contrats, signature et prélèvements
 
-> Référence de travail partagée — mise à jour le 6 octobre 2026.
+> Référence de travail partagée — mise à jour le 7 octobre 2026.
 >
 > Ce document est la source de vérité du chantier. Il est versionné avec Cremona :
 > le consulter et le mettre à jour sur n'importe quel poste après synchronisation Git.
@@ -41,6 +41,8 @@ de vie de la location.
 - Profil légal d'organisation, snapshots documentaires et moteur PDF de devis,
   réutilisables comme fondation.
 - SMTP, file Laravel et tâches CRM disponibles comme fondations transversales.
+- Registre `RentalDocument` livré : type métier, version, snapshot, référence au
+  PDF privé, hash contrôlé et protection contre la modification d'un document généré.
 
 ### Non livré
 
@@ -91,7 +93,7 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 | Phase | Objectif | État |
 | --- | --- | --- |
 | 0. Décisions métier | Niveau de signature, modèle juridique, signataire/payeur, justificatifs. | À valider |
-| 1. Fondation documentaire | `RentalDocument`, snapshots, PDF privé hashé et immuable. | Non commencé |
+| 1. Fondation documentaire | `RentalDocument`, snapshots, PDF privé hashé et immuable. | Livré — registre et intégrité ; rendu PDF en phase 2 |
 | 2. Contrat de location | Rendu depuis données structurées et émission contrôlée. | Non commencé |
 | 3. Signature Cremona | Lien, jeton hashé, expiration, preuves, invitation et confirmation. | Non commencé |
 | 4. Assurance | Contrat/couverture avec moteur documentaire commun. | Non commencé |
@@ -122,7 +124,7 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 - Renseigner assurance, mandat et prélèvement attendu progressivement, après revue
   humaine.
 
-## Décisions à obtenir avant la phase 1
+## Décisions à obtenir avant l'émission et la signature réelles
 
 1. Signature probatoire interne Cremona ou maintien/intégration de Docaposte-Maileva ?
 2. Quels justificatifs sont obligatoires en V1 ?
@@ -135,6 +137,7 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 | Date | État | Décision / livraison | Suite |
 | --- | --- | --- | --- |
 | 2026-10-06 | Audit terminé | Modèles de contrats analysés, architecture Cremona confrontée à la cible, plan validable rédigé. Aucun code métier ajouté. | Valider les cinq décisions ci-dessus. |
+| 2026-10-07 | Phase 1 livrée | Registre `RentalDocument`, versionnement, snapshots, lien au document privé hashé, protection d'intégrité et tests ciblés. | Phase 2 : produire le PDF du contrat à partir des données structurées. |
 
 ## Règle de mise à jour partagée
 

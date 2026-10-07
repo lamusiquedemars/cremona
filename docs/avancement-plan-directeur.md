@@ -109,6 +109,13 @@ se chevaucher. La restitution est datée, commentée et tracée.
 L'acceptation d'un devis fait aussi désormais passer le dossier atelier lié à
 « Accord reçu » avant sa planification.
 
+La fondation documentaire des futurs contrats est désormais livrée : chaque
+`RentalDocument` est rattaché à une location et à un document privé, conserve un
+snapshot, une version de modèle et le SHA-256 du PDF, et ne peut plus être
+modifié une fois généré. Ce registre ne génère pas encore le contrat ni sa
+signature ; ces capacités restent les lots suivants, consignés dans le
+[Plan Location — contrats, signature et prélèvements](plan-location-contrats-signature.md).
+
 ### G. Correspondances et boîtes email
 
 - IMAP/SMTP permet de tester une boîte, relever ses messages et envoyer des

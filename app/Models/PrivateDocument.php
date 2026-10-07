@@ -81,6 +81,11 @@ class PrivateDocument extends Model
         return $this->hasMany(PrivateDocumentLink::class);
     }
 
+    public function rentalDocuments(): HasMany
+    {
+        return $this->hasMany(RentalDocument::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'public_id';
