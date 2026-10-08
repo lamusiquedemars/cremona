@@ -115,6 +115,8 @@ snapshot, une version de modèle et le SHA-256 du PDF, et ne peut plus être
 modifié une fois généré. Ce registre ne génère pas encore le contrat ni sa
 signature ; ces capacités restent les lots suivants, consignés dans le
 [Plan Location — contrats, signature et prélèvements](plan-location-contrats-signature.md).
+Le lot a été déployé sur LWS le 8 octobre 2026 après application de sa migration
+et reconstruction des caches.
 
 ### G. Correspondances et boîtes email
 

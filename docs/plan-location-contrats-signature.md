@@ -93,7 +93,7 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 | Phase | Objectif | État |
 | --- | --- | --- |
 | 0. Décisions métier | Niveau de signature, modèle juridique, signataire/payeur, justificatifs. | À valider |
-| 1. Fondation documentaire | `RentalDocument`, snapshots, PDF privé hashé et immuable. | Livré — registre et intégrité ; rendu PDF en phase 2 |
+| 1. Fondation documentaire | `RentalDocument`, snapshots, PDF privé hashé et immuable. | Livré et déployé — registre et intégrité ; rendu PDF en phase 2 |
 | 2. Contrat de location | Rendu depuis données structurées et émission contrôlée. | Non commencé |
 | 3. Signature Cremona | Lien, jeton hashé, expiration, preuves, invitation et confirmation. | Non commencé |
 | 4. Assurance | Contrat/couverture avec moteur documentaire commun. | Non commencé |
@@ -138,6 +138,7 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 | --- | --- | --- | --- |
 | 2026-10-06 | Audit terminé | Modèles de contrats analysés, architecture Cremona confrontée à la cible, plan validable rédigé. Aucun code métier ajouté. | Valider les cinq décisions ci-dessus. |
 | 2026-10-07 | Phase 1 livrée | Registre `RentalDocument`, versionnement, snapshots, lien au document privé hashé, protection d'intégrité et tests ciblés. | Phase 2 : produire le PDF du contrat à partir des données structurées. |
+| 2026-10-08 | Phase 1 déployée | Migration `rental_documents` et caches de production activés sur LWS, confirmation de bon déroulement reçue. | Phase 2 : produire le PDF du contrat à partir des données structurées. |
 
 ## Règle de mise à jour partagée
 
