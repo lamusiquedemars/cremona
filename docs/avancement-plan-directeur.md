@@ -1,6 +1,6 @@
 # Avancement du plan directeur Cremona
 
-> Dernière mise à jour : 16 septembre 2026.
+> Dernière mise à jour : 8 octobre 2026.
 >
 > Ce document suit les livraisons du [plan directeur produit](plan-directeur-produit-cremona.md). Il ne remplace pas les critères de fin du plan.
 
@@ -19,6 +19,10 @@
 - Une demande provenant de `maracuja-cms` affiche désormais « Formulaire du
   site ». L’identifiant technique est conservé en base pour le bridge, sans
   être imposé à l’utilisateur.
+- L'entrée **Clients** est livrée : une seule liste recherche les personnes et
+  les entreprises, avec des vues Particuliers et Professionnels. Les modèles,
+  droits, URLs et fiches existants sont conservés ; Contacts et Entreprises ne
+  sont plus deux entrées de menu concurrentes.
 
 État : **en cours**. Le registre de capacités n’est pas encore la source unique.
 Le lot transversal des titres et fils d’Ariane est livré ; restent les libellés
@@ -108,6 +112,13 @@ nouvelle location sans réécrire l'historique. Les grilles actives ne peuvent p
 se chevaucher. La restitution est datée, commentée et tracée.
 L'acceptation d'un devis fait aussi désormais passer le dossier atelier lié à
 « Accord reçu » avant sa planification.
+
+La frontière produit entre opérations et référentiels est maintenant
+documentée, sans déplacement d'interface à ce stade : gammes et grilles de
+location, prestations atelier et modèles de propositions sont des
+référentiels métier ; instruments, dossiers atelier, locations et stock
+restent des opérations. Ces référentiels ne doivent pas être absorbés par la
+Configuration globale de l'organisation.
 
 La fondation documentaire des futurs contrats est désormais livrée : chaque
 `RentalDocument` est rattaché à une location et à un document privé, conserve un

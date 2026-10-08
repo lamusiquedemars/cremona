@@ -33,6 +33,9 @@ Activité commerciale
 Atelier
   Dossiers atelier · Instruments · Locations
 
+Référentiels métier (selon le pack actif)
+  Tarifs de location · Prestations atelier · Modèles de propositions
+
 Offre
   Produits · Services · Réalisations
 
@@ -110,6 +113,34 @@ pas les modèles ni ne supprime les historiques. Les autres évolutions de
 vocabulaire, de regroupement et de chemins de création restent des hypothèses
 à comparer aux usages réels.
 
+### 3.2. Référentiels métier : proposition de regroupement
+
+Les paramètres techniques de l'organisation — identité légale, membres,
+boîtes email, canaux entrants, connecteurs, intégrations et sécurité — restent
+dans **Configuration de l'organisation**. Ils administrent l'environnement
+commun de l'entreprise ; ils ne décrivent pas son activité quotidienne.
+
+À l'inverse, certains objets actuellement répartis entre Atelier et Catalogue
+et stock définissent les règles réutilisables de l'activité. Ce sont des
+**référentiels métier** : ils ne sont ni des opérations à traiter aujourd'hui,
+ni des réglages techniques globaux.
+
+| Objet actuel | Nature | Proposition de présentation |
+| --- | --- | --- |
+| Gammes de location | Classification commerciale d'un instrument : Étude, Avancé, Professionnel ; sans prix | Référentiels métier → Location |
+| Grilles de location | Règle tarifaire : famille, tailles, gamme et loyer mensuel | Référentiels métier → Tarifs de location |
+| Prestations atelier | Catalogue de travaux réutilisables, tarif indicatif, TVA et description | Référentiels métier → Atelier |
+| Lignes de devis enregistrées | Modèles commerciaux réutilisables : prestation, produit, location ou frais | Référentiels métier → Propositions d'atelier |
+| Articles de stock | Quantités, seuils et mouvements réellement suivis | Reste une opération de stock, pas un paramètre |
+| Instruments, dossiers atelier, locations | Parc, intervention ou contrat réellement en cours | Restent des opérations Atelier |
+
+Cette proposition ne crée pas une section « Paramètres » concurrente et ne
+change aucun modèle. Elle vise une zone secondaire de navigation, par exemple
+**Référentiels métier**, qui reste contextualisée par le pack actif. Elle doit
+être validée après observation de la fréquence réelle de modification de ces
+objets : un référentiel régulièrement utilisé peut mériter un raccourci depuis
+son opération, sans devenir pour autant une entrée principale.
+
 ## 4. Architecture à viser
 
 ### Registre canonique des capacités
@@ -150,6 +181,7 @@ Un archet, une intervention de lutherie, un dossier juridique ou un chantier ne 
 - Ajouter au registre les groupes canoniques cibles ; n'afficher que les groupes contenant une capacité réellement livrée.
 - Livrer l'entrée **Clients** unifiée : vues Particuliers et Professionnels, sans migration des personnes ni des entreprises et sans casser les URL ou droits existants.
 - Comparer, à partir de parcours réels, la place de Demandes, Correspondances, Rendez-vous et Tâches avant toute nouvelle réorganisation de la navigation.
+- Valider la rubrique secondaire **Référentiels métier**, distincte de Configuration de l'organisation, avant de déplacer les gammes et grilles de location, prestations atelier ou modèles de propositions.
 - Présenter les rendez-vous comme **Agenda** seulement après livraison de la vue correspondant à cette promesse.
 - Réserver Offre, Présence en ligne, Résultats et Référencement sans les afficher avant leur première capacité utilisable.
 - Réunir les ressources techniques sous Paramètres en distinguant Entreprise, Utilisateurs, Connexions et Réglages.
