@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Rentals;
 
+use App\Enums\RentalAcceptanceStatus;
 use App\Enums\RentalStatus;
 use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Rentals\Pages\CreateRental;
@@ -9,11 +10,13 @@ use App\Filament\Resources\Rentals\Pages\EditRental;
 use App\Filament\Resources\Rentals\Pages\ListRentals;
 use App\Models\InstrumentAsset;
 use App\Models\Rental;
+use App\Models\RentalAcceptanceRequest;
 use App\Models\RentalInsurancePlan;
 use App\Services\RentalInsurancePricing;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -54,6 +57,19 @@ class RentalResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(2)->components([
+            Section::make('Suivi de l’acceptation')
+                ->visible(fn (?Rental $record): bool => $record !== null)
+                ->schema([
+                    Placeholder::make('acceptance_status')
+                        ->label('État')
+                        ->content(fn (?Rental $record): string => self::acceptanceLabel($record?->latestAcceptance) ?? 'Aucune demande envoyée'),
+                    Placeholder::make('acceptance_recipient')
+                        ->label('Destinataire')
+                        ->content(fn (?Rental $record): string => $record?->latestAcceptance?->recipient_email ?? '—'),
+                    Placeholder::make('acceptance_timing')
+                        ->label('Suivi')
+                        ->content(fn (?Rental $record): string => self::acceptanceTiming($record?->latestAcceptance)),
+                ])->columns(3)->columnSpanFull(),
             Section::make('Location')->schema([
                 TextInput::make('reference')->label(__('common.reference'))->helperText('Générée automatiquement si laissée vide.'),
                 Select::make('status')->label(__('common.status'))->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required(),
@@ -99,6 +115,7 @@ class RentalResource extends Resource
             TextColumn::make('instrument.name')->label('Instrument')->searchable(),
             TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
             TextColumn::make('status')->label(__('common.status'))->badge(),
+            TextColumn::make('latestAcceptance.status')->label('Acceptation')->state(fn (Rental $record): ?string => self::acceptanceLabel($record->latestAcceptance))->badge()->color(fn (Rental $record): string => self::acceptanceColor($record->latestAcceptance))->description(fn (Rental $record): ?string => self::acceptanceDescription($record->latestAcceptance))->placeholder('Non envoyée'),
             TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
             TextColumn::make('unit_amount')->label('Loyer mensuel')->money('EUR'),
             TextColumn::make('insurance_monthly_amount')->label('Assurance')->money('EUR')->placeholder('—')->toggleable(),
@@ -108,5 +125,56 @@ class RentalResource extends Resource
     public static function getPages(): array
     {
         return ['index' => ListRentals::route('/'), 'create' => CreateRental::route('/create'), 'edit' => EditRental::route('/{record}/edit')];
+    }
+
+    public static function acceptanceLabel(?RentalAcceptanceRequest $request): ?string
+    {
+        if ($request === null) {
+            return null;
+        }
+        if (in_array($request->status, [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent], true) && $request->expires_at->isPast()) {
+            return 'Expirée';
+        }
+
+        return $request->status->getLabel();
+    }
+
+    public static function acceptanceColor(?RentalAcceptanceRequest $request): string
+    {
+        return match (self::acceptanceLabel($request)) {
+            'Acceptée' => 'success',
+            'Envoyée' => 'warning',
+            'Expirée', 'Refusée', 'Annulée' => 'danger',
+            default => 'gray',
+        };
+    }
+
+    public static function acceptanceDescription(?RentalAcceptanceRequest $request): ?string
+    {
+        if ($request === null) {
+            return null;
+        }
+
+        return match (self::acceptanceLabel($request)) {
+            'Acceptée' => 'Le '.$request->accepted_at?->format('d/m/Y'),
+            'Envoyée' => 'Expire le '.$request->expires_at->format('d/m/Y'),
+            'Expirée' => 'Expirée le '.$request->expires_at->format('d/m/Y'),
+            default => null,
+        };
+    }
+
+    public static function acceptanceTiming(?RentalAcceptanceRequest $request): string
+    {
+        if ($request === null) {
+            return 'Générez les contrats, puis envoyez une demande au client lorsque le dossier est prêt.';
+        }
+
+        return match (self::acceptanceLabel($request)) {
+            'Acceptée' => 'Acceptée le '.$request->accepted_at?->format('d/m/Y à H:i'),
+            'Envoyée' => 'Envoyée le '.$request->sent_at?->format('d/m/Y à H:i').', valable jusqu’au '.$request->expires_at->format('d/m/Y'),
+            'Expirée' => 'Le lien a expiré le '.$request->expires_at->format('d/m/Y').'. Renvoyez une nouvelle demande si nécessaire.',
+            'Annulée' => 'Demande annulée le '.$request->cancelled_at?->format('d/m/Y à H:i'),
+            default => 'Demande préparée, pas encore envoyée.',
+        };
     }
 }

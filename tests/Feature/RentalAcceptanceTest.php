@@ -51,6 +51,24 @@ class RentalAcceptanceTest extends TestCase
         });
     }
 
+    public function test_an_unsolicited_acceptance_request_can_be_cancelled(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $rental = $this->rental();
+            app(RentalContractGenerator::class)->generate($rental, RentalDocumentType::RentalContract);
+            $acceptance = app(RentalAcceptanceManager::class)->issue($rental);
+
+            app(RentalAcceptanceManager::class)->cancel($acceptance);
+
+            $this->assertSame(RentalAcceptanceStatus::Cancelled, $acceptance->fresh()->status);
+            $this->assertDatabaseHas('rental_acceptance_events', ['request_id' => $acceptance->id, 'event' => 'cancelled']);
+        });
+    }
+
     private function rental(): Rental
     {
         OrganizationLegalProfile::query()->create([

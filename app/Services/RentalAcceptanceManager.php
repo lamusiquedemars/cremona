@@ -148,6 +148,22 @@ class RentalAcceptanceManager
         });
     }
 
+    public function cancel(RentalAcceptanceRequest $request, ?User $actor = null): RentalAcceptanceRequest
+    {
+        return $this->context->run($request->rental->organization, function () use ($request, $actor): RentalAcceptanceRequest {
+            return DB::transaction(function () use ($request, $actor): RentalAcceptanceRequest {
+                $request = RentalAcceptanceRequest::query()->lockForUpdate()->with('rental')->findOrFail($request->id);
+                if (! in_array($request->status, [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent], true)) {
+                    throw new LogicException('Seule une demande en attente peut être annulée.');
+                }
+                $request->update(['status' => RentalAcceptanceStatus::Cancelled, 'cancelled_at' => now()]);
+                $this->event($request, 'cancelled', actor: $actor);
+
+                return $request->fresh();
+            });
+        });
+    }
+
     public function document(RentalAcceptanceRequest $request, int $rentalDocumentId): RentalDocument
     {
         if ($request->expires_at->isPast()) {

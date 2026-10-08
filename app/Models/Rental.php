@@ -104,6 +104,16 @@ class Rental extends Model
         return $this->hasMany(RentalDocument::class);
     }
 
+    public function acceptanceRequests(): HasMany
+    {
+        return $this->hasMany(RentalAcceptanceRequest::class);
+    }
+
+    public function latestAcceptance(): HasOne
+    {
+        return $this->hasOne(RentalAcceptanceRequest::class)->latestOfMany();
+    }
+
     public function returnRecord(): HasOne
     {
         return $this->hasOne(RentalReturn::class);

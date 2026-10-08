@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Rentals\Pages;
 
+use App\Enums\RentalAcceptanceStatus;
 use App\Enums\RentalDocumentStatus;
 use App\Enums\RentalDocumentType;
 use App\Enums\RentalStatus;
@@ -12,6 +13,7 @@ use App\Services\RentalAcceptanceManager;
 use App\Services\RentalContractGenerator;
 use App\Services\RentalManager;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -28,7 +30,7 @@ class EditRental extends BusinessEditRecord
     {
         return [
             Action::make('sendAcceptance')
-                ->label('Envoyer pour acceptation')
+                ->label(fn (): string => $this->canResendAcceptance() ? 'Renvoyer pour acceptation' : 'Envoyer pour acceptation')
                 ->icon(Heroicon::OutlinedPaperAirplane)
                 ->color('primary')
                 ->requiresConfirmation()
@@ -42,6 +44,23 @@ class EditRental extends BusinessEditRecord
                         return;
                     }
                     Notification::make()->title('Demande envoyée')->body('Un lien personnel a été envoyé à '.$request->recipient_email.'.')->success()->send();
+                }),
+            Action::make('cancelAcceptance')
+                ->label('Annuler la demande')
+                ->icon(Heroicon::OutlinedXCircle)
+                ->color('danger')
+                ->visible(fn (): bool => $this->hasPendingAcceptance())
+                ->requiresConfirmation()
+                ->modalDescription('Le lien envoyé au client cessera immédiatement de fonctionner. Les contrats archivés restent conservés dans le dossier.')
+                ->action(function (RentalAcceptanceManager $manager): void {
+                    try {
+                        $manager->cancel($this->record->latestAcceptance, auth()->user());
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Demande non annulée')->body($exception->getMessage())->danger()->send();
+
+                        return;
+                    }
+                    Notification::make()->title('Demande annulée')->body('Le lien personnel envoyé au client n’est plus utilisable.')->success()->send();
                 }),
             Action::make('generateRentalContract')
                 ->label('Générer le contrat de location')
@@ -126,9 +145,18 @@ class EditRental extends BusinessEditRecord
                 ->color('success')
                 ->visible(fn (): bool => $this->record->status === RentalStatus::Draft)
                 ->requiresConfirmation()
-                ->action(function (RentalManager $manager): void {
+                ->modalDescription(fn (): string => $this->requiresAcceptanceOverride()
+                    ? 'Le client n’a pas encore accepté la demande en cours. Vous pouvez tout de même enregistrer une remise physique, mais celle-ci sera signalée dans le journal de la location.'
+                    : 'La remise physique sera enregistrée et l’instrument passera en location.')
+                ->schema(fn (): array => $this->requiresAcceptanceOverride() ? [
+                    Checkbox::make('acceptance_override')
+                        ->label('Confirmer la remise malgré l’absence d’acceptation')
+                        ->accepted()
+                        ->required(),
+                ] : [])
+                ->action(function (array $data, RentalManager $manager): void {
                     try {
-                        $manager->activate($this->record);
+                        $manager->activate($this->record, (bool) ($data['acceptance_override'] ?? false), auth()->user());
                     } catch (LogicException $exception) {
                         Notification::make()->title('Location non démarrée')->body($exception->getMessage())->danger()->send();
 
@@ -169,5 +197,22 @@ class EditRental extends BusinessEditRecord
             ->where('status', RentalDocumentStatus::Generated)
             ->latest('version_number')
             ->first();
+    }
+
+    private function hasPendingAcceptance(): bool
+    {
+        return in_array($this->record->latestAcceptance?->status, [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent], true);
+    }
+
+    private function canResendAcceptance(): bool
+    {
+        return $this->record->latestAcceptance !== null;
+    }
+
+    private function requiresAcceptanceOverride(): bool
+    {
+        $acceptance = $this->record->latestAcceptance;
+
+        return $acceptance !== null && $acceptance->status !== RentalAcceptanceStatus::Accepted;
     }
 }

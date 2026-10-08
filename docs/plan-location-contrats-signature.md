@@ -96,10 +96,10 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 | --- | --- | --- |
 | 0. Décisions métier | Acceptation interne, modèle juridique, signataire, justificatifs. | Décision actée le 8 octobre |
 | 1. Fondation documentaire | `RentalDocument`, snapshots, PDF privé hashé et immuable. | Livré et déployé — registre et intégrité ; rendu PDF en phase 2 |
-| 2. Contrat de location | Rendu depuis données structurées et émission contrôlée. | Livré — en attente de migration production |
-| 3. Acceptation Cremona | Lien, jeton hashé, expiration, preuves, invitation et confirmation. | Livré — en attente de migration production |
-| 4. Assurance | Contrat/couverture avec moteur documentaire commun. | Livré — en attente de migration production |
-| 5. Restitution | Constat, accessoires, frais, photos privées et attestation. | Livré — en attente de migration production |
+| 2. Contrat de location | Rendu depuis données structurées et émission contrôlée. | Livré et déployé |
+| 3. Acceptation Cremona | Lien, jeton hashé, expiration, preuves, invitation et confirmation. | Livré et déployé |
+| 4. Assurance | Contrat/couverture avec moteur documentaire commun. | Livré et déployé |
+| 5. Restitution | Constat, accessoires, frais, photos privées et attestation. | Livré et déployé |
 | 6. Mandat SEPA documentaire | Dépôt privé facultatif d’un mandat déjà signé, sans données bancaires structurées. | Livré via Documents privés |
 | 7. Banque / prélèvements | Exécution, connecteur, import et export bancaire. | Hors périmètre |
 
@@ -142,6 +142,7 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 | 2026-10-08 | Décision produit | Cremona réalisera une acceptation interne traçable. Aucun connecteur bancaire, ordre de prélèvement, IBAN ou RUM ne sera développé ; un mandat existant pourra seulement être archivé comme document privé. | Phase 3 : parcours d’acceptation interne. |
 | 2026-10-08 | Lot location complet | Génération location, assurance et attestation de restitution ; acceptation interne par e-mail ; constat structuré de retour. Les fichiers sont prêts à être déployés avec trois migrations additives. | Exécuter migrations et caches LWS, puis valider un parcours réel sans données fictives. |
 | 2026-10-08 | Formules d’assurance | Référentiel séparé des grilles de location : critères famille/taille/gamme, prime et version des garanties. La demande d’acceptation refuse tout document devenu obsolète après un changement de formule. | Configurer les formules réelles de Giovanni, puis valider le premier dossier. |
+| 2026-10-08 | Pilotage des locations | Tableau « Locations à suivre », onglets de travail, statut d’acceptation visible, renvoi/annulation contrôlés et confirmation explicite avant une remise sans acceptation. Aucun e-mail interne automatique : les alertes restent d’abord visibles dans l’interface. | Créer un premier dossier réel, émettre ses contrats puis parcourir remise et restitution avec Giovanni. |
 
 ## Règle de mise à jour partagée
 

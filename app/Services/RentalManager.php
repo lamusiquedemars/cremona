@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\InstrumentAssetStatus;
+use App\Enums\RentalAcceptanceStatus;
 use App\Enums\RentalStatus;
 use App\Models\InstrumentAsset;
 use App\Models\Rental;
@@ -14,18 +15,27 @@ use LogicException;
 
 class RentalManager
 {
-    public function activate(Rental $rental): Rental
+    public function activate(Rental $rental, bool $acceptanceOverride = false, ?User $actor = null): Rental
     {
-        return DB::transaction(function () use ($rental): Rental {
-            $rental = Rental::query()->lockForUpdate()->findOrFail($rental->getKey());
+        return DB::transaction(function () use ($rental, $acceptanceOverride, $actor): Rental {
+            $rental = Rental::query()->lockForUpdate()->with('latestAcceptance')->findOrFail($rental->getKey());
             $instrument = InstrumentAsset::query()->lockForUpdate()->findOrFail($rental->instrument_asset_id);
 
             if (! $instrument->available_for_rental || $instrument->status !== InstrumentAssetStatus::Available) {
                 throw new LogicException("L’instrument « {$instrument->name} » n’est pas disponible pour cette location.");
             }
+            if ($rental->latestAcceptance !== null
+                && $rental->latestAcceptance->status !== RentalAcceptanceStatus::Accepted
+                && ! $acceptanceOverride) {
+                throw new LogicException('Le client n’a pas encore accepté la demande. Confirmez explicitement la remise physique pour poursuivre.');
+            }
 
             $instrument->update(['status' => InstrumentAssetStatus::Rented]);
             $rental->update(['status' => RentalStatus::Active, 'starts_on' => $rental->starts_on ?? today()]);
+            app(AuditLogger::class)->record('rental.started', $rental, $actor, [
+                'acceptance_status' => $rental->latestAcceptance?->status?->value,
+                'acceptance_override' => $rental->latestAcceptance !== null && $rental->latestAcceptance->status !== RentalAcceptanceStatus::Accepted,
+            ]);
 
             return $rental->fresh();
         });
