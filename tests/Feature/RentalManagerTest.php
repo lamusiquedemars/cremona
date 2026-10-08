@@ -29,10 +29,20 @@ class RentalManagerTest extends TestCase
             $this->assertSame(RentalStatus::Active, $rental->fresh()->status);
             $this->assertSame(InstrumentAssetStatus::Rented, $instrument->fresh()->status);
 
-            app(RentalManager::class)->return($rental, today(), 'Instrument contrôlé au retour.');
+            app(RentalManager::class)->return($rental, today(), 'Instrument contrôlé au retour.', details: [
+                'accessories_state' => 'Étui et archet remis.',
+                'condition_notes' => 'Instrument contrôlé au retour.',
+                'charge_amount' => 12.5,
+                'charge_note' => 'Jeu de cordes.',
+            ]);
             $this->assertSame(RentalStatus::Returned, $rental->fresh()->status);
             $this->assertSame(InstrumentAssetStatus::Available, $instrument->fresh()->status);
             $this->assertSame('Instrument contrôlé au retour.', $rental->fresh()->return_notes);
+            $this->assertDatabaseHas('rental_returns', [
+                'rental_id' => $rental->id,
+                'accessories_state' => 'Étui et archet remis.',
+                'charge_amount' => 12.5,
+            ]);
         });
     }
 

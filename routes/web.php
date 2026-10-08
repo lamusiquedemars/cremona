@@ -5,6 +5,7 @@ use App\Http\Controllers\GoogleAdsOAuthController;
 use App\Http\Controllers\PrivateDocumentDownloadController;
 use App\Http\Controllers\PublicStorageController;
 use App\Http\Controllers\QuotePdfController;
+use App\Http\Controllers\RentalAcceptanceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,10 @@ Route::get('/manifest.webmanifest', function () {
 Route::get('/', function () {
     return redirect('/platform/organizations');
 });
+
+Route::get('/location/acceptation/{token}', [RentalAcceptanceController::class, 'show'])->name('rental-acceptance.show');
+Route::post('/location/acceptation/{token}', [RentalAcceptanceController::class, 'accept'])->name('rental-acceptance.accept');
+Route::get('/location/acceptation/{token}/documents/{document}', [RentalAcceptanceController::class, 'document'])->whereNumber('document')->name('rental-acceptance.document');
 
 // Public media is routed through Laravel because this LWS host does not allow
 // the usual public/storage symbolic link.

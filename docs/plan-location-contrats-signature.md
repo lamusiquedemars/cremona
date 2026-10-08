@@ -45,13 +45,18 @@ de vie de la location.
 - Registre `RentalDocument` livré : type métier, version, snapshot, référence au
   PDF privé, hash contrôlé et protection contre la modification d'un document généré.
 
-### Non livré
+### Livré dans le lot en cours de publication
 
-- Contrat de location généré, PDF archivé et version de clauses.
-- Demande d’acceptation interne, lien personnel, expiration, preuve et emails
-  transactionnels.
-- Contrat/couverture d'assurance.
-- Restitution structurée (accessoires, frais, photos privées) et attestation.
+- Contrat de location et contrat d’assurance générés depuis la fiche location,
+  archivés en PDF privé, hashés et versionnés.
+- Demande d’acceptation interne par e-mail : jeton hashé, lien personnel de
+  quatorze jours, consultation, consentement explicite, identité saisie,
+  horodatage et preuve immuable.
+- Restitution structurée : accessoires, état, frais éventuels et attestation PDF
+  versionnée. Les photos ou justificatifs restent des documents privés rattachés
+  à la location, sans duplication de stockage.
+- Un mandat SEPA déjà signé peut être ajouté dans **Documents** et rattaché à la
+  location ; aucune donnée bancaire structurée n’est créée.
 
 ## Modèle cible minimal
 
@@ -88,11 +93,11 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 | --- | --- | --- |
 | 0. Décisions métier | Acceptation interne, modèle juridique, signataire, justificatifs. | Décision actée le 8 octobre |
 | 1. Fondation documentaire | `RentalDocument`, snapshots, PDF privé hashé et immuable. | Livré et déployé — registre et intégrité ; rendu PDF en phase 2 |
-| 2. Contrat de location | Rendu depuis données structurées et émission contrôlée. | En cours |
-| 3. Acceptation Cremona | Lien, jeton hashé, expiration, preuves, invitation et confirmation. | Non commencé |
-| 4. Assurance | Contrat/couverture avec moteur documentaire commun. | Non commencé |
-| 5. Restitution | Constat, accessoires, frais, photos privées et attestation. | Non commencé |
-| 6. Mandat SEPA documentaire | Dépôt privé facultatif d’un mandat déjà signé, sans données bancaires structurées. | Non commencé |
+| 2. Contrat de location | Rendu depuis données structurées et émission contrôlée. | Livré — en attente de migration production |
+| 3. Acceptation Cremona | Lien, jeton hashé, expiration, preuves, invitation et confirmation. | Livré — en attente de migration production |
+| 4. Assurance | Contrat/couverture avec moteur documentaire commun. | Livré — en attente de migration production |
+| 5. Restitution | Constat, accessoires, frais, photos privées et attestation. | Livré — en attente de migration production |
+| 6. Mandat SEPA documentaire | Dépôt privé facultatif d’un mandat déjà signé, sans données bancaires structurées. | Livré via Documents privés |
 | 7. Banque / prélèvements | Exécution, connecteur, import et export bancaire. | Hors périmètre |
 
 ## Sécurité et preuves
@@ -132,6 +137,7 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 | 2026-10-08 | Phase 1 déployée | Migration `rental_documents` et caches de production activés sur LWS, confirmation de bon déroulement reçue. | Phase 2 : produire le PDF du contrat à partir des données structurées. |
 | 2026-10-08 | Références métier retrouvées | Les modèles source `contrat location Contempo.docx` et `contrat assurance Contempo.docx` ont été relus hors Git. Ils confirment : location à durée indéterminée avec engagement initial de trois mois, paiement mensuel, assurance distincte et optionnelle, justificatifs et mandat SEPA séparés, signature Docaposte historique. | Générer et archiver les deux PDF ; ne pas prétendre remplacer Docaposte tant qu’un choix de signature n’est pas acté. |
 | 2026-10-08 | Décision produit | Cremona réalisera une acceptation interne traçable. Aucun connecteur bancaire, ordre de prélèvement, IBAN ou RUM ne sera développé ; un mandat existant pourra seulement être archivé comme document privé. | Phase 3 : parcours d’acceptation interne. |
+| 2026-10-08 | Lot location complet | Génération location, assurance et attestation de restitution ; acceptation interne par e-mail ; constat structuré de retour. Les fichiers sont prêts à être déployés avec trois migrations additives. | Exécuter migrations et caches LWS, puis valider un parcours réel sans données fictives. |
 
 ## Règle de mise à jour partagée
 

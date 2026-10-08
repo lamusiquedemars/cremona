@@ -33,7 +33,7 @@ class RentalContractGenerator
 
     private function generateForOrganization(Rental $rental, RentalDocumentType $type, ?User $actor): RentalDocument
     {
-        if (! in_array($type, [RentalDocumentType::RentalContract, RentalDocumentType::InsuranceContract], true)) {
+        if (! in_array($type, [RentalDocumentType::RentalContract, RentalDocumentType::InsuranceContract, RentalDocumentType::ReturnCertificate], true)) {
             throw new LogicException('Ce type de document ne peut pas encore être généré.');
         }
 
@@ -78,7 +78,11 @@ class RentalContractGenerator
                     $rental,
                     $privateDocument,
                     $type,
-                    $type === RentalDocumentType::RentalContract ? 'contempo-location-v1' : 'contempo-assurance-v1',
+                    match ($type) {
+                        RentalDocumentType::RentalContract => 'contempo-location-v1',
+                        RentalDocumentType::InsuranceContract => 'contempo-assurance-v1',
+                        RentalDocumentType::ReturnCertificate => 'contempo-restitution-v1',
+                    },
                     $snapshot,
                     $actor,
                     $previous,
@@ -135,6 +139,10 @@ class RentalContractGenerator
         if ($type === RentalDocumentType::InsuranceContract && $insurance <= 0) {
             throw new LogicException('Indiquez une assurance mensuelle supérieure à zéro avant de générer le contrat d’assurance.');
         }
+        $return = $rental->returnRecord;
+        if ($type === RentalDocumentType::ReturnCertificate && $return === null) {
+            throw new LogicException('Enregistrez d’abord la restitution physique avant de générer son attestation.');
+        }
 
         return [
             'issuer' => $issuer,
@@ -160,13 +168,24 @@ class RentalContractGenerator
                 'reference' => $instrument->reference,
                 'name' => $instrument->name,
             ],
+            'return' => $return === null ? null : [
+                'returned_on' => $return->returned_on?->format('d/m/Y'),
+                'accessories_state' => $return->accessories_state,
+                'condition_notes' => $return->condition_notes,
+                'charge_amount' => number_format((float) $return->charge_amount, 2, ',', ' '),
+                'charge_note' => $return->charge_note,
+            ],
             'generated_on' => now()->format('d/m/Y'),
         ];
     }
 
     private function filename(Rental $rental, RentalDocumentType $type, int $version): string
     {
-        $prefix = $type === RentalDocumentType::RentalContract ? 'contrat-location' : 'contrat-assurance';
+        $prefix = match ($type) {
+            RentalDocumentType::RentalContract => 'contrat-location',
+            RentalDocumentType::InsuranceContract => 'contrat-assurance',
+            RentalDocumentType::ReturnCertificate => 'attestation-restitution',
+        };
 
         return $prefix.'-'.Str::slug((string) $rental->reference).'-v'.$version.'.pdf';
     }

@@ -8,6 +8,7 @@ use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class Rental extends Model
@@ -71,6 +72,11 @@ class Rental extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(RentalDocument::class);
+    }
+
+    public function returnRecord(): HasOne
+    {
+        return $this->hasOne(RentalReturn::class);
     }
 
     public function getRouteKeyName(): string
