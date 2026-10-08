@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\RentalStatus;
 use App\Services\InstrumentRentalPricing;
+use App\Services\RentalInsurancePricing;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,30 @@ class Rental extends Model
                 $rental->unit_amount = $instrument?->rentalMonthlyAmount() ?? 0;
             }
         });
+
+        static::saving(function (self $rental): void {
+            if ($rental->insurance_plan_id === null) {
+                if ($rental->isDirty('insurance_plan_id')) {
+                    $rental->insurance_plan_name = null;
+                    $rental->insurance_clause_version = null;
+                    $rental->insurance_coverage_summary = null;
+                    $rental->insurance_monthly_amount = 0;
+                }
+
+                return;
+            }
+
+            $plan = RentalInsurancePlan::query()->find($rental->insurance_plan_id);
+            $instrument = InstrumentAsset::query()->find($rental->instrument_asset_id);
+            if ($plan === null || $instrument === null) {
+                throw new \LogicException('La formule d’assurance et l’instrument doivent appartenir à l’organisation active.');
+            }
+            app(RentalInsurancePricing::class)->assertEligible($plan, $instrument);
+            $rental->insurance_monthly_amount = $plan->monthly_amount;
+            $rental->insurance_plan_name = $plan->name;
+            $rental->insurance_clause_version = $plan->clause_version;
+            $rental->insurance_coverage_summary = $plan->coverage_summary;
+        });
     }
 
     protected $guarded = [];
@@ -62,6 +87,11 @@ class Rental extends Model
     public function person(): BelongsTo
     {
         return $this->belongsTo(Person::class);
+    }
+
+    public function insurancePlan(): BelongsTo
+    {
+        return $this->belongsTo(RentalInsurancePlan::class);
     }
 
     public function returnedBy(): BelongsTo

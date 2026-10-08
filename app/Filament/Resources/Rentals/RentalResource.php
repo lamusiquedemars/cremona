@@ -9,6 +9,8 @@ use App\Filament\Resources\Rentals\Pages\EditRental;
 use App\Filament\Resources\Rentals\Pages\ListRentals;
 use App\Models\InstrumentAsset;
 use App\Models\Rental;
+use App\Models\RentalInsurancePlan;
+use App\Services\RentalInsurancePricing;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
@@ -17,6 +19,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -60,6 +63,8 @@ class RentalResource extends Resource
                     if ($amount !== null) {
                         $set('unit_amount', $amount);
                     }
+                    $set('insurance_plan_id', null);
+                    $set('insurance_monthly_amount', 0);
                 })->required(),
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable(),
                 DatePicker::make('starts_on')->label('Début prévu')->native(false),
@@ -67,7 +72,20 @@ class RentalResource extends Resource
                 DatePicker::make('returned_on')->label('Restitué le')->native(false),
                 Textarea::make('return_notes')->label('Constat de restitution')->rows(3)->columnSpanFull(),
                 TextInput::make('unit_amount')->label('Loyer mensuel')->numeric()->prefix('€')->default(0)->helperText('Proposé depuis la grille de l’instrument, puis figé dans cette location.'),
-                TextInput::make('insurance_monthly_amount')->label('Assurance mensuelle')->numeric()->prefix('€')->default(0)->helperText('Laissez zéro si elle n’est pas souscrite. Ce montant permet de générer le contrat d’assurance séparé.'),
+                Select::make('insurance_plan_id')->label('Assurance facultative')->options(function (Get $get): array {
+                    $instrument = InstrumentAsset::query()->find($get('instrument_asset_id'));
+                    if ($instrument === null) {
+                        return [];
+                    }
+
+                    return app(RentalInsurancePricing::class)->eligiblePlans($instrument)
+                        ->mapWithKeys(fn ($plan): array => [$plan->id => $plan->name.' — '.number_format((float) $plan->monthly_amount, 2, ',', ' ').' €/mois'])
+                        ->all();
+                })->searchable()->live()->afterStateUpdated(function (?int $state, Set $set): void {
+                    $plan = $state === null ? null : RentalInsurancePlan::query()->find($state);
+                    $set('insurance_monthly_amount', $plan?->monthly_amount ?? 0);
+                })->helperText('Laissez vide si le client ne souscrit pas l’assurance.'),
+                TextInput::make('insurance_monthly_amount')->label('Prime mensuelle')->numeric()->prefix('€')->default(0)->disabled()->dehydrated()->helperText('Reprise automatiquement depuis la formule choisie et figée dans cette location.'),
                 TextInput::make('deposit_amount')->label('Dépôt de garantie')->numeric()->prefix('€')->default(0),
                 Textarea::make('notes')->label(__('common.internal_notes'))->rows(4)->columnSpanFull(),
             ])->columns(2),
@@ -83,6 +101,7 @@ class RentalResource extends Resource
             TextColumn::make('status')->label(__('common.status'))->badge(),
             TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
             TextColumn::make('unit_amount')->label('Loyer mensuel')->money('EUR'),
+            TextColumn::make('insurance_monthly_amount')->label('Assurance')->money('EUR')->placeholder('—')->toggleable(),
         ])->filters([SelectFilter::make('status')->label(__('common.status'))->options(RentalStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle location')]);
     }
 

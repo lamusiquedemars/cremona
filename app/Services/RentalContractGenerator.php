@@ -136,8 +136,8 @@ class RentalContractGenerator
         }
 
         $insurance = (float) $rental->insurance_monthly_amount;
-        if ($type === RentalDocumentType::InsuranceContract && $insurance <= 0) {
-            throw new LogicException('Indiquez une assurance mensuelle supérieure à zéro avant de générer le contrat d’assurance.');
+        if ($type === RentalDocumentType::InsuranceContract && ($insurance <= 0 || $rental->insurance_plan_id === null)) {
+            throw new LogicException('Sélectionnez une formule d’assurance avant de générer le contrat d’assurance.');
         }
         $return = $rental->returnRecord;
         if ($type === RentalDocumentType::ReturnCertificate && $return === null) {
@@ -153,6 +153,9 @@ class RentalContractGenerator
                 'monthly_amount' => number_format((float) $rental->unit_amount, 2, ',', ' '),
                 'insurance_monthly_amount' => number_format($insurance, 2, ',', ' '),
                 'total_monthly_amount' => number_format((float) $rental->unit_amount + $insurance, 2, ',', ' '),
+                'insurance_plan_name' => $rental->insurance_plan_name,
+                'insurance_clause_version' => $rental->insurance_clause_version,
+                'insurance_coverage_summary' => $rental->insurance_coverage_summary,
             ],
             'client' => [
                 'name' => $person->display_name,

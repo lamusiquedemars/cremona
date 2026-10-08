@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ContactMethodType;
 use App\Enums\RentalAcceptanceStatus;
 use App\Enums\RentalDocumentStatus;
+use App\Enums\RentalDocumentType;
 use App\Mail\RentalAcceptanceInvitation;
 use App\Models\ContactMethod;
 use App\Models\Rental;
@@ -46,12 +47,25 @@ class RentalAcceptanceManager
                 ->with('privateDocument')
                 ->where('rental_id', $rental->id)
                 ->where('status', RentalDocumentStatus::Generated)
+                ->whereIn('type', $rental->insurance_plan_id === null
+                    ? [RentalDocumentType::RentalContract]
+                    : [RentalDocumentType::RentalContract, RentalDocumentType::InsuranceContract])
                 ->latest('version_number')
                 ->get()
                 ->unique('type')
                 ->values();
             if ($documents->isEmpty()) {
                 throw new LogicException('Générez au moins un contrat avant d’envoyer une demande d’acceptation.');
+            }
+            $contract = $documents->firstWhere('type', RentalDocumentType::RentalContract);
+            if ($contract === null || ! $this->matchesCurrentInsurance($contract, $rental)) {
+                throw new LogicException('Générez une nouvelle version du contrat de location après avoir modifié l’assurance.');
+            }
+            if ($rental->insurance_plan_id !== null) {
+                $insurance = $documents->firstWhere('type', RentalDocumentType::InsuranceContract);
+                if ($insurance === null || ! $this->matchesCurrentInsurance($insurance, $rental)) {
+                    throw new LogicException('Générez le contrat d’assurance correspondant à la formule sélectionnée avant l’envoi.');
+                }
             }
 
             $token = Str::random(64);
@@ -161,5 +175,13 @@ class RentalAcceptanceManager
         $proof->save();
 
         app(AuditLogger::class)->record('rental.acceptance.'.$event, $request, $actor, ['rental_id' => $request->rental_id]);
+    }
+
+    private function matchesCurrentInsurance(RentalDocument $document, Rental $rental): bool
+    {
+        $snapshot = $document->snapshot['rental'] ?? [];
+
+        return ($snapshot['insurance_plan_name'] ?? null) === $rental->insurance_plan_name
+            && ($snapshot['insurance_monthly_amount'] ?? null) === number_format((float) $rental->insurance_monthly_amount, 2, ',', ' ');
     }
 }

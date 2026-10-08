@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\OrganizationLegalProfile;
 use App\Models\Person;
 use App\Models\Rental;
+use App\Models\RentalInsurancePlan;
 use App\Services\RentalContractGenerator;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,7 +48,8 @@ class RentalContractGeneratorTest extends TestCase
         $organization = Organization::factory()->create();
 
         app(OrganizationContext::class)->run($organization, function (): void {
-            $rental = $this->completeRental(['insurance_monthly_amount' => 4.5]);
+            $plan = RentalInsurancePlan::query()->create(['name' => 'Assurance standard', 'monthly_amount' => 4.5]);
+            $rental = $this->completeRental(['insurance_plan_id' => $plan->id]);
             $generator = app(RentalContractGenerator::class);
 
             $first = $generator->generate($rental, RentalDocumentType::RentalContract);
@@ -59,6 +61,7 @@ class RentalContractGeneratorTest extends TestCase
             $this->assertSame($first->id, $second->version_of_id);
             $this->assertSame('contempo-assurance-v1', $insurance->template_version);
             $this->assertSame('4,50', $insurance->snapshot['rental']['insurance_monthly_amount']);
+            $this->assertSame('Assurance standard', $insurance->snapshot['rental']['insurance_plan_name']);
         });
     }
 
@@ -69,7 +72,7 @@ class RentalContractGeneratorTest extends TestCase
 
         app(OrganizationContext::class)->run($organization, function (): void {
             $this->expectException(LogicException::class);
-            $this->expectExceptionMessage('assurance mensuelle supérieure à zéro');
+            $this->expectExceptionMessage('formule d’assurance');
 
             app(RentalContractGenerator::class)->generate($this->completeRental(), RentalDocumentType::InsuranceContract);
         });

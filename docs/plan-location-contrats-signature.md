@@ -49,6 +49,9 @@ de vie de la location.
 
 - Contrat de location et contrat d’assurance générés depuis la fiche location,
   archivés en PDF privé, hashés et versionnés.
+- Formules d’assurance facultatives par famille, taille et gamme : la prime, la
+  version de garanties et le résumé sont figés dans la location. Toute modification
+  exige une nouvelle génération des documents avant leur envoi au client.
 - Demande d’acceptation interne par e-mail : jeton hashé, lien personnel de
   quatorze jours, consultation, consentement explicite, identité saisie,
   horodatage et preuve immuable.
@@ -138,6 +141,7 @@ demande séparée lorsque l'assurance est ajoutée plus tard.
 | 2026-10-08 | Références métier retrouvées | Les modèles source `contrat location Contempo.docx` et `contrat assurance Contempo.docx` ont été relus hors Git. Ils confirment : location à durée indéterminée avec engagement initial de trois mois, paiement mensuel, assurance distincte et optionnelle, justificatifs et mandat SEPA séparés, signature Docaposte historique. | Générer et archiver les deux PDF ; ne pas prétendre remplacer Docaposte tant qu’un choix de signature n’est pas acté. |
 | 2026-10-08 | Décision produit | Cremona réalisera une acceptation interne traçable. Aucun connecteur bancaire, ordre de prélèvement, IBAN ou RUM ne sera développé ; un mandat existant pourra seulement être archivé comme document privé. | Phase 3 : parcours d’acceptation interne. |
 | 2026-10-08 | Lot location complet | Génération location, assurance et attestation de restitution ; acceptation interne par e-mail ; constat structuré de retour. Les fichiers sont prêts à être déployés avec trois migrations additives. | Exécuter migrations et caches LWS, puis valider un parcours réel sans données fictives. |
+| 2026-10-08 | Formules d’assurance | Référentiel séparé des grilles de location : critères famille/taille/gamme, prime et version des garanties. La demande d’acceptation refuse tout document devenu obsolète après un changement de formule. | Configurer les formules réelles de Giovanni, puis valider le premier dossier. |
 
 ## Règle de mise à jour partagée
 
