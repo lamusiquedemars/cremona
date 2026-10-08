@@ -47,6 +47,7 @@ class Rental extends Model
             'expected_return_on' => 'immutable_date',
             'returned_on' => 'immutable_date',
             'unit_amount' => 'decimal:2',
+            'insurance_monthly_amount' => 'decimal:2',
             'deposit_amount' => 'decimal:2',
             'returned_at' => 'immutable_datetime',
         ];

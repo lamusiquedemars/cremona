@@ -46,6 +46,7 @@ class RentalDocumentManager
             ]);
 
             return RentalDocument::query()->create([
+                'organization_id' => $rental->organization_id,
                 'rental_id' => $rental->id,
                 'private_document_id' => $privateDocument->id,
                 'version_of_id' => $previous?->id,

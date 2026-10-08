@@ -15,9 +15,9 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -57,14 +57,17 @@ class RentalResource extends Resource
                 Select::make('instrument_asset_id')->label('Instrument')->relationship('instrument', 'name')->getOptionLabelFromRecordUsing(fn (InstrumentAsset $instrument): string => trim($instrument->name.' — '.$instrument->status->label()))->preload()->searchable()->live()->afterStateUpdated(function (?int $state, Set $set): void {
                     $instrument = InstrumentAsset::query()->with('category')->find($state);
                     $amount = $instrument?->rentalMonthlyAmount();
-                    if ($amount !== null) $set('unit_amount', $amount);
+                    if ($amount !== null) {
+                        $set('unit_amount', $amount);
+                    }
                 })->required(),
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable(),
                 DatePicker::make('starts_on')->label('Début prévu')->native(false),
                 DatePicker::make('expected_return_on')->label('Retour prévu')->native(false),
                 DatePicker::make('returned_on')->label('Restitué le')->native(false),
                 Textarea::make('return_notes')->label('Constat de restitution')->rows(3)->columnSpanFull(),
-                TextInput::make('unit_amount')->label('Loyer mensuel HT')->numeric()->prefix('€')->default(0)->helperText('Proposé depuis la grille de l’instrument, puis figé dans cette location.'),
+                TextInput::make('unit_amount')->label('Loyer mensuel')->numeric()->prefix('€')->default(0)->helperText('Proposé depuis la grille de l’instrument, puis figé dans cette location.'),
+                TextInput::make('insurance_monthly_amount')->label('Assurance mensuelle')->numeric()->prefix('€')->default(0)->helperText('Laissez zéro si elle n’est pas souscrite. Ce montant permet de générer le contrat d’assurance séparé.'),
                 TextInput::make('deposit_amount')->label('Dépôt de garantie')->numeric()->prefix('€')->default(0),
                 Textarea::make('notes')->label(__('common.internal_notes'))->rows(4)->columnSpanFull(),
             ])->columns(2),
@@ -79,7 +82,7 @@ class RentalResource extends Resource
             TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
             TextColumn::make('status')->label(__('common.status'))->badge(),
             TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
-            TextColumn::make('unit_amount')->label('Loyer mensuel HT')->money('EUR'),
+            TextColumn::make('unit_amount')->label('Loyer mensuel')->money('EUR'),
         ])->filters([SelectFilter::make('status')->label(__('common.status'))->options(RentalStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle location')]);
     }
 
