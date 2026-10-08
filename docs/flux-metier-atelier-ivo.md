@@ -44,7 +44,14 @@ Ces éléments décrivent l’usage constaté. Les durées, montants et conditio
 
 ## 3. Socle commun aux trois flux
 
-Chaque parcours commence par une `IncomingRequest`, puis utilise les objets communs existants selon le besoin :
+Un message, un formulaire ou un appel n'est pas automatiquement un dossier à
+gérer. Lorsqu'un besoin mérite une réponse, une relance, un rendez-vous, un
+essai ou une proposition, l'utilisateur crée une **demande client**. Le modèle
+technique sous-jacent reste `IncomingRequest`, mais ce nom ne doit pas être
+imposé à l'atelier. Une conversation reste une conversation ; elle est liée à
+une demande seulement lorsque ce contexte de suivi est utile.
+
+Le parcours utile est alors :
 
 ```text
 Demande
@@ -74,7 +81,7 @@ Un musicien cherche un conseil, a repéré un archet ou ne sait pas encore leque
 
 ### Parcours minimal
 
-1. La demande arrive du site ou est créée après un autre contact.
+1. Le besoin arrive du site, d'un e-mail direct ou d'un appel ; une demande client est créée seulement s'il mérite un traitement.
 2. Le contact est créé ou rapproché sans doublon.
 3. Ivo vérifie l’instrument, la pratique, le besoin et les références déjà repérées.
 4. La correspondance conserve les questions et réponses.
