@@ -25,13 +25,13 @@ Accueil
   Tableau de bord
 
 Relation client
-  Boîte de réception · Demandes clients · Clients · Devis
+  Demandes · Clients · Correspondances · Rendez-vous · Tâches
 
-Organisation
-  Agenda · À faire · Documents
+Activité commerciale
+  Propositions d’atelier · Documents
 
-Atelier (si le pack Luthier est actif)
-  Essais · Dossiers atelier · Parc / locations
+Atelier
+  Dossiers atelier · Instruments · Locations
 
 Offre
   Produits · Services · Réalisations
@@ -49,11 +49,8 @@ Paramètres
 ### Principes de vocabulaire
 
 - **Demande** est le mot courant pour une intention entrante. « Lead » ne doit pas devenir une entrée principale.
-- **Demande client** est le nom affiché d'un besoin concret qui mérite un suivi : essai, conseil, réparation, achat, location ou rendez-vous. Le nom provisoire « demande de suivi » ne doit pas être conservé dans l'interface. Une conversation n'est transformée en demande que lorsqu'une action ou une décision commerciale est nécessaire.
-- **Boîte de réception** est le nom affiché des correspondances : elle contient les messages à lire ou auxquels répondre. Elle n'est pas une seconde liste de demandes. Le fil de messages reste relié à la demande client lorsqu'il y en a une.
-- **Clients** réunit les personnes et, lorsqu'elles existent, les entreprises. Une entreprise reste un objet utile pour les écoles, orchestres, associations ou fournisseurs, mais ne doit pas encombrer le menu quotidien d'un atelier qui travaille surtout avec des particuliers.
-- **À faire** désigne les tâches personnelles ou d'équipe. Une tâche est toujours créée depuis son contexte — demande client, devis, essai, location ou dossier atelier — et ramène vers celui-ci ; ce n'est pas un dossier client supplémentaire à tenir à jour.
-- **Essai** est une opération propre au métier de luthier : sélection d'instruments ou d'archets, rendez-vous ou expédition, dates, retour et résultat. Il appartient au pack Atelier et non au socle Relation client, tout en restant lié au client et à sa demande.
+- **Demande client** désigne, dans la réflexion produit, un besoin concret qui mérite un suivi : conseil, réparation, achat, location ou rendez-vous. Une conversation n'est transformée en demande que lorsqu'une action ou une décision commerciale est nécessaire. Le libellé définitif de l'interface reste à valider.
+- **Clients** est une entrée unique qui réunit les personnes et les entreprises. Une entreprise reste un modèle distinct, utile pour les écoles, orchestres, associations ou fournisseurs ; elle n'est plus une porte de navigation concurrente.
 - **Agenda** est le nom utilisateur de la capacité temporelle. Il pourra réunir rendez-vous, essais, appels, visites et rappels. Tant que seuls les rendez-vous existent, l'interface ne doit pas promettre davantage.
 - **Campagnes**, **Résultats** et **Référencement** expriment une intention de pilotage. Google Ads, GA4 et Search Console restent dans le détail, l'aide ou les connexions.
 - **Devis** reste le nom canonique de la capacité commerciale ; une organisation peut le présenter comme « Proposition d'atelier » sans changer la nature de la donnée ni sa valeur juridique.
@@ -75,7 +72,7 @@ Paramètres
 | Résultats et Référencement | non construits | audit comparatif des sources obligatoire |
 | IA | bases de correspondance seulement | aucune automatisation externe sans garde-fous |
 
-### 3.1. Décision de simplicité — suivi client pour un atelier
+### 3.1. Réflexion de simplicité — suivi client pour un atelier
 
 Le socle actuel expose six ressources distinctes — demandes, contacts,
 entreprises, correspondances, rendez-vous/essais et tâches. Cette découpe est
@@ -84,7 +81,7 @@ interne pour servir de poste de travail quotidien à un luthier. La navigation
 doit présenter une intention de travail, pas obliger l'utilisateur à choisir
 la table où ranger son action.
 
-Le parcours attendu est volontairement court :
+Le parcours observé à examiner est le suivant :
 
 ```text
 Message, formulaire ou appel
@@ -94,25 +91,24 @@ Message, formulaire ou appel
   → résultat : réalisé, vendu, essai organisé, sans suite, etc.
 ```
 
-Une demande client devient ainsi le dossier léger d'un besoin réel ; elle ne
-duplique ni les e-mails ni la fiche client. Elle permet de voir ce qui reste à
-faire, de conserver le contexte de la décision, puis de rattacher le résultat
-à une proposition, un essai ou une intervention. Un simple message,
-une information ponctuelle ou un spam demeure dans la boîte de réception.
+Une demande peut devenir le dossier léger d'un besoin réel ; elle ne duplique
+ni les e-mails ni la fiche client. Un simple message, une information
+ponctuelle ou un spam ne doit pas déclencher de suivi artificiel. Cette règle
+reste à éprouver sur les parcours quotidiens avant de modifier le menu.
 
 | Besoin quotidien | Élément affiché | Rôle et règle de simplicité |
 | --- | --- | --- |
-| Lire, répondre, classer | Boîte de réception | Les correspondances ; création d'une demande seulement à la demande de l'utilisateur. |
-| Ne pas oublier un besoin commercial ou atelier | Demandes clients | File des besoins actifs, de leur priorité et de leur issue ; point de départ des actions utiles. |
-| Retrouver l'historique d'une personne | Clients | Fiche qui agrège demandes, correspondances, devis, essais et rendez-vous. Les entreprises y sont accessibles comme type de client ou filtre, sans entrée de menu autonome par défaut. |
-| Préparer ou suivre une proposition | Devis | Reste un objet commercial distinct, toujours contextualisable depuis une demande ou un client. |
-| Savoir quoi faire et quand | Agenda et À faire | Les rendez-vous et tâches sont affichés par échéance et renvoient à leur contexte ; ils ne créent pas de suivi parallèle. |
-| Gérer une opération de lutherie | Atelier | Les essais, dossiers atelier et locations ont leur propre cycle métier ; ils dérivent d'une demande lorsque c'est pertinent. |
+| Retrouver l'historique d'une personne ou d'une structure | Clients | Décision validée : une entrée, avec des vues Particuliers et Professionnels ; les deux modèles existants sont conservés. |
+| Lire, répondre, classer | Correspondances | À comparer avec les demandes : ne pas transformer chaque message en dossier de suivi. |
+| Ne pas oublier un besoin commercial ou atelier | Demandes | À préciser par les cas réels : origine, qualification, action et issue. |
+| Savoir quoi faire et quand | Rendez-vous et Tâches | Leur place dans ou hors de Suivi client reste ouverte ; ce sont des objets transversaux. |
+| Préparer ou suivre une proposition | Propositions d’atelier | Elles restent dans Activité commerciale. |
+| Gérer une opération de lutherie | Atelier | Les dossiers atelier et locations ont leur propre cycle métier. |
 
-Cette décision ne fusionne pas les modèles ni ne supprime les historiques :
-elle concerne le vocabulaire, le regroupement et les chemins de création. Les
-ressources techniques existantes restent disponibles derrière les vues métier
-jusqu'à ce que chaque redirection, permission et intégration ait été auditée.
+La seule décision validée à ce stade est la vue Clients unifiée. Elle ne fusionne
+pas les modèles ni ne supprime les historiques. Les autres évolutions de
+vocabulaire, de regroupement et de chemins de création restent des hypothèses
+à comparer aux usages réels.
 
 ## 4. Architecture à viser
 
@@ -152,9 +148,8 @@ Un archet, une intervention de lutherie, un dossier juridique ou un chantier ne 
 
 - Valider la configuration d'organisation déjà livrée : groupes, libellés et interrupteurs.
 - Ajouter au registre les groupes canoniques cibles ; n'afficher que les groupes contenant une capacité réellement livrée.
-- Présenter Relation client autour de quatre entrées quotidiennes : **Boîte de réception**, **Demandes clients**, **Clients** et **Devis**. Conserver les entreprises comme vue secondaire de Clients, non comme entrée par défaut.
-- Déplacer les essais et autres opérations de luthier dans la rubrique Atelier du pack concerné ; conserver leurs liens avec le client, la demande, l'agenda et le devis.
-- Présenter les tâches comme **À faire** dans Organisation et privilégier leur création depuis le contexte métier plutôt qu'une saisie isolée.
+- Livrer l'entrée **Clients** unifiée : vues Particuliers et Professionnels, sans migration des personnes ni des entreprises et sans casser les URL ou droits existants.
+- Comparer, à partir de parcours réels, la place de Demandes, Correspondances, Rendez-vous et Tâches avant toute nouvelle réorganisation de la navigation.
 - Présenter les rendez-vous comme **Agenda** seulement après livraison de la vue correspondant à cette promesse.
 - Réserver Offre, Présence en ligne, Résultats et Référencement sans les afficher avant leur première capacité utilisable.
 - Réunir les ressources techniques sous Paramètres en distinguant Entreprise, Utilisateurs, Connexions et Réglages.

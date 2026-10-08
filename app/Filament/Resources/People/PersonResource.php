@@ -67,6 +67,11 @@ class PersonResource extends Resource
 
     protected static int $globalSearchResultsLimit = 10;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return [

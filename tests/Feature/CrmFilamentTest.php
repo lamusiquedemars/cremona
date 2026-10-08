@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationRole;
+use App\Filament\Pages\ClientDirectory;
 use App\Filament\Resources\Companies\CompanyResource;
 use App\Filament\Resources\InboundChannels\InboundChannelResource;
 use App\Filament\Resources\InboundChannels\Pages\ListInboundChannels;
@@ -76,6 +77,43 @@ class CrmFilamentTest extends TestCase
         $this->actingAs($collaborator)
             ->get(CompanyResource::getUrl('create', tenant: $organization))
             ->assertOk();
+    }
+
+    public function test_the_clients_directory_combines_people_and_companies_without_exposing_two_menu_entries(): void
+    {
+        $organization = $this->organizationWithCrm();
+        $viewer = User::factory()->create();
+        $viewer->organizations()->attach($organization, [
+            'role' => OrganizationRole::Viewer->value,
+        ]);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            Person::query()->create([
+                'first_name' => 'Camille',
+                'last_name' => 'Martin',
+                'display_name' => 'Camille Martin',
+                'city' => 'Lyon',
+            ]);
+            Company::query()->create([
+                'name' => 'Conservatoire de Lyon',
+                'city' => 'Lyon',
+            ]);
+        });
+
+        $this->actingAs($viewer)
+            ->get(ClientDirectory::getUrl(tenant: $organization))
+            ->assertOk()
+            ->assertSee('Camille Martin')
+            ->assertSee('Conservatoire de Lyon')
+            ->assertSee('Particulier')
+            ->assertSee('Professionnel');
+
+        $this->actingAs($viewer)
+            ->get(Filament::getPanel('admin')->getUrl($organization))
+            ->assertOk()
+            ->assertSee('Clients')
+            ->assertDontSee('Contacts')
+            ->assertDontSee('Entreprises');
     }
 
     public function test_a_request_detail_renders_its_snapshot_and_workflow_actions(): void

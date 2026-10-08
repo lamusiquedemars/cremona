@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\ClientDirectory;
 use App\Filament\Resources\InstrumentAssets\InstrumentAssetResource;
 use App\Filament\Resources\Organizations\Pages\CreateOrganization;
 use App\Filament\Resources\Organizations\Pages\EditOrganization;
@@ -54,7 +55,8 @@ class OrganizationModuleAccessTest extends TestCase
             OrganizationModule::query()->create(['module' => 'crm', 'enabled' => true]);
 
             $this->assertTrue(app(OrganizationModuleAccess::class)->enabled('crm'));
-            $this->assertTrue(PersonResource::shouldRegisterNavigation());
+            $this->assertTrue(ClientDirectory::shouldRegisterNavigation());
+            $this->assertFalse(PersonResource::shouldRegisterNavigation());
             $this->assertTrue(PersonResource::canGloballySearch());
             $this->assertFalse(InstrumentAssetResource::shouldRegisterNavigation());
         });
