@@ -150,13 +150,21 @@ class IncomingRequestManager
 
     public function createFromConversation(Conversation $conversation, ?User $actor = null): IncomingRequest
     {
-        $this->assertOwned($conversation);
-        if ($conversation->incoming_request_id !== null) return $conversation->incomingRequest;
+        $this->assertRelatedOrganization($conversation->organization_id);
+        if ($conversation->incoming_request_id !== null) {
+            return $conversation->incomingRequest
+                ?? throw new LogicException('La demande liée à cette correspondance est introuvable.');
+        }
         $message = $conversation->messages()->where('direction', 'inbound')->oldest('authored_at')->with('participants')->first()
             ?? throw new LogicException('Une correspondance sans message entrant ne peut pas créer de demande.');
         $from = $message->participants->firstWhere('role', 'from');
         return DB::transaction(function () use ($conversation, $message, $from, $actor): IncomingRequest {
             $request = IncomingRequest::query()->create([
+                'idempotency_key' => "direct-email-conversation:{$conversation->public_id}",
+                'payload_fingerprint' => hash('sha256', json_encode([
+                    'conversation_id' => $conversation->public_id,
+                    'message_id' => $message->public_id,
+                ], JSON_THROW_ON_ERROR)),
                 'source_channel' => 'email', 'source' => 'direct_email', 'person_id' => $conversation->person_id,
                 'company_id' => $conversation->company_id, 'assigned_user_id' => $conversation->assigned_user_id,
                 'name_snapshot' => $from?->name, 'email_snapshot' => $from?->address, 'subject' => $conversation->subject,
@@ -170,7 +178,7 @@ class IncomingRequestManager
 
     public function attachConversation(Conversation $conversation, IncomingRequest $request): void
     {
-        $this->assertOwned($conversation);
+        $this->assertRelatedOrganization($conversation->organization_id);
         $this->assertOwned($request);
         if ($conversation->incoming_request_id !== null && $conversation->incoming_request_id !== $request->id) {
             throw new LogicException('Cette correspondance est déjà liée à une autre demande.');

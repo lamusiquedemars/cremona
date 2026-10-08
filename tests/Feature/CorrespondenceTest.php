@@ -70,6 +70,36 @@ class CorrespondenceTest extends TestCase
         });
     }
 
+    public function test_a_direct_email_conversation_can_be_converted_into_a_follow_up_request(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['communications', 'crm']);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $conversation = Conversation::query()->create([
+                'initial_channel' => 'email',
+                'subject' => 'Réparation d’un alto',
+            ]);
+            app(CorrespondenceManager::class)->recordInbound($conversation, [
+                'body_text' => 'Bonjour, pourriez-vous établir un devis ?',
+                'participants' => [[
+                    'role' => MessageParticipantRole::From,
+                    'name' => 'Camille Martin',
+                    'address' => 'camille@example.test',
+                ]],
+            ]);
+
+            $request = app(IncomingRequestManager::class)->createFromConversation($conversation);
+
+            $this->assertSame('direct_email', $request->source);
+            $this->assertSame('camille@example.test', $request->email_snapshot);
+            $this->assertNotEmpty($request->payload_fingerprint);
+            $this->assertSame(64, strlen($request->payload_fingerprint));
+            $this->assertSame($request->id, $conversation->fresh()->incoming_request_id);
+            $this->assertSame($request->id, app(IncomingRequestManager::class)->createFromConversation($conversation->fresh())->id);
+        });
+    }
+
     public function test_a_fake_transport_accepts_a_reply_without_claiming_delivery(): void
     {
         $organization = Organization::factory()->create();
