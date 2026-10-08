@@ -31,6 +31,8 @@ class ClientDirectory extends Page
 
     protected static ?string $navigationLabel = 'Clients';
 
+    protected static ?string $title = 'Clients';
+
     protected static ?int $navigationSort = 20;
 
     protected Width|string|null $maxContentWidth = Width::Full;
