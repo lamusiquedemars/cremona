@@ -15,12 +15,12 @@ trait UsesOrganizationPresentation
 
     public static function getModelLabel(): string
     {
-        return app(OrganizationPresentation::class)->label(static::$presentationKey ?? '', static::$modelLabel ?? parent::getModelLabel());
+        return static::$modelLabel ?? parent::getModelLabel();
     }
 
     public static function getPluralModelLabel(): string
     {
-        return app(OrganizationPresentation::class)->label(static::$presentationKey ?? '', static::$pluralModelLabel ?? parent::getPluralModelLabel());
+        return static::$pluralModelLabel ?? parent::getPluralModelLabel();
     }
 
     public static function getNavigationGroup(): string|UnitEnum|null

@@ -14,7 +14,6 @@ use App\Filament\Resources\People\Pages\ViewPerson;
 use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
 use App\Filament\Resources\People\RelationManagers\IncomingRequestsRelationManager;
 use App\Models\Person;
-use App\Services\OrganizationPresentation;
 use App\Support\ClientProfileOptions;
 use BackedEnum;
 use Filament\Actions\EditAction;
@@ -49,7 +48,7 @@ class PersonResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Suivi client';
 
-    protected static ?string $navigationLabel = 'Contacts';
+    protected static ?string $navigationLabel = 'Clients particuliers';
 
     protected static ?string $presentationKey = 'contacts';
 
@@ -57,9 +56,9 @@ class PersonResource extends Resource
 
     protected static ?string $presentationGroupKey = 'customer_follow_up';
 
-    protected static ?string $modelLabel = 'contact';
+    protected static ?string $modelLabel = 'client particulier';
 
-    protected static ?string $pluralModelLabel = 'contacts';
+    protected static ?string $pluralModelLabel = 'clients particuliers';
 
     protected static ?string $recordTitleAttribute = 'display_name';
 
@@ -184,7 +183,7 @@ class PersonResource extends Resource
         return $schema
             ->columns(12)
             ->components([
-                Section::make(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))
+                Section::make('Client particulier')
                     ->columnSpan(8)
                     ->schema([
                         TextEntry::make('display_name')

@@ -27,7 +27,7 @@ class ClientDirectory extends Page
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Suivi client';
+    protected static string|\UnitEnum|null $navigationGroup = null;
 
     protected static ?string $navigationLabel = 'Clients';
 
@@ -100,12 +100,12 @@ class ClientDirectory extends Page
 
         return [
             Action::make('createPerson')
-                ->label('Nouveau particulier')
+                ->label('Nouveau client particulier')
                 ->icon(Heroicon::OutlinedUserPlus)
                 ->url(fn (): string => PersonResource::getUrl('create', tenant: $organization))
                 ->visible($canCreate),
             Action::make('createCompany')
-                ->label('Nouveau professionnel')
+                ->label('Nouvelle entreprise')
                 ->icon(Heroicon::OutlinedBuildingOffice2)
                 ->color('gray')
                 ->url(fn (): string => CompanyResource::getUrl('create', tenant: $organization))

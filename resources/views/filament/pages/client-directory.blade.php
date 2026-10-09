@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="inline-flex w-fit rounded-lg bg-gray-100 p-1 dark:bg-white/10" role="tablist" aria-label="Type de client">
-            @foreach (['all' => 'Tous', 'person' => 'Particuliers', 'company' => 'Professionnels'] as $key => $label)
+            @foreach (['all' => 'Tous', 'person' => 'Particuliers', 'company' => 'Entreprises'] as $key => $label)
                 <button type="button" wire:click="selectType('{{ $key }}')" role="tab" aria-selected="{{ $type === $key ? 'true' : 'false' }}"
                     @class([
                         'rounded-md px-3 py-1.5 text-sm font-medium transition',
@@ -37,7 +37,7 @@
                         <td class="px-4 py-3 font-medium text-primary-700 dark:text-primary-400">
                             <a href="{{ $this->clientUrl($client) }}" class="focus:outline-none focus:underline">{{ $client->name }}</a>
                         </td>
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ $client->client_type === 'person' ? 'Particulier' : 'Professionnel' }}</td>
+                        <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ $client->client_type === 'person' ? 'Particulier' : 'Entreprise' }}</td>
                         <td class="hidden px-4 py-3 text-gray-600 dark:text-gray-300 sm:table-cell">{{ $client->city ?: '—' }}</td>
                         <td class="hidden px-4 py-3 text-gray-600 dark:text-gray-300 md:table-cell">{{ \Illuminate\Support\Carbon::parse($client->updated_at)->format('d/m/Y') }}</td>
                     </tr>

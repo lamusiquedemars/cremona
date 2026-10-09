@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\BusinessCreateRecord;
+use App\Filament\Pages\BusinessEditRecord;
+use App\Filament\Pages\BusinessViewRecord;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\BrevoConnections\BrevoConnectionResource;
 use App\Filament\Resources\Campaigns\CampaignResource;
@@ -13,20 +16,21 @@ use App\Filament\Resources\EmailMailboxes\EmailMailboxResource;
 use App\Filament\Resources\GoogleAdsConnections\GoogleAdsConnectionResource;
 use App\Filament\Resources\InboundChannels\InboundChannelResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
+use App\Filament\Resources\IncomingRequests\Pages\ViewIncomingRequest;
 use App\Filament\Resources\InstrumentAssets\InstrumentAssetResource;
 use App\Filament\Resources\Organizations\OrganizationResource;
 use App\Filament\Resources\People\PersonResource;
 use App\Filament\Resources\PrivateDocuments\PrivateDocumentResource;
 use App\Filament\Resources\QuoteLineTemplates\QuoteLineTemplateResource;
+use App\Filament\Resources\Quotes\Pages\CreateQuote;
 use App\Filament\Resources\Quotes\QuoteResource;
+use App\Filament\Resources\Rentals\Pages\EditRental;
 use App\Filament\Resources\Rentals\RentalResource;
 use App\Filament\Resources\ServiceDefinitions\ServiceDefinitionResource;
 use App\Filament\Resources\StockItems\StockItemResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
-use App\Filament\Pages\BusinessCreateRecord;
-use App\Filament\Pages\BusinessEditRecord;
-use App\Filament\Pages\BusinessViewRecord;
+use App\Services\OrganizationPresentation;
 use Tests\TestCase;
 
 class DefaultInterfaceLocaleTest extends TestCase
@@ -41,6 +45,14 @@ class DefaultInterfaceLocaleTest extends TestCase
     {
         $this->assertSame('Voir', __('filament-actions::view.single.label'));
         $this->assertSame('Modifier', __('filament-actions::edit.single.label'));
+    }
+
+    public function test_create_actions_keep_the_singular_business_label(): void
+    {
+        $presentation = app(OrganizationPresentation::class);
+
+        $this->assertSame('Créer : Contact', $presentation->createActionLabel('contacts', 'Contact'));
+        $this->assertSame('Créer : Entreprise', $presentation->createActionLabel('companies', 'Entreprise'));
     }
 
     public function test_every_filament_resource_uses_a_french_model_label(): void
@@ -59,7 +71,7 @@ class DefaultInterfaceLocaleTest extends TestCase
             IncomingRequestResource::class => ['demande', 'demandes'],
             InstrumentAssetResource::class => ['instrument', 'instruments'],
             OrganizationResource::class => ['organisation', 'organisations'],
-            PersonResource::class => ['contact', 'contacts'],
+            PersonResource::class => ['client particulier', 'clients particuliers'],
             PrivateDocumentResource::class => ['document privé', 'documents privés'],
             QuoteLineTemplateResource::class => ['ligne de devis enregistrée', 'lignes de devis enregistrées'],
             QuoteResource::class => ['devis', 'devis'],
@@ -78,9 +90,9 @@ class DefaultInterfaceLocaleTest extends TestCase
 
     public function test_record_pages_use_business_titles_instead_of_generic_filament_titles(): void
     {
-        $this->assertTrue(is_subclass_of(\App\Filament\Resources\Quotes\Pages\CreateQuote::class, BusinessCreateRecord::class));
-        $this->assertTrue(is_subclass_of(\App\Filament\Resources\Rentals\Pages\EditRental::class, BusinessEditRecord::class));
-        $this->assertTrue(is_subclass_of(\App\Filament\Resources\IncomingRequests\Pages\ViewIncomingRequest::class, BusinessViewRecord::class));
+        $this->assertTrue(is_subclass_of(CreateQuote::class, BusinessCreateRecord::class));
+        $this->assertTrue(is_subclass_of(EditRental::class, BusinessEditRecord::class));
+        $this->assertTrue(is_subclass_of(ViewIncomingRequest::class, BusinessViewRecord::class));
     }
 
     public function test_a_technical_cms_origin_has_a_business_label(): void

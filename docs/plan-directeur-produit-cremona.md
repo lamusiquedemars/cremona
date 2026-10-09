@@ -24,8 +24,11 @@ La navigation de référence est la suivante. Elle décrit des capacités produi
 Accueil
   Tableau de bord
 
-Relation client
-  Demandes · Clients · Correspondances · Rendez-vous · Tâches
+Clients
+  Répertoire clients
+
+Suivi client
+  Demandes · Correspondances · Rendez-vous · Tâches
 
 Activité commerciale
   Propositions d’atelier · Documents
@@ -53,7 +56,8 @@ Paramètres
 
 - **Demande** est le mot courant pour une intention entrante. « Lead » ne doit pas devenir une entrée principale.
 - **Demande client** désigne, dans la réflexion produit, un besoin concret qui mérite un suivi : conseil, réparation, achat, location ou rendez-vous. Une conversation n'est transformée en demande que lorsqu'une action ou une décision commerciale est nécessaire. Le libellé définitif de l'interface reste à valider.
-- **Clients** est une entrée unique qui réunit les personnes et les entreprises. Une entreprise reste un modèle distinct, utile pour les écoles, orchestres, associations ou fournisseurs ; elle n'est plus une porte de navigation concurrente.
+- **Clients** est une entrée unique qui réunit les particuliers et les entreprises. Elle est une entrée de navigation autonome. Le **Suivi client** rassemble les demandes, correspondances, rendez-vous et tâches : ce n’est pas une seconde rubrique Clients.
+- Un particulier est un client en propre. Une entreprise est une cliente professionnelle ; ses personnes liées sont des **contacts** avec un rôle (direction, professeur, administration, comptabilité). Le mot « contact » ne sert donc pas à renommer indistinctement tous les clients.
 - **Agenda** est le nom utilisateur de la capacité temporelle. Il pourra réunir rendez-vous, essais, appels, visites et rappels. Tant que seuls les rendez-vous existent, l'interface ne doit pas promettre davantage.
 - **Campagnes**, **Résultats** et **Référencement** expriment une intention de pilotage. Google Ads, GA4 et Search Console restent dans le détail, l'aide ou les connexions.
 - **Devis** reste le nom canonique de la capacité commerciale ; une organisation peut le présenter comme « Proposition d'atelier » sans changer la nature de la donnée ni sa valeur juridique.
@@ -112,6 +116,15 @@ La seule décision validée à ce stade est la vue Clients unifiée. Elle ne fus
 pas les modèles ni ne supprime les historiques. Les autres évolutions de
 vocabulaire, de regroupement et de chemins de création restent des hypothèses
 à comparer aux usages réels.
+
+Pour un client professionnel, l’entreprise est la partie cliente ; les personnes
+qui y travaillent sont ses contacts liés, avec leur fonction et un contact
+principal éventuel. Les devis peuvent déjà désigner l’entreprise et son
+interlocuteur. Les locations et dossiers atelier ne gèrent encore qu’une
+personne : avant de les proposer à un conservatoire ou à une école, il faudra
+ajouter proprement la distinction entre le contractant/payeur (personne ou
+entreprise) et l’utilisateur de l’instrument. Ce n’est pas une capacité à
+simuler avant sa conception métier et documentaire.
 
 ### 3.2. Référentiels métier : proposition de regroupement
 

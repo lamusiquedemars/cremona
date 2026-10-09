@@ -106,7 +106,7 @@ class CrmFilamentTest extends TestCase
             ->assertSee('Camille Martin')
             ->assertSee('Conservatoire de Lyon')
             ->assertSee('Particulier')
-            ->assertSee('Professionnel')
+            ->assertSee('Entreprise')
             ->assertDontSee('Client Directory')
             ->assertDontSee('Répertoire clients')
             ->assertDontSee('avec leurs fiches adaptées');
