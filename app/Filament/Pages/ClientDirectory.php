@@ -27,7 +27,7 @@ class ClientDirectory extends Page
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static string|\UnitEnum|null $navigationGroup = null;
+    protected static string|\UnitEnum|null $navigationGroup = 'Suivi client';
 
     protected static ?string $navigationLabel = 'Clients';
 

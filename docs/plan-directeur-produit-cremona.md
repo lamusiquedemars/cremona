@@ -24,11 +24,8 @@ La navigation de référence est la suivante. Elle décrit des capacités produi
 Accueil
   Tableau de bord
 
-Clients
-  Répertoire clients
-
 Suivi client
-  Demandes · Correspondances · Rendez-vous · Tâches
+  Clients · Demandes · Correspondances · Rendez-vous · Tâches
 
 Activité commerciale
   Propositions d’atelier · Documents
@@ -56,7 +53,7 @@ Paramètres
 
 - **Demande** est le mot courant pour une intention entrante. « Lead » ne doit pas devenir une entrée principale.
 - **Demande client** désigne, dans la réflexion produit, un besoin concret qui mérite un suivi : conseil, réparation, achat, location ou rendez-vous. Une conversation n'est transformée en demande que lorsqu'une action ou une décision commerciale est nécessaire. Le libellé définitif de l'interface reste à valider.
-- **Clients** est une entrée unique qui réunit les particuliers et les entreprises. Elle est une entrée de navigation autonome. Le **Suivi client** rassemble les demandes, correspondances, rendez-vous et tâches : ce n’est pas une seconde rubrique Clients.
+- **Clients** est l’entrée unique qui réunit les particuliers et les entreprises. Elle appartient à la rubrique **Suivi client**, qui rassemble également les demandes, correspondances, rendez-vous et tâches. Il n’y a ni deuxième entrée Clients, ni rubrique orpheline.
 - Un particulier est un client en propre. Une entreprise est une cliente professionnelle ; ses personnes liées sont des **contacts** avec un rôle (direction, professeur, administration, comptabilité). Le mot « contact » ne sert donc pas à renommer indistinctement tous les clients.
 - **Agenda** est le nom utilisateur de la capacité temporelle. Il pourra réunir rendez-vous, essais, appels, visites et rappels. Tant que seuls les rendez-vous existent, l'interface ne doit pas promettre davantage.
 - **Campagnes**, **Résultats** et **Référencement** expriment une intention de pilotage. Google Ads, GA4 et Search Console restent dans le détail, l'aide ou les connexions.

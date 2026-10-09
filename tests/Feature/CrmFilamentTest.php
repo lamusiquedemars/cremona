@@ -73,10 +73,13 @@ class CrmFilamentTest extends TestCase
 
         $this->actingAs($collaborator)
             ->get(PersonResource::getUrl('create', tenant: $organization))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Nouveau client particulier');
         $this->actingAs($collaborator)
             ->get(CompanyResource::getUrl('create', tenant: $organization))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Nouvelle entreprise')
+            ->assertDontSee('Nouveau entreprise');
     }
 
     public function test_the_clients_directory_combines_people_and_companies_without_exposing_two_menu_entries(): void
@@ -114,6 +117,7 @@ class CrmFilamentTest extends TestCase
         $this->actingAs($viewer)
             ->get(Filament::getPanel('admin')->getUrl($organization))
             ->assertOk()
+            ->assertSee('Suivi client')
             ->assertSee('Clients')
             ->assertDontSee('Contacts')
             ->assertDontSee('Entreprises');

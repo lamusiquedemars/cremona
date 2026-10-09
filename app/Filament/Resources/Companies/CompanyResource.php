@@ -20,7 +20,6 @@ use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -133,31 +132,27 @@ class CompanyResource extends Resource
                         Repeater::make('contactMethods')
                             ->label('E-mail et téléphone')
                             ->relationship()
-                            ->table([
-                                TableColumn::make('Type')->width('18%'),
-                                TableColumn::make('Coordonnée')->width('38%'),
-                                TableColumn::make('Précision')->width('28%'),
-                                TableColumn::make('À privilégier')->width('12%'),
-                            ])
                             ->schema([
-                                Select::make('type')
-                                    ->label('Type')
-                                    ->options(ContactMethodType::class)
-                                    ->required()
-                                    ->hiddenLabel(),
-                                TextInput::make('value')
-                                    ->label('Coordonnée')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->hiddenLabel(),
-                                TextInput::make('label')
-                                    ->label('Précision')
-                                    ->placeholder('Ex. accueil ou comptabilité')
-                                    ->maxLength(255)
-                                    ->hiddenLabel(),
-                                Toggle::make('is_primary')
-                                    ->label('À privilégier')
-                                    ->hiddenLabel(),
+                                Grid::make(12)->schema([
+                                    Select::make('type')
+                                        ->label('Type')
+                                        ->options(ContactMethodType::class)
+                                        ->required()
+                                        ->columnSpan(3),
+                                    TextInput::make('value')
+                                        ->label('E-mail ou téléphone')
+                                        ->required()
+                                        ->maxLength(255)
+                                        ->columnSpan(5),
+                                    TextInput::make('label')
+                                        ->label('Précision')
+                                        ->placeholder('Ex. accueil ou comptabilité')
+                                        ->maxLength(255)
+                                        ->columnSpan(3),
+                                    Toggle::make('is_primary')
+                                        ->label('À privilégier')
+                                        ->columnSpan(1),
+                                ]),
                             ])
                             ->reorderable(false)
                             ->defaultItems(0)
