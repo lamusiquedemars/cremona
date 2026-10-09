@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Services\OrganizationPresentation;
 use App\Enums\InstrumentAssetStatus;
 use App\Enums\RentalStatus;
 use App\Models\Organization;
+use App\Services\OrganizationPresentation;
 use App\Tenancy\OrganizationContext;
 use Tests\TestCase;
 
@@ -17,7 +17,7 @@ class InterfaceTranslationTest extends TestCase
             app()->setLocale('fr');
 
             $this->assertSame('Contacts', __('cremona.navigation.items.contacts'));
-            $this->assertSame('Priorités du jour', __('cremona.dashboard.priorities'));
+            $this->assertSame('À faire aujourd’hui', __('cremona.dashboard.priorities'));
 
             app()->setLocale('pt_BR');
 

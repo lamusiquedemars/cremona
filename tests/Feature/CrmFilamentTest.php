@@ -174,7 +174,7 @@ class CrmFilamentTest extends TestCase
             ->get(Filament::getPanel('admin')->getUrl($organization))
             ->assertOk()
             ->assertSee('Suivi client')
-            ->assertSee('Demandes à traiter')
+            ->assertSee('Demandes à suivre')
             ->assertSee('Demande non attribuée')
             ->assertSee('Demande attribuée')
             ->assertDontSee('Rendez-vous aujourd’hui')

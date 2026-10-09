@@ -57,17 +57,17 @@ class RentalResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(2)->components([
-            Section::make('Suivi de l’acceptation')
+            Section::make('Accord du client')
                 ->visible(fn (?Rental $record): bool => $record !== null)
                 ->schema([
                     Placeholder::make('acceptance_status')
-                        ->label('État')
+                        ->label('Situation')
                         ->content(fn (?Rental $record): string => self::acceptanceLabel($record?->latestAcceptance) ?? 'Aucune demande envoyée'),
                     Placeholder::make('acceptance_recipient')
                         ->label('Destinataire')
                         ->content(fn (?Rental $record): string => $record?->latestAcceptance?->recipient_email ?? '—'),
                     Placeholder::make('acceptance_timing')
-                        ->label('Suivi')
+                        ->label('Prochaine étape')
                         ->content(fn (?Rental $record): string => self::acceptanceTiming($record?->latestAcceptance)),
                 ])->columns(3)->columnSpanFull(),
             Section::make('Location')->schema([
@@ -115,7 +115,7 @@ class RentalResource extends Resource
             TextColumn::make('instrument.name')->label('Instrument')->searchable(),
             TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
             TextColumn::make('status')->label(__('common.status'))->badge(),
-            TextColumn::make('latestAcceptance.status')->label('Acceptation')->state(fn (Rental $record): ?string => self::acceptanceLabel($record->latestAcceptance))->badge()->color(fn (Rental $record): string => self::acceptanceColor($record->latestAcceptance))->description(fn (Rental $record): ?string => self::acceptanceDescription($record->latestAcceptance))->placeholder('Non envoyée'),
+            TextColumn::make('latestAcceptance.status')->label('Accord du client')->state(fn (Rental $record): ?string => self::acceptanceLabel($record->latestAcceptance))->badge()->color(fn (Rental $record): string => self::acceptanceColor($record->latestAcceptance))->description(fn (Rental $record): ?string => self::acceptanceDescription($record->latestAcceptance))->placeholder('Pas encore demandé'),
             TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
             TextColumn::make('unit_amount')->label('Loyer mensuel')->money('EUR'),
             TextColumn::make('insurance_monthly_amount')->label('Assurance')->money('EUR')->placeholder('—')->toggleable(),
@@ -166,13 +166,13 @@ class RentalResource extends Resource
     public static function acceptanceTiming(?RentalAcceptanceRequest $request): string
     {
         if ($request === null) {
-            return 'Générez les contrats, puis envoyez une demande au client lorsque le dossier est prêt.';
+            return 'Générez les contrats, puis demandez l’accord du client lorsque le dossier est prêt.';
         }
 
         return match (self::acceptanceLabel($request)) {
             'Acceptée' => 'Acceptée le '.$request->accepted_at?->format('d/m/Y à H:i'),
             'Envoyée' => 'Envoyée le '.$request->sent_at?->format('d/m/Y à H:i').', valable jusqu’au '.$request->expires_at->format('d/m/Y'),
-            'Expirée' => 'Le lien a expiré le '.$request->expires_at->format('d/m/Y').'. Renvoyez une nouvelle demande si nécessaire.',
+            'Expirée' => 'Le lien a expiré le '.$request->expires_at->format('d/m/Y').'. Envoyez une nouvelle demande si nécessaire.',
             'Annulée' => 'Demande annulée le '.$request->cancelled_at?->format('d/m/Y à H:i'),
             default => 'Demande préparée, pas encore envoyée.',
         };

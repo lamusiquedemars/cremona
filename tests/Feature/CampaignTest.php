@@ -91,7 +91,7 @@ class CampaignTest extends TestCase
         $this->actingAs($collaborator)
             ->get(Filament::getPanel('admin')->getUrl($organization))
             ->assertOk()
-            ->assertSee('Pilotage des campagnes');
+            ->assertSee('Vos publicités');
 
         $this->actingAs($collaborator)
             ->get(CampaignResource::getUrl('view', ['record' => $campaign], tenant: $organization))

@@ -24,7 +24,7 @@ class ListRentals extends ListRecords
                 ->badge(fn (): int => $this->attentionQuery($returnHorizon)->count())
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $this->applyAttentionQuery($query, $returnHorizon)),
-            'awaiting_acceptance' => Tab::make('Acceptation client')
+            'awaiting_acceptance' => Tab::make('Accord du client')
                 ->badge(fn (): int => Rental::query()->whereHas('latestAcceptance', fn (Builder $query): Builder => $query->whereIn('status', [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent]))->count())
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->whereHas('latestAcceptance', fn (Builder $query): Builder => $query->whereIn('status', [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent]))),

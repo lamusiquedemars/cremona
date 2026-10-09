@@ -41,13 +41,13 @@ class RentalAttention extends TableWidget
 
         return $table
             ->heading('Locations à suivre')
-            ->description('Les remises à préparer, acceptations client et retours prévus prochainement.')
+            ->description('Les locations qui demandent une action : préparation, accord du client ou retour à organiser.')
             ->query($this->attentionQuery($horizon))
             ->columns([
                 TextColumn::make('reference')->label('Référence')->weight('medium'),
                 TextColumn::make('instrument.name')->label('Instrument')->wrap(),
                 TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
-                TextColumn::make('next_step')->label('À faire')->state(fn (Rental $record): string => $this->nextStep($record))->badge()->color(fn (Rental $record): string => $this->nextStepColor($record)),
+                TextColumn::make('next_step')->label('Prochaine étape')->state(fn (Rental $record): string => $this->nextStep($record))->badge()->color(fn (Rental $record): string => $this->nextStepColor($record)),
                 TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—')->color(fn (Rental $record): string => $record->status === RentalStatus::Active && $record->expected_return_on?->isPast() ? 'danger' : 'gray'),
             ])
             ->recordUrl(fn (Rental $record): string => RentalResource::getUrl('edit', ['record' => $record]))
@@ -78,7 +78,7 @@ class RentalAttention extends TableWidget
     {
         $acceptance = $rental->latestAcceptance;
         if ($acceptance !== null && in_array($acceptance->status, [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent], true)) {
-            return $acceptance->expires_at->isPast() ? 'Renvoyer l’acceptation' : 'Suivre l’acceptation';
+            return $acceptance->expires_at->isPast() ? 'Renvoyer la demande d’accord' : 'Attendre l’accord du client';
         }
         if ($rental->status === RentalStatus::Draft && $acceptance?->status === RentalAcceptanceStatus::Accepted) {
             return 'Remettre l’instrument';
