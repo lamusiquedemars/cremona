@@ -34,6 +34,10 @@ class Person extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (Person $person): void {
+            $person->source ??= 'manual';
+        });
+
         static::saving(function (Person $person): void {
             $person->first_name = self::clean($person->first_name);
             $person->last_name = self::clean($person->last_name);

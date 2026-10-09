@@ -31,6 +31,18 @@ class Company extends Model
 {
     use BelongsToOrganization, ValidatesOrganizationAssignee;
 
+    protected static function booted(): void
+    {
+        static::creating(function (Company $company): void {
+            $company->source ??= 'manual';
+        });
+
+        static::saving(function (Company $company): void {
+            $countryCode = trim((string) $company->country_code);
+            $company->country_code = $countryCode !== '' ? mb_strtoupper($countryCode) : null;
+        });
+    }
+
     protected function casts(): array
     {
         return [

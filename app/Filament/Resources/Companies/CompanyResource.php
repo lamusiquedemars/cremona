@@ -15,6 +15,7 @@ use App\Filament\Resources\Companies\RelationManagers\IncomingRequestsRelationMa
 use App\Filament\Resources\Companies\RelationManagers\PeopleRelationManager;
 use App\Models\Company;
 use App\Services\OrganizationPresentation;
+use App\Support\ClientProfileOptions;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -101,66 +102,71 @@ class CompanyResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema
-            ->columns(3)
+            ->columns(12)
             ->components([
                 Section::make(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))
-                    ->columnSpan(2)
+                    ->description('Les informations d’identification de la structure.')
+                    ->columnSpanFull()
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make(12)->schema([
                             TextInput::make('name')
-                                ->label(__('common.current_name'))
+                                ->label('Nom usuel')
                                 ->required()
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->columnSpan(6),
                             TextInput::make('legal_name')
                                 ->label(__('common.legal_name'))
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->columnSpan(6),
                             TextInput::make('website')
                                 ->label(__('common.website'))
                                 ->url()
                                 ->maxLength(2048)
                                 ->columnSpanFull(),
-                            TextInput::make('address_line_1')->label('Adresse')->maxLength(255),
-                            TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255),
-                            TextInput::make('postal_code')->label('Code postal')->maxLength(32),
-                            TextInput::make('city')->label('Ville')->maxLength(255),
-                            TextInput::make('country_code')->label('Pays')->placeholder('FR')->length(2),
                         ]),
                     ]),
-                Section::make(__('common.reference_points'))
-                    ->columnSpan(1)
-                    ->schema([
-                        TextInput::make('industry')
-                            ->label(__('common.industry'))
-                            ->maxLength(255),
-                        TextInput::make('source')
-                            ->label(__('common.source'))
-                            ->maxLength(40),
-                    ]),
-                Section::make(__('common.contact_details'))
+                Section::make('Coordonnées')
+                    ->description('Les moyens de joindre cette structure et son adresse.')
                     ->columnSpanFull()
                     ->schema([
                         Repeater::make('contactMethods')
-                            ->label(__('common.contact_methods'))
+                            ->label('E-mail et téléphone')
                             ->relationship()
                             ->schema([
                                 Select::make('type')
-                                    ->label(__('common.type'))
+                                    ->label('Type')
                                     ->options(ContactMethodType::class)
-                                    ->required(),
-                                TextInput::make('label')
-                                    ->label(__('common.label'))
-                                    ->placeholder(__('common.contact_label_placeholder'))
-                                    ->maxLength(255),
-                                TextInput::make('value')
-                                    ->label(__('common.contact_detail'))
                                     ->required()
-                                    ->maxLength(255),
+                                    ->columnSpan(3),
+                                TextInput::make('value')
+                                    ->label('Coordonnée')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpan(5),
+                                TextInput::make('label')
+                                    ->label('Précision')
+                                    ->placeholder('Ex. accueil ou comptabilité')
+                                    ->maxLength(255)
+                                    ->columnSpan(3),
                                 Toggle::make('is_primary')
-                                    ->label(__('common.primary')),
+                                    ->label('À privilégier')
+                                    ->columnSpan(1),
                             ])
-                            ->columns(4)
+                            ->columns(12)
                             ->defaultItems(0)
-                            ->addActionLabel(__('common.add_contact_detail')),
+                            ->addActionLabel('Ajouter une coordonnée')
+                            ->columnSpanFull(),
+                        Grid::make(12)->schema([
+                            TextInput::make('address_line_1')->label('Adresse')->maxLength(255)->columnSpan(6),
+                            TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255)->columnSpan(6),
+                            TextInput::make('postal_code')->label('Code postal')->maxLength(32)->columnSpan(3),
+                            TextInput::make('city')->label('Ville')->maxLength(255)->columnSpan(5),
+                            Select::make('country_code')->label('Pays')->options(ClientProfileOptions::countries())->default('FR')->searchable()->columnSpan(4),
+                        ]),
+                        TextInput::make('industry')
+                            ->label('Secteur d’activité')
+                            ->maxLength(255)
+                            ->columnSpan(4),
                     ]),
             ]);
     }
@@ -168,10 +174,10 @@ class CompanyResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema
-            ->columns(3)
+            ->columns(12)
             ->components([
                 Section::make(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))
-                    ->columnSpan(2)
+                    ->columnSpan(8)
                     ->schema([
                         TextEntry::make('name')
                             ->label(__('common.current_name'))
@@ -186,17 +192,19 @@ class CompanyResource extends Resource
                             ->openUrlInNewTab()
                             ->placeholder('—'),
                     ]),
-                Section::make('Repères')
-                    ->columnSpan(1)
+                Section::make('Gestion interne')
+                    ->columnSpan(4)
                     ->schema([
                         TextEntry::make('status')
                             ->label(__('common.status'))
                             ->badge()
                             ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
                             ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
+                        TextEntry::make('source')->label('Origine')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::sourceLabel($state)),
+                        TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
                     ]),
                 Section::make('Coordonnées')
-                    ->columnSpan(2)
+                    ->columnSpan(8)
                     ->schema([
                         RepeatableEntry::make('contactMethods')
                             ->label('')
@@ -207,9 +215,16 @@ class CompanyResource extends Resource
                                 IconEntry::make('is_primary')->label(__('common.primary'))->boolean(),
                             ])
                             ->columns(4),
+                        TextEntry::make('address_line_1')->label('Adresse')->placeholder('—'),
+                        TextEntry::make('address_line_2')->label('Complément d’adresse')->placeholder('—'),
+                        Grid::make(3)->schema([
+                            TextEntry::make('postal_code')->label('Code postal')->placeholder('—'),
+                            TextEntry::make('city')->label('Ville')->placeholder('—'),
+                            TextEntry::make('country_code')->label('Pays')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::countryLabel($state)),
+                        ]),
                     ]),
-                Section::make(__('common.overview'))
-                    ->columnSpan(1)
+                Section::make('Activité')
+                    ->columnSpan(4)
                     ->schema([
                         TextEntry::make('people_count')
                             ->label(__('common.linked_contacts'))

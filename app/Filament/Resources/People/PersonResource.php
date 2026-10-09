@@ -15,6 +15,7 @@ use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
 use App\Filament\Resources\People\RelationManagers\IncomingRequestsRelationManager;
 use App\Models\Person;
 use App\Services\OrganizationPresentation;
+use App\Support\ClientProfileOptions;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -101,71 +102,72 @@ class PersonResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema
-            ->columns(3)
+            ->columns(12)
             ->components([
                 Section::make(__('cremona.person.identity'))
-                    ->description(__('cremona.person.identity_description'))
-                    ->columnSpan(2)
+                    ->description('Les informations permettant d’identifier cette personne dans votre fichier clients.')
+                    ->columnSpanFull()
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make(12)->schema([
                             TextInput::make('first_name')
                                 ->label(__('cremona.request.first_name'))
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->columnSpan(6),
                             TextInput::make('last_name')
                                 ->label(__('cremona.request.last_name'))
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->columnSpan(6),
                             TextInput::make('display_name')
-                                ->label(__('cremona.request.display_name'))
-                                ->helperText(__('cremona.person.display_name_help'))
+                                ->label('Nom affiché')
+                                ->helperText('Utilisé dans les listes et les documents. Laissez vide pour reprendre le prénom et le nom.')
                                 ->maxLength(255)
                                 ->columnSpanFull(),
                         ]),
                     ]),
-                Section::make(__('cremona.person.reference_points'))
-                    ->columnSpan(1)
-                    ->schema([
-                        TextInput::make('locale')
-                            ->label(__('cremona.person.language'))
-                            ->placeholder('fr')
-                            ->maxLength(16),
-                        TextInput::make('country_code')
-                            ->label(__('cremona.person.country'))
-                            ->placeholder('FR')
-                            ->length(2),
-                        TextInput::make('source')
-                            ->label(__('cremona.request.origin'))
-                            ->maxLength(40),
-                        TextInput::make('address_line_1')->label('Adresse')->maxLength(255),
-                        TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255),
-                        TextInput::make('postal_code')->label('Code postal')->maxLength(32),
-                        TextInput::make('city')->label('Ville')->maxLength(255),
-                    ]),
-                Section::make(__('cremona.person.contact_details'))
-                    ->description(__('cremona.person.contact_details_description'))
+                Section::make('Coordonnées')
+                    ->description('Ajoutez les moyens de joindre la personne et son adresse postale.')
                     ->columnSpanFull()
                     ->schema([
                         Repeater::make('contactMethods')
-                            ->label(__('cremona.person.contact_methods'))
+                            ->label('E-mail et téléphone')
                             ->relationship()
                             ->schema([
                                 Select::make('type')
-                                    ->label(__('cremona.person.type'))
+                                    ->label('Type')
                                     ->options(ContactMethodType::class)
-                                    ->required(),
-                                TextInput::make('label')
-                                    ->label(__('cremona.person.label'))
-                                    ->placeholder(__('cremona.person.label_placeholder'))
-                                    ->maxLength(255),
-                                TextInput::make('value')
-                                    ->label(__('cremona.person.contact_detail'))
                                     ->required()
-                                    ->maxLength(255),
+                                    ->columnSpan(3),
+                                TextInput::make('value')
+                                    ->label('Coordonnée')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpan(5),
+                                TextInput::make('label')
+                                    ->label('Précision')
+                                    ->placeholder('Ex. personnel ou atelier')
+                                    ->maxLength(255)
+                                    ->columnSpan(3),
                                 Toggle::make('is_primary')
-                                    ->label(__('cremona.person.primary')),
+                                    ->label('À privilégier')
+                                    ->columnSpan(1),
                             ])
-                            ->columns(4)
+                            ->columns(12)
                             ->defaultItems(0)
-                            ->addActionLabel(__('cremona.person.add_contact_detail')),
+                            ->addActionLabel('Ajouter une coordonnée')
+                            ->columnSpanFull(),
+                        Grid::make(12)->schema([
+                            TextInput::make('address_line_1')->label('Adresse')->maxLength(255)->columnSpan(6),
+                            TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255)->columnSpan(6),
+                            TextInput::make('postal_code')->label('Code postal')->maxLength(32)->columnSpan(3),
+                            TextInput::make('city')->label('Ville')->maxLength(255)->columnSpan(5),
+                            Select::make('country_code')->label('Pays')->options(ClientProfileOptions::countries())->default('FR')->searchable()->columnSpan(4),
+                        ]),
+                        Select::make('locale')
+                            ->label('Langue de communication')
+                            ->options(ClientProfileOptions::languages())
+                            ->default('fr')
+                            ->native(false)
+                            ->columnSpan(4),
                     ]),
             ]);
     }
@@ -173,10 +175,10 @@ class PersonResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema
-            ->columns(3)
+            ->columns(12)
             ->components([
                 Section::make(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))
-                    ->columnSpan(2)
+                    ->columnSpan(8)
                     ->schema([
                         TextEntry::make('display_name')
                             ->label(__('common.display_name'))
@@ -187,21 +189,20 @@ class PersonResource extends Resource
                             TextEntry::make('last_name')->label(__('common.name'))->placeholder('—'),
                         ]),
                     ]),
-                Section::make(__('common.reference_points'))
-                    ->columnSpan(1)
+                Section::make('Gestion interne')
+                    ->columnSpan(4)
                     ->schema([
                         TextEntry::make('status')
                             ->label(__('common.status'))
                             ->badge()
                             ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
                             ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
-                        TextEntry::make('source')->label(__('common.source'))->placeholder('—'),
-                        TextEntry::make('locale')->label(__('common.language'))->placeholder('—'),
-                        TextEntry::make('country_code')->label(__('common.country'))->placeholder('—'),
+                        TextEntry::make('source')->label('Origine')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::sourceLabel($state)),
+                        TextEntry::make('locale')->label('Langue de communication')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::languageLabel($state)),
                         TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
                     ]),
                 Section::make(__('common.contact_details'))
-                    ->columnSpan(2)
+                    ->columnSpan(8)
                     ->schema([
                         RepeatableEntry::make('contactMethods')
                             ->label('')
@@ -212,9 +213,16 @@ class PersonResource extends Resource
                                 IconEntry::make('is_primary')->label(__('common.primary'))->boolean(),
                             ])
                             ->columns(4),
+                        TextEntry::make('address_line_1')->label('Adresse')->placeholder('—'),
+                        TextEntry::make('address_line_2')->label('Complément d’adresse')->placeholder('—'),
+                        Grid::make(3)->schema([
+                            TextEntry::make('postal_code')->label('Code postal')->placeholder('—'),
+                            TextEntry::make('city')->label('Ville')->placeholder('—'),
+                            TextEntry::make('country_code')->label('Pays')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::countryLabel($state)),
+                        ]),
                     ]),
-                Section::make(__('common.overview'))
-                    ->columnSpan(1)
+                Section::make('Activité')
+                    ->columnSpan(4)
                     ->schema([
                         TextEntry::make('companies_count')
                             ->label(__('common.linked_companies'))
