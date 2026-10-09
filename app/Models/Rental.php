@@ -21,24 +21,14 @@ class Rental extends Model
         static::creating(function (self $rental): void {
             $rental->public_id ??= (string) Str::ulid();
             $rental->reference ??= 'LOC-'.str($rental->public_id)->substr(0, 8);
-            if ((float) $rental->unit_amount === 0.0 && $rental->instrument_asset_id !== null) {
-                $instrument = InstrumentAsset::query()->with('category')->find($rental->instrument_asset_id);
-
-                if ($instrument?->available_for_rental
-                    && $instrument->rental_pricing_mode !== 'override'
-                    && (filled($instrument->family) || filled($instrument->rental_size) || filled($instrument->rental_tier_id))) {
-                    app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
-                    if ($instrument->isDirty('instrument_category_id')) {
-                        $instrument->save();
-                    }
-                    $instrument->load('category');
-                }
-
-                $rental->unit_amount = $instrument?->rentalMonthlyAmount() ?? 0;
-            }
+            $rental->applyPricingSource();
         });
 
         static::saving(function (self $rental): void {
+            if (! $rental->exists || $rental->isDirty(['instrument_asset_id', 'rental_pricing_source'])) {
+                $rental->applyPricingSource();
+            }
+
             if ($rental->insurance_plan_id === null) {
                 if ($rental->isDirty('insurance_plan_id')) {
                     $rental->insurance_plan_name = null;
@@ -122,5 +112,39 @@ class Rental extends Model
     public function getRouteKeyName(): string
     {
         return 'public_id';
+    }
+
+    private function applyPricingSource(): void
+    {
+        if ($this->instrument_asset_id === null) {
+            return;
+        }
+
+        $instrument = InstrumentAsset::query()->with('category')->find($this->instrument_asset_id);
+        if ($instrument === null) {
+            return;
+        }
+        if ($instrument->available_for_rental && $instrument->rental_pricing_mode !== 'override') {
+            app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
+            if ($instrument->isDirty('instrument_category_id')) {
+                $instrument->save();
+            }
+            $instrument->load('category');
+        }
+        if ($this->rental_pricing_source === null) {
+            $this->rental_pricing_source = $instrument->rental_pricing_mode === 'override'
+                ? 'instrument'
+                : ($instrument->category !== null ? 'grid' : 'custom');
+        }
+        if ($this->rental_pricing_source === 'grid') {
+            if ($instrument->category !== null) {
+                $this->unit_amount = $instrument->rentalMonthlyAmount();
+            }
+
+            return;
+        }
+        if ($this->rental_pricing_source === 'instrument') {
+            $this->unit_amount = (float) ($instrument->rental_amount_override ?? 0);
+        }
     }
 }

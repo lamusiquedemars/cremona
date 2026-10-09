@@ -72,6 +72,8 @@ class ActiveConversations extends TableWidget
                     ->icon(Heroicon::OutlinedArrowRight)
                     ->url(ConversationResource::getUrl('index')),
             ])
+            ->emptyStateHeading('Aucun message en attente')
+            ->emptyStateDescription('Les réponses à apporter apparaîtront ici.')
             ->paginated(false);
     }
 }

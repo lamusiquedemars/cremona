@@ -73,6 +73,8 @@ class UpcomingAppointments extends TableWidget
                     ->icon(Heroicon::OutlinedArrowRight)
                     ->url(AppointmentResource::getUrl('index')),
             ])
+            ->emptyStateHeading('Aucun rendez-vous à venir')
+            ->emptyStateDescription('Les prochains rendez-vous apparaîtront ici.')
             ->paginated(false);
     }
 }

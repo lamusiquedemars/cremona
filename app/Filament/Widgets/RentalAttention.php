@@ -57,6 +57,8 @@ class RentalAttention extends TableWidget
                     ->icon(Heroicon::OutlinedArrowRight)
                     ->url(RentalResource::getUrl('index')),
             ])
+            ->emptyStateHeading('Aucune location à suivre')
+            ->emptyStateDescription('Les locations qui demandent une action apparaîtront ici.')
             ->paginated(false);
     }
 

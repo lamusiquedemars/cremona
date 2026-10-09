@@ -185,4 +185,51 @@ class InstrumentCategoryRentalRateTest extends TestCase
             $this->assertNull($instrument->fresh()->instrument_category_id);
         });
     }
+
+    public function test_creating_a_grid_attaches_already_qualified_instruments_without_reopening_them(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $tier = RentalTier::query()->create(['name' => 'Étude']);
+            $instrument = InstrumentAsset::query()->create([
+                'name' => 'Alto d’étude',
+                'family' => 'alto',
+                'rental_size' => '16in',
+                'rental_tier_id' => $tier->id,
+                'available_for_rental' => true,
+            ]);
+
+            $this->assertNull($instrument->instrument_category_id);
+
+            $category = InstrumentCategory::query()->create([
+                'name' => 'Alto adulte — étude',
+                'family' => 'alto',
+                'eligible_sizes' => ['16in'],
+                'rental_tier_id' => $tier->id,
+                'rental_monthly_amount' => 38,
+            ]);
+
+            $this->assertSame($category->id, $instrument->fresh()->instrument_category_id);
+        });
+    }
+
+    public function test_a_recorded_rental_amount_is_not_replaced_until_the_user_chooses_another_price(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $instrument = InstrumentAsset::query()->create(['name' => 'Alto existant']);
+            $rental = Rental::query()->create([
+                'instrument_asset_id' => $instrument->id,
+                'unit_amount' => 45,
+                'rental_pricing_source' => 'recorded',
+            ]);
+
+            $rental->update(['notes' => 'Montant historique conservé.']);
+
+            $this->assertSame('45.00', $rental->fresh()->unit_amount);
+            $this->assertSame('recorded', $rental->fresh()->rental_pricing_source);
+        });
+    }
 }

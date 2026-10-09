@@ -65,6 +65,8 @@ class OpenCrmTasks extends TableWidget
                     ->icon(Heroicon::OutlinedArrowRight)
                     ->url(CrmTaskResource::getUrl('index')),
             ])
+            ->emptyStateHeading('Rien à faire pour le moment')
+            ->emptyStateDescription('Les tâches à suivre apparaîtront ici.')
             ->paginated(false);
     }
 }

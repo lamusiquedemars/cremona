@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\InstrumentRentalPricing;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InstrumentCategory extends Model
 {
@@ -16,7 +17,15 @@ class InstrumentCategory extends Model
     protected static function booted(): void
     {
         static::saving(function (self $category): void {
-            app(\App\Services\InstrumentRentalPricing::class)->assertCategoryDoesNotOverlap($category);
+            app(InstrumentRentalPricing::class)->assertCategoryDoesNotOverlap($category);
+        });
+
+        static::saved(function (self $category): void {
+            app(InstrumentRentalPricing::class)->synchronizeInstrumentsForCategory($category);
+        });
+
+        static::deleted(function (self $category): void {
+            app(InstrumentRentalPricing::class)->synchronizeInstrumentsForCategory($category);
         });
     }
 

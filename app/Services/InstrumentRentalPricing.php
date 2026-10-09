@@ -41,6 +41,8 @@ class InstrumentRentalPricing
 
         if ($matches->count() > 1) {
             if (! $requireProfile) {
+                $instrument->instrument_category_id = null;
+
                 return;
             }
 
@@ -51,6 +53,8 @@ class InstrumentRentalPricing
 
         if ($matches->isEmpty()) {
             if (! $requireProfile) {
+                $instrument->instrument_category_id = null;
+
                 return;
             }
 
@@ -60,6 +64,48 @@ class InstrumentRentalPricing
         }
 
         $instrument->instrument_category_id = $matches->first()?->id;
+    }
+
+    /**
+     * Retourne la grille unique applicable, sans modifier la fiche instrument.
+     *
+     * Cette lecture est aussi utilisée par les dossiers créés avant qu'une grille
+     * ne soit configurée : ils restent ainsi lisibles avant leur prochaine sauvegarde.
+     */
+    public function resolvedCategoryForInstrument(InstrumentAsset $instrument): ?InstrumentCategory
+    {
+        if (! $instrument->available_for_rental || $instrument->rental_pricing_mode === 'override') {
+            return null;
+        }
+
+        if (blank($instrument->family) || blank($instrument->rental_size) || blank($instrument->rental_tier_id)) {
+            return null;
+        }
+
+        $matches = $this->matchingCategories($instrument->family, $instrument->rental_size, (int) $instrument->rental_tier_id);
+
+        return $matches->count() === 1 ? $matches->first() : null;
+    }
+
+    /**
+     * Une modification de grille doit également raccrocher les instruments déjà
+     * présents dans le parc : l'utilisateur ne doit pas avoir à rouvrir chaque fiche.
+     */
+    public function synchronizeInstrumentsForCategory(InstrumentCategory $category): void
+    {
+        InstrumentAsset::withoutGlobalScopes()
+            ->where('organization_id', $category->organization_id)
+            ->where('family', $category->family)
+            ->where('rental_tier_id', $category->rental_tier_id)
+            ->where('available_for_rental', true)
+            ->where('rental_pricing_mode', '!=', 'override')
+            ->eachById(function (InstrumentAsset $instrument): void {
+                $this->applyToInstrument($instrument);
+
+                if ($instrument->isDirty('instrument_category_id')) {
+                    $instrument->save();
+                }
+            });
     }
 
     public function assertCategoryDoesNotOverlap(InstrumentCategory $category): void

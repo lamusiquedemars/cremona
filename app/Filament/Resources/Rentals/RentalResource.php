@@ -9,6 +9,7 @@ use App\Filament\Resources\Rentals\Pages\CreateRental;
 use App\Filament\Resources\Rentals\Pages\EditRental;
 use App\Filament\Resources\Rentals\Pages\ListRentals;
 use App\Models\InstrumentAsset;
+use App\Models\InstrumentCategory;
 use App\Models\Rental;
 use App\Models\RentalAcceptanceRequest;
 use App\Models\RentalInsurancePlan;
@@ -83,7 +84,9 @@ class RentalResource extends Resource
                         }
                         $instrument->load('category');
                     }
-                    $amount = $instrument?->rentalMonthlyAmount();
+                    $source = self::defaultPricingSource($instrument);
+                    $set('rental_pricing_source', $source);
+                    $amount = self::amountForPricingSource($instrument, $source);
                     if ($amount !== null) {
                         $set('unit_amount', $amount);
                     }
@@ -93,7 +96,21 @@ class RentalResource extends Resource
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable()->required()->columnSpan(6),
                 DatePicker::make('starts_on')->label('Début prévu')->native(false)->columnSpan(3),
                 DatePicker::make('expected_return_on')->label('Retour prévu')->native(false)->columnSpan(3),
-                TextInput::make('unit_amount')->label('Loyer mensuel')->numeric()->prefix('€')->default(0)->helperText('Montant proposé pour cette location. Vous pouvez l’ajuster avant l’enregistrement ; il restera ensuite associé à ce dossier.')->columnSpan(3),
+                Select::make('rental_pricing_source')->label('Tarif appliqué')->options(fn (Get $get, ?Rental $record): array => self::pricingSourceOptions(InstrumentAsset::query()->with('category')->find($get('instrument_asset_id')), $record))->default('grid')->required()->live()->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
+                    $instrument = InstrumentAsset::query()->with('category')->find($get('instrument_asset_id'));
+                    if ($state === 'grid' && $instrument?->available_for_rental) {
+                        app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
+                        if ($instrument->isDirty('instrument_category_id')) {
+                            $instrument->save();
+                        }
+                        $instrument->load('category');
+                    }
+                    $amount = self::amountForPricingSource($instrument, $state);
+                    if ($amount !== null) {
+                        $set('unit_amount', $amount);
+                    }
+                })->helperText(fn (Get $get): string => self::pricingSourceHelp((string) $get('rental_pricing_source')))->columnSpan(3),
+                TextInput::make('unit_amount')->label(fn (Get $get): string => self::pricingAmountLabel((string) $get('rental_pricing_source')))->numeric()->prefix('€')->default(0)->disabled(fn (Get $get): bool => in_array($get('rental_pricing_source'), ['grid', 'instrument', 'recorded'], true))->dehydrated()->helperText(fn (Get $get): string => self::pricingAmountHelp((string) $get('rental_pricing_source')))->columnSpan(3),
                 TextInput::make('deposit_amount')->label('Dépôt de garantie')->numeric()->prefix('€')->default(0)->columnSpan(3),
                 Select::make('insurance_plan_id')->label('Assurance facultative')->options(function (Get $get): array {
                     $instrument = InstrumentAsset::query()->find($get('instrument_asset_id'));
@@ -184,5 +201,82 @@ class RentalResource extends Resource
             'Annulée' => 'Demande annulée le '.$request->cancelled_at?->format('d/m/Y à H:i'),
             default => 'Demande préparée, pas encore envoyée.',
         };
+    }
+
+    /** @return array<string, string> */
+    public static function pricingSourceOptions(?InstrumentAsset $instrument, ?Rental $record): array
+    {
+        $options = [];
+        if ($record?->rental_pricing_source === 'recorded') {
+            $options['recorded'] = 'Montant déjà enregistré pour ce dossier';
+        }
+        if ($instrument?->rental_pricing_mode === 'override') {
+            $options['instrument'] = 'Tarif propre à cet instrument';
+        }
+        $grid = self::gridFor($instrument);
+        if ($grid !== null) {
+            $options['grid'] = 'Tarif de la grille — '.$grid->name;
+        }
+        $options['custom'] = 'Montant personnalisé pour cette location';
+
+        return $options;
+    }
+
+    public static function defaultPricingSource(?InstrumentAsset $instrument): string
+    {
+        if ($instrument?->rental_pricing_mode === 'override') {
+            return 'instrument';
+        }
+
+        return self::gridFor($instrument) === null ? 'custom' : 'grid';
+    }
+
+    public static function amountForPricingSource(?InstrumentAsset $instrument, ?string $source): ?float
+    {
+        $grid = self::gridFor($instrument);
+
+        return match ($source) {
+            'grid' => $grid === null ? null : (float) $grid->rental_monthly_amount,
+            'instrument' => $instrument === null ? null : (float) ($instrument->rental_amount_override ?? 0),
+            default => null,
+        };
+    }
+
+    public static function pricingSourceHelp(string $source): string
+    {
+        return match ($source) {
+            'grid' => 'Le loyer est repris de la grille de cet instrument.',
+            'instrument' => 'Cet instrument a un tarif propre, différent de la grille.',
+            'recorded' => 'Ce montant existait déjà dans ce dossier. Choisissez la grille ou un montant personnalisé pour le modifier.',
+            default => 'Choisissez cette option uniquement si vous convenez d’un montant particulier avec le client.',
+        };
+    }
+
+    public static function pricingAmountLabel(string $source): string
+    {
+        return match ($source) {
+            'grid' => 'Loyer mensuel de la grille',
+            'instrument' => 'Loyer mensuel de cet instrument',
+            'recorded' => 'Loyer mensuel enregistré',
+            default => 'Loyer mensuel convenu',
+        };
+    }
+
+    public static function pricingAmountHelp(string $source): string
+    {
+        return match ($source) {
+            'grid', 'instrument' => 'Modifiez le tarif appliqué si vous souhaitez convenir d’un montant particulier pour cette location.',
+            'recorded' => 'Ce montant reste conservé tant que vous ne choisissez pas un autre tarif appliqué.',
+            default => 'Ce montant restera associé à cette location, même si le tarif de la grille change ensuite.',
+        };
+    }
+
+    private static function gridFor(?InstrumentAsset $instrument): ?InstrumentCategory
+    {
+        if ($instrument === null) {
+            return null;
+        }
+
+        return app(InstrumentRentalPricing::class)->resolvedCategoryForInstrument($instrument);
     }
 }

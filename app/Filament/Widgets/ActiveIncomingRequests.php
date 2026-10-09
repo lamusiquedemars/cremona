@@ -77,6 +77,8 @@ class ActiveIncomingRequests extends TableWidget
                     ->icon(Heroicon::OutlinedArrowRight)
                     ->url(IncomingRequestResource::getUrl('index')),
             ])
+            ->emptyStateHeading('Aucune demande à suivre')
+            ->emptyStateDescription('Les nouvelles prises de contact apparaîtront ici.')
             ->paginated(false);
     }
 }

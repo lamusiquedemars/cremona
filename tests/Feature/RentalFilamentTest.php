@@ -65,6 +65,7 @@ class RentalFilamentTest extends TestCase
             $rental = Rental::query()->sole();
             $this->assertSame($instrument->id, $rental->instrument_asset_id);
             $this->assertSame($person->id, $rental->person_id);
+            $this->assertSame('grid', $rental->rental_pricing_source);
             $this->assertSame('38.00', $rental->unit_amount);
         });
     }
