@@ -123,6 +123,24 @@ class CrmFilamentTest extends TestCase
             ->assertDontSee('Entreprises');
     }
 
+    public function test_the_clients_directory_uses_the_same_configured_navigation_group_as_the_crm_resources(): void
+    {
+        $organization = Organization::factory()->create([
+            'settings' => [
+                'presentation' => [
+                    'labels' => [
+                        'customer_follow_up' => 'Clients',
+                    ],
+                ],
+            ],
+        ]);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $this->assertSame('Clients', ClientDirectory::getNavigationGroup());
+            $this->assertSame('Clients', IncomingRequestResource::getNavigationGroup());
+        });
+    }
+
     public function test_a_request_detail_renders_its_snapshot_and_workflow_actions(): void
     {
         $organization = $this->organizationWithCrm();

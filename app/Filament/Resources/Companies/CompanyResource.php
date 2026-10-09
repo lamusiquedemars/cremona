@@ -27,6 +27,7 @@ use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -133,32 +134,29 @@ class CompanyResource extends Resource
                             ->label('E-mail et téléphone')
                             ->relationship()
                             ->schema([
-                                Grid::make(12)->schema([
+                                Grid::make(1)->schema([
                                     Select::make('type')
                                         ->label('Type')
                                         ->options(ContactMethodType::class)
-                                        ->required()
-                                        ->columnSpan(3),
+                                        ->required(),
                                     TextInput::make('value')
                                         ->label('E-mail ou téléphone')
                                         ->required()
-                                        ->maxLength(255)
-                                        ->columnSpan(5),
+                                        ->maxLength(255),
                                     TextInput::make('label')
                                         ->label('Précision')
                                         ->placeholder('Ex. accueil ou comptabilité')
-                                        ->maxLength(255)
-                                        ->columnSpan(3),
+                                        ->maxLength(255),
                                     Toggle::make('is_primary')
-                                        ->label('À privilégier')
-                                        ->columnSpan(1),
+                                        ->label('Coordonnée à privilégier'),
                                 ]),
                             ])
                             ->reorderable(false)
                             ->defaultItems(0)
                             ->addActionLabel('Ajouter une coordonnée')
+                            ->extraAttributes(['style' => 'margin-bottom: 1.5rem'])
                             ->columnSpanFull(),
-                        Grid::make(12)->schema([
+                        Fieldset::make('Adresse postale')->columns(12)->schema([
                             TextInput::make('address_line_1')->label('Adresse')->maxLength(255)->columnSpan(6),
                             TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255)->columnSpan(6),
                             TextInput::make('postal_code')->label('Code postal')->maxLength(32)->columnSpan(3),
