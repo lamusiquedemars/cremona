@@ -24,7 +24,7 @@ La navigation de référence est la suivante. Elle décrit des capacités produi
 Accueil
   Tableau de bord
 
-Suivi client
+Suivi client (nommé « Clients » si l’organisation le configure ainsi)
   Clients · Demandes · Correspondances · Rendez-vous · Tâches
 
 Activité commerciale
