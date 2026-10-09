@@ -77,7 +77,7 @@ class RentalResource extends Resource
                 Select::make('status')->label(__('common.status'))->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required()->columnSpan(3),
                 Select::make('instrument_asset_id')->label('Instrument')->relationship('instrument', 'name')->getOptionLabelFromRecordUsing(fn (InstrumentAsset $instrument): string => trim($instrument->name.' — '.$instrument->status->label()))->preload()->searchable()->live()->afterStateUpdated(function (?int $state, Set $set): void {
                     $instrument = InstrumentAsset::query()->with('category')->find($state);
-                    if ($instrument?->available_for_rental && $instrument->rental_pricing_mode !== 'override') {
+                    if ($instrument?->available_for_rental) {
                         app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
                         if ($instrument->isDirty('instrument_category_id')) {
                             $instrument->save();

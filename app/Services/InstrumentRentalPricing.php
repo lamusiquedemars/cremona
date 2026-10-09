@@ -23,7 +23,7 @@ class InstrumentRentalPricing
 
     public function applyToInstrument(InstrumentAsset $instrument, bool $requireProfile = false): void
     {
-        if (! $instrument->available_for_rental || $instrument->rental_pricing_mode === 'override') {
+        if (! $instrument->available_for_rental) {
             return;
         }
 
@@ -41,8 +41,6 @@ class InstrumentRentalPricing
 
         if ($matches->count() > 1) {
             if (! $requireProfile) {
-                $instrument->instrument_category_id = null;
-
                 return;
             }
 
@@ -53,8 +51,6 @@ class InstrumentRentalPricing
 
         if ($matches->isEmpty()) {
             if (! $requireProfile) {
-                $instrument->instrument_category_id = null;
-
                 return;
             }
 
@@ -74,7 +70,7 @@ class InstrumentRentalPricing
      */
     public function resolvedCategoryForInstrument(InstrumentAsset $instrument): ?InstrumentCategory
     {
-        if (! $instrument->available_for_rental || $instrument->rental_pricing_mode === 'override') {
+        if (! $instrument->available_for_rental) {
             return null;
         }
 
@@ -84,7 +80,7 @@ class InstrumentRentalPricing
 
         $matches = $this->matchingCategories($instrument->family, $instrument->rental_size, (int) $instrument->rental_tier_id);
 
-        return $matches->count() === 1 ? $matches->first() : null;
+        return $matches->count() === 1 ? $matches->first() : $instrument->category;
     }
 
     /**
@@ -98,7 +94,6 @@ class InstrumentRentalPricing
             ->where('family', $category->family)
             ->where('rental_tier_id', $category->rental_tier_id)
             ->where('available_for_rental', true)
-            ->where('rental_pricing_mode', '!=', 'override')
             ->eachById(function (InstrumentAsset $instrument): void {
                 $this->applyToInstrument($instrument);
 

@@ -124,7 +124,7 @@ class Rental extends Model
         if ($instrument === null) {
             return;
         }
-        if ($instrument->available_for_rental && $instrument->rental_pricing_mode !== 'override') {
+        if ($instrument->available_for_rental) {
             app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
             if ($instrument->isDirty('instrument_category_id')) {
                 $instrument->save();

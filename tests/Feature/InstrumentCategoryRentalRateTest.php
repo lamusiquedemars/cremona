@@ -108,6 +108,60 @@ class InstrumentCategoryRentalRateTest extends TestCase
         });
     }
 
+    public function test_an_exceptional_rate_keeps_the_instrument_attached_to_its_rental_grid(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $tier = RentalTier::query()->create(['name' => 'Étude']);
+            $category = InstrumentCategory::query()->create([
+                'name' => 'Violon adulte — étude',
+                'family' => 'violon',
+                'eligible_sizes' => ['4/4'],
+                'rental_tier_id' => $tier->id,
+                'rental_monthly_amount' => 42,
+            ]);
+            $instrument = InstrumentAsset::query()->create([
+                'name' => 'Violon avec tarif propre',
+                'family' => 'violon',
+                'rental_size' => '4/4',
+                'rental_tier_id' => $tier->id,
+                'available_for_rental' => true,
+                'rental_pricing_mode' => 'override',
+                'rental_amount_override' => 55,
+            ]);
+
+            $this->assertSame($category->id, $instrument->fresh()->instrument_category_id);
+            $this->assertSame(55.0, $instrument->fresh()->load('category')->rentalMonthlyAmount());
+        });
+    }
+
+    public function test_an_existing_grid_link_is_not_removed_when_the_profile_is_incomplete_or_different(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $tier = RentalTier::query()->create(['name' => 'Étude']);
+            $category = InstrumentCategory::query()->create([
+                'name' => 'Violon adulte — étude',
+                'family' => 'violon',
+                'eligible_sizes' => ['4/4'],
+                'rental_tier_id' => $tier->id,
+                'rental_monthly_amount' => 42,
+            ]);
+            $instrument = InstrumentAsset::query()->create([
+                'name' => 'Violon historique',
+                'family' => 'violon',
+                'rental_size' => '3/4',
+                'rental_tier_id' => $tier->id,
+                'available_for_rental' => true,
+                'instrument_category_id' => $category->id,
+            ]);
+
+            $this->assertSame($category->id, $instrument->fresh()->instrument_category_id);
+        });
+    }
+
     public function test_switching_back_to_the_grid_clears_a_legacy_exception_and_uses_the_grid_rate(): void
     {
         $organization = Organization::factory()->create();

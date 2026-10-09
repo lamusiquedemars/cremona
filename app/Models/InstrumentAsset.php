@@ -25,8 +25,9 @@ class InstrumentAsset extends Model
 
             if ($instrument->rental_pricing_mode !== 'override') {
                 $instrument->rental_amount_override = null;
-                app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
             }
+
+            app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
         });
     }
 
