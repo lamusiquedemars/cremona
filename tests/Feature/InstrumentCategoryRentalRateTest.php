@@ -108,6 +108,41 @@ class InstrumentCategoryRentalRateTest extends TestCase
         });
     }
 
+    public function test_switching_back_to_the_grid_clears_a_legacy_exception_and_uses_the_grid_rate(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $tier = RentalTier::query()->create(['name' => 'Étude']);
+            $category = InstrumentCategory::query()->create([
+                'name' => 'Alto adulte — étude',
+                'family' => 'alto',
+                'eligible_sizes' => ['16in'],
+                'rental_tier_id' => $tier->id,
+                'rental_monthly_amount' => 38,
+            ]);
+            $instrument = InstrumentAsset::query()->create([
+                'name' => 'Alto d’étude',
+                'family' => 'alto',
+                'rental_size' => '16in',
+                'rental_tier_id' => $tier->id,
+                'available_for_rental' => true,
+                'rental_pricing_mode' => 'override',
+                'rental_amount_override' => 45,
+            ]);
+
+            $instrument->update(['rental_pricing_mode' => 'automatic']);
+
+            $instrument->refresh();
+            $this->assertSame($category->id, $instrument->instrument_category_id);
+            $this->assertNull($instrument->rental_amount_override);
+            $this->assertSame(38.0, $instrument->load('category')->rentalMonthlyAmount());
+
+            $rental = Rental::query()->create(['instrument_asset_id' => $instrument->id]);
+            $this->assertSame('38.00', $rental->fresh()->unit_amount);
+        });
+    }
+
     public function test_a_legacy_rental_instrument_can_be_saved_before_it_is_qualified(): void
     {
         $organization = Organization::factory()->create();

@@ -10,6 +10,7 @@ use App\Filament\Resources\InstrumentAssets\Pages\EditInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\ListInstrumentAssets;
 use App\Models\InstrumentAsset;
 use App\Support\InstrumentRentalCatalog;
+use App\Tenancy\OrganizationContext;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ImportAction;
@@ -30,7 +31,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use App\Tenancy\OrganizationContext;
 
 class InstrumentAssetResource extends Resource
 {
@@ -74,8 +74,8 @@ class InstrumentAssetResource extends Resource
                 Select::make('status')->label('Disponibilité actuelle')->options(InstrumentAssetStatus::class)->default(InstrumentAssetStatus::Available)->required()->columnSpan(6),
                 Textarea::make('description')->label('Description interne')->rows(4)->columnSpanFull(),
                 Textarea::make('commercial_notes')->label('Note commerciale interne')->rows(2)->helperText('Par exemple : instrument à vendre qui peut aussi être proposé à la location. Cette note ne paraît jamais sur le site.')->columnSpanFull(),
-                Select::make('rental_pricing_mode')->label('Tarification de location')->options(['automatic' => 'Grille automatique', 'override' => 'Tarif exceptionnel'])->default('automatic')->required()->live()->visible(fn (Get $get): bool => (bool) $get('available_for_rental'))->columnSpan(4)->helperText('La grille est trouvée à partir de la famille, de la taille et de la gamme.'),
-                TextInput::make('rental_amount_override')->label('Loyer mensuel HT exceptionnel')->numeric()->prefix('€')->required(fn (Get $get): bool => $get('available_for_rental') && $get('rental_pricing_mode') === 'override')->visible(fn (Get $get): bool => $get('available_for_rental') && $get('rental_pricing_mode') === 'override')->columnSpan(4)->helperText('Ce montant remplace la grille uniquement pour cet instrument.'),
+                Select::make('rental_pricing_mode')->label('Loyer de location')->options(['automatic' => 'Appliquer le tarif de la grille', 'override' => 'Utiliser un tarif propre à cet instrument'])->default('automatic')->required()->live()->visible(fn (Get $get): bool => (bool) $get('available_for_rental'))->columnSpan(4)->helperText('La grille correspondant à cet instrument propose le loyer mensuel.'),
+                TextInput::make('rental_amount_override')->label('Loyer mensuel HT')->numeric()->prefix('€')->required(fn (Get $get): bool => $get('available_for_rental') && $get('rental_pricing_mode') === 'override')->visible(fn (Get $get): bool => $get('available_for_rental') && $get('rental_pricing_mode') === 'override')->columnSpan(4)->helperText('À utiliser uniquement si cet instrument est proposé à un montant différent du tarif habituel.'),
                 Repeater::make('attributes')->label('Caractéristiques de l’instrument')->schema([
                     Select::make('label')->label('Caractéristique')->options([
                         'Instrument' => 'Instrument',
@@ -109,8 +109,7 @@ class InstrumentAssetResource extends Resource
                     TextInput::make('suggested_sale_amount')->label('Prix de vente HT indicatif')->numeric()->prefix('€')->default(0)->columnSpan(6),
                 ])->columns(12)->columnSpan(6),
                 Group::make([
-                    Checkbox::make('available_for_rental')->label('Proposer à la location')->live()->columnSpan(6),
-                    TextInput::make('suggested_rental_amount')->label('Ancien loyer indicatif')->numeric()->prefix('€')->disabled()->dehydrated(false)->visible(fn (?InstrumentAsset $record): bool => (float) ($record?->suggested_rental_amount ?? 0) > 0)->columnSpan(6)->helperText('Conservé pour l’historique. Utilisez désormais la grille ou le tarif exceptionnel.'),
+                    Checkbox::make('available_for_rental')->label('Proposer à la location')->live()->columnSpanFull()->helperText('Activez cette option lorsque cet instrument peut être confié à un client.'),
                 ])->columns(12)->columnSpan(6)->extraAttributes(['class' => 'border-s border-gray-200 ps-6 dark:border-white/10']),
             ])->columns(12)->columnSpanFull(),
             Section::make('Visibilité sur le site')->description('Ces informations sont celles que le site public peut afficher. Elles ne modifient ni la location, ni la vente, ni le suivi atelier.')->schema([

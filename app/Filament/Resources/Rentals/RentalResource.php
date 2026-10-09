@@ -12,6 +12,7 @@ use App\Models\InstrumentAsset;
 use App\Models\Rental;
 use App\Models\RentalAcceptanceRequest;
 use App\Models\RentalInsurancePlan;
+use App\Services\InstrumentRentalPricing;
 use App\Services\RentalInsurancePricing;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
@@ -56,7 +57,7 @@ class RentalResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->columns(2)->components([
+        return $schema->columns(12)->components([
             Section::make('Accord du client')
                 ->visible(fn (?Rental $record): bool => $record !== null)
                 ->schema([
@@ -71,23 +72,29 @@ class RentalResource extends Resource
                         ->content(fn (?Rental $record): string => self::acceptanceTiming($record?->latestAcceptance)),
                 ])->columns(3)->columnSpanFull(),
             Section::make('Location')->schema([
-                TextInput::make('reference')->label(__('common.reference'))->helperText('Générée automatiquement si laissée vide.'),
-                Select::make('status')->label(__('common.status'))->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required(),
+                TextInput::make('reference')->label(__('common.reference'))->helperText('Générée automatiquement si laissée vide.')->columnSpan(3),
+                Select::make('status')->label(__('common.status'))->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required()->columnSpan(3),
                 Select::make('instrument_asset_id')->label('Instrument')->relationship('instrument', 'name')->getOptionLabelFromRecordUsing(fn (InstrumentAsset $instrument): string => trim($instrument->name.' — '.$instrument->status->label()))->preload()->searchable()->live()->afterStateUpdated(function (?int $state, Set $set): void {
                     $instrument = InstrumentAsset::query()->with('category')->find($state);
+                    if ($instrument?->available_for_rental && $instrument->rental_pricing_mode !== 'override') {
+                        app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
+                        if ($instrument->isDirty('instrument_category_id')) {
+                            $instrument->save();
+                        }
+                        $instrument->load('category');
+                    }
                     $amount = $instrument?->rentalMonthlyAmount();
                     if ($amount !== null) {
                         $set('unit_amount', $amount);
                     }
                     $set('insurance_plan_id', null);
                     $set('insurance_monthly_amount', 0);
-                })->required(),
-                Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable(),
-                DatePicker::make('starts_on')->label('Début prévu')->native(false),
-                DatePicker::make('expected_return_on')->label('Retour prévu')->native(false),
-                DatePicker::make('returned_on')->label('Restitué le')->native(false),
-                Textarea::make('return_notes')->label('Constat de restitution')->rows(3)->columnSpanFull(),
-                TextInput::make('unit_amount')->label('Loyer mensuel')->numeric()->prefix('€')->default(0)->helperText('Proposé depuis la grille de l’instrument, puis figé dans cette location.'),
+                })->required()->columnSpan(6),
+                Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable()->required()->columnSpan(6),
+                DatePicker::make('starts_on')->label('Début prévu')->native(false)->columnSpan(3),
+                DatePicker::make('expected_return_on')->label('Retour prévu')->native(false)->columnSpan(3),
+                TextInput::make('unit_amount')->label('Loyer mensuel')->numeric()->prefix('€')->default(0)->helperText('Montant proposé pour cette location. Vous pouvez l’ajuster avant l’enregistrement ; il restera ensuite associé à ce dossier.')->columnSpan(3),
+                TextInput::make('deposit_amount')->label('Dépôt de garantie')->numeric()->prefix('€')->default(0)->columnSpan(3),
                 Select::make('insurance_plan_id')->label('Assurance facultative')->options(function (Get $get): array {
                     $instrument = InstrumentAsset::query()->find($get('instrument_asset_id'));
                     if ($instrument === null) {
@@ -100,11 +107,12 @@ class RentalResource extends Resource
                 })->searchable()->live()->afterStateUpdated(function (?int $state, Set $set): void {
                     $plan = $state === null ? null : RentalInsurancePlan::query()->find($state);
                     $set('insurance_monthly_amount', $plan?->monthly_amount ?? 0);
-                })->helperText('Laissez vide si le client ne souscrit pas l’assurance.'),
-                TextInput::make('insurance_monthly_amount')->label('Prime mensuelle')->numeric()->prefix('€')->default(0)->disabled()->dehydrated()->helperText('Reprise automatiquement depuis la formule choisie et figée dans cette location.'),
-                TextInput::make('deposit_amount')->label('Dépôt de garantie')->numeric()->prefix('€')->default(0),
+                })->helperText('Laissez vide lorsque le client ne souhaite pas cette protection.')->columnSpan(6),
+                TextInput::make('insurance_monthly_amount')->label('Montant mensuel de l’assurance')->numeric()->prefix('€')->default(0)->disabled()->dehydrated()->helperText('Ce montant est celui choisi pour cette location et reste inchangé dans le dossier.')->columnSpan(6),
+                DatePicker::make('returned_on')->label('Restitué le')->native(false)->columnSpan(3),
+                Textarea::make('return_notes')->label('Constat de restitution')->rows(3)->columnSpan(9),
                 Textarea::make('notes')->label(__('common.internal_notes'))->rows(4)->columnSpanFull(),
-            ])->columns(2),
+            ])->columns(12)->columnSpanFull(),
         ]);
     }
 

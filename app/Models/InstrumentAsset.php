@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use App\Enums\InstrumentAssetStatus;
+use App\Services\InstrumentRentalPricing;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class InstrumentAsset extends Model
@@ -20,6 +21,11 @@ class InstrumentAsset extends Model
         static::saving(function (self $instrument): void {
             if ($instrument->is_site_published && blank($instrument->public_slug)) {
                 $instrument->public_slug = Str::slug($instrument->public_title ?: $instrument->name);
+            }
+
+            if ($instrument->rental_pricing_mode !== 'override') {
+                $instrument->rental_amount_override = null;
+                app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
             }
         });
     }
