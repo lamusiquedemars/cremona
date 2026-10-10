@@ -131,32 +131,32 @@ class CompanyResource extends Resource
                     ->columns(1)
                     ->columnSpanFull()
                     ->schema([
-                        Repeater::make('contactMethods')
-                            ->label('E-mail et téléphone')
-                            ->relationship()
-                            ->schema([
-                                Grid::make(1)->schema([
-                                    Select::make('type')
-                                        ->label('Type')
-                                        ->options(ContactMethodType::class)
-                                        ->required(),
-                                    TextInput::make('value')
-                                        ->label('E-mail ou téléphone')
-                                        ->required()
-                                        ->maxLength(255),
-                                    TextInput::make('label')
-                                        ->label('Précision')
-                                        ->placeholder('Ex. accueil ou comptabilité')
-                                        ->maxLength(255),
-                                    Toggle::make('is_primary')
-                                        ->label('Coordonnée à privilégier'),
-                                ]),
-                            ])
-                            ->reorderable(false)
-                            ->defaultItems(0)
-                            ->addActionLabel('Ajouter une coordonnée')
-                            ->extraAttributes(['style' => 'margin-bottom: 1.5rem'])
-                            ->columnSpanFull(),
+                        Fieldset::make('E-mail et téléphone')->schema([
+                            Repeater::make('contactMethods')
+                                ->relationship()
+                                ->hiddenLabel()
+                                ->schema([
+                                    Grid::make(1)->schema([
+                                        Select::make('type')
+                                            ->label('Type')
+                                            ->options(ContactMethodType::class)
+                                            ->required(),
+                                        TextInput::make('value')
+                                            ->label('E-mail ou téléphone')
+                                            ->required()
+                                            ->maxLength(255),
+                                        TextInput::make('label')
+                                            ->label('Précision')
+                                            ->placeholder('Ex. accueil ou comptabilité')
+                                            ->maxLength(255),
+                                        Toggle::make('is_primary')
+                                            ->label('Coordonnée à privilégier'),
+                                    ]),
+                                ])
+                                ->reorderable(false)
+                                ->defaultItems(0)
+                                ->addActionLabel('Ajouter une coordonnée'),
+                        ])->columnSpanFull(),
                         Fieldset::make('Adresse postale')->columns(12)->schema([
                             TextInput::make('address_line_1')->label('Adresse')->maxLength(255)->columnSpan(6),
                             TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255)->columnSpan(6),
