@@ -25,11 +25,7 @@ trait UsesOrganizationPresentation
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        $group = static::$navigationGroup;
-
-        return is_string($group)
-            ? app(OrganizationPresentation::class)->navigationGroupLabel(static::$presentationGroupKey ?? '', $group)
-            : $group;
+        return static::$navigationGroup;
     }
 
     public static function shouldRegisterNavigation(): bool

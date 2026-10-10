@@ -58,11 +58,11 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->navigationGroups([
-                NavigationGroup::make(fn (): string => app(\App\Services\OrganizationPresentation::class)->navigationGroupLabel('customer_follow_up', 'Suivi client')),
-                NavigationGroup::make(fn (): string => app(\App\Services\OrganizationPresentation::class)->navigationGroupLabel('commercial_activity', 'Activité commerciale')),
-                NavigationGroup::make(fn (): string => app(\App\Services\OrganizationPresentation::class)->navigationGroupLabel('workshop', 'Atelier')),
+                NavigationGroup::make('Suivi client'),
+                NavigationGroup::make('Activité commerciale'),
+                NavigationGroup::make('Atelier'),
                 NavigationGroup::make('Catalogue et stock'),
-                NavigationGroup::make(fn (): string => app(\App\Services\OrganizationPresentation::class)->navigationGroupLabel('marketing', 'Marketing')),
+                NavigationGroup::make('Marketing'),
                 NavigationGroup::make('Configuration de l’organisation'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

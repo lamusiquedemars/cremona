@@ -123,7 +123,7 @@ class CrmFilamentTest extends TestCase
             ->assertDontSee('Entreprises');
     }
 
-    public function test_the_clients_directory_uses_the_same_configured_navigation_group_as_the_crm_resources(): void
+    public function test_the_clients_directory_and_crm_resources_share_the_single_client_follow_up_navigation_group(): void
     {
         $organization = Organization::factory()->create([
             'settings' => [
@@ -136,8 +136,8 @@ class CrmFilamentTest extends TestCase
         ]);
 
         app(OrganizationContext::class)->run($organization, function (): void {
-            $this->assertSame('Clients', ClientDirectory::getNavigationGroup());
-            $this->assertSame('Clients', IncomingRequestResource::getNavigationGroup());
+            $this->assertSame('Suivi client', ClientDirectory::getNavigationGroup());
+            $this->assertSame('Suivi client', IncomingRequestResource::getNavigationGroup());
         });
     }
 

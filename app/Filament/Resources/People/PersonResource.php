@@ -126,6 +126,7 @@ class PersonResource extends Resource
                     ]),
                 Section::make('Coordonnées')
                     ->description('Ajoutez les moyens de joindre la personne et son adresse postale.')
+                    ->columns(1)
                     ->columnSpanFull()
                     ->schema([
                         Repeater::make('contactMethods')

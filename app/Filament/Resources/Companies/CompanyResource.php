@@ -128,6 +128,7 @@ class CompanyResource extends Resource
                     ]),
                 Section::make('Coordonnées')
                     ->description('Les moyens de joindre cette structure et son adresse.')
+                    ->columns(1)
                     ->columnSpanFull()
                     ->schema([
                         Repeater::make('contactMethods')

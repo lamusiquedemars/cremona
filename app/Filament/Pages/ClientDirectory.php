@@ -9,7 +9,6 @@ use App\Models\Company;
 use App\Models\Person;
 use App\Models\User;
 use App\Services\OrganizationModuleAccess;
-use App\Services\OrganizationPresentation;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
@@ -51,11 +50,6 @@ class ClientDirectory extends Page
             && $user instanceof User
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization)
             && app(OrganizationModuleAccess::class)->enabled('crm');
-    }
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return app(OrganizationPresentation::class)->navigationGroupLabel('customer_follow_up', 'Suivi client');
     }
 
     public function updatedSearch(): void
