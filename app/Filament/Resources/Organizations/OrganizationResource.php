@@ -73,9 +73,7 @@ class OrganizationResource extends Resource
                         $set("modules.{$module}", isset($enabled[$module]));
                     }
 
-                    foreach ($registry->grouped() as $groupKey => $group) {
-                        $set("settings.presentation.labels.{$groupKey}", $preset['labels'][$groupKey] ?? null);
-
+                    foreach ($registry->grouped() as $group) {
                         foreach ($group['modules'] as $definition) {
                             $key = $definition['presentation_key'];
                             $set("settings.presentation.labels.{$key}", $preset['labels'][$key] ?? null);
@@ -142,16 +140,11 @@ class OrganizationResource extends Resource
 
                 $fields = [
                     ...$fields,
-                    Text::make(fn (Get $get): string => $get("settings.presentation.labels.{$groupKey}") ?: $group['label'])
+                    Text::make($group['label'])
                         ->color('primary')
                         ->size(Size::Large)
                         ->weight(FontWeight::Bold)
-                        ->columnSpan(4),
-                    TextInput::make("settings.presentation.labels.{$groupKey}")
-                        ->hiddenLabel()
-                        ->placeholder('Nom de la catégorie (facultatif)')
-                        ->maxLength(80)
-                        ->columnSpan(8),
+                        ->columnSpanFull(),
                 ];
 
                 foreach ($group['modules'] as $module => $definition) {

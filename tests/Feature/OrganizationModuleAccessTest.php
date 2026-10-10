@@ -124,7 +124,7 @@ class OrganizationModuleAccessTest extends TestCase
             'rentals',
             'inventory',
         ], $preset['modules']);
-        $this->assertSame('Clients', $preset['labels']['customer_follow_up']);
+        $this->assertArrayNotHasKey('customer_follow_up', $preset['labels']);
         $this->assertSame('Instruments et prestations', $preset['labels']['luthier_catalog']);
     }
 
@@ -138,7 +138,7 @@ class OrganizationModuleAccessTest extends TestCase
             'quotes',
             'marketing',
         ], $preset['modules']);
-        $this->assertSame('Relation client', $preset['labels']['customer_follow_up']);
+        $this->assertArrayNotHasKey('customer_follow_up', $preset['labels']);
     }
 
     public function test_pack_selector_updates_module_toggles_immediately(): void
@@ -157,7 +157,6 @@ class OrganizationModuleAccessTest extends TestCase
                 'modules.luthier_catalog' => true,
                 'modules.workshop' => true,
                 'modules.rentals' => true,
-                'settings.presentation.labels.customer_follow_up' => 'Clients',
                 'settings.presentation.labels.luthier_catalog' => 'Instruments et prestations',
             ])
             ->assertFormFieldIsDisabled('modules.luthier_catalog')
@@ -167,7 +166,6 @@ class OrganizationModuleAccessTest extends TestCase
                 'modules.workshop' => false,
                 'modules.rentals' => false,
                 'modules.marketing' => true,
-                'settings.presentation.labels.customer_follow_up' => 'Relation client',
             ])
             ->fillForm(['modules.workshop' => true])
             ->assertFormSet(['modules.luthier_catalog' => true])
