@@ -13,17 +13,24 @@ final class OrganizationModuleRegistry
         '__none__' => [
             'modules' => ['crm', 'appointments', 'quotes', 'marketing'],
             'labels' => [
+                'customer_follow_up' => 'Relation client',
                 'crm' => 'Contacts, demandes et échanges',
+                'commercial_activity' => 'Activité commerciale',
                 'quotes' => 'Devis et documents',
+                'marketing' => 'Campagnes et publicité',
             ],
         ],
         'luthier' => [
             'modules' => ['crm', 'appointments', 'quotes', 'luthier_catalog', 'workshop', 'rentals', 'inventory'],
             'labels' => [
+                'customer_follow_up' => 'Clients',
                 'crm' => 'Contacts, demandes et échanges',
+                'commercial_activity' => 'Activité commerciale',
                 'quotes' => 'Devis et documents',
+                'workshop' => 'Atelier',
                 'luthier_catalog' => 'Instruments et prestations',
                 'rentals' => 'Locations',
+                'catalog_inventory' => 'Stock et accessoires',
                 'inventory' => 'Articles et stock',
             ],
         ],

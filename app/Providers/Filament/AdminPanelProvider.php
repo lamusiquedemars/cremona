@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Auth\CremonaLogin;
 use App\Http\Middleware\SetActiveOrganization;
 use App\Models\Organization;
+use App\Services\OrganizationPresentation;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -58,11 +59,11 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->navigationGroups([
-                NavigationGroup::make('Suivi client'),
-                NavigationGroup::make('Activité commerciale'),
-                NavigationGroup::make('Atelier'),
+                NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('customer_follow_up', 'Suivi client')),
+                NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('commercial_activity', 'Activité commerciale')),
+                NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('workshop', 'Atelier')),
                 NavigationGroup::make('Catalogue et stock'),
-                NavigationGroup::make('Marketing'),
+                NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('marketing', 'Marketing')),
                 NavigationGroup::make('Configuration de l’organisation'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
