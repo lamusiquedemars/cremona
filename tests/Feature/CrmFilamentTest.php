@@ -6,9 +6,12 @@ use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationRole;
 use App\Filament\Pages\ClientDirectory;
 use App\Filament\Resources\Companies\CompanyResource;
+use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\InboundChannels\InboundChannelResource;
 use App\Filament\Resources\InboundChannels\Pages\ListInboundChannels;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
+use App\Filament\Resources\People\Pages\CreatePerson;
+use App\Filament\Resources\People\Pages\EditPerson;
 use App\Filament\Resources\People\Pages\ViewPerson;
 use App\Filament\Resources\People\PersonResource;
 use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
@@ -80,6 +83,77 @@ class CrmFilamentTest extends TestCase
             ->assertOk()
             ->assertSee('Nouvelle entreprise')
             ->assertDontSee('Nouveau entreprise');
+    }
+
+    public function test_client_contact_details_are_saved_from_the_new_person_and_company_forms(): void
+    {
+        $organization = $this->organizationWithCrm();
+        $collaborator = User::factory()->create();
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+
+        $this->actingAs($collaborator);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            Livewire::test(CreatePerson::class)
+                ->fillForm([
+                    'first_name' => 'Camille',
+                    'last_name' => 'Martin',
+                    'primary_email' => 'camille@example.test',
+                    'primary_phone' => '06 12 34 56 78',
+                    'address_line_1' => '12 rue des Luthiers',
+                    'postal_code' => '69001',
+                    'city' => 'Lyon',
+                    'country_code' => 'FR',
+                ])
+                ->call('create')
+                ->assertHasNoFormErrors();
+
+            $person = Person::query()->sole();
+            $this->assertSame('12 rue des Luthiers', $person->address_line_1);
+            $this->assertSame('69001', $person->postal_code);
+            $this->assertSame('Lyon', $person->city);
+            $this->assertSame('camille@example.test', $person->contactMethods()->where('type', 'email')->sole()->value);
+            $this->assertSame('06 12 34 56 78', $person->contactMethods()->where('type', 'phone')->sole()->value);
+            $person->contactMethods()->create([
+                'type' => 'email',
+                'label' => 'Professionnel',
+                'value' => 'camille.pro@example.test',
+            ]);
+
+            Livewire::test(EditPerson::class, ['record' => $person->getRouteKey()])
+                ->fillForm([
+                    'primary_email' => 'camille.martin@example.test',
+                    'primary_phone' => '07 98 76 54 32',
+                ])
+                ->call('save')
+                ->assertHasNoFormErrors();
+
+            $emails = $person->refresh()->contactMethods()->where('type', 'email')->get();
+            $this->assertSame('camille.martin@example.test', $emails->firstWhere('is_primary', true)?->value);
+            $this->assertTrue($emails->contains('value', 'camille.pro@example.test'));
+            $this->assertSame('07 98 76 54 32', $person->contactMethods()->where('type', 'phone')->sole()->value);
+
+            Livewire::test(CreateCompany::class)
+                ->fillForm([
+                    'name' => 'Atelier Martin',
+                    'primary_email' => 'contact@atelier-martin.example.test',
+                    'primary_phone' => '04 72 00 00 00',
+                    'address_line_1' => '8 place de la Musique',
+                    'postal_code' => '69002',
+                    'city' => 'Lyon',
+                    'country_code' => 'FR',
+                ])
+                ->call('create')
+                ->assertHasNoFormErrors();
+
+            $company = Company::query()->sole();
+            $this->assertSame('contact@atelier-martin.example.test', $company->contactMethods()->where('type', 'email')->sole()->value);
+            $this->assertSame('04 72 00 00 00', $company->contactMethods()->where('type', 'phone')->sole()->value);
+        });
     }
 
     public function test_the_clients_directory_combines_people_and_companies_without_exposing_two_menu_entries(): void

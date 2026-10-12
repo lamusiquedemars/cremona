@@ -24,6 +24,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -125,50 +126,46 @@ class CompanyResource extends Resource
                     ->columnSpanFull()
                     ->schema([
                         Grid::make(12)->schema([
-                            TextInput::make('contact_preview_email')
+                            TextInput::make('primary_email')
                                 ->label('E-mail général')
                                 ->placeholder('contact@entreprise.fr')
                                 ->email()
-                                ->readOnly()
-                                ->dehydrated(false)
+                                ->maxLength(255)
                                 ->columnSpan(6),
-                            TextInput::make('contact_preview_phone')
+                            TextInput::make('primary_phone')
                                 ->label('Téléphone')
                                 ->placeholder('04 72 00 00 00')
                                 ->tel()
-                                ->readOnly()
-                                ->dehydrated(false)
+                                ->maxLength(64)
                                 ->columnSpan(6),
-                            TextInput::make('contact_preview_address_line_1')
+                            TextInput::make('address_line_1')
                                 ->label('Adresse')
                                 ->placeholder('12 rue des Luthiers')
-                                ->readOnly()
-                                ->dehydrated(false)
+                                ->maxLength(255)
+                                ->required(fn (Get $get): bool => filled($get('address_line_2')) || filled($get('postal_code')) || filled($get('city')))
                                 ->columnSpan(8),
-                            TextInput::make('contact_preview_address_line_2')
+                            TextInput::make('address_line_2')
                                 ->label('Complément d’adresse')
                                 ->placeholder('Bâtiment, étage, lieu-dit…')
-                                ->readOnly()
-                                ->dehydrated(false)
+                                ->maxLength(255)
                                 ->columnSpan(4),
-                            TextInput::make('contact_preview_postal_code')
+                            TextInput::make('postal_code')
                                 ->label('Code postal')
                                 ->placeholder('69001')
-                                ->readOnly()
-                                ->dehydrated(false)
+                                ->maxLength(32)
+                                ->required(fn (Get $get): bool => $get('country_code') === 'FR' && (filled($get('address_line_1')) || filled($get('address_line_2')) || filled($get('city'))))
                                 ->columnSpan(3),
-                            TextInput::make('contact_preview_city')
+                            TextInput::make('city')
                                 ->label('Ville')
                                 ->placeholder('Lyon')
-                                ->readOnly()
-                                ->dehydrated(false)
+                                ->maxLength(255)
+                                ->required(fn (Get $get): bool => filled($get('address_line_1')) || filled($get('address_line_2')) || filled($get('postal_code')))
                                 ->columnSpan(5),
-                            Select::make('contact_preview_country')
+                            Select::make('country_code')
                                 ->label('Pays')
                                 ->options(ClientProfileOptions::countries())
                                 ->default('FR')
-                                ->disabled()
-                                ->dehydrated(false)
+                                ->searchable()
                                 ->columnSpan(4),
                         ]),
                     ]),

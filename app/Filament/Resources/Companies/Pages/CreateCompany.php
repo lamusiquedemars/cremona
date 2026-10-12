@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Companies\Pages;
 
-use App\Filament\Pages\BusinessCreateRecord;
+use App\Filament\Pages\BusinessCreateClientRecord;
 use App\Filament\Resources\Companies\CompanyResource;
 
-class CreateCompany extends BusinessCreateRecord
+class CreateCompany extends BusinessCreateClientRecord
 {
     protected static string $resource = CompanyResource::class;
 
@@ -18,5 +18,4 @@ class CreateCompany extends BusinessCreateRecord
     {
         return 'Nouvelle entreprise';
     }
-
 }

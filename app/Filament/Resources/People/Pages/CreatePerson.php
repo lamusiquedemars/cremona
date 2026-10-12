@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\People\Pages;
 
-use App\Filament\Pages\BusinessCreateRecord;
+use App\Filament\Pages\BusinessCreateClientRecord;
 use App\Filament\Resources\People\PersonResource;
 
-class CreatePerson extends BusinessCreateRecord
+class CreatePerson extends BusinessCreateClientRecord
 {
     protected static string $resource = PersonResource::class;
 
@@ -18,5 +18,4 @@ class CreatePerson extends BusinessCreateRecord
     {
         return 'Nouveau client particulier';
     }
-
 }
