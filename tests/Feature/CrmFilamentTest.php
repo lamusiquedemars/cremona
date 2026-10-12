@@ -225,6 +225,9 @@ class CrmFilamentTest extends TestCase
                 'display_name' => 'Camille Martin',
                 'locale' => 'fr',
                 'country_code' => 'FR',
+                'address_line_1' => '12 rue des Luthiers',
+                'postal_code' => '69001',
+                'city' => 'Lyon',
             ]);
             $person->contactMethods()->create([
                 'type' => 'email',
@@ -256,7 +259,10 @@ class CrmFilamentTest extends TestCase
             ->get(PersonResource::getUrl('view', ['record' => $person], tenant: $organization))
             ->assertOk()
             ->assertSee('Camille Martin')
-            ->assertDontSee('camille@example.test')
+            ->assertSee('camille@example.test')
+            ->assertSee('12 rue des Luthiers')
+            ->assertSee('69001')
+            ->assertSee('France')
             ->assertSee('Projet sur mesure')
             ->assertDontSee('Modifier le contact');
 
@@ -285,6 +291,10 @@ class CrmFilamentTest extends TestCase
                 'name' => 'Atelier Dupont',
                 'legal_name' => 'Atelier Dupont SARL',
                 'website' => 'https://atelier-dupont.example.test',
+                'address_line_1' => '8 place de la Musique',
+                'postal_code' => '69002',
+                'city' => 'Lyon',
+                'country_code' => 'FR',
             ]);
             $company->contactMethods()->create([
                 'type' => 'email',
@@ -315,7 +325,9 @@ class CrmFilamentTest extends TestCase
             ->get(CompanyResource::getUrl('view', ['record' => $company], tenant: $organization))
             ->assertOk()
             ->assertSee('Atelier Dupont SARL')
-            ->assertDontSee('bonjour@atelier-dupont.example.test')
+            ->assertSee('bonjour@atelier-dupont.example.test')
+            ->assertSee('8 place de la Musique')
+            ->assertSee('69002')
             ->assertSee('Jeanne Dupont')
             ->assertDontSee('Modifier l’entreprise');
 

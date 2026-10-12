@@ -14,7 +14,6 @@ abstract class BusinessEditRecord extends EditRecord
 
     public function getBreadcrumb(): string
     {
-        return $this->getRecordTitle();
+        return 'Modifier';
     }
-
 }

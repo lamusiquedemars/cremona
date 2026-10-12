@@ -190,6 +190,51 @@ class PersonResource extends Resource
                             TextEntry::make('last_name')->label(__('common.name'))->placeholder('—'),
                         ]),
                     ]),
+                Section::make('Coordonnées')
+                    ->columnSpan(8)
+                    ->schema([
+                        Grid::make(12)->schema([
+                            TextEntry::make('primary_email')
+                                ->label('E-mail')
+                                ->state(fn (Person $record): ?string => $record->contactMethods()
+                                    ->where('type', 'email')
+                                    ->orderByDesc('is_primary')
+                                    ->value('value'))
+                                ->placeholder('—')
+                                ->copyable()
+                                ->columnSpan(6),
+                            TextEntry::make('primary_phone')
+                                ->label('Téléphone')
+                                ->state(fn (Person $record): ?string => $record->contactMethods()
+                                    ->where('type', 'phone')
+                                    ->orderByDesc('is_primary')
+                                    ->value('value'))
+                                ->placeholder('—')
+                                ->copyable()
+                                ->columnSpan(6),
+                            TextEntry::make('address_line_1')
+                                ->label('Adresse')
+                                ->placeholder('—')
+                                ->columnSpan(8),
+                            TextEntry::make('address_line_2')
+                                ->label('Complément d’adresse')
+                                ->placeholder('—')
+                                ->columnSpan(4),
+                            TextEntry::make('postal_code')
+                                ->label('Code postal')
+                                ->placeholder('—')
+                                ->columnSpan(3),
+                            TextEntry::make('city')
+                                ->label('Ville')
+                                ->placeholder('—')
+                                ->columnSpan(5),
+                            TextEntry::make('country_code')
+                                ->label('Pays')
+                                ->formatStateUsing(fn (?string $state): string => ClientProfileOptions::countryLabel($state))
+                                ->placeholder('—')
+                                ->columnSpan(4),
+                        ]),
+                    ]),
                 Section::make('Gestion interne')
                     ->columnSpan(4)
                     ->schema([
