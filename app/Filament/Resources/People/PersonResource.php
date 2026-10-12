@@ -118,6 +118,58 @@ class PersonResource extends Resource
                                 ->columnSpanFull(),
                         ]),
                     ]),
+                Section::make('Coordonnées')
+                    ->description('Les moyens de joindre le client et son adresse postale.')
+                    ->columnSpanFull()
+                    ->schema([
+                        Grid::make(12)->schema([
+                            TextInput::make('contact_preview_email')
+                                ->label('E-mail')
+                                ->placeholder('prenom.nom@example.fr')
+                                ->email()
+                                ->readOnly()
+                                ->dehydrated(false)
+                                ->columnSpan(6),
+                            TextInput::make('contact_preview_phone')
+                                ->label('Téléphone')
+                                ->placeholder('06 12 34 56 78')
+                                ->tel()
+                                ->readOnly()
+                                ->dehydrated(false)
+                                ->columnSpan(6),
+                            TextInput::make('contact_preview_address_line_1')
+                                ->label('Adresse')
+                                ->placeholder('12 rue des Luthiers')
+                                ->readOnly()
+                                ->dehydrated(false)
+                                ->columnSpan(8),
+                            TextInput::make('contact_preview_address_line_2')
+                                ->label('Complément d’adresse')
+                                ->placeholder('Bâtiment, étage, lieu-dit…')
+                                ->readOnly()
+                                ->dehydrated(false)
+                                ->columnSpan(4),
+                            TextInput::make('contact_preview_postal_code')
+                                ->label('Code postal')
+                                ->placeholder('69001')
+                                ->readOnly()
+                                ->dehydrated(false)
+                                ->columnSpan(3),
+                            TextInput::make('contact_preview_city')
+                                ->label('Ville')
+                                ->placeholder('Lyon')
+                                ->readOnly()
+                                ->dehydrated(false)
+                                ->columnSpan(5),
+                            Select::make('contact_preview_country')
+                                ->label('Pays')
+                                ->options(ClientProfileOptions::countries())
+                                ->default('FR')
+                                ->disabled()
+                                ->dehydrated(false)
+                                ->columnSpan(4),
+                        ]),
+                    ]),
             ]);
     }
 
