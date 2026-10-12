@@ -51,39 +51,6 @@ body.fi-body {
     letter-spacing: -0.025em;
 }
 
-/* Chaque coordonnée occupe une ligne complète : jamais de grille héritée. */
-.crm-contact-methods,
-[id="form.contactMethods"] {
-    position: relative;
-    display: block;
-    width: 100%;
-}
-
-.crm-contact-methods .fi-fo-repeater-item-content .fi-grid,
-[id="form.contactMethods"] .fi-fo-repeater-item-content .fi-grid {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) !important;
-    width: 100%;
-    max-width: none;
-}
-
-.crm-contact-methods .fi-fo-repeater-item-content .fi-grid-col,
-[id="form.contactMethods"] .fi-fo-repeater-item-content .fi-grid-col {
-    position: relative;
-    grid-column: 1 / -1 !important;
-    min-width: 0;
-    width: 100%;
-}
-
-.crm-contact-methods .fi-fo-repeater-add,
-[id="form.contactMethods"] .fi-fo-repeater-add {
-    position: relative;
-    display: flex;
-    width: 100%;
-    margin-top: 1rem;
-}
-
 .dark body.fi-body {
     background:
         radial-gradient(circle at 82% 0%, rgb(245 158 11 / 0.07), transparent 28rem),

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Companies;
 
-use App\Enums\ContactMethodType;
 use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\RelationManagers\AppointmentsRelationManager;
 use App\Filament\RelationManagers\ConversationsRelationManager;
@@ -19,10 +18,8 @@ use App\Support\ClientProfileOptions;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -131,32 +128,23 @@ class CompanyResource extends Resource
                     ->columns(1)
                     ->columnSpanFull()
                     ->schema([
-                        Fieldset::make('E-mail et téléphone')->schema([
-                            Repeater::make('contactMethods')
-                                ->relationship()
-                                ->hiddenLabel()
-                                ->extraAttributes(['class' => 'crm-contact-methods'])
-                                ->schema([
-                                    Grid::make(1)->schema([
-                                        Select::make('type')
-                                            ->label('Type')
-                                            ->options(ContactMethodType::class)
-                                            ->required(),
-                                        TextInput::make('value')
-                                            ->label('E-mail ou téléphone')
-                                            ->required()
-                                            ->maxLength(255),
-                                        TextInput::make('label')
-                                            ->label('Précision')
-                                            ->placeholder('Ex. accueil ou comptabilité')
-                                            ->maxLength(255),
-                                        Toggle::make('is_primary')
-                                            ->label('Coordonnée à privilégier'),
-                                    ]),
-                                ])
-                                ->reorderable(false)
-                                ->defaultItems(0)
-                                ->addActionLabel('Ajouter une coordonnée'),
+                        Fieldset::make('E-mail et téléphone')->columns(12)->schema([
+                            TextInput::make('email')
+                                ->label('E-mail')
+                                ->email()
+                                ->maxLength(255)
+                                ->afterStateHydrated(function (TextInput $component, ?Company $record): void {
+                                    $component->state($record ? app(\App\Services\PrimaryContactDetails::class)->values($record)['email'] : null);
+                                })
+                                ->columnSpan(6),
+                            TextInput::make('phone')
+                                ->label('Téléphone')
+                                ->tel()
+                                ->maxLength(255)
+                                ->afterStateHydrated(function (TextInput $component, ?Company $record): void {
+                                    $component->state($record ? app(\App\Services\PrimaryContactDetails::class)->values($record)['phone'] : null);
+                                })
+                                ->columnSpan(6),
                         ])->columnSpanFull(),
                         Fieldset::make('Adresse postale')->columns(12)->schema([
                             TextInput::make('address_line_1')->label('Adresse')->maxLength(255)->columnSpan(6),
