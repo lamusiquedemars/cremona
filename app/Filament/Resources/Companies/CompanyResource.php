@@ -180,26 +180,20 @@ class CompanyResource extends Resource
         return $schema
             ->columns(12)
             ->components([
-                Section::make(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))
-                    ->columnSpan(8)
-                    ->schema([
-                        TextEntry::make('name')
-                            ->label(__('common.current_name'))
-                            ->weight('semibold')
-                            ->size('lg'),
-                        TextEntry::make('legal_name')
-                            ->label(__('common.legal_name'))
-                            ->placeholder('—'),
-                        TextEntry::make('website')
-                            ->label(__('common.website'))
-                            ->url(fn (?string $state): ?string => $state)
-                            ->openUrlInNewTab()
-                            ->placeholder('—'),
-                    ]),
-                Section::make('Coordonnées')
+                Section::make('Informations entreprise')
                     ->columnSpan(8)
                     ->schema([
                         Grid::make(12)->schema([
+                            TextEntry::make('legal_name')
+                                ->label(__('common.legal_name'))
+                                ->placeholder('—')
+                                ->columnSpan(6),
+                            TextEntry::make('website')
+                                ->label(__('common.website'))
+                                ->url(fn (?string $state): ?string => $state)
+                                ->openUrlInNewTab()
+                                ->placeholder('—')
+                                ->columnSpan(6),
                             TextEntry::make('primary_email')
                                 ->label('E-mail général')
                                 ->state(fn (Company $record): ?string => $record->contactMethods()
@@ -241,17 +235,6 @@ class CompanyResource extends Resource
                                 ->columnSpan(4),
                         ]),
                     ]),
-                Section::make('Gestion interne')
-                    ->columnSpan(4)
-                    ->schema([
-                        TextEntry::make('status')
-                            ->label(__('common.status'))
-                            ->badge()
-                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
-                            ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
-                        TextEntry::make('source')->label('Origine')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::sourceLabel($state)),
-                        TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
-                    ]),
                 Section::make('Activité')
                     ->columnSpan(4)
                     ->schema([
@@ -272,6 +255,19 @@ class CompanyResource extends Resource
                         TextEntry::make('created_at')
                             ->label(__('common.created_at'))
                             ->dateTime('d/m/Y H:i'),
+                    ]),
+                Section::make('Suivi')
+                    ->columnSpan(4)
+                    ->columnStart(9)
+                    ->schema([
+                        TextEntry::make('assignedUser.name')
+                            ->label('Responsable du suivi')
+                            ->placeholder('Non attribué'),
+                        TextEntry::make('status')
+                            ->label('État de la fiche')
+                            ->badge()
+                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Active' : 'Archivée')
+                            ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
                     ]),
             ]);
     }

@@ -178,22 +178,18 @@ class PersonResource extends Resource
         return $schema
             ->columns(12)
             ->components([
-                Section::make('Client particulier')
-                    ->columnSpan(8)
-                    ->schema([
-                        TextEntry::make('display_name')
-                            ->label(__('common.display_name'))
-                            ->weight('semibold')
-                            ->size('lg'),
-                        Grid::make(2)->schema([
-                            TextEntry::make('first_name')->label(__('common.first_name'))->placeholder('—'),
-                            TextEntry::make('last_name')->label(__('common.name'))->placeholder('—'),
-                        ]),
-                    ]),
-                Section::make('Coordonnées')
+                Section::make('Informations client')
                     ->columnSpan(8)
                     ->schema([
                         Grid::make(12)->schema([
+                            TextEntry::make('first_name')
+                                ->label(__('common.first_name'))
+                                ->placeholder('—')
+                                ->columnSpan(6),
+                            TextEntry::make('last_name')
+                                ->label(__('common.name'))
+                                ->placeholder('—')
+                                ->columnSpan(6),
                             TextEntry::make('primary_email')
                                 ->label('E-mail')
                                 ->state(fn (Person $record): ?string => $record->contactMethods()
@@ -235,18 +231,6 @@ class PersonResource extends Resource
                                 ->columnSpan(4),
                         ]),
                     ]),
-                Section::make('Gestion interne')
-                    ->columnSpan(4)
-                    ->schema([
-                        TextEntry::make('status')
-                            ->label(__('common.status'))
-                            ->badge()
-                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
-                            ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
-                        TextEntry::make('source')->label('Origine')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::sourceLabel($state)),
-                        TextEntry::make('locale')->label('Langue de communication')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::languageLabel($state)),
-                        TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
-                    ]),
                 Section::make('Activité')
                     ->columnSpan(4)
                     ->schema([
@@ -267,6 +251,23 @@ class PersonResource extends Resource
                         TextEntry::make('created_at')
                             ->label(__('common.created_at'))
                             ->dateTime('d/m/Y H:i'),
+                    ]),
+                Section::make('Suivi')
+                    ->columnSpan(4)
+                    ->columnStart(9)
+                    ->schema([
+                        TextEntry::make('assignedUser.name')
+                            ->label('Responsable du suivi')
+                            ->placeholder('Non attribué'),
+                        TextEntry::make('status')
+                            ->label('État de la fiche')
+                            ->badge()
+                            ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Active' : 'Archivée')
+                            ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
+                        TextEntry::make('locale')
+                            ->label('Langue privilégiée')
+                            ->formatStateUsing(fn (?string $state): string => ClientProfileOptions::languageLabel($state))
+                            ->placeholder('—'),
                     ]),
             ]);
     }

@@ -14,6 +14,6 @@ abstract class BusinessViewRecord extends ViewRecord
 
     public function getBreadcrumb(): string
     {
-        return $this->getRecordTitle();
+        return 'Voir';
     }
 }
