@@ -123,40 +123,36 @@ class PersonResource extends Resource
                     ]),
                 Section::make('Coordonnées')
                     ->description('Ajoutez les moyens de joindre la personne et son adresse postale.')
-                    ->columns(1)
+                    ->columns(12)
                     ->columnSpanFull()
                     ->schema([
-                        Fieldset::make('E-mail et téléphone')->columns(12)->schema([
-                            TextInput::make('email')
-                                ->label('E-mail')
-                                ->email()
-                                ->maxLength(255)
-                                ->afterStateHydrated(function (TextInput $component, ?Person $record): void {
-                                    $component->state($record ? app(\App\Services\PrimaryContactDetails::class)->values($record)['email'] : null);
-                                })
-                                ->columnSpan(6),
-                            TextInput::make('phone')
-                                ->label('Téléphone')
-                                ->tel()
-                                ->maxLength(255)
-                                ->afterStateHydrated(function (TextInput $component, ?Person $record): void {
-                                    $component->state($record ? app(\App\Services\PrimaryContactDetails::class)->values($record)['phone'] : null);
-                                })
-                                ->columnSpan(6),
-                        ])->columnSpanFull(),
-                        Fieldset::make('Adresse postale')->columns(12)->schema([
-                            TextInput::make('address_line_1')->label('Adresse')->maxLength(255)->columnSpan(6),
-                            TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255)->columnSpan(6),
-                            TextInput::make('postal_code')->label('Code postal')->maxLength(32)->columnSpan(3),
-                            TextInput::make('city')->label('Ville')->maxLength(255)->columnSpan(5),
-                            Select::make('country_code')->label('Pays')->options(ClientProfileOptions::countries())->default('FR')->searchable()->columnSpan(4),
-                        ]),
+                        TextInput::make('primary_email')
+                            ->label('E-mail')
+                            ->email()
+                            ->maxLength(255)
+                            ->afterStateHydrated(function (TextInput $component, ?Person $record): void {
+                                $component->state($record?->contactMethods()->where('type', 'email')->orderByDesc('is_primary')->value('value'));
+                            })
+                            ->columnSpan(6),
+                        TextInput::make('primary_phone')
+                            ->label('Téléphone')
+                            ->tel()
+                            ->maxLength(255)
+                            ->afterStateHydrated(function (TextInput $component, ?Person $record): void {
+                                $component->state($record?->contactMethods()->where('type', 'phone')->orderByDesc('is_primary')->value('value'));
+                            })
+                            ->columnSpan(6),
+                        TextInput::make('address_line_1')->label('Adresse')->maxLength(255)->columnSpanFull(),
+                        TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255)->columnSpanFull(),
+                        TextInput::make('postal_code')->label('Code postal')->maxLength(32)->columnSpan(3),
+                        TextInput::make('city')->label('Ville')->maxLength(255)->columnSpan(5),
+                        Select::make('country_code')->label('Pays')->options(ClientProfileOptions::countries())->default('FR')->searchable()->columnSpan(4),
                         Select::make('locale')
                             ->label('Langue de communication')
                             ->options(ClientProfileOptions::languages())
                             ->default('fr')
                             ->native(false)
-                            ->columnSpan(4),
+                            ->columnSpanFull(),
                     ]),
             ]);
     }
