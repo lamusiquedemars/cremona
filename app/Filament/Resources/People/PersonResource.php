@@ -133,6 +133,7 @@ class PersonResource extends Resource
                             Repeater::make('contactMethods')
                                 ->relationship()
                                 ->hiddenLabel()
+                                ->extraAttributes(['class' => 'crm-contact-methods'])
                                 ->schema([
                                     Grid::make(1)->schema([
                                         Select::make('type')

@@ -51,29 +51,32 @@ body.fi-body {
     letter-spacing: -0.025em;
 }
 
-/*
- * Les anciens schémas de coordonnées pouvaient encore être servis par PHP-FPM
- * pendant un déploiement. Cette règle garde chaque champ de coordonnée dans le
- * flux normal, à pleine largeur, sans chevauchement.
- */
+/* Chaque coordonnée occupe une ligne complète : jamais de grille héritée. */
+.crm-contact-methods,
 [id="form.contactMethods"] {
     position: relative;
     display: block;
     width: 100%;
 }
 
-[id="form.contactMethods"] .fi-fo-repeater-item-content .fi-grid,
-[id="form.contactMethods"] .fi-fo-repeater-item-content .fi-grid-col {
+.crm-contact-methods .fi-fo-repeater-item-content .fi-grid,
+[id="form.contactMethods"] .fi-fo-repeater-item-content .fi-grid {
     position: relative;
-    display: block;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) !important;
     width: 100%;
     max-width: none;
 }
 
-[id="form.contactMethods"] .fi-fo-repeater-item-content .fi-grid-col + .fi-grid-col {
-    margin-top: 1rem;
+.crm-contact-methods .fi-fo-repeater-item-content .fi-grid-col,
+[id="form.contactMethods"] .fi-fo-repeater-item-content .fi-grid-col {
+    position: relative;
+    grid-column: 1 / -1 !important;
+    min-width: 0;
+    width: 100%;
 }
 
+.crm-contact-methods .fi-fo-repeater-add,
 [id="form.contactMethods"] .fi-fo-repeater-add {
     position: relative;
     display: flex;

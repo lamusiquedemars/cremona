@@ -58,6 +58,16 @@ class ClientDirectory extends Page
         return app(OrganizationPresentation::class)->navigationGroupLabel('customer_follow_up', 'Suivi client');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('cremona.navigation.items.clients');
+    }
+
+    public function getTitle(): string
+    {
+        return __('cremona.navigation.items.clients');
+    }
+
     public function updatedSearch(): void
     {
         $this->resetPage('clientsPage');

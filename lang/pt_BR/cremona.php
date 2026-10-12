@@ -11,6 +11,7 @@ return [
         'items' => [
             'appointments' => 'Agendamentos',
             'campaigns' => 'Campanhas',
+            'clients' => 'Clientes',
             'companies' => 'Empresas',
             'contacts' => 'Contatos',
             'conversations' => 'Conversas',

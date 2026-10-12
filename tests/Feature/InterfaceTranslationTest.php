@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\InstrumentAssetStatus;
 use App\Enums\RentalStatus;
+use App\Filament\Pages\ClientDirectory;
 use App\Models\Organization;
 use App\Services\OrganizationPresentation;
 use App\Tenancy\OrganizationContext;
@@ -22,6 +23,7 @@ class InterfaceTranslationTest extends TestCase
             app()->setLocale('pt_BR');
 
             $this->assertSame('Contatos', __('cremona.navigation.items.contacts'));
+            $this->assertSame('Clientes', ClientDirectory::getNavigationLabel());
             $this->assertSame('Prioridades de hoje', __('cremona.dashboard.priorities'));
             $this->assertSame('Campanhas ativas', __('cremona.dashboard.active_campaigns'));
             $this->assertSame('Despesas', __('cremona.dashboard.recorded_spend'));
