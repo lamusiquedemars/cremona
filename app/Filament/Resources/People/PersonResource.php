@@ -19,11 +19,8 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -121,39 +118,6 @@ class PersonResource extends Resource
                                 ->columnSpanFull(),
                         ]),
                     ]),
-                Section::make('Coordonnées')
-                    ->description('Ajoutez les moyens de joindre la personne et son adresse postale.')
-                    ->columns(12)
-                    ->columnSpanFull()
-                    ->schema([
-                        TextInput::make('primary_email')
-                            ->label('E-mail')
-                            ->email()
-                            ->maxLength(255)
-                            ->afterStateHydrated(function (TextInput $component, ?Person $record): void {
-                                $component->state($record?->contactMethods()->where('type', 'email')->orderByDesc('is_primary')->value('value'));
-                            })
-                            ->columnSpan(6),
-                        TextInput::make('primary_phone')
-                            ->label('Téléphone')
-                            ->tel()
-                            ->maxLength(255)
-                            ->afterStateHydrated(function (TextInput $component, ?Person $record): void {
-                                $component->state($record?->contactMethods()->where('type', 'phone')->orderByDesc('is_primary')->value('value'));
-                            })
-                            ->columnSpan(6),
-                        TextInput::make('address_line_1')->label('Adresse')->maxLength(255)->columnSpanFull(),
-                        TextInput::make('address_line_2')->label('Complément d’adresse')->maxLength(255)->columnSpanFull(),
-                        TextInput::make('postal_code')->label('Code postal')->maxLength(32)->columnSpan(3),
-                        TextInput::make('city')->label('Ville')->maxLength(255)->columnSpan(5),
-                        Select::make('country_code')->label('Pays')->options(ClientProfileOptions::countries())->default('FR')->searchable()->columnSpan(4),
-                        Select::make('locale')
-                            ->label('Langue de communication')
-                            ->options(ClientProfileOptions::languages())
-                            ->default('fr')
-                            ->native(false)
-                            ->columnSpanFull(),
-                    ]),
             ]);
     }
 
@@ -185,26 +149,6 @@ class PersonResource extends Resource
                         TextEntry::make('source')->label('Origine')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::sourceLabel($state)),
                         TextEntry::make('locale')->label('Langue de communication')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::languageLabel($state)),
                         TextEntry::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
-                    ]),
-                Section::make(__('common.contact_details'))
-                    ->columnSpan(8)
-                    ->schema([
-                        RepeatableEntry::make('contactMethods')
-                            ->label('')
-                            ->schema([
-                                TextEntry::make('type')->label(__('common.type'))->badge(),
-                                TextEntry::make('value')->label(__('common.contact_detail'))->copyable()->weight('medium'),
-                                TextEntry::make('label')->label(__('common.label'))->placeholder('—'),
-                                IconEntry::make('is_primary')->label(__('common.primary'))->boolean(),
-                            ])
-                            ->columns(4),
-                        TextEntry::make('address_line_1')->label('Adresse')->placeholder('—'),
-                        TextEntry::make('address_line_2')->label('Complément d’adresse')->placeholder('—'),
-                        Grid::make(3)->schema([
-                            TextEntry::make('postal_code')->label('Code postal')->placeholder('—'),
-                            TextEntry::make('city')->label('Ville')->placeholder('—'),
-                            TextEntry::make('country_code')->label('Pays')->formatStateUsing(fn (?string $state): string => ClientProfileOptions::countryLabel($state)),
-                        ]),
                     ]),
                 Section::make('Activité')
                     ->columnSpan(4)

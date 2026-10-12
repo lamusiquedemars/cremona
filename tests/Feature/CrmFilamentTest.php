@@ -210,7 +210,7 @@ class CrmFilamentTest extends TestCase
             ->assertDontSee('Demande attribuée');
     }
 
-    public function test_the_contact_page_combines_identity_coordinates_companies_and_requests(): void
+    public function test_the_contact_page_focuses_on_identity_companies_and_requests(): void
     {
         $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
@@ -256,7 +256,7 @@ class CrmFilamentTest extends TestCase
             ->get(PersonResource::getUrl('view', ['record' => $person], tenant: $organization))
             ->assertOk()
             ->assertSee('Camille Martin')
-            ->assertSee('camille@example.test')
+            ->assertDontSee('camille@example.test')
             ->assertSee('Projet sur mesure')
             ->assertDontSee('Modifier le contact');
 
@@ -272,7 +272,7 @@ class CrmFilamentTest extends TestCase
         $this->assertSame($person->id, $request->person_id);
     }
 
-    public function test_the_company_page_combines_identity_coordinates_contacts_and_requests(): void
+    public function test_the_company_page_focuses_on_identity_contacts_and_requests(): void
     {
         $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
@@ -315,7 +315,7 @@ class CrmFilamentTest extends TestCase
             ->get(CompanyResource::getUrl('view', ['record' => $company], tenant: $organization))
             ->assertOk()
             ->assertSee('Atelier Dupont SARL')
-            ->assertSee('bonjour@atelier-dupont.example.test')
+            ->assertDontSee('bonjour@atelier-dupont.example.test')
             ->assertSee('Jeanne Dupont')
             ->assertDontSee('Modifier l’entreprise');
 
