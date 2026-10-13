@@ -129,6 +129,14 @@ signature ; ces capacités restent les lots suivants, consignés dans le
 Le lot a été déployé sur LWS le 8 octobre 2026 après application de sa migration
 et reconstruction des caches.
 
+Le cycle opérationnel de Location est désormais livré : **Dossier en préparation,
+Dossier envoyé, Dossier accepté, Instrument remis, Instrument restitué**.
+L'accord fait passer automatiquement le dossier à l'étape 3 ; remise et
+restitution restent des confirmations physiques. Les actions d'encaissement
+manuelles sont créées à la remise et à la restitution, remontent au tableau de
+bord, et ne constituent pas un connecteur bancaire. Les confirmations client
+d'accord, de remise et de restitution sont également livrées.
+
 ### G. Correspondances et boîtes email
 
 - IMAP/SMTP permet de tester une boîte, relever ses messages et envoyer des
@@ -155,11 +163,10 @@ file unique attendue pour la relation client.
 3. Construire l’administration documentaire par organisation : réglages de
    numérotation, aperçu, droits, coordonnées, conditions et mentions ; voir
    [Numérotation et administration commerciale](numerotation-et-administration-commerciale.md).
-4. Attendre les retours de Giovanni sur réparation/reméchage, location et vente
-   avant de compléter le pack Luthier ou d’ajouter des automatisations.
-   Le prochain lot Location est toutefois cadré : cycle de vie, tarifs par
-   catégorie, restitution et rattachements documentaires ; assurance, SEPA,
-   signature et import bancaire ne sont pas engagés.
+4. Valider avec Giovanni un dossier de location réel de bout en bout : documents,
+   accord, remise, encaissement manuel, restitution et arrêt/ajustement de
+   l'encaissement. Corriger ensuite uniquement les règles révélées par ce test ;
+   aucun connecteur Dynamics, bancaire ou SEPA n'est engagé.
 5. Vérifier le bridge CMS ↔ Cremona avec deux organisations et une soumission
    réelle, sans fuite ni doublon sur reprise ; basculer ensuite Atelier Ivo,
    puis Contempo, sans supprimer les historiques locaux.

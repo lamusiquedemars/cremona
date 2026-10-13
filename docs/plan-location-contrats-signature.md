@@ -1,6 +1,6 @@
 # Plan Location — contrats, acceptation et archivage
 
-> Référence de travail partagée — mise à jour le 8 octobre 2026.
+> Référence de travail partagée — mise à jour le 13 octobre 2026.
 >
 > Ce document est la source de vérité du chantier. Il est versionné avec Cremona :
 > le consulter et le mettre à jour sur n'importe quel poste après synchronisation Git.
@@ -13,6 +13,32 @@ restitution documentée.
 
 `Rental` reste la racine métier. Aucun second objet concurrent ne porte le cycle
 de vie de la location.
+
+## Mise à jour produit — cycle livré le 13 octobre 2026
+
+Le cycle affiché est désormais unique et volontairement simple : **Dossier en
+préparation → Dossier envoyé → Dossier accepté → Instrument remis → Instrument
+restitué**.
+
+L'accord documentaire et l'encaissement sont des faits associés au dossier ; ils
+ne sont jamais des statuts concurrents de la location.
+
+| Étape | Déclencheur | Action attendue |
+| --- | --- | --- |
+| Dossier en préparation | Création de la location | Vérifier les informations et générer les documents. |
+| Dossier envoyé | Envoi de la demande au client | Attendre l'accord ; expiration ou refus restent des alertes. |
+| Dossier accepté | Acceptation sur le lien personnel | Préparer puis confirmer la remise physique. |
+| Instrument remis | Confirmation de la remise par l'atelier | Mettre en place l'encaissement dans l'outil bancaire. |
+| Instrument restitué | Confirmation du retour physique | Arrêter ou ajuster l'encaissement dans l'outil bancaire. |
+
+La remise rend l'instrument indisponible et crée l'action interne « encaissement
+à mettre en place ». La restitution le rend disponible et crée « encaissement à
+arrêter ou ajuster ». Ces actions restent visibles au tableau de bord jusqu'à
+confirmation de leur traitement. Cremona ne crée ni prélèvement, ni mandat, ni
+donnée bancaire structurée.
+
+Trois confirmations sont envoyées au client : accord enregistré, instrument
+remis, instrument restitué.
 
 ## Principes de conception
 

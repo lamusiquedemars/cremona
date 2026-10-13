@@ -1,4 +1,37 @@
-# Reprise Cremona sur le Mac mini — 16 septembre 2026
+# Reprise Cremona sur le Mac mini — mise à jour du 13 octobre 2026
+
+## Reprise immédiate — parcours Location
+
+Branche à utiliser : `feat/admin-interface-translations`.
+
+Derniers commits :
+
+- `f218836` — cycle Location à cinq étapes, actions d'encaissement manuelles et confirmations client ;
+- `c219bba` — actions de location visibles dans la synthèse du tableau de bord.
+
+Le flux livré est : **Dossier en préparation → Dossier envoyé → Dossier accepté
+→ Instrument remis → Instrument restitué**. L'encaissement est une action interne
+dans l'outil bancaire de l'atelier : à mettre en place après la remise, puis à
+arrêter ou ajuster après la restitution. Cremona ne stocke aucune donnée SEPA.
+
+La migration additive `2026_10_13_100000_refine_rental_lifecycle_and_collection_follow_up.php`
+convertit les anciens statuts et ajoute le suivi d'encaissement. Ne jamais
+utiliser `migrate:fresh` ni `db:wipe`.
+
+Sur le MacBook, après vérification que l'arbre de travail est propre :
+
+```bash
+git fetch origin
+git switch feat/admin-interface-translations
+git pull --ff-only
+php artisan test tests/Feature/RentalManagerTest.php tests/Feature/RentalAcceptanceTest.php tests/Feature/DashboardPrioritiesTest.php
+```
+
+La prochaine validation produit est de parcourir un dossier réel avec Giovanni,
+y compris les trois e-mails client et les deux actions d'encaissement. La source
+de vérité est `docs/plan-location-contrats-signature.md`.
+
+---
 
 ## État à reprendre
 
