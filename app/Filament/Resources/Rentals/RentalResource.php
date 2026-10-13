@@ -15,6 +15,7 @@ use App\Models\RentalAcceptanceRequest;
 use App\Models\RentalInsurancePlan;
 use App\Services\InstrumentRentalPricing;
 use App\Services\RentalInsurancePricing;
+use App\Support\InstrumentRentalCatalog;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
@@ -32,6 +33,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class RentalResource extends Resource
 {
@@ -134,13 +136,28 @@ class RentalResource extends Resource
         return $table->extraAttributes(['class' => 'rental-table'])->defaultSort('updated_at', 'desc')->columns([
             TextColumn::make('reference')->label(__('common.reference'))->searchable(),
             TextColumn::make('instrument.name')->label('Instrument')->searchable(),
-            TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
+            TextColumn::make('person.display_name')->label('Client')->searchable()->placeholder('—'),
             TextColumn::make('status')->label('Étape')->badge()->color(fn (Rental $record): string => self::stageColor($record)),
             TextColumn::make('next_action')->label('À faire')->state(fn (Rental $record): string => self::nextAction($record))->wrap(),
             TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
             TextColumn::make('unit_amount')->label('Loyer mensuel')->money('EUR'),
             TextColumn::make('insurance_monthly_amount')->label('Assurance')->money('EUR')->placeholder('—')->toggleable(),
-        ])->filters([SelectFilter::make('status')->label(__('common.status'))->options(RentalStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle location')]);
+        ])->filters([
+            SelectFilter::make('status')->label('Étape du dossier')->options(RentalStatus::class),
+            SelectFilter::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable()->preload(),
+            SelectFilter::make('instrument_family')
+                ->label('Famille d’instruments')
+                ->options(InstrumentRentalCatalog::families())
+                ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
+                    ? $query->whereHas('instrument', fn (Builder $instrument): Builder => $instrument->where('family', $data['value']))
+                    : $query),
+            SelectFilter::make('collection_status')->label('Encaissement')->options([
+                'to_set_up' => 'À mettre en place',
+                'set_up' => 'En place',
+                'to_stop' => 'À arrêter ou ajuster',
+                'closed' => 'Traité',
+            ]),
+        ])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle location')]);
     }
 
     public static function getPages(): array
@@ -170,7 +187,10 @@ class RentalResource extends Resource
 
     public static function nextAction(?Rental $rental): string
     {
-        if ($rental === null) return '—';
+        if ($rental === null) {
+            return '—';
+        }
+
         return match ($rental->status) {
             RentalStatus::Preparing => 'Préparer les documents et envoyer le dossier au client.',
             RentalStatus::Sent => 'Attendre l’accord du client.',

@@ -28,8 +28,8 @@ final class InstrumentRentalCatalog
                 '1/2' => '1/2', '3/4' => '3/4', '4/4' => '4/4', 'other' => 'Autre taille',
             ],
             'alto' => [
-                '13in' => '13 pouces', '14in' => '14 pouces', '15in' => '15 pouces',
-                '15_5in' => '15,5 pouces', '16in' => '16 pouces', '16_5in' => '16,5 pouces',
+                '38cm' => '38 cm', '39cm' => '39 cm', '40cm' => '40 cm',
+                '40_5cm' => '40,5 cm', '41cm' => '41 cm', '41_5cm' => '41,5 cm', '42cm' => '42 cm',
                 'other' => 'Autre taille',
             ],
             'violoncelle' => [

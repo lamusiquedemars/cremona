@@ -39,6 +39,7 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(fn (): string => asset((string) config('cremona.pwa.icon_192', 'favicon.ico')))
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('pwa.head')->render())
             ->renderHook(PanelsRenderHook::BODY_END, fn (): string => view('pwa.service-worker')->render())
+            ->renderHook(PanelsRenderHook::BODY_END, fn (): string => view('filament.hooks.rental-table-wheel-scroll')->render())
             ->globalSearchResourceOptIn()
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->tenant(Organization::class, slugAttribute: 'slug')

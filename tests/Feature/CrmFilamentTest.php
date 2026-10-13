@@ -16,6 +16,7 @@ use App\Filament\Resources\People\Pages\ViewPerson;
 use App\Filament\Resources\People\PersonResource;
 use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
 use App\Models\Company;
+use App\Models\CrmTask;
 use App\Models\Organization;
 use App\Models\Person;
 use App\Models\User;
@@ -694,5 +695,45 @@ class CrmFilamentTest extends TestCase
             'name' => 'atelierivoincidit-contact',
             'status' => 'active',
         ]);
+    }
+
+    public function test_a_collaborator_can_prepare_call_follow_up_tasks_from_a_client_record(): void
+    {
+        $organization = $this->organizationWithCrm();
+        $collaborator = User::factory()->create();
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+        $person = app(OrganizationContext::class)->run(
+            $organization,
+            fn (): Person => Person::query()->create(['display_name' => 'Camille Martin']),
+        );
+
+        $this->actingAs($collaborator);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        app(OrganizationContext::class)->run($organization, function () use ($person): void {
+            Livewire::test(ViewPerson::class, ['record' => $person->getRouteKey()])
+                ->callAction('call_follow_up', data: [
+                    'request' => 'Changement de taille : rappeler le parent et préparer un alto de 40 cm.',
+                    'call_due_at' => now()->addHour(),
+                    'create_preparation' => true,
+                    'preparation_due_at' => now()->addDay(),
+                ])
+                ->assertHasNoActionErrors();
+
+            $this->assertSame(2, CrmTask::query()->where('person_id', $person->id)->count());
+            $this->assertDatabaseHas('crm_tasks', [
+                'organization_id' => $person->organization_id,
+                'person_id' => $person->id,
+                'title' => 'Rappeler Camille Martin',
+            ]);
+            $this->assertDatabaseHas('crm_tasks', [
+                'organization_id' => $person->organization_id,
+                'person_id' => $person->id,
+                'title' => 'Préparer un instrument pour Camille Martin',
+            ]);
+        });
     }
 }
