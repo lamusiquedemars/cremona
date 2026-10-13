@@ -131,7 +131,7 @@ class RentalResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->defaultSort('updated_at', 'desc')->columns([
+        return $table->extraAttributes(['class' => 'rental-table'])->defaultSort('updated_at', 'desc')->columns([
             TextColumn::make('reference')->label(__('common.reference'))->searchable(),
             TextColumn::make('instrument.name')->label('Instrument')->searchable(),
             TextColumn::make('person.display_name')->label('Client')->placeholder('—'),

@@ -39,13 +39,22 @@ body.fi-body {
 }
 
 /* Tables keep every column reachable instead of letting the last ones disappear. */
-.fi-ta-content-ctn {
+.fi-ta-ctn:has(.rental-table),
+.fi-ta-ctn:has(.rental-table) .fi-ta-content,
+.fi-ta-ctn:has(.rental-table) .fi-ta-content-ctn {
+    max-width: 100%;
+    min-width: 0;
+}
+
+.fi-ta-ctn:has(.rental-table) .fi-ta-content-ctn {
     overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
     scrollbar-gutter: stable;
 }
 
-.fi-ta-content-ctn > .fi-ta-table {
-    min-width: max-content;
+.fi-ta-ctn:has(.rental-table) .fi-ta-table {
+    min-width: 68rem;
 }
 
 /* Long business actions remain readable inside their compact action menu. */
