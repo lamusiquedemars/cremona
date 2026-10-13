@@ -200,7 +200,7 @@ class EditRental extends BusinessEditRecord
                 ->icon(Heroicon::OutlinedEllipsisHorizontal)
                 ->button()
                 ->color('gray')
-                ->dropdownWidth(Width::ThreeExtraLarge)
+                ->dropdownWidth(Width::Large)
                 ->dropdownMaxHeight('70vh'),
         ];
     }

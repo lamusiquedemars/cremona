@@ -38,6 +38,29 @@ body.fi-body {
     border-radius: 1rem;
 }
 
+/* Tables keep every column reachable instead of letting the last ones disappear. */
+.fi-ta-content-ctn {
+    overflow-x: auto !important;
+    scrollbar-gutter: stable;
+}
+
+.fi-ta-content-ctn > .fi-ta-table {
+    min-width: max-content;
+}
+
+/* Long business actions remain readable inside their compact action menu. */
+.fi-dropdown-list-item {
+    align-items: flex-start;
+    white-space: normal;
+}
+
+.fi-dropdown-list-item-label {
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
 .fi-ta-row.crm-record-unread {
     background: rgb(245 158 11 / 0.055);
     box-shadow: inset 3px 0 rgb(245 158 11 / 0.8);
