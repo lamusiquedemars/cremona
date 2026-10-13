@@ -13,6 +13,7 @@ use App\Services\RentalAcceptanceManager;
 use App\Services\RentalContractGenerator;
 use App\Services\RentalManager;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
@@ -45,146 +46,152 @@ class EditRental extends BusinessEditRecord
                     }
                     Notification::make()->title('Demande envoyée')->body('Un lien personnel a été envoyé à '.$request->recipient_email.'.')->success()->send();
                 }),
-            Action::make('cancelAcceptance')
-                ->label('Annuler la demande')
-                ->icon(Heroicon::OutlinedXCircle)
-                ->color('danger')
-                ->visible(fn (): bool => $this->hasPendingAcceptance())
-                ->requiresConfirmation()
-                ->modalDescription('Le lien envoyé au client cessera immédiatement de fonctionner. Les contrats archivés restent conservés dans le dossier.')
-                ->action(function (RentalAcceptanceManager $manager): void {
-                    try {
-                        $manager->cancel($this->record->latestAcceptance, auth()->user());
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Demande non annulée')->body($exception->getMessage())->danger()->send();
+            ActionGroup::make([
+                Action::make('cancelAcceptance')
+                    ->label('Annuler la demande')
+                    ->icon(Heroicon::OutlinedXCircle)
+                    ->color('danger')
+                    ->visible(fn (): bool => $this->hasPendingAcceptance())
+                    ->requiresConfirmation()
+                    ->modalDescription('Le lien envoyé au client cessera immédiatement de fonctionner. Les contrats archivés restent conservés dans le dossier.')
+                    ->action(function (RentalAcceptanceManager $manager): void {
+                        try {
+                            $manager->cancel($this->record->latestAcceptance, auth()->user());
+                        } catch (LogicException $exception) {
+                            Notification::make()->title('Demande non annulée')->body($exception->getMessage())->danger()->send();
 
-                        return;
-                    }
-                    Notification::make()->title('Demande annulée')->body('Le lien personnel envoyé au client n’est plus utilisable.')->success()->send();
-                }),
-            Action::make('generateRentalContract')
-                ->label('Générer le contrat de location')
-                ->icon(Heroicon::OutlinedDocumentArrowDown)
-                ->requiresConfirmation()
-                ->modalDescription('Le PDF sera archivé dans l’espace privé. Si un contrat existe déjà, cette action créera une nouvelle version sans modifier la précédente.')
-                ->action(function (RentalContractGenerator $generator): void {
-                    try {
-                        $generator->generate($this->record, RentalDocumentType::RentalContract, auth()->user());
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Contrat non généré')->body($exception->getMessage())->danger()->send();
+                            return;
+                        }
+                        Notification::make()->title('Demande annulée')->body('Le lien personnel envoyé au client n’est plus utilisable.')->success()->send();
+                    }),
+                Action::make('generateRentalContract')
+                    ->label('Générer le contrat de location')
+                    ->icon(Heroicon::OutlinedDocumentArrowDown)
+                    ->requiresConfirmation()
+                    ->modalDescription('Le PDF sera archivé dans l’espace privé. Si un contrat existe déjà, cette action créera une nouvelle version sans modifier la précédente.')
+                    ->action(function (RentalContractGenerator $generator): void {
+                        try {
+                            $generator->generate($this->record, RentalDocumentType::RentalContract, auth()->user());
+                        } catch (LogicException $exception) {
+                            Notification::make()->title('Contrat non généré')->body($exception->getMessage())->danger()->send();
 
-                        return;
-                    }
-                    $this->refreshFormData(['insurance_monthly_amount']);
-                    Notification::make()->title('Contrat de location généré')->body('Le PDF immuable est archivé dans les documents privés de cette location.')->success()->send();
-                }),
-            Action::make('generateInsuranceContract')
-                ->label('Générer le contrat d’assurance')
-                ->icon(Heroicon::OutlinedShieldCheck)
-                ->visible(fn (): bool => (float) $this->record->insurance_monthly_amount > 0)
-                ->requiresConfirmation()
-                ->modalDescription('Le PDF sera archivé dans l’espace privé. Si un contrat existe déjà, cette action créera une nouvelle version sans modifier la précédente.')
-                ->action(function (RentalContractGenerator $generator): void {
-                    try {
-                        $generator->generate($this->record, RentalDocumentType::InsuranceContract, auth()->user());
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Contrat d’assurance non généré')->body($exception->getMessage())->danger()->send();
+                            return;
+                        }
+                        $this->refreshFormData(['insurance_monthly_amount']);
+                        Notification::make()->title('Contrat de location généré')->body('Le PDF immuable est archivé dans les documents privés de cette location.')->success()->send();
+                    }),
+                Action::make('generateInsuranceContract')
+                    ->label('Générer le contrat d’assurance')
+                    ->icon(Heroicon::OutlinedShieldCheck)
+                    ->visible(fn (): bool => (float) $this->record->insurance_monthly_amount > 0)
+                    ->requiresConfirmation()
+                    ->modalDescription('Le PDF sera archivé dans l’espace privé. Si un contrat existe déjà, cette action créera une nouvelle version sans modifier la précédente.')
+                    ->action(function (RentalContractGenerator $generator): void {
+                        try {
+                            $generator->generate($this->record, RentalDocumentType::InsuranceContract, auth()->user());
+                        } catch (LogicException $exception) {
+                            Notification::make()->title('Contrat d’assurance non généré')->body($exception->getMessage())->danger()->send();
 
-                        return;
-                    }
-                    Notification::make()->title('Contrat d’assurance généré')->body('Le PDF immuable est archivé dans les documents privés de cette location.')->success()->send();
-                }),
-            Action::make('downloadRentalContract')
-                ->label('Télécharger le contrat de location')
-                ->icon(Heroicon::OutlinedArrowDownTray)
-                ->visible(fn (): bool => $this->latestDocument(RentalDocumentType::RentalContract) !== null)
-                ->url(function (): string {
-                    $document = $this->latestDocument(RentalDocumentType::RentalContract);
+                            return;
+                        }
+                        Notification::make()->title('Contrat d’assurance généré')->body('Le PDF immuable est archivé dans les documents privés de cette location.')->success()->send();
+                    }),
+                Action::make('downloadRentalContract')
+                    ->label('Télécharger le contrat de location')
+                    ->icon(Heroicon::OutlinedArrowDownTray)
+                    ->visible(fn (): bool => $this->latestDocument(RentalDocumentType::RentalContract) !== null)
+                    ->url(function (): string {
+                        $document = $this->latestDocument(RentalDocumentType::RentalContract);
 
-                    return $document?->privateDocument === null ? '#' : route('private-documents.download', $document->privateDocument->public_id);
-                })
-                ->openUrlInNewTab(),
-            Action::make('downloadInsuranceContract')
-                ->label('Télécharger le contrat d’assurance')
-                ->icon(Heroicon::OutlinedArrowDownTray)
-                ->visible(fn (): bool => $this->latestDocument(RentalDocumentType::InsuranceContract) !== null)
-                ->url(function (): string {
-                    $document = $this->latestDocument(RentalDocumentType::InsuranceContract);
+                        return $document?->privateDocument === null ? '#' : route('private-documents.download', $document->privateDocument->public_id);
+                    })
+                    ->openUrlInNewTab(),
+                Action::make('downloadInsuranceContract')
+                    ->label('Télécharger le contrat d’assurance')
+                    ->icon(Heroicon::OutlinedArrowDownTray)
+                    ->visible(fn (): bool => $this->latestDocument(RentalDocumentType::InsuranceContract) !== null)
+                    ->url(function (): string {
+                        $document = $this->latestDocument(RentalDocumentType::InsuranceContract);
 
-                    return $document?->privateDocument === null ? '#' : route('private-documents.download', $document->privateDocument->public_id);
-                })
-                ->openUrlInNewTab(),
-            Action::make('generateReturnCertificate')
-                ->label('Générer l’attestation de restitution')
-                ->icon(Heroicon::OutlinedDocumentCheck)
-                ->visible(fn (): bool => $this->record->status === RentalStatus::Returned)
-                ->requiresConfirmation()
-                ->action(function (RentalContractGenerator $generator): void {
-                    try {
-                        $generator->generate($this->record, RentalDocumentType::ReturnCertificate, auth()->user());
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Attestation non générée')->body($exception->getMessage())->danger()->send();
+                        return $document?->privateDocument === null ? '#' : route('private-documents.download', $document->privateDocument->public_id);
+                    })
+                    ->openUrlInNewTab(),
+                Action::make('generateReturnCertificate')
+                    ->label('Générer l’attestation de restitution')
+                    ->icon(Heroicon::OutlinedDocumentCheck)
+                    ->visible(fn (): bool => $this->record->status === RentalStatus::Returned)
+                    ->requiresConfirmation()
+                    ->action(function (RentalContractGenerator $generator): void {
+                        try {
+                            $generator->generate($this->record, RentalDocumentType::ReturnCertificate, auth()->user());
+                        } catch (LogicException $exception) {
+                            Notification::make()->title('Attestation non générée')->body($exception->getMessage())->danger()->send();
 
-                        return;
-                    }
-                    Notification::make()->title('Attestation de restitution générée')->body('Le PDF immuable est archivé dans les documents privés de cette location.')->success()->send();
-                }),
-            Action::make('downloadReturnCertificate')
-                ->label('Télécharger l’attestation de restitution')
-                ->icon(Heroicon::OutlinedArrowDownTray)
-                ->visible(fn (): bool => $this->latestDocument(RentalDocumentType::ReturnCertificate) !== null)
-                ->url(function (): string {
-                    $document = $this->latestDocument(RentalDocumentType::ReturnCertificate);
+                            return;
+                        }
+                        Notification::make()->title('Attestation de restitution générée')->body('Le PDF immuable est archivé dans les documents privés de cette location.')->success()->send();
+                    }),
+                Action::make('downloadReturnCertificate')
+                    ->label('Télécharger l’attestation de restitution')
+                    ->icon(Heroicon::OutlinedArrowDownTray)
+                    ->visible(fn (): bool => $this->latestDocument(RentalDocumentType::ReturnCertificate) !== null)
+                    ->url(function (): string {
+                        $document = $this->latestDocument(RentalDocumentType::ReturnCertificate);
 
-                    return $document?->privateDocument === null ? '#' : route('private-documents.download', $document->privateDocument->public_id);
-                })
-                ->openUrlInNewTab(),
-            Action::make('activate')
-                ->label('Démarrer la location')
-                ->icon(Heroicon::OutlinedPlay)
-                ->color('success')
-                ->visible(fn (): bool => $this->record->status === RentalStatus::Draft)
-                ->requiresConfirmation()
-                ->modalDescription(fn (): string => $this->requiresAcceptanceOverride()
-                    ? 'Le client n’a pas encore accepté la demande en cours. Vous pouvez tout de même enregistrer une remise physique, mais celle-ci sera signalée dans le journal de la location.'
-                    : 'La remise physique sera enregistrée et l’instrument passera en location.')
-                ->schema(fn (): array => $this->requiresAcceptanceOverride() ? [
-                    Checkbox::make('acceptance_override')
-                        ->label('Confirmer la remise malgré l’absence d’acceptation')
-                        ->accepted()
-                        ->required(),
-                ] : [])
-                ->action(function (array $data, RentalManager $manager): void {
-                    try {
-                        $manager->activate($this->record, (bool) ($data['acceptance_override'] ?? false), auth()->user());
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Location non démarrée')->body($exception->getMessage())->danger()->send();
+                        return $document?->privateDocument === null ? '#' : route('private-documents.download', $document->privateDocument->public_id);
+                    })
+                    ->openUrlInNewTab(),
+                Action::make('activate')
+                    ->label('Démarrer la location')
+                    ->icon(Heroicon::OutlinedPlay)
+                    ->color('success')
+                    ->visible(fn (): bool => $this->record->status === RentalStatus::Draft)
+                    ->requiresConfirmation()
+                    ->modalDescription(fn (): string => $this->requiresAcceptanceOverride()
+                        ? 'Le client n’a pas encore accepté la demande en cours. Vous pouvez tout de même enregistrer une remise physique, mais celle-ci sera signalée dans le journal de la location.'
+                        : 'La remise physique sera enregistrée et l’instrument passera en location.')
+                    ->schema(fn (): array => $this->requiresAcceptanceOverride() ? [
+                        Checkbox::make('acceptance_override')
+                            ->label('Confirmer la remise malgré l’absence d’acceptation')
+                            ->accepted()
+                            ->required(),
+                    ] : [])
+                    ->action(function (array $data, RentalManager $manager): void {
+                        try {
+                            $manager->activate($this->record, (bool) ($data['acceptance_override'] ?? false), auth()->user());
+                        } catch (LogicException $exception) {
+                            Notification::make()->title('Location non démarrée')->body($exception->getMessage())->danger()->send();
 
-                        return;
-                    }
-                    Notification::make()->title('Location démarrée')->body('L’instrument est maintenant indiqué comme en location.')->success()->send();
-                }),
-            Action::make('return')
-                ->label('Enregistrer le retour')
-                ->icon(Heroicon::OutlinedArrowUturnLeft)
-                ->visible(fn (): bool => $this->record->status === RentalStatus::Active)
-                ->schema([
-                    DatePicker::make('returned_on')->label('Date de restitution')->default(today())->native(false)->required(),
-                    Textarea::make('accessories_state')->label('Accessoires remis et état')->rows(3)->helperText('Ex. étui, archet, housse ; indiquez les éléments manquants ou endommagés.'),
-                    Textarea::make('condition_notes')->label('État de l’instrument et observations')->rows(3),
-                    TextInput::make('charge_amount')->label('Frais à régler')->numeric()->prefix('€')->default(0),
-                    Textarea::make('charge_note')->label('Motif des frais')->rows(2),
-                ])
-                ->action(function (array $data, RentalManager $manager): void {
-                    try {
-                        $manager->return($this->record, Carbon::parse($data['returned_on']), $data['condition_notes'] ?? null, auth()->user(), $data);
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Retour non enregistré')->body($exception->getMessage())->danger()->send();
+                            return;
+                        }
+                        Notification::make()->title('Location démarrée')->body('L’instrument est maintenant indiqué comme en location.')->success()->send();
+                    }),
+                Action::make('return')
+                    ->label('Enregistrer le retour')
+                    ->icon(Heroicon::OutlinedArrowUturnLeft)
+                    ->visible(fn (): bool => $this->record->status === RentalStatus::Active)
+                    ->schema([
+                        DatePicker::make('returned_on')->label('Date de restitution')->default(today())->native(false)->required(),
+                        Textarea::make('accessories_state')->label('Accessoires remis et état')->rows(3)->helperText('Ex. étui, archet, housse ; indiquez les éléments manquants ou endommagés.'),
+                        Textarea::make('condition_notes')->label('État de l’instrument et observations')->rows(3),
+                        TextInput::make('charge_amount')->label('Frais à régler')->numeric()->prefix('€')->default(0),
+                        Textarea::make('charge_note')->label('Motif des frais')->rows(2),
+                    ])
+                    ->action(function (array $data, RentalManager $manager): void {
+                        try {
+                            $manager->return($this->record, Carbon::parse($data['returned_on']), $data['condition_notes'] ?? null, auth()->user(), $data);
+                        } catch (LogicException $exception) {
+                            Notification::make()->title('Retour non enregistré')->body($exception->getMessage())->danger()->send();
 
-                        return;
-                    }
-                    Notification::make()->title('Restitution enregistrée')->body('L’instrument redevient disponible. Le constat est conservé avec la location.')->success()->send();
-                }),
+                            return;
+                        }
+                        Notification::make()->title('Restitution enregistrée')->body('L’instrument redevient disponible. Le constat est conservé avec la location.')->success()->send();
+                    }),
+            ])
+                ->label('Gérer la location')
+                ->icon(Heroicon::OutlinedEllipsisHorizontal)
+                ->button()
+                ->color('gray'),
         ];
     }
 

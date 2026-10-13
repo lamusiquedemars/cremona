@@ -100,11 +100,19 @@ class RentalAcceptanceManager
     public function resolve(string $token): RentalAcceptanceRequest
     {
         $request = RentalAcceptanceRequest::withoutGlobalScopes()
-            ->with(['rental.organization', 'documents.privateDocument'])
             ->where('token_hash', hash('sha256', $token))
             ->firstOrFail();
 
-        return $this->context->run($request->rental->organization, function () use ($request): RentalAcceptanceRequest {
+        $organization = Rental::withoutGlobalScopes()
+            ->with('organization')
+            ->findOrFail($request->rental_id)
+            ->organization;
+
+        return $this->context->run($organization, function () use ($request): RentalAcceptanceRequest {
+            $request = RentalAcceptanceRequest::query()
+                ->with(['rental.organization', 'documents.privateDocument'])
+                ->findOrFail($request->id);
+
             if (in_array($request->status, [RentalAcceptanceStatus::Cancelled, RentalAcceptanceStatus::Refused], true)) {
                 throw new LogicException('Cette demande d’acceptation n’est plus disponible.');
             }

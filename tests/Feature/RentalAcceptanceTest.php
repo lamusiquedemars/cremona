@@ -51,6 +51,27 @@ class RentalAcceptanceTest extends TestCase
         });
     }
 
+    public function test_a_personal_acceptance_link_works_without_an_active_organization_context(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+        $organization = Organization::factory()->create();
+
+        $token = app(OrganizationContext::class)->run($organization, function (): string {
+            $rental = $this->rental();
+            app(RentalContractGenerator::class)->generate($rental, RentalDocumentType::RentalContract);
+            $acceptance = app(RentalAcceptanceManager::class)->issue($rental);
+            $token = 'a-public-acceptance-token';
+            $acceptance->update(['token_hash' => hash('sha256', $token)]);
+
+            return $token;
+        });
+
+        $this->get(route('rental-acceptance.show', ['token' => $token]))
+            ->assertOk()
+            ->assertSee('Documents de location');
+    }
+
     public function test_an_unsolicited_acceptance_request_can_be_cancelled(): void
     {
         Storage::fake('local');
