@@ -8,6 +8,7 @@ use App\Enums\CrmTaskStatus;
 use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationPermission;
 use App\Enums\QuoteStatus;
+use App\Enums\RentalStatus;
 use App\Models\Appointment;
 use App\Models\Campaign;
 use App\Models\Conversation;
@@ -15,6 +16,7 @@ use App\Models\CrmTask;
 use App\Models\IncomingRequest;
 use App\Models\Person;
 use App\Models\Quote;
+use App\Models\Rental;
 use App\Services\OrganizationModuleAccess;
 use App\Tenancy\OrganizationContext;
 use Filament\Support\Icons\Heroicon;
@@ -65,7 +67,17 @@ class DashboardHomeSummary extends Widget
         $appointmentsToday = $appointmentsEnabled
             ? Appointment::query()->where('status', AppointmentStatus::Scheduled)->whereBetween('starts_at', [now(), $todayEnd])->count()
             : 0;
-        $actions = $pendingRequests + $pendingConversations + $tasksDue + $appointmentsToday;
+        $rentalActions = 0;
+        $rentalOverview = null;
+        if ($moduleAccess->enabled('rentals', $organization)) {
+            $toHandOver = Rental::query()->where('status', RentalStatus::Accepted)->count();
+            $toSetUp = Rental::query()->where('collection_status', 'to_set_up')->count();
+            $toStop = Rental::query()->where('collection_status', 'to_stop')->count();
+            $returnsSoon = Rental::query()->where('status', RentalStatus::HandedOver)->whereDate('expected_return_on', '<=', now($timezone)->addDays(14)->toDateString())->count();
+            $rentalActions = $toHandOver + $toSetUp + $toStop + $returnsSoon;
+            $rentalOverview = compact('toHandOver', 'toSetUp', 'toStop', 'returnsSoon');
+        }
+        $actions = $pendingRequests + $pendingConversations + $tasksDue + $appointmentsToday + $rentalActions;
 
         $overview = [];
 
@@ -94,6 +106,19 @@ class DashboardHomeSummary extends Widget
                 'label' => __('cremona.navigation.items.quotes'),
                 'value' => trans_choice('cremona.dashboard.sent_quotes', $sentQuotes, ['count' => $sentQuotes]),
                 'icon' => Heroicon::OutlinedDocumentCurrencyEuro,
+            ];
+        }
+
+        if ($rentalOverview !== null) {
+            $parts = [];
+            if ($rentalOverview['toHandOver'] > 0) $parts[] = $rentalOverview['toHandOver'].' à remettre';
+            if ($rentalOverview['toSetUp'] > 0) $parts[] = $rentalOverview['toSetUp'].' encaissement'.($rentalOverview['toSetUp'] > 1 ? 's' : '').' à mettre en place';
+            if ($rentalOverview['toStop'] > 0) $parts[] = $rentalOverview['toStop'].' encaissement'.($rentalOverview['toStop'] > 1 ? 's' : '').' à arrêter';
+            if ($rentalOverview['returnsSoon'] > 0) $parts[] = $rentalOverview['returnsSoon'].' retour'.($rentalOverview['returnsSoon'] > 1 ? 's' : '').' à suivre';
+            $overview[] = [
+                'label' => 'Locations',
+                'value' => $parts === [] ? 'Aucune action de location à prévoir' : implode(' · ', $parts),
+                'icon' => Heroicon::OutlinedKey,
             ];
         }
 
