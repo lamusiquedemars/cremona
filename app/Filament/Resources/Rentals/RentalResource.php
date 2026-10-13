@@ -15,6 +15,7 @@ use App\Models\RentalAcceptanceRequest;
 use App\Models\RentalInsurancePlan;
 use App\Services\InstrumentRentalPricing;
 use App\Services\RentalInsurancePricing;
+use App\Tenancy\OrganizationContext;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
@@ -181,9 +182,9 @@ class RentalResource extends Resource
         }
 
         return match (self::acceptanceLabel($request)) {
-            'Acceptée' => 'Le '.$request->accepted_at?->format('d/m/Y'),
-            'Envoyée' => 'Expire le '.$request->expires_at->format('d/m/Y'),
-            'Expirée' => 'Expirée le '.$request->expires_at->format('d/m/Y'),
+            'Acceptée' => 'Le '.self::formatAcceptanceDate($request->accepted_at, 'd/m/Y'),
+            'Envoyée' => 'Expire le '.self::formatAcceptanceDate($request->expires_at, 'd/m/Y'),
+            'Expirée' => 'Expirée le '.self::formatAcceptanceDate($request->expires_at, 'd/m/Y'),
             default => null,
         };
     }
@@ -195,12 +196,17 @@ class RentalResource extends Resource
         }
 
         return match (self::acceptanceLabel($request)) {
-            'Acceptée' => 'Acceptée le '.$request->accepted_at?->format('d/m/Y à H:i'),
-            'Envoyée' => 'Envoyée le '.$request->sent_at?->format('d/m/Y à H:i').', valable jusqu’au '.$request->expires_at->format('d/m/Y'),
-            'Expirée' => 'Le lien a expiré le '.$request->expires_at->format('d/m/Y').'. Envoyez une nouvelle demande si nécessaire.',
-            'Annulée' => 'Demande annulée le '.$request->cancelled_at?->format('d/m/Y à H:i'),
+            'Acceptée' => 'Acceptée le '.self::formatAcceptanceDate($request->accepted_at, 'd/m/Y à H:i'),
+            'Envoyée' => 'Envoyée le '.self::formatAcceptanceDate($request->sent_at, 'd/m/Y à H:i').', valable jusqu’au '.self::formatAcceptanceDate($request->expires_at, 'd/m/Y'),
+            'Expirée' => 'Le lien a expiré le '.self::formatAcceptanceDate($request->expires_at, 'd/m/Y').'. Envoyez une nouvelle demande si nécessaire.',
+            'Annulée' => 'Demande annulée le '.self::formatAcceptanceDate($request->cancelled_at, 'd/m/Y à H:i'),
             default => 'Demande préparée, pas encore envoyée.',
         };
+    }
+
+    private static function formatAcceptanceDate(?\DateTimeInterface $date, string $format): string
+    {
+        return $date?->setTimezone(app(OrganizationContext::class)->require()->timezone())->format($format) ?? '—';
     }
 
     /** @return array<string, string> */

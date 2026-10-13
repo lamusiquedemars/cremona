@@ -14,6 +14,7 @@ use App\Models\Rental;
 use App\Services\RentalAcceptanceManager;
 use App\Services\RentalContractGenerator;
 use App\Tenancy\OrganizationContext;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -70,6 +71,53 @@ class RentalAcceptanceTest extends TestCase
         $this->get(route('rental-acceptance.show', ['token' => $token]))
             ->assertOk()
             ->assertSee('Documents de location');
+    }
+
+    public function test_a_client_can_download_a_document_from_a_personal_link_without_an_active_organization_context(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+        $organization = Organization::factory()->create();
+
+        [$token, $documentId] = app(OrganizationContext::class)->run($organization, function (): array {
+            $rental = $this->rental();
+            $document = app(RentalContractGenerator::class)->generate($rental, RentalDocumentType::RentalContract);
+            $acceptance = app(RentalAcceptanceManager::class)->issue($rental);
+            $token = 'a-public-document-token';
+            $acceptance->update(['token_hash' => hash('sha256', $token)]);
+
+            return [$token, $document->id];
+        });
+
+        $this->get(route('rental-acceptance.document', ['token' => $token, 'document' => $documentId]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_an_acceptance_time_is_displayed_in_the_organization_timezone(): void
+    {
+        Storage::fake('local');
+        Mail::fake();
+        $organization = Organization::factory()->create(['settings' => ['timezone' => 'Europe/Paris']]);
+
+        $token = app(OrganizationContext::class)->run($organization, function (): string {
+            $rental = $this->rental();
+            app(RentalContractGenerator::class)->generate($rental, RentalDocumentType::RentalContract);
+            $acceptance = app(RentalAcceptanceManager::class)->issue($rental);
+            $token = 'a-timezone-token';
+            $acceptance->update([
+                'token_hash' => hash('sha256', $token),
+                'status' => RentalAcceptanceStatus::Accepted,
+                'accepted_at' => CarbonImmutable::parse('2026-10-13 06:50:00', 'UTC'),
+                'accepted_name' => 'Camille Durand',
+            ]);
+
+            return $token;
+        });
+
+        $this->get(route('rental-acceptance.show', ['token' => $token]))
+            ->assertOk()
+            ->assertSee('13/10/2026 à 08:50');
     }
 
     public function test_an_unsolicited_acceptance_request_can_be_cancelled(): void

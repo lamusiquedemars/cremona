@@ -174,15 +174,27 @@ class RentalAcceptanceManager
 
     public function document(RentalAcceptanceRequest $request, int $rentalDocumentId): RentalDocument
     {
-        if ($request->expires_at->isPast()) {
-            throw new LogicException('Ce lien d’acceptation a expiré.');
-        }
-        $document = $request->documents()->whereKey($rentalDocumentId)->with('privateDocument')->firstOrFail();
-        if ($document->privateDocument === null || $document->privateDocument->sha256 !== $document->pivot->document_sha256) {
-            throw new LogicException('Le document demandé n’est plus disponible dans son état d’origine.');
-        }
+        // This route is intentionally public: there is no organization selected while
+        // a client consults the personal acceptance link. Re-enter the owning
+        // organization before resolving the pivot and its private document.
+        $organization = Rental::withoutGlobalScopes()
+            ->with('organization')
+            ->findOrFail($request->rental_id)
+            ->organization;
 
-        return $document;
+        return $this->context->run($organization, function () use ($request, $rentalDocumentId): RentalDocument {
+            $request = RentalAcceptanceRequest::query()->findOrFail($request->id);
+            if ($request->status !== RentalAcceptanceStatus::Accepted && $request->expires_at->isPast()) {
+                throw new LogicException('Ce lien d’acceptation a expiré.');
+            }
+
+            $document = $request->documents()->whereKey($rentalDocumentId)->with('privateDocument')->firstOrFail();
+            if ($document->privateDocument === null || $document->privateDocument->sha256 !== $document->pivot->document_sha256) {
+                throw new LogicException('Le document demandé n’est plus disponible dans son état d’origine.');
+            }
+
+            return $document;
+        });
     }
 
     /** @param array<string, mixed> $metadata */
