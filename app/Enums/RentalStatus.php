@@ -6,8 +6,10 @@ use Filament\Support\Contracts\HasLabel;
 
 enum RentalStatus: string implements HasLabel
 {
-    case Draft = 'draft';
-    case Active = 'active';
+    case Preparing = 'preparing';
+    case Sent = 'sent';
+    case Accepted = 'accepted';
+    case HandedOver = 'handed_over';
     case Returned = 'returned';
     case Cancelled = 'cancelled';
 

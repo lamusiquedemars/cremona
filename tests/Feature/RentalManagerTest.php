@@ -25,10 +25,15 @@ class RentalManagerTest extends TestCase
 
         app(OrganizationContext::class)->run($organization, function (): void {
             $instrument = InstrumentAsset::query()->create(['name' => 'Violon d’étude 4/4', 'available_for_rental' => true]);
-            $rental = Rental::query()->create(['instrument_asset_id' => $instrument->id]);
+            $rental = Rental::query()->create(['instrument_asset_id' => $instrument->id, 'status' => RentalStatus::Accepted]);
+            RentalAcceptanceRequest::query()->create([
+                'rental_id' => $rental->id, 'recipient_name' => 'Camille Durand', 'recipient_email' => 'camille@example.test',
+                'token_hash' => hash('sha256', 'accepted-token'), 'status' => RentalAcceptanceStatus::Accepted,
+                'consent_text' => 'Texte de test', 'expires_at' => now()->addDays(14), 'accepted_at' => now(), 'accepted_name' => 'Camille Durand',
+            ]);
 
             app(RentalManager::class)->activate($rental);
-            $this->assertSame(RentalStatus::Active, $rental->fresh()->status);
+            $this->assertSame(RentalStatus::HandedOver, $rental->fresh()->status);
             $this->assertSame(InstrumentAssetStatus::Rented, $instrument->fresh()->status);
 
             app(RentalManager::class)->return($rental, today(), 'Instrument contrôlé au retour.', details: [
@@ -61,14 +66,14 @@ class RentalManagerTest extends TestCase
         });
     }
 
-    public function test_a_pending_client_acceptance_requires_an_explicit_handover_override(): void
+    public function test_a_client_acceptance_is_required_before_the_instrument_can_be_handed_over(): void
     {
         $organization = Organization::factory()->create();
 
         app(OrganizationContext::class)->run($organization, function (): void {
             $instrument = InstrumentAsset::query()->create(['name' => 'Violon d’étude 4/4', 'available_for_rental' => true]);
             $rental = Rental::query()->create(['instrument_asset_id' => $instrument->id]);
-            RentalAcceptanceRequest::query()->create([
+            $request = RentalAcceptanceRequest::query()->create([
                 'rental_id' => $rental->id,
                 'recipient_name' => 'Camille Durand',
                 'recipient_email' => 'camille@example.test',
@@ -83,11 +88,13 @@ class RentalManagerTest extends TestCase
                 app(RentalManager::class)->activate($rental);
                 $this->fail('La remise doit demander une confirmation lorsque l’acceptation est en attente.');
             } catch (LogicException $exception) {
-                $this->assertStringContainsString('n’a pas encore accepté', $exception->getMessage());
+                $this->assertStringContainsString('doit être accepté', $exception->getMessage());
             }
 
-            app(RentalManager::class)->activate($rental, acceptanceOverride: true);
-            $this->assertSame(RentalStatus::Active, $rental->fresh()->status);
+            $rental->update(['status' => RentalStatus::Accepted]);
+            $request->update(['status' => RentalAcceptanceStatus::Accepted, 'accepted_at' => now(), 'accepted_name' => 'Camille Durand']);
+            app(RentalManager::class)->activate($rental);
+            $this->assertSame(RentalStatus::HandedOver, $rental->fresh()->status);
         });
     }
 }

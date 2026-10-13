@@ -60,22 +60,17 @@ class RentalResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(12)->components([
-            Section::make('Accord du client')
+            Section::make(fn (?Rental $record): string => $record === null ? 'Nouvelle location' : 'Étape '.self::stageNumber($record).' sur 5 — '.$record->status->getLabel())
                 ->visible(fn (?Rental $record): bool => $record !== null)
+                ->description(fn (?Rental $record): string => self::nextAction($record))
                 ->schema([
-                    Placeholder::make('acceptance_status')
-                        ->label('Situation')
-                        ->content(fn (?Rental $record): string => self::acceptanceLabel($record?->latestAcceptance) ?? 'Aucune demande envoyée'),
-                    Placeholder::make('acceptance_recipient')
-                        ->label('Destinataire')
-                        ->content(fn (?Rental $record): string => $record?->latestAcceptance?->recipient_email ?? '—'),
-                    Placeholder::make('acceptance_timing')
-                        ->label('Prochaine étape')
-                        ->content(fn (?Rental $record): string => self::acceptanceTiming($record?->latestAcceptance)),
+                    Placeholder::make('rental_status')->label('Étape du dossier')->content(fn (?Rental $record): string => $record?->status->getLabel() ?? '—'),
+                    Placeholder::make('agreement_status')->label('Accord du client')->content(fn (?Rental $record): string => self::acceptanceLabel($record?->latestAcceptance) ?? 'Pas encore demandé'),
+                    Placeholder::make('collection_status')->label('Encaissement')->content(fn (?Rental $record): string => self::collectionLabel($record?->collection_status)),
                 ])->columns(3)->columnSpanFull(),
             Section::make('Location')->schema([
                 TextInput::make('reference')->label(__('common.reference'))->helperText('Générée automatiquement si laissée vide.')->columnSpan(3),
-                Select::make('status')->label(__('common.status'))->options(RentalStatus::class)->default(RentalStatus::Draft)->disabled()->dehydrated()->required()->columnSpan(3),
+                Select::make('status')->label('Étape du dossier')->options(RentalStatus::class)->default(RentalStatus::Preparing)->disabled()->dehydrated()->required()->columnSpan(3),
                 Select::make('instrument_asset_id')->label('Instrument')->relationship('instrument', 'name')->getOptionLabelFromRecordUsing(fn (InstrumentAsset $instrument): string => trim($instrument->name.' — '.$instrument->status->label()))->preload()->searchable()->live()->afterStateUpdated(function (?int $state, Set $set): void {
                     $instrument = InstrumentAsset::query()->with('category')->find($state);
                     if ($instrument?->available_for_rental) {
@@ -140,8 +135,8 @@ class RentalResource extends Resource
             TextColumn::make('reference')->label(__('common.reference'))->searchable(),
             TextColumn::make('instrument.name')->label('Instrument')->searchable(),
             TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
-            TextColumn::make('status')->label(__('common.status'))->badge(),
-            TextColumn::make('latestAcceptance.status')->label('Accord du client')->state(fn (Rental $record): ?string => self::acceptanceLabel($record->latestAcceptance))->badge()->color(fn (Rental $record): string => self::acceptanceColor($record->latestAcceptance))->description(fn (Rental $record): ?string => self::acceptanceDescription($record->latestAcceptance))->placeholder('Pas encore demandé'),
+            TextColumn::make('status')->label('Étape')->badge()->color(fn (Rental $record): string => self::stageColor($record)),
+            TextColumn::make('next_action')->label('À faire')->state(fn (Rental $record): string => self::nextAction($record))->wrap(),
             TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
             TextColumn::make('unit_amount')->label('Loyer mensuel')->money('EUR'),
             TextColumn::make('insurance_monthly_amount')->label('Assurance')->money('EUR')->placeholder('—')->toggleable(),
@@ -163,6 +158,42 @@ class RentalResource extends Resource
         }
 
         return $request->status->getLabel();
+    }
+
+    public static function stageNumber(Rental $rental): int
+    {
+        return match ($rental->status) {
+            RentalStatus::Preparing => 1, RentalStatus::Sent => 2, RentalStatus::Accepted => 3,
+            RentalStatus::HandedOver => 4, RentalStatus::Returned => 5, default => 0,
+        };
+    }
+
+    public static function nextAction(?Rental $rental): string
+    {
+        if ($rental === null) return '—';
+        return match ($rental->status) {
+            RentalStatus::Preparing => 'Préparer les documents et envoyer le dossier au client.',
+            RentalStatus::Sent => 'Attendre l’accord du client.',
+            RentalStatus::Accepted => 'Préparer puis confirmer la remise de l’instrument.',
+            RentalStatus::HandedOver => $rental->collection_status === 'to_set_up' ? 'Mettre en place l’encaissement.' : 'Suivre la location et organiser le retour.',
+            RentalStatus::Returned => $rental->collection_status === 'to_stop' ? 'Arrêter ou ajuster l’encaissement.' : 'Dossier terminé.',
+            default => 'Aucune action à prévoir.',
+        };
+    }
+
+    public static function collectionLabel(?string $status): string
+    {
+        return match ($status) {
+            'to_set_up' => 'À mettre en place', 'set_up' => 'En place', 'to_stop' => 'À arrêter ou ajuster', 'closed' => 'Traité', default => 'Non concerné',
+        };
+    }
+
+    public static function stageColor(Rental $rental): string
+    {
+        return match ($rental->status) {
+            RentalStatus::Preparing, RentalStatus::Sent => 'warning', RentalStatus::Accepted => 'info',
+            RentalStatus::HandedOver => 'success', RentalStatus::Returned => 'gray', default => 'danger',
+        };
     }
 
     public static function acceptanceColor(?RentalAcceptanceRequest $request): string

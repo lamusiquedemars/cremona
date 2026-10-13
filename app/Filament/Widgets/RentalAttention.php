@@ -41,14 +41,15 @@ class RentalAttention extends TableWidget
 
         return $table
             ->heading('Locations à suivre')
-            ->description('Les locations qui demandent une action : préparation, accord du client ou retour à organiser.')
+            ->description('Les locations qui demandent une action : dossier, remise, encaissement ou restitution.')
             ->query($this->attentionQuery($horizon))
             ->columns([
                 TextColumn::make('reference')->label('Référence')->weight('medium'),
                 TextColumn::make('instrument.name')->label('Instrument')->wrap(),
                 TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
-                TextColumn::make('next_step')->label('Prochaine étape')->state(fn (Rental $record): string => $this->nextStep($record))->badge()->color(fn (Rental $record): string => $this->nextStepColor($record)),
-                TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—')->color(fn (Rental $record): string => $record->status === RentalStatus::Active && $record->expected_return_on?->isPast() ? 'danger' : 'gray'),
+                TextColumn::make('status')->label('Étape')->badge(),
+                TextColumn::make('next_step')->label('À faire')->state(fn (Rental $record): string => $this->nextStep($record))->badge()->color(fn (Rental $record): string => $this->nextStepColor($record)),
+                TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—')->color(fn (Rental $record): string => $record->status === RentalStatus::HandedOver && $record->expected_return_on?->isPast() ? 'danger' : 'gray'),
             ])
             ->recordUrl(fn (Rental $record): string => RentalResource::getUrl('edit', ['record' => $record]))
             ->headerActions([
@@ -67,27 +68,22 @@ class RentalAttention extends TableWidget
         return Rental::query()
             ->with(['instrument', 'person', 'latestAcceptance'])
             ->where(function (Builder $query) use ($horizon): void {
-                $query->where('status', RentalStatus::Draft)
-                    ->orWhere(fn (Builder $query): Builder => $query->where('status', RentalStatus::Active)->whereDate('expected_return_on', '<=', $horizon))
-                    ->orWhereHas('latestAcceptance', fn (Builder $query): Builder => $query->whereIn('status', [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent]));
+                $query->whereIn('status', [RentalStatus::Preparing, RentalStatus::Sent, RentalStatus::Accepted])
+                    ->orWhere(fn (Builder $query): Builder => $query->where('status', RentalStatus::HandedOver)->whereDate('expected_return_on', '<=', $horizon))
+                    ->orWhereIn('collection_status', ['to_set_up', 'to_stop']);
             })
-            ->orderByRaw("case when status = 'draft' then 0 else 1 end")
+            ->orderByRaw("case when status = 'accepted' then 0 when collection_status in ('to_set_up', 'to_stop') then 1 else 2 end")
             ->orderBy('expected_return_on')
             ->limit(8);
     }
 
     private function nextStep(Rental $rental): string
     {
-        $acceptance = $rental->latestAcceptance;
-        if ($acceptance !== null && in_array($acceptance->status, [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent], true)) {
-            return $acceptance->expires_at->isPast() ? 'Renvoyer la demande d’accord' : 'Attendre l’accord du client';
-        }
-        if ($rental->status === RentalStatus::Draft && $acceptance?->status === RentalAcceptanceStatus::Accepted) {
-            return 'Remettre l’instrument';
-        }
-        if ($rental->status === RentalStatus::Draft) {
-            return 'Préparer la location';
-        }
+        if ($rental->collection_status === 'to_set_up') return 'Mettre en place l’encaissement';
+        if ($rental->collection_status === 'to_stop') return 'Arrêter ou ajuster l’encaissement';
+        if ($rental->status === RentalStatus::Accepted) return 'Préparer et remettre l’instrument';
+        if ($rental->status === RentalStatus::Sent) return 'Attendre l’accord du client';
+        if ($rental->status === RentalStatus::Preparing) return 'Préparer et envoyer le dossier';
         if ($rental->expected_return_on?->isPast()) {
             return 'Relancer le retour';
         }
@@ -97,10 +93,10 @@ class RentalAttention extends TableWidget
 
     private function nextStepColor(Rental $rental): string
     {
-        if ($rental->status === RentalStatus::Active && $rental->expected_return_on?->isPast()) {
+        if ($rental->status === RentalStatus::HandedOver && $rental->expected_return_on?->isPast()) {
             return 'danger';
         }
 
-        return $rental->latestAcceptance?->status === RentalAcceptanceStatus::Accepted ? 'success' : 'warning';
+        return $rental->status === RentalStatus::Accepted ? 'success' : 'warning';
     }
 }

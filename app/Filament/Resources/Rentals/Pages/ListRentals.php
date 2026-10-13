@@ -24,16 +24,16 @@ class ListRentals extends ListRecords
                 ->badge(fn (): int => $this->attentionQuery($returnHorizon)->count())
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $this->applyAttentionQuery($query, $returnHorizon)),
-            'awaiting_acceptance' => Tab::make('Accord du client')
-                ->badge(fn (): int => Rental::query()->whereHas('latestAcceptance', fn (Builder $query): Builder => $query->whereIn('status', [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent]))->count())
+            'sent' => Tab::make('Dossiers envoyés')
+                ->badge(fn (): int => Rental::query()->where('status', RentalStatus::Sent)->count())
                 ->badgeColor('warning')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $query->whereHas('latestAcceptance', fn (Builder $query): Builder => $query->whereIn('status', [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent]))),
-            'ready' => Tab::make('À remettre')
-                ->badge(fn (): int => Rental::query()->where('status', RentalStatus::Draft)->whereHas('latestAcceptance', fn (Builder $query): Builder => $query->where('status', RentalAcceptanceStatus::Accepted))->count())
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Sent)),
+            'accepted' => Tab::make('Instruments à remettre')
+                ->badge(fn (): int => Rental::query()->where('status', RentalStatus::Accepted)->count())
                 ->badgeColor('success')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Draft)->whereHas('latestAcceptance', fn (Builder $query): Builder => $query->where('status', RentalAcceptanceStatus::Accepted))),
-            'active' => Tab::make('En cours')->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Active)),
-            'returned' => Tab::make('Restituées')->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Returned)),
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Accepted)),
+            'active' => Tab::make('Instruments remis')->badge(fn (): int => Rental::query()->where('status', RentalStatus::HandedOver)->count())->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::HandedOver)),
+            'returned' => Tab::make('Instruments restitués')->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Returned)),
         ];
     }
 
@@ -45,9 +45,9 @@ class ListRentals extends ListRecords
     private function applyAttentionQuery(Builder $query, string $returnHorizon): Builder
     {
         return $query->where(function (Builder $query) use ($returnHorizon): void {
-            $query->where('status', RentalStatus::Draft)
-                ->orWhere(fn (Builder $query): Builder => $query->where('status', RentalStatus::Active)->whereDate('expected_return_on', '<=', $returnHorizon))
-                ->orWhereHas('latestAcceptance', fn (Builder $query): Builder => $query->whereIn('status', [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent]));
+            $query->whereIn('status', [RentalStatus::Preparing, RentalStatus::Sent, RentalStatus::Accepted])
+                ->orWhere(fn (Builder $query): Builder => $query->where('status', RentalStatus::HandedOver)->whereDate('expected_return_on', '<=', $returnHorizon))
+                ->orWhereIn('collection_status', ['to_set_up', 'to_stop']);
         });
     }
 }

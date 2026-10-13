@@ -66,6 +66,7 @@ class Rental extends Model
             'insurance_monthly_amount' => 'decimal:2',
             'deposit_amount' => 'decimal:2',
             'returned_at' => 'immutable_datetime',
+            'collection_handled_at' => 'immutable_datetime',
         ];
     }
 

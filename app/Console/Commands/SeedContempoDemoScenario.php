@@ -98,7 +98,7 @@ class SeedContempoDemoScenario extends Command
 
                 Rental::query()->firstOrCreate(
                     ['reference' => self::MARKER.'-LOCATION'],
-                    ['instrument_asset_id' => $rentalInstrument->id, 'person_id' => $person->id, 'status' => RentalStatus::Draft, 'starts_on' => today(), 'expected_return_on' => today()->addMonth(), 'unit_amount' => $rentalInstrument->suggested_rental_amount, 'deposit_amount' => 300, 'notes' => 'Jeu de données supprimable '.self::MARKER],
+                    ['instrument_asset_id' => $rentalInstrument->id, 'person_id' => $person->id, 'status' => RentalStatus::Preparing, 'starts_on' => today(), 'expected_return_on' => today()->addMonth(), 'unit_amount' => $rentalInstrument->suggested_rental_amount, 'deposit_amount' => 300, 'notes' => 'Jeu de données supprimable '.self::MARKER],
                 );
 
                 $this->components->info("Jeu de démonstration créé pour {$workshopInstrument->name} et {$rentalInstrument->name}.");

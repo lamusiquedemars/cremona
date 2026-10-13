@@ -76,13 +76,13 @@ class InterfaceTranslationTest extends TestCase
 
             $this->assertSame('Disponible', InstrumentAssetStatus::Available->getLabel());
             $this->assertSame('Réservé', InstrumentAssetStatus::Reserved->getLabel());
-            $this->assertSame('À préparer', RentalStatus::Draft->getLabel());
+            $this->assertSame('Dossier en préparation', RentalStatus::Preparing->getLabel());
 
             app()->setLocale('pt_BR');
 
             $this->assertSame('Disponível', InstrumentAssetStatus::Available->getLabel());
             $this->assertSame('Reservado', InstrumentAssetStatus::Reserved->getLabel());
-            $this->assertSame('A preparar', RentalStatus::Draft->getLabel());
+            $this->assertSame('Dossiê em preparação', RentalStatus::Preparing->getLabel());
         } finally {
             app()->setLocale('fr');
         }

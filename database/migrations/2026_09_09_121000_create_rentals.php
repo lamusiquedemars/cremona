@@ -15,7 +15,7 @@ return new class extends Migration
             $t->string('reference', 40);
             $t->foreignId('instrument_asset_id')->constrained()->restrictOnDelete();
             $t->foreignId('person_id')->nullable()->constrained()->nullOnDelete();
-            $t->string('status', 32)->default('draft');
+            $t->string('status', 32)->default('preparing');
             $t->date('starts_on')->nullable();
             $t->date('expected_return_on')->nullable();
             $t->date('returned_on')->nullable();

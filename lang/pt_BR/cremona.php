@@ -212,9 +212,11 @@ return [
     ],
     'rental' => [
         'status' => [
-            'draft' => 'A preparar',
-            'active' => 'Em andamento',
-            'returned' => 'Devolvida',
+            'preparing' => 'Dossiê em preparação',
+            'sent' => 'Dossiê enviado',
+            'accepted' => 'Dossiê aceito',
+            'handed_over' => 'Instrumento entregue',
+            'returned' => 'Instrumento devolvido',
             'cancelled' => 'Cancelada',
         ],
     ],

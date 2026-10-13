@@ -6,7 +6,9 @@ use App\Enums\ContactMethodType;
 use App\Enums\RentalAcceptanceStatus;
 use App\Enums\RentalDocumentStatus;
 use App\Enums\RentalDocumentType;
+use App\Enums\RentalStatus;
 use App\Mail\RentalAcceptanceInvitation;
+use App\Mail\RentalAcceptanceReceipt;
 use App\Models\ContactMethod;
 use App\Models\Rental;
 use App\Models\RentalAcceptanceEvent;
@@ -30,6 +32,9 @@ class RentalAcceptanceManager
     {
         return $this->context->run($rental->organization, function () use ($rental, $actor): RentalAcceptanceRequest {
             $rental = Rental::query()->with(['organization', 'person'])->findOrFail($rental->id);
+            if (! in_array($rental->status, [RentalStatus::Preparing, RentalStatus::Sent], true)) {
+                throw new LogicException('Les documents ne peuvent être envoyés que pendant la préparation du dossier.');
+            }
             if ($rental->person === null) {
                 throw new LogicException('Sélectionnez le locataire avant d’envoyer une demande d’acceptation.');
             }
@@ -91,6 +96,7 @@ class RentalAcceptanceManager
             $url = route('rental-acceptance.show', ['token' => $token]);
             Mail::to($request->recipient_email)->send(new RentalAcceptanceInvitation($request, $url));
             $request->update(['status' => RentalAcceptanceStatus::Sent, 'sent_at' => now()]);
+            $rental->update(['status' => RentalStatus::Sent]);
             $this->event($request, 'sent', actor: $actor);
 
             return $request;
@@ -132,7 +138,7 @@ class RentalAcceptanceManager
 
     public function accept(RentalAcceptanceRequest $request, string $name, Request $httpRequest): RentalAcceptanceRequest
     {
-        return $this->context->run($request->rental->organization, function () use ($request, $name, $httpRequest): RentalAcceptanceRequest {
+        $accepted = $this->context->run($request->rental->organization, function () use ($request, $name, $httpRequest): RentalAcceptanceRequest {
             return DB::transaction(function () use ($request, $name, $httpRequest): RentalAcceptanceRequest {
                 $request = RentalAcceptanceRequest::query()->lockForUpdate()->with('rental')->findOrFail($request->id);
                 if (! in_array($request->status, [RentalAcceptanceStatus::Created, RentalAcceptanceStatus::Sent], true) || $request->expires_at->isPast()) {
@@ -150,10 +156,15 @@ class RentalAcceptanceManager
                     'accepted_user_agent' => Str::limit((string) $httpRequest->userAgent(), 2000, ''),
                 ]);
                 $this->event($request, 'accepted', ['accepted_name' => $name], $httpRequest);
+                $request->rental->update(['status' => RentalStatus::Accepted]);
 
                 return $request->fresh(['rental.organization', 'documents.privateDocument']);
             });
         });
+
+        Mail::to($accepted->recipient_email)->send(new RentalAcceptanceReceipt($accepted));
+
+        return $accepted;
     }
 
     public function cancel(RentalAcceptanceRequest $request, ?User $actor = null): RentalAcceptanceRequest

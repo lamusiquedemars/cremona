@@ -9,44 +9,49 @@ use App\Models\InstrumentAsset;
 use App\Models\Rental;
 use App\Models\RentalReturn;
 use App\Models\User;
+use App\Mail\RentalHandoverConfirmation;
+use App\Mail\RentalReturnConfirmation;
+use App\Enums\ContactMethodType;
+use App\Models\ContactMethod;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 
 class RentalManager
 {
-    public function activate(Rental $rental, bool $acceptanceOverride = false, ?User $actor = null): Rental
+    public function activate(Rental $rental, ?User $actor = null): Rental
     {
-        return DB::transaction(function () use ($rental, $acceptanceOverride, $actor): Rental {
+        $started = DB::transaction(function () use ($rental, $actor): Rental {
             $rental = Rental::query()->lockForUpdate()->with('latestAcceptance')->findOrFail($rental->getKey());
             $instrument = InstrumentAsset::query()->lockForUpdate()->findOrFail($rental->instrument_asset_id);
 
             if (! $instrument->available_for_rental || $instrument->status !== InstrumentAssetStatus::Available) {
                 throw new LogicException("L’instrument « {$instrument->name} » n’est pas disponible pour cette location.");
             }
-            if ($rental->latestAcceptance !== null
-                && $rental->latestAcceptance->status !== RentalAcceptanceStatus::Accepted
-                && ! $acceptanceOverride) {
-                throw new LogicException('Le client n’a pas encore accepté la demande. Confirmez explicitement la remise physique pour poursuivre.');
+            if ($rental->status !== RentalStatus::Accepted || $rental->latestAcceptance?->status !== RentalAcceptanceStatus::Accepted) {
+                throw new LogicException('Le dossier doit être accepté par le client avant de confirmer la remise de l’instrument.');
             }
 
             $instrument->update(['status' => InstrumentAssetStatus::Rented]);
-            $rental->update(['status' => RentalStatus::Active, 'starts_on' => $rental->starts_on ?? today()]);
+            $rental->update(['status' => RentalStatus::HandedOver, 'starts_on' => $rental->starts_on ?? today(), 'collection_status' => 'to_set_up', 'collection_handled_at' => null]);
             app(AuditLogger::class)->record('rental.started', $rental, $actor, [
                 'acceptance_status' => $rental->latestAcceptance?->status?->value,
-                'acceptance_override' => $rental->latestAcceptance !== null && $rental->latestAcceptance->status !== RentalAcceptanceStatus::Accepted,
             ]);
 
             return $rental->fresh();
         });
+
+        $this->sendClientMessage($started, RentalHandoverConfirmation::class);
+
+        return $started;
     }
 
     /** @param array<string, mixed> $details */
     public function return(Rental $rental, Carbon $returnedOn, ?string $notes, ?User $actor = null, array $details = []): Rental
     {
-        return DB::transaction(function () use ($rental, $returnedOn, $notes, $actor, $details): Rental {
+        $returned = DB::transaction(function () use ($rental, $returnedOn, $notes, $actor, $details): Rental {
             $rental = Rental::query()->lockForUpdate()->findOrFail($rental->getKey());
-            if ($rental->status !== RentalStatus::Active) {
+            if ($rental->status !== RentalStatus::HandedOver) {
                 throw new LogicException('Seule une location en cours peut être restituée.');
             }
 
@@ -54,6 +59,8 @@ class RentalManager
             $instrument->update(['status' => InstrumentAssetStatus::Available]);
             $rental->update([
                 'status' => RentalStatus::Returned,
+                'collection_status' => 'to_stop',
+                'collection_handled_at' => null,
                 'returned_on' => $returnedOn->toDateString(),
                 'returned_at' => now(),
                 'returned_by_user_id' => $actor?->getKey(),
@@ -76,5 +83,19 @@ class RentalManager
 
             return $rental->fresh();
         });
+
+        $this->sendClientMessage($returned, RentalReturnConfirmation::class);
+
+        return $returned;
+    }
+
+    /** @param class-string<\Illuminate\Mail\Mailable> $mailable */
+    private function sendClientMessage(Rental $rental, string $mailable): void
+    {
+        $email = ContactMethod::query()->where('contactable_type', $rental->person?->getMorphClass())
+            ->where('contactable_id', $rental->person_id)->where('type', ContactMethodType::Email)->orderByDesc('is_primary')->value('value');
+        if (filled($email)) {
+            \Illuminate\Support\Facades\Mail::to($email)->send(new $mailable($rental));
+        }
     }
 }

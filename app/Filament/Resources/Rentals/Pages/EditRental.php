@@ -34,6 +34,7 @@ class EditRental extends BusinessEditRecord
                 ->label(fn (): string => $this->canResendAcceptance() ? 'Renvoyer pour acceptation' : 'Envoyer pour acceptation')
                 ->icon(Heroicon::OutlinedPaperAirplane)
                 ->color('primary')
+                ->visible(fn (): bool => in_array($this->record->status, [RentalStatus::Preparing, RentalStatus::Sent], true))
                 ->requiresConfirmation()
                 ->modalDescription('Le client recevra un lien personnel valable quatorze jours. Les contrats générés et actifs seront joints à cette demande.')
                 ->action(function (RentalAcceptanceManager $manager): void {
@@ -145,31 +146,24 @@ class EditRental extends BusinessEditRecord
                     ->label('Démarrer la location')
                     ->icon(Heroicon::OutlinedPlay)
                     ->color('success')
-                    ->visible(fn (): bool => $this->record->status === RentalStatus::Draft)
-                    ->requiresConfirmation()
-                    ->modalDescription(fn (): string => $this->requiresAcceptanceOverride()
-                        ? 'Le client n’a pas encore accepté la demande en cours. Vous pouvez tout de même enregistrer une remise physique, mais celle-ci sera signalée dans le journal de la location.'
-                        : 'La remise physique sera enregistrée et l’instrument passera en location.')
-                    ->schema(fn (): array => $this->requiresAcceptanceOverride() ? [
-                        Checkbox::make('acceptance_override')
-                            ->label('Confirmer la remise malgré l’absence d’acceptation')
-                            ->accepted()
-                            ->required(),
-                    ] : [])
-                    ->action(function (array $data, RentalManager $manager): void {
+                ->label('Confirmer la remise de l’instrument')
+                ->visible(fn (): bool => $this->record->status === RentalStatus::Accepted)
+                ->requiresConfirmation()
+                ->modalDescription('La remise physique sera enregistrée. L’instrument passera en location et une action de mise en place de l’encaissement sera créée.')
+                    ->action(function (RentalManager $manager): void {
                         try {
-                            $manager->activate($this->record, (bool) ($data['acceptance_override'] ?? false), auth()->user());
+                            $manager->activate($this->record, auth()->user());
                         } catch (LogicException $exception) {
                             Notification::make()->title('Location non démarrée')->body($exception->getMessage())->danger()->send();
 
                             return;
                         }
-                        Notification::make()->title('Location démarrée')->body('L’instrument est maintenant indiqué comme en location.')->success()->send();
+                        Notification::make()->title('Instrument remis')->body('La location est en cours. Pensez maintenant à mettre en place l’encaissement.')->success()->send();
                     }),
                 Action::make('return')
                     ->label('Enregistrer le retour')
                     ->icon(Heroicon::OutlinedArrowUturnLeft)
-                    ->visible(fn (): bool => $this->record->status === RentalStatus::Active)
+                    ->visible(fn (): bool => $this->record->status === RentalStatus::HandedOver)
                     ->schema([
                         DatePicker::make('returned_on')->label('Date de restitution')->default(today())->native(false)->required(),
                         Textarea::make('accessories_state')->label('Accessoires remis et état')->rows(3)->helperText('Ex. étui, archet, housse ; indiquez les éléments manquants ou endommagés.'),
@@ -185,7 +179,20 @@ class EditRental extends BusinessEditRecord
 
                             return;
                         }
-                        Notification::make()->title('Restitution enregistrée')->body('L’instrument redevient disponible. Le constat est conservé avec la location.')->success()->send();
+                        Notification::make()->title('Instrument restitué')->body('L’instrument redevient disponible. Pensez à arrêter ou ajuster l’encaissement.')->success()->send();
+                    }),
+                Action::make('completeCollection')
+                    ->label(fn (): string => $this->record->collection_status === 'to_stop' ? 'Confirmer l’arrêt ou l’ajustement de l’encaissement' : 'Confirmer la mise en place de l’encaissement')
+                    ->icon(Heroicon::OutlinedBanknotes)
+                    ->visible(fn (): bool => in_array($this->record->collection_status, ['to_set_up', 'to_stop'], true))
+                    ->schema([Textarea::make('collection_note')->label('Note interne')->rows(2)->placeholder('Ex. prélèvement créé dans la banque le 13/10.')])
+                    ->action(function (array $data): void {
+                        $this->record->update([
+                            'collection_status' => $this->record->collection_status === 'to_stop' ? 'closed' : 'set_up',
+                            'collection_note' => $data['collection_note'] ?? null,
+                            'collection_handled_at' => now(),
+                        ]);
+                        Notification::make()->title('Encaissement mis à jour')->success()->send();
                     }),
             ])
                 ->label('Gérer la location')
@@ -216,10 +223,4 @@ class EditRental extends BusinessEditRecord
         return $this->record->latestAcceptance !== null;
     }
 
-    private function requiresAcceptanceOverride(): bool
-    {
-        $acceptance = $this->record->latestAcceptance;
-
-        return $acceptance !== null && $acceptance->status !== RentalAcceptanceStatus::Accepted;
-    }
 }
