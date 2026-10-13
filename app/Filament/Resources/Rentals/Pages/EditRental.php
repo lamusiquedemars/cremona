@@ -20,6 +20,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Carbon;
 use LogicException;
 
@@ -195,10 +196,12 @@ class EditRental extends BusinessEditRecord
                         Notification::make()->title('Encaissement mis à jour')->success()->send();
                     }),
             ])
-                ->label('Gérer la location')
+                ->label('Actions')
                 ->icon(Heroicon::OutlinedEllipsisHorizontal)
                 ->button()
-                ->color('gray'),
+                ->color('gray')
+                ->dropdownWidth(Width::ThreeExtraLarge)
+                ->dropdownMaxHeight('70vh'),
         ];
     }
 

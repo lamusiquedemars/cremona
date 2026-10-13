@@ -24,16 +24,16 @@ class ListRentals extends ListRecords
                 ->badge(fn (): int => $this->attentionQuery($returnHorizon)->count())
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $this->applyAttentionQuery($query, $returnHorizon)),
-            'sent' => Tab::make('Dossiers envoyés')
+            'sent' => Tab::make('Envoyés')
                 ->badge(fn (): int => Rental::query()->where('status', RentalStatus::Sent)->count())
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Sent)),
-            'accepted' => Tab::make('Instruments à remettre')
+            'accepted' => Tab::make('À remettre')
                 ->badge(fn (): int => Rental::query()->where('status', RentalStatus::Accepted)->count())
                 ->badgeColor('success')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Accepted)),
-            'active' => Tab::make('Instruments remis')->badge(fn (): int => Rental::query()->where('status', RentalStatus::HandedOver)->count())->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::HandedOver)),
-            'returned' => Tab::make('Instruments restitués')->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Returned)),
+            'active' => Tab::make('En cours')->badge(fn (): int => Rental::query()->where('status', RentalStatus::HandedOver)->count())->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::HandedOver)),
+            'returned' => Tab::make('Restitués')->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Returned)),
         ];
     }
 
