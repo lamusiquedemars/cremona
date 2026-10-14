@@ -55,7 +55,7 @@ body.fi-body {
     overflow-x: scroll !important;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    scrollbar-color: rgb(120 113 108) rgb(231 229 228);
+    scrollbar-color: rgb(109 40 217) rgb(237 233 254);
     scrollbar-gutter: stable both-edges;
     scrollbar-width: auto;
 }
@@ -66,28 +66,28 @@ body.fi-body {
 }
 
 .rental-table .fi-ta-content-ctn::-webkit-scrollbar-track {
-    background: rgb(231 229 228);
+    background: rgb(237 233 254);
     border-radius: 9999px;
 }
 
 .rental-table .fi-ta-content-ctn::-webkit-scrollbar-thumb {
     min-width: 3rem;
-    border: 3px solid rgb(231 229 228);
+    border: 3px solid rgb(237 233 254);
     border-radius: 9999px;
-    background: rgb(120 113 108);
+    background: rgb(109 40 217);
 }
 
 .dark .rental-table .fi-ta-content-ctn {
-    scrollbar-color: rgb(168 162 158) rgb(41 37 36);
+    scrollbar-color: rgb(196 181 253) rgb(46 16 101);
 }
 
 .dark .rental-table .fi-ta-content-ctn::-webkit-scrollbar-track {
-    background: rgb(41 37 36);
+    background: rgb(46 16 101);
 }
 
 .dark .rental-table .fi-ta-content-ctn::-webkit-scrollbar-thumb {
-    border-color: rgb(41 37 36);
-    background: rgb(168 162 158);
+    border-color: rgb(46 16 101);
+    background: rgb(196 181 253);
 }
 
 .rental-table .fi-ta-table {
