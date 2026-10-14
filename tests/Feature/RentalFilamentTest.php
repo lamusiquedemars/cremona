@@ -22,6 +22,11 @@ class RentalFilamentTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_the_rental_creation_page_uses_the_feminine_business_title(): void
+    {
+        $this->assertSame('Nouvelle location', app(CreateRental::class)->getTitle());
+    }
+
     public function test_a_collaborator_can_create_a_rental_with_the_monthly_rate_from_the_instrument_grid(): void
     {
         $organization = Organization::factory()->create();
