@@ -37,6 +37,10 @@ arrêter ou ajuster ». Ces actions restent visibles au tableau de bord jusqu'à
 confirmation de leur traitement. Cremona ne crée ni prélèvement, ni mandat, ni
 donnée bancaire structurée.
 
+Le tableau de bord propose des accès directs aux listes « Encaissements à mettre
+en place » et « Encaissements à arrêter ». Ces deux vues existent aussi comme
+onglets dans la liste des locations, en complément du filtre `Encaissement`.
+
 Trois confirmations sont envoyées au client : accord enregistré, instrument
 remis, instrument restitué.
 

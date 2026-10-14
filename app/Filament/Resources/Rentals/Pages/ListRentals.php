@@ -32,6 +32,14 @@ class ListRentals extends ListRecords
                 ->badge(fn (): int => Rental::query()->where('status', RentalStatus::Accepted)->count())
                 ->badgeColor('success')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Accepted)),
+            'collection_to_set_up' => Tab::make('Encaissement à mettre en place')
+                ->badge(fn (): int => Rental::query()->where('collection_status', 'to_set_up')->count())
+                ->badgeColor('warning')
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('collection_status', 'to_set_up')),
+            'collection_to_stop' => Tab::make('Encaissement à arrêter')
+                ->badge(fn (): int => Rental::query()->where('collection_status', 'to_stop')->count())
+                ->badgeColor('danger')
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('collection_status', 'to_stop')),
             'active' => Tab::make('En cours')->badge(fn (): int => Rental::query()->where('status', RentalStatus::HandedOver)->count())->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::HandedOver)),
             'returned' => Tab::make('Restitués')->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Returned)),
         ];

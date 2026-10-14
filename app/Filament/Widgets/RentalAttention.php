@@ -53,6 +53,15 @@ class RentalAttention extends TableWidget
             ])
             ->recordUrl(fn (Rental $record): string => RentalResource::getUrl('edit', ['record' => $record]))
             ->headerActions([
+                Action::make('collectionToSetUp')
+                    ->label('Encaissements à mettre en place')
+                    ->icon(Heroicon::OutlinedBanknotes)
+                    ->url(RentalResource::getUrl('index', ['tab' => 'collection_to_set_up'])),
+                Action::make('collectionToStop')
+                    ->label('Encaissements à arrêter')
+                    ->icon(Heroicon::OutlinedBanknotes)
+                    ->color('danger')
+                    ->url(RentalResource::getUrl('index', ['tab' => 'collection_to_stop'])),
                 Action::make('seeAll')
                     ->label('Voir les locations')
                     ->icon(Heroicon::OutlinedArrowRight)
