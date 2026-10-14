@@ -38,22 +38,59 @@ body.fi-body {
     border-radius: 1rem;
 }
 
-/* Tables keep every column reachable instead of letting the last ones disappear. */
-.fi-ta-ctn:has(.rental-table),
-.fi-ta-ctn:has(.rental-table) .fi-ta-content,
-.fi-ta-ctn:has(.rental-table) .fi-ta-content-ctn {
+/*
+ * The table class is on the outer .fi-ta element. Keep the scrollport inside
+ * it explicit: the native horizontal bar must always remain available with a
+ * mouse, trackpad or keyboard, even when macOS normally hides overlay bars.
+ */
+.rental-table,
+.rental-table .fi-ta-ctn,
+.rental-table .fi-ta-content,
+.rental-table .fi-ta-content-ctn {
     max-width: 100%;
     min-width: 0;
 }
 
-.fi-ta-ctn:has(.rental-table) .fi-ta-content-ctn {
-    overflow-x: auto !important;
+.rental-table .fi-ta-content-ctn {
+    overflow-x: scroll !important;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    scrollbar-gutter: stable;
+    scrollbar-color: rgb(120 113 108) rgb(231 229 228);
+    scrollbar-gutter: stable both-edges;
+    scrollbar-width: auto;
 }
 
-.fi-ta-ctn:has(.rental-table) .fi-ta-table {
+.rental-table .fi-ta-content-ctn::-webkit-scrollbar {
+    -webkit-appearance: none;
+    height: 14px;
+}
+
+.rental-table .fi-ta-content-ctn::-webkit-scrollbar-track {
+    background: rgb(231 229 228);
+    border-radius: 9999px;
+}
+
+.rental-table .fi-ta-content-ctn::-webkit-scrollbar-thumb {
+    min-width: 3rem;
+    border: 3px solid rgb(231 229 228);
+    border-radius: 9999px;
+    background: rgb(120 113 108);
+}
+
+.dark .rental-table .fi-ta-content-ctn {
+    scrollbar-color: rgb(168 162 158) rgb(41 37 36);
+}
+
+.dark .rental-table .fi-ta-content-ctn::-webkit-scrollbar-track {
+    background: rgb(41 37 36);
+}
+
+.dark .rental-table .fi-ta-content-ctn::-webkit-scrollbar-thumb {
+    border-color: rgb(41 37 36);
+    background: rgb(168 162 158);
+}
+
+.rental-table .fi-ta-table {
     min-width: 68rem;
 }
 
