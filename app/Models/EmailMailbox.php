@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'organization_integration_id', 'address', 'display_name', 'status',
@@ -37,5 +38,10 @@ class EmailMailbox extends Model
     public function syncRuns(): HasMany
     {
         return $this->hasMany(EmailSyncRun::class);
+    }
+
+    public function latestSyncRun(): HasOne
+    {
+        return $this->hasOne(EmailSyncRun::class)->latestOfMany('started_at');
     }
 }
