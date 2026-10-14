@@ -27,8 +27,8 @@
                 const synchronize = () => {
                     const maximum = Math.max(0, Math.ceil(container.scrollWidth - container.clientWidth));
 
-                    control.hidden = maximum === 0;
-                    slider.max = String(maximum);
+                    slider.disabled = maximum === 0;
+                    slider.max = String(Math.max(1, maximum));
                     slider.value = String(Math.min(maximum, Math.round(container.scrollLeft)));
                 };
 
