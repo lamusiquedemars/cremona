@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\WorkshopOrders\Pages;
 
-use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
 use App\Enums\WorkshopOrderStatus;
+use App\Filament\Pages\BusinessEditRecord;
+use App\Filament\Resources\Quotes\QuoteResource;
+use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
 use App\Services\StockManager;
 use App\Services\WorkshopOrderQuoteManager;
 use App\Services\WorkshopOrderWorkflowManager;
@@ -12,10 +14,10 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
-use App\Filament\Pages\BusinessEditRecord;
 use Filament\Support\Icons\Heroicon;
-use LogicException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\HtmlString;
+use LogicException;
 
 class EditWorkshopOrder extends BusinessEditRecord
 {
@@ -24,6 +26,10 @@ class EditWorkshopOrder extends BusinessEditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('openQuote')
+                ->label(fn (): string => 'Devis '.$this->record->quote?->reference)
+                ->visible(fn (): bool => $this->record->quote !== null && QuoteResource::canAccess())
+                ->url(fn (): ?string => $this->record->quote ? QuoteResource::getUrl('view', ['record' => $this->record->quote]) : null),
             Action::make('confirmDiagnosis')
                 ->label('Valider le diagnostic')
                 ->icon(Heroicon::OutlinedClipboardDocumentCheck)
@@ -54,14 +60,14 @@ class EditWorkshopOrder extends BusinessEditRecord
             Action::make('schedule')
                 ->label('Planifier l’intervention')
                 ->icon(Heroicon::OutlinedCalendarDays)
-                ->visible(fn (): bool => in_array($this->record->status, [WorkshopOrderStatus::Diagnosed, WorkshopOrderStatus::AwaitingApproval], true))
+                ->visible(fn (): bool => in_array($this->record->status, [WorkshopOrderStatus::Diagnosed, WorkshopOrderStatus::AwaitingApproval, WorkshopOrderStatus::Approved], true))
                 ->schema([
                     DateTimePicker::make('due_at')->label('Intervention prévue le')->seconds(false)->required(),
                     Textarea::make('authorization_note')->label('Motif de l’accord sans devis')->rows(2)->helperText('À renseigner seulement lorsqu’aucun devis n’est lié au dossier.'),
                 ])
                 ->action(function (array $data, WorkshopOrderWorkflowManager $manager): void {
                     try {
-                        $manager->schedule($this->record, \Illuminate\Support\Carbon::parse($data['due_at']), $data['authorization_note'] ?? null);
+                        $manager->schedule($this->record, Carbon::parse($data['due_at']), $data['authorization_note'] ?? null);
                     } catch (LogicException $exception) {
                         Notification::make()->title('Intervention non planifiée')->body($exception->getMessage())->danger()->send();
 

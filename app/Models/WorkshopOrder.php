@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\WorkshopOrderStatus;
+use App\Services\QuoteNumberGenerator;
+use App\Services\QuoteWorkshopSynchronizer;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +23,9 @@ class WorkshopOrder extends Model
     {
         static::creating(function (self $order): void {
             $order->public_id ??= (string) Str::ulid();
-            $order->reference ??= 'AT-'.str($order->public_id)->substr(0, 8);
+            if (blank($order->reference)) {
+                $order->reference = 'AT'.substr(app(QuoteNumberGenerator::class)->next((int) $order->organization_id), 1);
+            }
             $order->received_at ??= now();
         });
 
@@ -37,6 +41,9 @@ class WorkshopOrder extends Model
             }
             $order->ready_at = $order->status === WorkshopOrderStatus::Ready ? ($order->ready_at ?? now()) : $order->ready_at;
             $order->returned_at = $order->status === WorkshopOrderStatus::Returned ? ($order->returned_at ?? now()) : $order->returned_at;
+        });
+        static::saved(function (self $order): void {
+            app(QuoteWorkshopSynchronizer::class)->syncFromOrder($order);
         });
     }
 

@@ -4,17 +4,20 @@ namespace App\Services;
 
 use App\Models\Organization;
 use App\Models\Quote;
+use App\Models\WorkshopOrder;
+use Carbon\CarbonImmutable;
+use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 
 class QuoteNumberGenerator
 {
-    public function next(int $organizationId): string
+    public function next(int $organizationId, ?DateTimeInterface $createdAt = null): string
     {
-        return DB::transaction(function () use ($organizationId): string {
+        return DB::transaction(function () use ($organizationId, $createdAt): string {
             // Serialize allocations, including the first number of the year.
             Organization::query()->whereKey($organizationId)->lockForUpdate()->firstOrFail();
-            $date = now();
+            $date = $createdAt ? CarbonImmutable::instance($createdAt) : now();
             $year = (int) $date->format('Y');
             $prefix = 'D'.$date->format('y');
             $sequence = DB::table('quote_number_sequences')
@@ -26,6 +29,14 @@ class QuoteNumberGenerator
                 ->where('reference', 'like', $prefix.'____')->pluck('reference');
             foreach ($existing as $reference) {
                 if (preg_match('/^'.preg_quote($prefix, '/').'([0-9]{4})$/', $reference, $matches)) {
+                    $last = max($last, (int) $matches[1]);
+                }
+            }
+
+            $orders = WorkshopOrder::withoutGlobalScopes()->where('organization_id', $organizationId)
+                ->where('reference', 'like', 'AT'.$date->format('y').'____')->pluck('reference');
+            foreach ($orders as $reference) {
+                if (preg_match('/^AT'.$date->format('y').'([0-9]{4})$/', $reference, $matches)) {
                     $last = max($last, (int) $matches[1]);
                 }
             }

@@ -47,7 +47,7 @@ class WorkshopOrderWorkflowManager
 
             $order->update([
                 'status' => WorkshopOrderStatus::Scheduled,
-                'authorized_at' => now(),
+                'authorized_at' => $order->authorized_at ?? now(),
                 'authorization_note' => filled($authorizationNote) ? trim($authorizationNote) : $order->authorization_note,
                 'due_at' => $dueAt,
                 'scheduled_at' => now(),

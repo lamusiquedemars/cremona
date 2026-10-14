@@ -56,9 +56,6 @@ class QuoteWorkflowManager
 
             $quote->load('workshopOrder');
             $quote->update(['status' => $to]);
-            if ($to === QuoteStatus::Accepted && $quote->workshopOrder !== null) {
-                app(WorkshopOrderWorkflowManager::class)->markApproved($quote->workshopOrder);
-            }
 
             return $quote->fresh();
         });

@@ -1,15 +1,15 @@
 # Numérotation et future administration commerciale
 
-Décision du 16 septembre 2026. Le nom de la rubrique d’administration reste à définir.
+Décision du 16 septembre 2026, mise à jour le 18 septembre 2026. Le nom de la rubrique d’administration reste à définir.
 
 ## Devis : règle implémentée
 
 - Format `DAANNNN`, par exemple `D260003` : préfixe D et six chiffres, sept caractères au total.
-- AA correspond à l’année de création dans le fuseau de l’application ; modifier la date du devis ne renumérote pas le document.
+- AA correspond à l’année de création du dossier, ou du devis autonome, dans le fuseau de l’application ; modifier la date du devis ne renumérote pas le document. Un devis créé l’année suivante conserve le numéro réservé par son dossier.
 - Compteur annuel propre à chaque organisation, de 0001 à 9999, remis à 0001 au changement d’année.
 - Allocation sérialisée par verrou de base de données ; compteur conservé séparément des devis pour ne pas réutiliser les numéros supprimés. Des trous sont possibles si une création échoue après réservation.
 - Blocage explicite à 9999, sans allongement silencieux du format.
-- Les références existantes sont conservées. Les références importées qui correspondent au format sont prises en compte pour poursuivre au-delà du plus grand numéro.
+- Les références modernes existantes sont conservées. La reprise du 18 septembre convertit les anciennes références automatiques `Q-…` et `AT-…`, avec conservation dans `previous_reference` (visible et recherchable dans les listes). Les références importées qui correspondent au format sont prises en compte pour poursuivre au-delà du plus grand numéro.
 - Dans le formulaire, la référence est attribuée automatiquement et n’est pas modifiable.
 - La migration `2026_09_16_000000_create_quote_number_sequences` et les
   caches ont été appliqués en production le 16 septembre 2026.
@@ -21,7 +21,11 @@ Décision du 16 septembre 2026. Le nom de la rubrique d’administration reste �
 
 Prévoir un paramétrage par organisation pour les devis et les autres objets numérotés : préfixe, nombre de chiffres, périodicité du compteur, prochain numéro, aperçu du résultat et droits de modification. Toute modification devra préserver les références déjà attribuées, empêcher les doublons et être journalisée.
 
-Pour les dossiers, la proposition validée est un compteur continu sur six chiffres (`000001`), propre à chaque organisation, sans remise à zéro annuelle. Cette règle n’est pas implémentée dans ce lot ; préciser les types de dossiers concernés avant généralisation.
+La décision du 18 septembre remplace la proposition de compteur continu pour les dossiers atelier : ils partagent désormais le compteur annuel des devis. Exemple : `AT260001` et `D260001`. Un dossier réserve le numéro à sa création ; son devis reprend ce numéro, même si des devis autonomes ont été créés entre-temps. Un devis autonome consomme également un numéro du compteur partagé. Les autres types de dossiers ne sont pas concernés.
+
+La reprise refuse les dossiers liés à plusieurs devis plutôt que de choisir arbitrairement. Les identifiants internes et les URL restent inchangés. Les anciens PDF déjà téléchargés conservent naturellement leur ancienne référence ; celle-ci reste consultable dans l’application.
+
+Le contact ajouté au devis complète le dossier sans client. Tant que le devis est brouillon, les changements de contact sont répercutés dans les deux sens si les contacts correspondaient ou si le destinataire est vide. Un contact différent explicitement renseigné est préservé, ainsi que les destinataires des devis déjà envoyés. L’acceptation passe le dossier diagnostiqué/en attente à `approved` (« Accord reçu — à planifier ») ; elle ne planifie ni ne démarre l’intervention.
 
 Regrouper ou relier dans cette future administration les coordonnées de l’émetteur, mentions légales, conditions de règlement, note fiscale, durée de validité et lien vers les CGV. Prévoir un aperçu complet du document et un signalement des champs manquants ; le nom définitif de la rubrique reste ouvert.
 
