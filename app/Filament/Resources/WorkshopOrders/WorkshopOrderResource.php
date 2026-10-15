@@ -59,7 +59,7 @@ class WorkshopOrderResource extends Resource
             Section::make('Dossier atelier')->columns(12)->columnSpanFull()->schema([
                 TextInput::make('title')->label('Intitulé')->required()->columnSpan(6),
                 Placeholder::make('workflow_status')->label('Étape du dossier')->content(fn (?WorkshopOrder $record): string => $record?->status->getLabel() ?? WorkshopOrderStatus::Received->getLabel())->columnSpan(3),
-                TextInput::make('reference')->label(__('common.reference'))->helperText('Générée automatiquement si laissée vide.')->columnSpan(3),
+                TextInput::make('reference')->label(__('common.reference'))->disabled()->dehydrated(false)->placeholder('Attribuée automatiquement : AT'.now()->format('y').'0001')->columnSpan(3),
                 Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable()->preload()->columnSpan(6),
                 Select::make('incoming_request_id')->label(__('common.request_origin'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->columnSpan(6),
                 Textarea::make('instrument_description')->label('Instrument confié')->rows(3)->columnSpan(6),
@@ -106,7 +106,7 @@ class WorkshopOrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('updated_at', 'desc')->columns([
-            TextColumn::make('reference')->label(__('common.reference'))->searchable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap(), TextColumn::make('person.display_name')->label('Client')->placeholder('—'), TextColumn::make('status')->label(__('common.status'))->badge(), TextColumn::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y')->placeholder('—'),
+            TextColumn::make('reference')->label(__('common.reference'))->searchable(['reference', 'previous_reference'])->description(fn (WorkshopOrder $record): ?string => $record->previous_reference ? 'Ancien : '.$record->previous_reference : null), TextColumn::make('title')->label('Dossier')->searchable()->wrap(), TextColumn::make('person.display_name')->label('Client')->placeholder('—'), TextColumn::make('status')->label(__('common.status'))->badge(), TextColumn::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y')->placeholder('—'),
         ])->filters([SelectFilter::make('status')->options(WorkshopOrderStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouveau dossier atelier')]);
     }
 

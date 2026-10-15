@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Enums\WorkshopOrderStatus;
 use App\Enums\QuoteStatus;
+use App\Enums\WorkshopOrderStatus;
 use App\Models\Organization;
 use App\Models\StockItem;
 use App\Models\WorkshopOrder;
@@ -22,7 +22,7 @@ class WorkshopOrderTest extends TestCase
         app(OrganizationContext::class)->run($organization, function (): void {
             $order = WorkshopOrder::query()->create(['title' => 'Révision du violon', 'status' => WorkshopOrderStatus::Received]);
             $this->assertNotNull($order->received_at);
-            $this->assertStringStartsWith('AT-', $order->reference);
+            $this->assertMatchesRegularExpression('/^AT[0-9]{6}$/', $order->reference);
             $order->update(['status' => WorkshopOrderStatus::Returned]);
             $this->assertNotNull($order->returned_at);
         });

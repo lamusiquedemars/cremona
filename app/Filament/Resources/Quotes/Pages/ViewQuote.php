@@ -4,11 +4,12 @@ namespace App\Filament\Resources\Quotes\Pages;
 
 use App\Enums\QuoteStatus;
 use App\Filament\Resources\Quotes\QuoteResource;
+use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
 use App\Models\Quote;
 use App\Services\QuoteDocumentProfileManager;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
@@ -34,6 +35,10 @@ class ViewQuote extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('openWorkshopOrder')
+                ->label(fn (): string => 'Dossier atelier '.$this->record->workshopOrder?->reference)
+                ->visible(fn (): bool => $this->record->workshopOrder !== null && WorkshopOrderResource::canAccess())
+                ->url(fn (): ?string => $this->record->workshopOrder ? WorkshopOrderResource::getUrl('edit', ['record' => $this->record->workshopOrder]) : null),
             Action::make('downloadPdf')
                 ->label('Télécharger le PDF')
                 ->url(fn (): string => route('quotes.pdf', ['publicId' => $this->record->public_id]))

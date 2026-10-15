@@ -1,6 +1,6 @@
 # Avancement du plan directeur Cremona
 
-> Dernière mise à jour : 8 octobre 2026.
+> Dernière mise à jour : 14 octobre 2026.
 >
 > Ce document suit les livraisons du [plan directeur produit](plan-directeur-produit-cremona.md). Il ne remplace pas les critères de fin du plan.
 
@@ -81,10 +81,19 @@ rarement utilisés.
 - La migration du compteur et les caches ont été activés en production le
   16 septembre. Le téléchargement d’un devis existant a été confirmé en
   production.
+- Le dossier atelier et son devis partagent désormais un même numéro annuel,
+  par exemple `AT260001` / `D260001`. Les anciennes références sont conservées
+  et restent recherchables ; les références et URL modernes existantes ne sont
+  pas réécrites.
+- L’acceptation d’un devis lié place le dossier à « Accord reçu — à planifier »
+  sans planifier l’intervention ni perdre la date de l’accord. Les deux écrans
+  permettent d’ouvrir le document lié. Le lot `61f2eec` a été activé sur LWS
+  le 14 octobre, avec ses migrations additives et la reconstruction des caches.
 
 État : **opérationnel, à confirmer lors de la prochaine création réelle de
-devis**. Cette création contrôlera la référence automatiquement attribuée ;
-aucune donnée commerciale fictive ne doit être créée pour ce test.
+devis lié à un dossier atelier**. Cette création contrôlera les deux références
+automatiquement attribuées ; aucune donnée commerciale fictive ne doit être
+créée pour ce test.
 
 ### F. Pack Luthier — pilote Contempo
 
@@ -111,7 +120,7 @@ l'instrument, tarif exceptionnel explicite et montant recopié dans chaque
 nouvelle location sans réécrire l'historique. Les grilles actives ne peuvent pas
 se chevaucher. La restitution est datée, commentée et tracée.
 L'acceptation d'un devis fait aussi désormais passer le dossier atelier lié à
-« Accord reçu » avant sa planification.
+« Accord reçu — à planifier », avant sa planification.
 
 La frontière produit entre opérations et référentiels est maintenant
 documentée, sans déplacement d'interface à ce stade : gammes et grilles de
@@ -158,8 +167,9 @@ file unique attendue pour la relation client.
    l’état de relève compréhensible et réunir emails directs, demandes du site,
    appels et rencontres dans une file de travail cohérente. La suppression
    distante ne devra jamais fermer une demande automatiquement.
-2. Confirmer la numérotation lors de la prochaine création réelle de devis,
-   puis conserver ce résultat dans le journal de livraison.
+2. Confirmer, lors de la prochaine création réelle d’un dossier atelier avec
+   devis, la paire de références `AT…` / `D…` partagée ; conserver ce résultat
+   dans le journal de livraison.
 3. Construire l’administration documentaire par organisation : réglages de
    numérotation, aperçu, droits, coordonnées, conditions et mentions ; voir
    [Numérotation et administration commerciale](numerotation-et-administration-commerciale.md).
@@ -178,8 +188,9 @@ file unique attendue pour la relation client.
 
 La suite globale comporte quatre échecs préexistants, reproductibles isolément, dans les tests de campagne Google Ads et de correspondance. Ils ne sont pas causés par le lot B1, mais doivent être corrigés avant de pouvoir exiger une suite globale entièrement verte comme garde de livraison.
 
-### Devis et administration des numérotations — 16 septembre 2026
+### Devis et administration des numérotations — 14 octobre 2026
 
-Le correctif PDF et la numérotation des nouveaux devis sont actifs en
-production. Le chantier restant concerne l’administration documentaire
-réutilisable ; la numérotation des dossiers reste un lot distinct.
+Le correctif PDF, la numérotation annuelle des devis et la numérotation
+partagée dossier atelier / devis sont actifs en production. Le chantier restant
+concerne l’administration documentaire réutilisable et la confirmation d’une
+première paire de références créée en situation réelle.

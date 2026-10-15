@@ -20,7 +20,7 @@ enum WorkshopOrderStatus: string implements HasColor, HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Received => 'Reçu', self::Diagnosed => 'Diagnostic établi', self::AwaitingApproval => 'En attente d’accord', self::Approved => 'Accord reçu', self::Scheduled => 'Planifié', self::InProgress => 'En cours', self::Ready => 'Prêt à restituer', self::Returned => 'Restitué', self::Cancelled => 'Annulé',
+            self::Received => 'Reçu', self::Diagnosed => 'Diagnostic établi', self::AwaitingApproval => 'En attente d’accord', self::Approved => 'Accord reçu — à planifier', self::Scheduled => 'Planifié', self::InProgress => 'En cours', self::Ready => 'Prêt à restituer', self::Returned => 'Restitué', self::Cancelled => 'Annulé',
         };
     }
 

@@ -61,10 +61,12 @@ class EmailMailboxResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
+        return $table->modifyQueryUsing(fn ($query) => $query->with('latestSyncRun'))->columns([
             TextColumn::make('address')->label('Boîte')->searchable(),
             TextColumn::make('status')->label(__('common.state'))->badge(),
-            TextColumn::make('last_synced_at')->label('Dernière relève')->dateTime('d/m/Y H:i')->placeholder(__('common.never')),
+            TextColumn::make('latestSyncRun.status')->label('Dernière relève')->badge()->placeholder(__('common.never')),
+            TextColumn::make('latestSyncRun.imported_count')->label('Bilan')->formatStateUsing(fn (?int $state): string => $state === null ? '—' : $state.' nouveau(x)')->description(fn (EmailMailbox $record): ?string => $record->latestSyncRun === null ? null : $record->latestSyncRun->skipped_count.' déjà connu(s)')->placeholder('—'),
+            TextColumn::make('last_synced_at')->label('Dernier succès')->dateTime('d/m/Y H:i')->placeholder(__('common.never')),
             TextColumn::make('last_error')->label('Dernier incident')->limit(80)->placeholder('Aucun'),
         ])->recordActions([
             Action::make('test_imap')

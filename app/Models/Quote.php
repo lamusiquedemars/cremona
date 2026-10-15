@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use App\Enums\QuoteStatus;
-use App\Services\QuoteNumberGenerator;
+use App\Services\QuoteWorkshopSynchronizer;
+use App\Services\WorkshopReferenceManager;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +23,7 @@ class Quote extends Model
         static::creating(function (self $quote): void {
             $quote->public_id ??= (string) Str::ulid();
             if (blank($quote->reference)) {
-                $quote->reference = app(QuoteNumberGenerator::class)->next((int) $quote->organization_id);
+                $quote->reference = app(WorkshopReferenceManager::class)->forQuote($quote);
             }
             $settings = OrganizationQuoteSettings::query()->first();
             $quote->issued_on ??= now()->toDateString();
@@ -35,7 +36,7 @@ class Quote extends Model
             if ($quote->title === '') {
                 throw new LogicException('Un devis doit avoir un intitulé.');
             }
-            foreach ([Person::class => $quote->person_id, Company::class => $quote->company_id, IncomingRequest::class => $quote->incoming_request_id] as $model => $id) {
+            foreach ([Person::class => $quote->person_id, Company::class => $quote->company_id, IncomingRequest::class => $quote->incoming_request_id, WorkshopOrder::class => $quote->workshop_order_id] as $model => $id) {
                 if ($id !== null && ! $model::query()->whereKey($id)->exists()) {
                     throw new LogicException('Le rattachement du devis ne relève pas de l’organisation active.');
                 }
@@ -43,6 +44,9 @@ class Quote extends Model
             $quote->sent_at = $quote->status === QuoteStatus::Sent ? ($quote->sent_at ?? now()) : $quote->sent_at;
             $quote->accepted_at = $quote->status === QuoteStatus::Accepted ? ($quote->accepted_at ?? now()) : null;
             $quote->declined_at = $quote->status === QuoteStatus::Declined ? ($quote->declined_at ?? now()) : null;
+        });
+        static::saved(function (self $quote): void {
+            app(QuoteWorkshopSynchronizer::class)->sync($quote);
         });
     }
 

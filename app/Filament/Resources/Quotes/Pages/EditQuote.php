@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Quotes\Pages;
 
-use App\Filament\Resources\Quotes\QuoteResource;
 use App\Enums\QuoteStatus;
+use App\Filament\Pages\BusinessEditRecord;
+use App\Filament\Resources\Quotes\QuoteResource;
+use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
 use App\Models\QuoteLineTemplate;
 use App\Services\QuoteLineTemplateManager;
 use App\Services\QuoteWorkflowManager;
@@ -11,7 +13,6 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use App\Filament\Pages\BusinessEditRecord;
 use Filament\Support\Icons\Heroicon;
 use LogicException;
 
@@ -22,6 +23,10 @@ class EditQuote extends BusinessEditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('openWorkshopOrder')
+                ->label(fn (): string => 'Dossier atelier '.$this->record->workshopOrder?->reference)
+                ->visible(fn (): bool => $this->record->workshopOrder !== null && WorkshopOrderResource::canAccess())
+                ->url(fn (): ?string => $this->record->workshopOrder ? WorkshopOrderResource::getUrl('edit', ['record' => $this->record->workshopOrder]) : null),
             Action::make('markSent')
                 ->label('Marquer comme envoyé')
                 ->icon(Heroicon::OutlinedPaperAirplane)
