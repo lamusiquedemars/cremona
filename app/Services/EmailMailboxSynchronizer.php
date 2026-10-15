@@ -13,6 +13,7 @@ use App\Models\ConversationMessage;
 use App\Models\EmailFolder;
 use App\Models\EmailMailbox;
 use App\Models\EmailMessageCopy;
+use App\Support\EmailHeaderDecoder;
 use App\Support\TechnicalEmailNotification;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
@@ -161,10 +162,11 @@ class EmailMailboxSynchronizer
         $messageId = trim((string) $source->getMessageId()) ?: null;
         $inReplyTo = trim((string) $source->getInReplyTo()) ?: null;
         $references = array_values(array_filter(array_map('strval', $source->getReferences()->toArray())));
+        $subject = EmailHeaderDecoder::text((string) $source->getSubject());
         $conversation = $this->findConversation($inReplyTo, $references)
             ?? Conversation::query()->create([
                 'initial_channel' => MessageChannel::Email,
-                'subject' => (string) $source->getSubject() ?: null,
+                'subject' => $subject,
                 'status' => ConversationStatus::Open,
             ]);
         $authoredAt = $this->authoredAt($source);
@@ -173,7 +175,7 @@ class EmailMailboxSynchronizer
             'email_mailbox_id' => $mailbox->getKey(),
             'direction' => $direction,
             'channel' => MessageChannel::Email,
-            'subject' => (string) $source->getSubject() ?: null,
+            'subject' => $subject,
             'body_text' => $this->body($source),
             'message_id' => $messageId,
             'in_reply_to' => $inReplyTo,

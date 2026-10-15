@@ -17,6 +17,7 @@ use App\Models\Person;
 use App\Models\User;
 use App\Services\OrganizationModuleAccess;
 use App\Services\OrganizationPresentation;
+use App\Support\EmailHeaderDecoder;
 use App\Tenancy\OrganizationContext;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
@@ -107,6 +108,20 @@ class ClientWorkQueue extends Page
             'conversation' => 'Message à répondre',
             'task' => 'Tâche',
             default => 'Demande',
+        };
+    }
+
+    public function itemTitle(object $item): string
+    {
+        return EmailHeaderDecoder::text($item->title) ?? 'Sans objet';
+    }
+
+    public function itemDateLabel(object $item): string
+    {
+        return match ($item->item_type) {
+            'task' => 'À faire le',
+            'conversation' => 'Reçu le',
+            default => 'Reçue le',
         };
     }
 
