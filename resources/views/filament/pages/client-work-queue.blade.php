@@ -49,7 +49,7 @@
 
             <span class="text-sm text-gray-600 dark:text-gray-300">Page {{ $items->currentPage() }} sur {{ $items->lastPage() }}</span>
 
-            @if ($items->hasMorePages())
+            @if ($items->currentPage() < $items->lastPage())
                 <a href="{{ $items->nextPageUrl() }}" class="rounded-lg bg-primary-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-primary-500">Suivant</a>
             @else
                 <span class="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-400 dark:bg-white/10 dark:text-gray-500">Suivant</span>

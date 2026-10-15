@@ -96,9 +96,9 @@ class ClientWorkQueue extends Page
     public function itemUrl(object $item): string
     {
         return match ($item->item_type) {
-            'conversation' => ConversationResource::getUrl('view', ['record' => $item->id]),
-            'task' => CrmTaskResource::getUrl('view', ['record' => $item->id]),
-            default => IncomingRequestResource::getUrl('view', ['record' => $item->id]),
+            'conversation' => ConversationResource::getUrl('view', ['record' => $item->record_key]),
+            'task' => CrmTaskResource::getUrl('view', ['record' => $item->record_key]),
+            default => IncomingRequestResource::getUrl('view', ['record' => $item->record_key]),
         };
     }
 
@@ -132,6 +132,7 @@ class ClientWorkQueue extends Page
 
         return IncomingRequest::query()
             ->select("{$table}.id")
+            ->select("{$table}.public_id as record_key")
             ->selectRaw("'request' as item_type")
             ->selectRaw("COALESCE(NULLIF({$rawTable}.subject, ''), 'Demande sans objet') as title")
             ->selectRaw("COALESCE({$rawTable}.name_snapshot, {$rawTable}.email_snapshot, {$rawTable}.phone_snapshot, 'Contact à préciser') as contact")
@@ -158,6 +159,7 @@ class ClientWorkQueue extends Page
             ->leftJoin($people, "{$people}.id", '=', "{$table}.person_id")
             ->leftJoin($companies, "{$companies}.id", '=', "{$table}.company_id")
             ->select("{$table}.id")
+            ->select("{$table}.public_id as record_key")
             ->selectRaw("'conversation' as item_type")
             ->selectRaw("COALESCE(NULLIF({$rawTable}.subject, ''), 'Message sans objet') as title")
             ->selectRaw("COALESCE({$rawPeople}.display_name, {$rawCompanies}.name, 'Contact à rapprocher') as contact")
@@ -184,6 +186,7 @@ class ClientWorkQueue extends Page
             ->leftJoin($people, "{$people}.id", '=', "{$table}.person_id")
             ->leftJoin($companies, "{$companies}.id", '=', "{$table}.company_id")
             ->select("{$table}.id")
+            ->select("{$table}.public_id as record_key")
             ->selectRaw("'task' as item_type")
             ->selectRaw("{$rawTable}.title as title")
             ->selectRaw("COALESCE({$rawPeople}.display_name, {$rawCompanies}.name, 'Sans client lié') as contact")
