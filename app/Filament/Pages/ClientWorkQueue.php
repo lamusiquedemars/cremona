@@ -9,9 +9,11 @@ use App\Enums\OrganizationPermission;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\CrmTasks\CrmTaskResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
+use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\CrmTask;
 use App\Models\IncomingRequest;
+use App\Models\Person;
 use App\Models\User;
 use App\Services\OrganizationModuleAccess;
 use App\Services\OrganizationPresentation;
@@ -21,6 +23,7 @@ use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
 
@@ -109,15 +112,17 @@ class ClientWorkQueue extends Page
 
     private function requestsQuery(): Builder
     {
+        $rawTable = $this->prefixedTable(new IncomingRequest);
+
         return IncomingRequest::query()
-            ->select('incoming_requests.id')
+            ->select("{$rawTable}.id")
             ->selectRaw("'request' as item_type")
-            ->selectRaw("COALESCE(NULLIF(incoming_requests.subject, ''), 'Demande sans objet') as title")
-            ->selectRaw("COALESCE(incoming_requests.name_snapshot, incoming_requests.email_snapshot, incoming_requests.phone_snapshot, 'Contact à préciser') as contact")
-            ->selectRaw('incoming_requests.status as state')
-            ->selectRaw('incoming_requests.message as summary')
-            ->selectRaw('incoming_requests.received_at as sort_at')
-            ->whereIn('incoming_requests.status', [
+            ->selectRaw("COALESCE(NULLIF({$rawTable}.subject, ''), 'Demande sans objet') as title")
+            ->selectRaw("COALESCE({$rawTable}.name_snapshot, {$rawTable}.email_snapshot, {$rawTable}.phone_snapshot, 'Contact à préciser') as contact")
+            ->selectRaw("{$rawTable}.status as state")
+            ->selectRaw("{$rawTable}.message as summary")
+            ->selectRaw("{$rawTable}.received_at as sort_at")
+            ->whereIn("{$rawTable}.status", [
                 IncomingRequestStatus::New,
                 IncomingRequestStatus::InProgress,
                 IncomingRequestStatus::Qualified,
@@ -126,35 +131,57 @@ class ClientWorkQueue extends Page
 
     private function conversationsQuery(): Builder
     {
+        $table = (new Conversation)->getTable();
+        $people = (new Person)->getTable();
+        $companies = (new Company)->getTable();
+        $rawTable = $this->prefixedTable(new Conversation);
+        $rawPeople = $this->prefixedTable(new Person);
+        $rawCompanies = $this->prefixedTable(new Company);
+
         return Conversation::query()
-            ->leftJoin('people', 'people.id', '=', 'conversations.person_id')
-            ->leftJoin('companies', 'companies.id', '=', 'conversations.company_id')
-            ->select('conversations.id')
+            ->leftJoin($people, "{$rawPeople}.id", '=', "{$rawTable}.person_id")
+            ->leftJoin($companies, "{$rawCompanies}.id", '=', "{$rawTable}.company_id")
+            ->select("{$rawTable}.id")
             ->selectRaw("'conversation' as item_type")
-            ->selectRaw("COALESCE(NULLIF(conversations.subject, ''), 'Message sans objet') as title")
-            ->selectRaw("COALESCE(people.display_name, companies.name, 'Contact à rapprocher') as contact")
-            ->selectRaw('conversations.status as state')
+            ->selectRaw("COALESCE(NULLIF({$rawTable}.subject, ''), 'Message sans objet') as title")
+            ->selectRaw("COALESCE({$rawPeople}.display_name, {$rawCompanies}.name, 'Contact à rapprocher') as contact")
+            ->selectRaw("{$rawTable}.status as state")
             ->selectRaw("'Réponse attendue' as summary")
-            ->selectRaw('conversations.last_inbound_at as sort_at')
-            ->where('conversations.status', ConversationStatus::Open)
-            ->whereNotNull('conversations.last_inbound_at')
+            ->selectRaw("{$rawTable}.last_inbound_at as sort_at")
+            ->where("{$rawTable}.status", ConversationStatus::Open)
+            ->whereNotNull("{$rawTable}.last_inbound_at")
             ->where(fn (Builder $query): Builder => $query
-                ->whereNull('conversations.last_outbound_at')
-                ->orWhereColumn('conversations.last_inbound_at', '>', 'conversations.last_outbound_at'));
+                ->whereNull("{$rawTable}.last_outbound_at")
+                ->orWhereColumn("{$rawTable}.last_inbound_at", '>', "{$rawTable}.last_outbound_at"));
     }
 
     private function tasksQuery(): Builder
     {
+        $table = (new CrmTask)->getTable();
+        $people = (new Person)->getTable();
+        $companies = (new Company)->getTable();
+        $rawTable = $this->prefixedTable(new CrmTask);
+        $rawPeople = $this->prefixedTable(new Person);
+        $rawCompanies = $this->prefixedTable(new Company);
+
         return CrmTask::query()
-            ->leftJoin('people', 'people.id', '=', 'crm_tasks.person_id')
-            ->leftJoin('companies', 'companies.id', '=', 'crm_tasks.company_id')
-            ->select('crm_tasks.id')
+            ->leftJoin($people, "{$rawPeople}.id", '=', "{$rawTable}.person_id")
+            ->leftJoin($companies, "{$rawCompanies}.id", '=', "{$rawTable}.company_id")
+            ->select("{$rawTable}.id")
             ->selectRaw("'task' as item_type")
-            ->selectRaw('crm_tasks.title as title')
-            ->selectRaw("COALESCE(people.display_name, companies.name, 'Sans client lié') as contact")
-            ->selectRaw('crm_tasks.status as state')
-            ->selectRaw("COALESCE(crm_tasks.description, 'Action à réaliser') as summary")
-            ->selectRaw('COALESCE(crm_tasks.due_at, crm_tasks.created_at) as sort_at')
-            ->whereIn('crm_tasks.status', [CrmTaskStatus::Open, CrmTaskStatus::InProgress]);
+            ->selectRaw("{$rawTable}.title as title")
+            ->selectRaw("COALESCE({$rawPeople}.display_name, {$rawCompanies}.name, 'Sans client lié') as contact")
+            ->selectRaw("{$rawTable}.status as state")
+            ->selectRaw("COALESCE({$rawTable}.description, 'Action à réaliser') as summary")
+            ->selectRaw("COALESCE({$rawTable}.due_at, {$rawTable}.created_at) as sort_at")
+            ->whereIn("{$rawTable}.status", [CrmTaskStatus::Open, CrmTaskStatus::InProgress]);
+    }
+
+    private function prefixedTable(Model $model): string
+    {
+        $table = $model->getTable();
+        $prefix = $model->getConnection()->getTablePrefix();
+
+        return $prefix !== '' && ! str_starts_with($table, $prefix) ? $prefix.$table : $table;
     }
 }
