@@ -28,8 +28,8 @@ final class InstrumentRentalCatalog
                 '1/2' => '1/2', '3/4' => '3/4', '4/4' => '4/4', 'other' => 'Autre taille',
             ],
             'alto' => [
-                '38cm' => '38 cm', '39cm' => '39 cm', '40cm' => '40 cm',
-                '40_5cm' => '40,5 cm', '41cm' => '41 cm', '41_5cm' => '41,5 cm', '42cm' => '42 cm',
+                '28cm' => '28 cm', '31cm' => '31 cm', '33cm' => '33 cm', '36cm' => '36 cm', '37cm' => '37 cm',
+                '38cm' => '38 cm', '39cm' => '39 cm', '40cm' => '40 cm', '41cm' => '41 cm', '42cm' => '42 cm',
                 'other' => 'Autre taille',
             ],
             'violoncelle' => [
