@@ -55,7 +55,7 @@ body.fi-body {
     overflow-x: scroll !important;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    scrollbar-color: rgb(109 40 217) rgb(237 233 254);
+    scrollbar-color: rgb(120 113 108) rgb(231 229 228);
     scrollbar-gutter: stable both-edges;
     scrollbar-width: auto;
 }
@@ -66,92 +66,32 @@ body.fi-body {
 }
 
 .rental-table .fi-ta-content-ctn::-webkit-scrollbar-track {
-    background: rgb(237 233 254);
+    background: rgb(231 229 228);
     border-radius: 9999px;
 }
 
 .rental-table .fi-ta-content-ctn::-webkit-scrollbar-thumb {
     min-width: 3rem;
-    border: 3px solid rgb(237 233 254);
+    border: 3px solid rgb(231 229 228);
     border-radius: 9999px;
-    background: rgb(109 40 217);
+    background: rgb(120 113 108);
 }
 
 .dark .rental-table .fi-ta-content-ctn {
-    scrollbar-color: rgb(196 181 253) rgb(46 16 101);
+    scrollbar-color: rgb(168 162 158) rgb(41 37 36);
 }
 
 .dark .rental-table .fi-ta-content-ctn::-webkit-scrollbar-track {
-    background: rgb(46 16 101);
+    background: rgb(41 37 36);
 }
 
 .dark .rental-table .fi-ta-content-ctn::-webkit-scrollbar-thumb {
-    border-color: rgb(46 16 101);
-    background: rgb(196 181 253);
+    border-color: rgb(41 37 36);
+    background: rgb(168 162 158);
 }
 
 .rental-table .fi-ta-table {
     min-width: 68rem;
-}
-
-.rental-table-scroll-control {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-    padding: 0.625rem 0.875rem;
-    border: 1px solid rgb(196 181 253);
-    border-radius: 0.75rem;
-    background: rgb(245 243 255);
-}
-
-.rental-table-scroll-control > span {
-    flex: none;
-    color: rgb(91 33 182);
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-
-.rental-table-scroll-control > input {
-    width: 100%;
-    height: 1.5rem;
-    cursor: ew-resize;
-    accent-color: rgb(109 40 217);
-}
-
-.rental-table-scroll-control > input::-webkit-slider-runnable-track {
-    height: 0.5rem;
-    border-radius: 9999px;
-    background: rgb(196 181 253);
-}
-
-.rental-table-scroll-control > input::-webkit-slider-thumb {
-    width: 1.25rem;
-    height: 1.25rem;
-    margin-top: -0.375rem;
-    border: 3px solid rgb(245 243 255);
-    border-radius: 9999px;
-    background: rgb(109 40 217);
-    box-shadow: 0 1px 3px rgb(76 29 149 / 0.35);
-    -webkit-appearance: none;
-}
-
-.dark .rental-table-scroll-control {
-    border-color: rgb(109 40 217);
-    background: rgb(46 16 101);
-}
-
-.dark .rental-table-scroll-control > span {
-    color: rgb(221 214 254);
-}
-
-.dark .rental-table-scroll-control > input::-webkit-slider-runnable-track {
-    background: rgb(109 40 217);
-}
-
-.dark .rental-table-scroll-control > input::-webkit-slider-thumb {
-    border-color: rgb(46 16 101);
-    background: rgb(221 214 254);
 }
 
 /* Long business actions remain readable inside their compact action menu. */
