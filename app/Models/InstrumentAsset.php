@@ -69,6 +69,6 @@ class InstrumentAsset extends Model
             return (float) ($this->rental_amount_override ?? 0);
         }
 
-        return (float) ($this->category?->rental_monthly_amount ?? 0);
+        return $this->category?->monthlyAmountOn() ?? 0.0;
     }
 }

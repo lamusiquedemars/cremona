@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\ApplyRentalGridRates;
 use App\Console\Commands\SyncEmailMailboxes;
 use App\Console\Commands\SyncGoogleAdsCampaignConfigurations;
 use App\Console\Commands\SyncGoogleAdsReporting;
@@ -44,4 +45,8 @@ Schedule::command(SyncGoogleAdsCampaignConfigurations::class)
 
 Schedule::command(SyncEmailMailboxes::class)
     ->everyFifteenMinutes()
+    ->withoutOverlapping();
+
+Schedule::command(ApplyRentalGridRates::class)
+    ->dailyAt('00:05')
     ->withoutOverlapping();

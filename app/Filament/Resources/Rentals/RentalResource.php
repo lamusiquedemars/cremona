@@ -302,7 +302,7 @@ class RentalResource extends Resource
     public static function pricingSourceHelp(string $source): string
     {
         return match ($source) {
-            'grid' => 'Le loyer est repris de la grille de cet instrument.',
+            'grid' => 'Le loyer suit automatiquement le tarif en vigueur dans la grille de cet instrument.',
             'instrument' => 'Cet instrument a un tarif propre, différent de la grille.',
             'recorded' => 'Ce montant existait déjà dans ce dossier. Choisissez la grille ou un montant personnalisé pour le modifier.',
             default => 'Choisissez cette option uniquement si vous convenez d’un montant particulier avec le client.',
@@ -322,7 +322,8 @@ class RentalResource extends Resource
     public static function pricingAmountHelp(string $source): string
     {
         return match ($source) {
-            'grid', 'instrument' => 'Modifiez le tarif appliqué si vous souhaitez convenir d’un montant particulier pour cette location.',
+            'grid' => 'Le montant évolue automatiquement avec le tarif de la grille. Choisissez un montant personnalisé uniquement pour une dérogation.',
+            'instrument' => 'Modifiez le tarif appliqué si vous souhaitez convenir d’un montant particulier pour cette location.',
             'recorded' => 'Ce montant reste conservé tant que vous ne choisissez pas un autre tarif appliqué.',
             default => 'Ce montant restera associé à cette location, même si le tarif de la grille change ensuite.',
         };

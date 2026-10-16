@@ -6,8 +6,10 @@ use App\Models\InstrumentAsset;
 use App\Models\InstrumentCategory;
 use App\Models\Organization;
 use App\Models\Rental;
+use App\Models\RentalPriceVersion;
 use App\Models\RentalTier;
 use App\Services\InstrumentRentalPricing;
+use App\Services\RentalGridRateManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -17,7 +19,7 @@ class InstrumentCategoryRentalRateTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_the_category_monthly_rate_is_snapshotted_when_a_rental_is_created(): void
+    public function test_the_category_monthly_rate_is_applied_to_all_grid_rentals_when_it_takes_effect(): void
     {
         $organization = Organization::factory()->create();
 
@@ -28,8 +30,79 @@ class InstrumentCategoryRentalRateTest extends TestCase
 
             $this->assertSame('42.00', $rental->fresh()->unit_amount);
 
-            $category->update(['rental_monthly_amount' => 49]);
-            $this->assertSame('42.00', $rental->fresh()->unit_amount);
+            $category->update([
+                'rental_monthly_amount' => 49,
+                'rental_price_effective_on' => today(),
+            ]);
+
+            $this->assertSame('49.00', $rental->fresh()->unit_amount);
+            $this->assertDatabaseHas('rental_price_versions', [
+                'instrument_category_id' => $category->id,
+                'monthly_amount' => 49,
+                'effective_on' => today()->toDateString(),
+            ]);
+        });
+    }
+
+    public function test_a_future_grid_rate_is_applied_to_existing_rentals_on_its_effective_date(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $category = InstrumentCategory::query()->create(['name' => 'Violon enfant', 'rental_monthly_amount' => 16]);
+            $instrument = InstrumentAsset::query()->create(['name' => 'Violon enfant', 'instrument_category_id' => $category->id]);
+            $rental = Rental::query()->create([
+                'instrument_asset_id' => $instrument->id,
+                'rental_pricing_source' => 'grid',
+            ]);
+
+            $category->update([
+                'rental_monthly_amount' => 15,
+                'rental_price_effective_on' => today()->addDay(),
+            ]);
+
+            $this->assertSame('16.00', $rental->fresh()->unit_amount);
+            $this->assertSame(16.0, $category->fresh()->monthlyAmountOn());
+            $this->assertDatabaseHas('rental_price_versions', [
+                'instrument_category_id' => $category->id,
+                'monthly_amount' => 15,
+                'effective_on' => today()->addDay()->toDateString(),
+            ]);
+
+            app(RentalGridRateManager::class)->applyDueRates(today()->addDay());
+
+            $this->assertSame('15.00', $rental->fresh()->unit_amount);
+        });
+    }
+
+    public function test_the_scheduled_rate_command_updates_all_organizations_without_an_active_organization_context(): void
+    {
+        $organization = Organization::factory()->create();
+
+        $records = app(OrganizationContext::class)->run($organization, function () use ($organization): array {
+            $category = InstrumentCategory::query()->create(['name' => 'Violon enfant', 'rental_monthly_amount' => 16]);
+            $instrument = InstrumentAsset::query()->create(['name' => 'Violon enfant', 'instrument_category_id' => $category->id]);
+            $rental = Rental::query()->create([
+                'instrument_asset_id' => $instrument->id,
+                'rental_pricing_source' => 'grid',
+            ]);
+
+            RentalPriceVersion::withoutGlobalScopes()->updateOrCreate([
+                'instrument_category_id' => $category->id,
+                'effective_on' => today()->toDateString(),
+            ], [
+                'organization_id' => $organization->id,
+                'monthly_amount' => 15,
+            ]);
+
+            return [$category, $rental];
+        });
+
+        app(OrganizationContext::class)->forget();
+        $this->artisan('cremona:apply-rental-grid-rates')->assertSuccessful();
+
+        app(OrganizationContext::class)->run($organization, function () use ($records): void {
+            $this->assertSame('15.00', $records[1]->fresh()->unit_amount);
         });
     }
 

@@ -139,7 +139,7 @@ et non une taxonomie générale du parc.
 | Instrument | famille, taille, gamme de location, mode automatique ou tarif exceptionnel | Décrit le bien physique. Une taille ne reste plus seulement une caractéristique libre. |
 | Gamme de location | libellé actif par organisation | Vocabulaire métier configurable, par exemple Étude, Avancé, Professionnel. Aucun prix ici. |
 | Grille de location | libellé, famille, tailles cochées, gamme, loyer mensuel, active | Décrit une règle tarifaire ; une combinaison famille + taille + gamme ne peut être couverte que par une seule grille active. |
-| Location | montant mensuel recopié à sa création | Conserve le prix réellement appliqué, même après modification de la grille. |
+| Location | lien vers une grille ou tarif exceptionnel explicite | Suit le tarif versionné de la grille à sa date d'effet ; une dérogation reste autonome. Les documents générés conservent leur montant historique. |
 
 La relation instrument → grille est calculée lors de l'enregistrement de la
 fiche. Un instrument exceptionnel peut conserver sa qualification mais recevoir
