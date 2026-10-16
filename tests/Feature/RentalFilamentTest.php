@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Rentals\Pages\CreateRental;
+use App\Filament\Resources\Rentals\RentalResource;
 use App\Models\InstrumentAsset;
 use App\Models\InstrumentCategory;
 use App\Models\Organization;
@@ -73,5 +74,9 @@ class RentalFilamentTest extends TestCase
             $this->assertSame('grid', $rental->rental_pricing_source);
             $this->assertSame('38.00', $rental->unit_amount);
         });
+
+        $this->get(RentalResource::getUrl('index', tenant: $organization))
+            ->assertOk()
+            ->assertSeeText('Alto');
     }
 }

@@ -135,7 +135,8 @@ class RentalResource extends Resource
     {
         return $table->extraAttributes(['class' => 'rental-table'])->defaultSort('updated_at', 'desc')->columns([
             TextColumn::make('reference')->label(__('common.reference'))->searchable(),
-            TextColumn::make('instrument.name')->label('Instrument')->searchable(),
+            TextColumn::make('instrument.family')->label('Famille')->formatStateUsing(fn (?string $state): string => InstrumentRentalCatalog::families()[$state] ?? '—')->placeholder('—'),
+            TextColumn::make('instrument.name')->label('Instrument')->searchable()->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('person.display_name')->label('Client')->searchable()->placeholder('—'),
             TextColumn::make('status')->label('Étape')->badge()->color(fn (Rental $record): string => self::stageColor($record)),
             TextColumn::make('next_action')->label('À faire')->state(fn (Rental $record): string => self::nextAction($record))->wrap(),
