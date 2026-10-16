@@ -105,13 +105,13 @@ class QuoteLineTemplateResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('label')->columns([
-            TextColumn::make('label')->label('Intitulé')->searchable(),
+            TextColumn::make('label')->label('Intitulé')->searchable()->sortable(),
             TextColumn::make('kind')->label(__('common.type'))->badge()->formatStateUsing(fn (string $state): string => match ($state) {
                 'service' => 'Prestation', 'product' => 'Produit', 'rental' => 'Location', 'fee' => 'Frais', default => $state,
-            }),
-            TextColumn::make('description')->label(__('common.description'))->limit(70)->tooltip(fn (QuoteLineTemplate $record): string => $record->description),
+            })->sortable(),
+            TextColumn::make('description')->label(__('common.description'))->limit(70)->tooltip(fn (QuoteLineTemplate $record): string => $record->description)->sortable(),
             TextColumn::make('default_unit_amount')->label('Prix HT')->money('EUR')->sortable(),
-            ToggleColumn::make('is_active')->label('Ligne active'),
+            ToggleColumn::make('is_active')->label('Ligne active')->sortable(),
         ])->recordActions([EditAction::make()])->headerActions([CreateAction::make()]);
     }
 

@@ -44,10 +44,11 @@ class CompaniesRelationManager extends RelationManager
                     ->label(__('common.company'))
                     ->description(fn ($record): ?string => $record->legal_name)
                     ->weight('medium')
-                    ->searchable(),
-                TextColumn::make('pivot.job_title')->label(__('common.function'))->placeholder('—'),
-                IconColumn::make('pivot.is_primary')->label(__('common.primary'))->boolean(),
-                TextColumn::make('industry')->label(__('common.industry'))->placeholder('—'),
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('pivot.job_title')->label(__('common.function'))->placeholder('—')->sortable(),
+                IconColumn::make('pivot.is_primary')->label(__('common.primary'))->boolean()->sortable(),
+                TextColumn::make('industry')->label(__('common.industry'))->placeholder('—')->sortable(),
                 TextColumn::make('website')->label(__('common.website'))->url(fn (?string $state): ?string => $state)->openUrlInNewTab(),
             ])
             ->headerActions([

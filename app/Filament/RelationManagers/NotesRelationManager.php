@@ -38,7 +38,8 @@ class NotesRelationManager extends RelationManager
                     ->label(__('cremona.request.internal_note'))
                     ->wrap(),
                 TextColumn::make('author.name')
-                    ->label(__('cremona.request.by')),
+                    ->label(__('cremona.request.by'))
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label(__('cremona.request.added_on'))
                     ->dateTime('d/m/Y H:i')

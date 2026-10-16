@@ -109,10 +109,10 @@ class OrganizationResource extends Resource
         return $table->columns([
             TextColumn::make('name')->label('Organisation')->searchable()->sortable()
                 ->url(fn (Organization $record): string => '/dashboard/'.$record->slug),
-            TextColumn::make('vertical_pack')->label('Activité')->placeholder('—'),
-            TextColumn::make('status')->label(__('common.status'))->badge(),
-            TextColumn::make('users_count')->label('Membres')->counts('users'),
-            TextColumn::make('updated_at')->label(__('common.updated_at'))->since(),
+            TextColumn::make('vertical_pack')->label('Activité')->placeholder('—')->sortable(),
+            TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
+            TextColumn::make('users_count')->label('Membres')->counts('users')->sortable(),
+            TextColumn::make('updated_at')->label(__('common.updated_at'))->since()->sortable(),
         ])->recordActions([EditAction::make()->label('Modifier')]);
     }
 

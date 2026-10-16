@@ -250,11 +250,11 @@ class AppointmentResource extends Resource
             ->defaultSort('starts_at', 'desc')
             ->columns([
                 TextColumn::make('starts_at')->label(__('common.date'))->dateTime('d/m/Y H:i')->sortable(),
-                TextColumn::make('title')->label(__('common.appointment'))->searchable()->weight('medium'),
-                TextColumn::make('person.display_name')->label(__('common.contact'))->placeholder('—')->searchable(),
-                TextColumn::make('modality')->label(__('common.modality'))->badge(),
+                TextColumn::make('title')->label(__('common.appointment'))->searchable()->weight('medium')->sortable(),
+                TextColumn::make('person.display_name')->label(__('common.contact'))->placeholder('—')->searchable()->sortable(),
+                TextColumn::make('modality')->label(__('common.modality'))->badge()->sortable(),
                 TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
-                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('—'),
+                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('—')->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')->label(__('common.status'))->options(AppointmentStatus::class),

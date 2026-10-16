@@ -48,10 +48,10 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('name')->label(__('common.name'))->searchable(),
-            TextColumn::make('email')->label('Email')->searchable(),
-            IconColumn::make('is_platform_admin')->label('Super-admin')->boolean(),
-            TextColumn::make('organizations_count')->label('Organisations')->counts('organizations'),
+            TextColumn::make('name')->label(__('common.name'))->searchable()->sortable(),
+            TextColumn::make('email')->label('Email')->searchable()->sortable(),
+            IconColumn::make('is_platform_admin')->label('Super-admin')->boolean()->sortable(),
+            TextColumn::make('organizations_count')->label('Organisations')->counts('organizations')->sortable(),
         ])->recordActions([EditAction::make()]);
     }
 

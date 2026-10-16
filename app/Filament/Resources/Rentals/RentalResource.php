@@ -134,15 +134,15 @@ class RentalResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->extraAttributes(['class' => 'rental-table'])->defaultSort('updated_at', 'desc')->columns([
-            TextColumn::make('reference')->label(__('common.reference'))->searchable(),
-            TextColumn::make('instrument.family')->label('Famille')->formatStateUsing(fn (?string $state): string => InstrumentRentalCatalog::families()[$state] ?? '—')->placeholder('—'),
-            TextColumn::make('instrument.name')->label('Instrument')->searchable()->toggleable(isToggledHiddenByDefault: true),
-            TextColumn::make('person.display_name')->label('Client')->searchable()->placeholder('—'),
-            TextColumn::make('status')->label('Étape')->badge()->color(fn (Rental $record): string => self::stageColor($record)),
+            TextColumn::make('reference')->label(__('common.reference'))->searchable()->sortable(),
+            TextColumn::make('instrument.family')->label('Famille')->formatStateUsing(fn (?string $state): string => InstrumentRentalCatalog::families()[$state] ?? '—')->placeholder('—')->sortable(),
+            TextColumn::make('instrument.name')->label('Instrument')->searchable()->toggleable(isToggledHiddenByDefault: true)->sortable(),
+            TextColumn::make('person.display_name')->label('Client')->searchable()->placeholder('—')->sortable(),
+            TextColumn::make('status')->label('Étape')->badge()->color(fn (Rental $record): string => self::stageColor($record))->sortable(),
             TextColumn::make('next_action')->label('À faire')->state(fn (Rental $record): string => self::nextAction($record))->wrap(),
-            TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
-            TextColumn::make('unit_amount')->label('Loyer mensuel')->money('EUR'),
-            TextColumn::make('insurance_monthly_amount')->label('Assurance')->money('EUR')->placeholder('—')->toggleable(),
+            TextColumn::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—')->sortable(),
+            TextColumn::make('unit_amount')->label('Loyer mensuel')->money('EUR')->sortable(),
+            TextColumn::make('insurance_monthly_amount')->label('Assurance')->money('EUR')->placeholder('—')->toggleable()->sortable(),
         ])->filters([
             SelectFilter::make('status')->label('Étape du dossier')->options(RentalStatus::class),
             SelectFilter::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable()->preload(),

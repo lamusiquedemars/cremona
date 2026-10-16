@@ -92,10 +92,10 @@ class ConversationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('last_message_at', 'desc')->columns([
-            TextColumn::make('subject')->label(fn (): string => app(OrganizationPresentation::class)->label('conversations', 'Correspondance'))->placeholder(__('cremona.crm.untitled'))->searchable()->weight('medium'),
-            TextColumn::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder(__('cremona.crm.unlinked'))->searchable(),
+            TextColumn::make('subject')->label(fn (): string => app(OrganizationPresentation::class)->label('conversations', 'Correspondance'))->placeholder(__('cremona.crm.untitled'))->searchable()->weight('medium')->sortable(),
+            TextColumn::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder(__('cremona.crm.unlinked'))->searchable()->sortable(),
             TextColumn::make('status')->label(__('cremona.crm.status'))->badge()->sortable(),
-            TextColumn::make('assignedUser.name')->label(__('cremona.crm.assignee'))->placeholder(__('cremona.crm.unassigned')),
+            TextColumn::make('assignedUser.name')->label(__('cremona.crm.assignee'))->placeholder(__('cremona.crm.unassigned'))->sortable(),
             TextColumn::make('last_message_at')->label(__('cremona.crm.last_message'))->dateTime('d/m/Y H:i')->sortable(),
         ])->filters([
             SelectFilter::make('status')->label(__('cremona.crm.status'))->options(ConversationStatus::class),

@@ -40,10 +40,10 @@ class RentalTierResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('name')->label('Gamme')->searchable(),
-            TextColumn::make('instruments_count')->label('Instruments')->counts('instruments'),
-            TextColumn::make('categories_count')->label('Grilles tarifaires')->counts('categories'),
-            ToggleColumn::make('is_active')->label('Active'),
+            TextColumn::make('name')->label('Gamme')->searchable()->sortable(),
+            TextColumn::make('instruments_count')->label('Instruments')->counts('instruments')->sortable(),
+            TextColumn::make('categories_count')->label('Grilles tarifaires')->counts('categories')->sortable(),
+            ToggleColumn::make('is_active')->label('Active')->sortable(),
         ])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle gamme')]);
     }
 

@@ -47,10 +47,10 @@ class StockItemResource extends Resource
     public static function table(Table $t): Table
     {
         return $t->columns([
-            TextColumn::make('name')->label('Article')->searchable(),
-            TextColumn::make('quantity_on_hand')->label('Disponible')->color(fn (StockItem $record): string => $record->quantity_on_hand <= $record->reorder_level ? 'danger' : 'success'),
-            TextColumn::make('reorder_level')->label('Alerte sous'),
-            TextColumn::make('suggested_unit_amount')->label('Prix HT')->money('EUR'),
+            TextColumn::make('name')->label('Article')->searchable()->sortable(),
+            TextColumn::make('quantity_on_hand')->label('Disponible')->color(fn (StockItem $record): string => $record->quantity_on_hand <= $record->reorder_level ? 'danger' : 'success')->sortable(),
+            TextColumn::make('reorder_level')->label('Alerte sous')->sortable(),
+            TextColumn::make('suggested_unit_amount')->label('Prix HT')->money('EUR')->sortable(),
             TextColumn::make('latestMovement.occurred_at')->label('Dernier mouvement')->since()->placeholder('—')->toggleable(),
         ])->recordActions([
             Action::make('recordMovement')

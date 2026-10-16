@@ -44,9 +44,10 @@ class PeopleRelationManager extends RelationManager
                 TextColumn::make('display_name')
                     ->label(__('common.contact'))
                     ->weight('medium')
-                    ->searchable(),
-                TextColumn::make('pivot.job_title')->label(__('common.function'))->placeholder('—'),
-                IconColumn::make('pivot.is_primary')->label(__('common.primary'))->boolean(),
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('pivot.job_title')->label(__('common.function'))->placeholder('—')->sortable(),
+                IconColumn::make('pivot.is_primary')->label(__('common.primary'))->boolean()->sortable(),
                 TextColumn::make('contactMethods.value')
                     ->label(__('common.contact_details'))
                     ->listWithLineBreaks()

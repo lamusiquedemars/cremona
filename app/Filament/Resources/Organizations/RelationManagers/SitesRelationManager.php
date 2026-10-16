@@ -18,6 +18,6 @@ class SitesRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
-        return $table->columns([TextColumn::make('name')->label('Site'), TextColumn::make('base_url')->label('Adresse')->url(fn (?string $state): ?string => $state), TextColumn::make('status')->label('Statut')->badge()])->headerActions([CreateAction::make()->label('Rattacher un site')->schema([TextInput::make('name')->label('Nom')->required(), TextInput::make('base_url')->label('Adresse')->url(), Select::make('status')->options(['active' => 'Actif', 'inactive' => 'Inactif'])->default('active')->required()])])->recordActions([DeleteAction::make()->label('Retirer')]);
+        return $table->columns([TextColumn::make('name')->label('Site')->sortable(), TextColumn::make('base_url')->label('Adresse')->url(fn (?string $state): ?string => $state)->sortable(), TextColumn::make('status')->label('Statut')->badge()->sortable()])->headerActions([CreateAction::make()->label('Rattacher un site')->schema([TextInput::make('name')->label('Nom')->required(), TextInput::make('base_url')->label('Adresse')->url(), Select::make('status')->options(['active' => 'Actif', 'inactive' => 'Inactif'])->default('active')->required()])])->recordActions([DeleteAction::make()->label('Retirer')]);
     }
 }

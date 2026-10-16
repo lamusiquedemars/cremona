@@ -51,7 +51,8 @@ class BrevoConnectionResource extends Resource
                 TextColumn::make('name')
                     ->label('Service')
                     ->formatStateUsing(fn (): string => 'Brevo Meetings')
-                    ->weight('medium'),
+                    ->weight('medium')
+                    ->sortable(),
                 TextColumn::make('booking_url')
                     ->label('Page de réservation')
                     ->state(fn (OrganizationIntegration $record): ?string => $record->credentials['booking_url'] ?? null)
@@ -68,8 +69,9 @@ class BrevoConnectionResource extends Resource
                     ->label(__('common.status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Connecté' : 'Révoqué')
-                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'danger'),
-                TextColumn::make('updated_at')->label(__('common.updated_at'))->since(),
+                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'danger')
+                    ->sortable(),
+                TextColumn::make('updated_at')->label(__('common.updated_at'))->since()->sortable(),
             ])
             ->recordActions([
                 Action::make('revoke')

@@ -197,10 +197,10 @@ class CampaignResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('name')->label(__('cremona.campaign.campaign'))->description(fn (Campaign $record): string => $record->tracking_key)->searchable()->sortable()->weight('medium'),
-                TextColumn::make('channel')->label(__('common.channel'))->badge()->formatStateUsing(fn (string $state): string => match ($state) {
+                TextColumn::make('channel')->label(__('common.channel'))->badge()->sortable()->formatStateUsing(fn (string $state): string => match ($state) {
                     'google_ads' => 'Google Ads', 'meta_ads' => 'Meta Ads', 'linkedin_ads' => 'LinkedIn Ads', default => 'Autre',
                 }),
-                TextColumn::make('status')->label(__('common.status'))->badge(),
+                TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
                 TextColumn::make('google_ads_primary_status')
                     ->label(__('cremona.campaign.google_status'))
                     ->formatStateUsing(fn (?string $state): string => self::googleAdsPrimaryStatusLabel($state))
@@ -212,11 +212,12 @@ class CampaignResource extends Resource
                         default => 'gray',
                     })
                     ->placeholder(__('cremona.campaign.to_sync'))
+                    ->sortable()
                     ->toggleable(),
                 TextColumn::make('daily_metrics_sum_spend')->label(__('cremona.campaign.spent'))->money(fn (Campaign $record): string => $record->currency)->sortable(),
-                TextColumn::make('attributed_incoming_requests_count')->label(__('cremona.campaign.site_requests'))->counts('attributedIncomingRequests')->badge()->color('success'),
-                TextColumn::make('google_ads_synced_at')->label(__('common.google_updated'))->since()->placeholder(__('common.never'))->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('starts_on')->label(__('common.start'))->date('d/m/Y')->placeholder('—'),
+                TextColumn::make('attributed_incoming_requests_count')->label(__('cremona.campaign.site_requests'))->counts('attributedIncomingRequests')->badge()->color('success')->sortable(),
+                TextColumn::make('google_ads_synced_at')->label(__('common.google_updated'))->since()->placeholder(__('common.never'))->toggleable(isToggledHiddenByDefault: true)->sortable(),
+                TextColumn::make('starts_on')->label(__('common.start'))->date('d/m/Y')->placeholder('—')->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')->label(__('common.status'))->options(CampaignStatus::class),

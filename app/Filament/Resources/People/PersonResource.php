@@ -294,7 +294,8 @@ class PersonResource extends Resource
                     ->label(__('common.status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
-                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
+                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray')
+                    ->sortable(),
                 TextColumn::make('updated_at')
                     ->label(__('common.updated_at'))
                     ->since()

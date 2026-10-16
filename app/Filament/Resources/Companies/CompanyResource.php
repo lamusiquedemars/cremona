@@ -283,7 +283,8 @@ class CompanyResource extends Resource
                 TextColumn::make('industry')
                     ->label(__('common.industry'))
                     ->placeholder('—')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('people.display_name')
                     ->label(__('common.contacts'))
                     ->badge()
@@ -298,7 +299,8 @@ class CompanyResource extends Resource
                     ->label(__('common.status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'active' ? __('common.active') : __('common.archived'))
-                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray'),
+                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'gray')
+                    ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')

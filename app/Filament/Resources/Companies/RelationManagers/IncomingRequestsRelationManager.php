@@ -35,10 +35,11 @@ class IncomingRequestsRelationManager extends RelationManager
                     ->label(__('common.request'))
                     ->description(fn (IncomingRequest $record): string => str($record->message)->squish()->limit(70))
                     ->placeholder(__('common.untitled'))
-                    ->wrap(),
-                TextColumn::make('status')->label(__('common.status'))->badge(),
-                TextColumn::make('urgency')->label(__('common.urgency'))->badge(),
-                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
+                    ->wrap()
+                    ->sortable(),
+                TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
+                TextColumn::make('urgency')->label(__('common.urgency'))->badge()->sortable(),
+                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned'))->sortable(),
                 TextColumn::make('received_at')->label(__('common.received'))->dateTime('d/m/Y H:i')->sortable(),
             ])
             ->recordActions([

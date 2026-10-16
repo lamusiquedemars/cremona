@@ -111,10 +111,10 @@ class PrivateDocumentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('created_at', 'desc')->columns([
-            TextColumn::make('original_name')->label('Fichier')->searchable()->weight('medium')->wrap(),
-            TextColumn::make('title')->label('Intitulé')->searchable()->placeholder('—')->wrap(),
-            TextColumn::make('category')->label(__('common.category'))->toggleable(),
-            TextColumn::make('version_number')->label(__('common.version'))->formatStateUsing(fn (int $state): string => 'v'.$state),
+            TextColumn::make('original_name')->label('Fichier')->searchable()->weight('medium')->wrap()->sortable(),
+            TextColumn::make('title')->label('Intitulé')->searchable()->placeholder('—')->wrap()->sortable(),
+            TextColumn::make('category')->label(__('common.category'))->toggleable()->sortable(),
+            TextColumn::make('version_number')->label(__('common.version'))->formatStateUsing(fn (int $state): string => 'v'.$state)->sortable(),
             TextColumn::make('created_at')->label('Déposé le')->dateTime('d/m/Y H:i')->sortable(),
         ])->recordActions([ViewAction::make(), EditAction::make()])
             ->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('documents', 'Document'))]);

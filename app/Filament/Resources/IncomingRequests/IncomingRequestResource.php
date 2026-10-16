@@ -284,13 +284,15 @@ class IncomingRequestResource extends Resource
                     ->description(fn (IncomingRequest $record): ?string => $record->email_snapshot ?? $record->phone_snapshot)
                     ->placeholder(__('cremona.dashboard.anonymous'))
                     ->searchable(['name_snapshot', 'email_snapshot', 'phone_snapshot'])
+                    ->sortable()
                     ->weight('medium'),
                 TextColumn::make('subject')
                     ->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))
                     ->description(fn (IncomingRequest $record): string => str($record->message)->squish()->limit(70))
                     ->placeholder(__('cremona.crm.untitled'))
                     ->searchable(['subject', 'message'])
-                    ->wrap(),
+                    ->wrap()
+                    ->sortable(),
                 TextColumn::make('status')
                     ->label(__('cremona.crm.status'))
                     ->badge()
@@ -302,6 +304,7 @@ class IncomingRequestResource extends Resource
                 TextColumn::make('assignedUser.name')
                     ->label(__('cremona.crm.assignee'))
                     ->placeholder(__('cremona.crm.unassigned'))
+                    ->sortable()
                     ->toggleable(),
                 TextColumn::make('received_at')
                     ->label(__('cremona.request.received'))

@@ -20,9 +20,9 @@ class MembersRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label(__('common.name'))->searchable(),
-                TextColumn::make('email')->label('Email')->searchable()->copyable(),
-                TextColumn::make('pivot.role')->label(__('common.role'))->badge()->formatStateUsing(fn (OrganizationRole|string $state): string => $state instanceof OrganizationRole ? $state->label() : OrganizationRole::from($state)->label()),
+                TextColumn::make('name')->label(__('common.name'))->searchable()->sortable(),
+                TextColumn::make('email')->label('Email')->searchable()->copyable()->sortable(),
+                TextColumn::make('pivot.role')->label(__('common.role'))->badge()->formatStateUsing(fn (OrganizationRole|string $state): string => $state instanceof OrganizationRole ? $state->label() : OrganizationRole::from($state)->label())->sortable(),
             ])
             ->headerActions([
                 AttachAction::make()

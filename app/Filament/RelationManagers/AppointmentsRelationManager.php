@@ -31,10 +31,10 @@ class AppointmentsRelationManager extends RelationManager
             ->defaultSort('starts_at', 'desc')
             ->columns([
                 TextColumn::make('starts_at')->label(__('common.date'))->dateTime('d/m/Y H:i')->sortable(),
-                TextColumn::make('title')->label(__('common.appointment'))->weight('medium'),
-                TextColumn::make('modality')->label(__('common.modality'))->badge(),
-                TextColumn::make('status')->label(__('common.status'))->badge(),
-                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('—'),
+                TextColumn::make('title')->label(__('common.appointment'))->weight('medium')->sortable(),
+                TextColumn::make('modality')->label(__('common.modality'))->badge()->sortable(),
+                TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
+                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('—')->sortable(),
             ])
             ->recordActions([
                 ViewAction::make()

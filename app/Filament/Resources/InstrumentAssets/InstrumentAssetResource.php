@@ -127,15 +127,15 @@ class InstrumentAssetResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('updated_at', 'desc')->columns([
-            TextColumn::make('name')->label('Instrument')->searchable()->description(fn (InstrumentAsset $record): ?string => $record->maker),
+            TextColumn::make('name')->label('Instrument')->searchable()->description(fn (InstrumentAsset $record): ?string => $record->maker)->sortable(),
             TextColumn::make('family')->label(__('common.family'))->formatStateUsing(fn (?string $state): string => match ($state) {
                 'violon' => 'Violon', 'alto' => 'Alto', 'violoncelle' => 'Violoncelle', 'contrebasse' => 'Contrebasse', 'archet' => 'Archet', default => 'Autre'
-            })->placeholder('—'),
-            TextColumn::make('rentalTier.name')->label('Gamme')->placeholder('—')->toggleable(),
-            TextColumn::make('category.name')->label('Grille tarifaire')->placeholder('—')->toggleable(),
-            TextColumn::make('status')->label(__('common.state'))->badge(),
-            IconColumn::make('available_for_sale')->label('Vente')->boolean(),
-            IconColumn::make('available_for_rental')->label('Location')->boolean(),
+            })->placeholder('—')->sortable(),
+            TextColumn::make('rentalTier.name')->label('Gamme')->placeholder('—')->toggleable()->sortable(),
+            TextColumn::make('category.name')->label('Grille tarifaire')->placeholder('—')->toggleable()->sortable(),
+            TextColumn::make('status')->label(__('common.state'))->badge()->sortable(),
+            IconColumn::make('available_for_sale')->label('Vente')->boolean()->sortable(),
+            IconColumn::make('available_for_rental')->label('Location')->boolean()->sortable(),
         ])->filters([SelectFilter::make('status')->label(__('common.state'))->options(InstrumentAssetStatus::class)])->recordActions([EditAction::make()])->headerActions([
             ImportAction::make()->label('Importer un parc')->importer(InstrumentAssetImporter::class)->options(fn (): array => ['organization_id' => app(OrganizationContext::class)->require()->getKey()])->maxRows(500)->chunkSize(50),
             CreateAction::make()->label('Nouvel instrument'),

@@ -132,11 +132,11 @@ class CrmTaskResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->defaultSort('due_at')->columns([
-            TextColumn::make('title')->label(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâche'))->searchable()->weight('medium')->wrap(),
+            TextColumn::make('title')->label(fn (): string => app(OrganizationPresentation::class)->label('tasks', 'Tâche'))->searchable()->weight('medium')->wrap()->sortable(),
             TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
             TextColumn::make('priority')->label(__('common.priority'))->badge()->sortable(),
             TextColumn::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y H:i')->timezone(fn (): string => static::organizationTimezone())->sortable()->placeholder('—'),
-            TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned')),
+            TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned'))->sortable(),
         ])->filters([
             SelectFilter::make('status')->label(__('common.status'))->options(CrmTaskStatus::class),
             SelectFilter::make('priority')->label(__('common.priority'))->options(CrmTaskPriority::class),

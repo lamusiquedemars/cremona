@@ -60,9 +60,9 @@ class InstrumentCategoryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('name')->label('Grille')->searchable(),
-            TextColumn::make('family')->label('Famille')->formatStateUsing(fn (?string $state): string => InstrumentRentalCatalog::families()[$state] ?? '—'),
-            TextColumn::make('rentalTier.name')->label('Gamme')->placeholder('—'),
+            TextColumn::make('name')->label('Grille')->searchable()->sortable(),
+            TextColumn::make('family')->label('Famille')->formatStateUsing(fn (?string $state): string => InstrumentRentalCatalog::families()[$state] ?? '—')->sortable(),
+            TextColumn::make('rentalTier.name')->label('Gamme')->placeholder('—')->sortable(),
             TextColumn::make('eligible_sizes')->label('Tailles')->formatStateUsing(function (string|array|null $state, InstrumentCategory $record): string {
                 if (is_array($state)) {
                     return collect($state)
@@ -73,10 +73,10 @@ class InstrumentCategoryResource extends Resource
 
                 return InstrumentRentalCatalog::sizeLabel($record->family, $state) ?? '—';
             }),
-            TextColumn::make('rental_monthly_amount')->label('Loyer en vigueur')->state(fn (InstrumentCategory $record): float => $record->monthlyAmountOn())->money('EUR')->placeholder('À définir'),
-            TextColumn::make('rental_price_effective_on')->label('Dernière date d’effet')->date('d/m/Y')->placeholder('—')->toggleable(),
-            TextColumn::make('instruments_count')->label('Instruments tarifés')->counts('instruments'),
-            ToggleColumn::make('is_active')->label('Active'),
+            TextColumn::make('rental_monthly_amount')->label('Loyer en vigueur')->state(fn (InstrumentCategory $record): float => $record->monthlyAmountOn())->money('EUR')->placeholder('À définir')->sortable(),
+            TextColumn::make('rental_price_effective_on')->label('Dernière date d’effet')->date('d/m/Y')->placeholder('—')->toggleable()->sortable(),
+            TextColumn::make('instruments_count')->label('Instruments tarifés')->counts('instruments')->sortable(),
+            ToggleColumn::make('is_active')->label('Active')->sortable(),
         ])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle catégorie')]);
     }
 

@@ -59,12 +59,12 @@ class RentalInsurancePlanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('name')->label('Formule')->searchable()->wrap(),
-            TextColumn::make('family')->label('Famille')->formatStateUsing(fn (?string $state): string => $state === null ? 'Toutes' : (InstrumentRentalCatalog::families()[$state] ?? $state)),
-            TextColumn::make('rentalTier.name')->label('Gamme')->placeholder('Toutes'),
-            TextColumn::make('monthly_amount')->label('Prime mensuelle')->money('EUR'),
-            TextColumn::make('clause_version')->label('Garanties')->placeholder('—'),
-            ToggleColumn::make('is_active')->label('Active'),
+            TextColumn::make('name')->label('Formule')->searchable()->wrap()->sortable(),
+            TextColumn::make('family')->label('Famille')->formatStateUsing(fn (?string $state): string => $state === null ? 'Toutes' : (InstrumentRentalCatalog::families()[$state] ?? $state))->sortable(),
+            TextColumn::make('rentalTier.name')->label('Gamme')->placeholder('Toutes')->sortable(),
+            TextColumn::make('monthly_amount')->label('Prime mensuelle')->money('EUR')->sortable(),
+            TextColumn::make('clause_version')->label('Garanties')->placeholder('—')->sortable(),
+            ToggleColumn::make('is_active')->label('Active')->sortable(),
         ])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle formule')]);
     }
 

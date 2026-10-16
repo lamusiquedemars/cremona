@@ -60,16 +60,19 @@ class InboundChannelResource extends Resource
                     ->label(__('common.channel'))
                     ->description('Maracuja CMS')
                     ->searchable()
+                    ->sortable()
                     ->weight('medium'),
                 TextColumn::make('status')
                     ->label(__('common.status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Actif' : 'Révoqué')
-                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'danger'),
+                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'danger')
+                    ->sortable(),
                 TextColumn::make('key_id')
                     ->label('Identifiant')
                     ->copyable()
-                    ->fontFamily('mono'),
+                    ->fontFamily('mono')
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label(__('common.created_at'))
                     ->dateTime('d/m/Y H:i')
@@ -77,7 +80,8 @@ class InboundChannelResource extends Resource
                 TextColumn::make('revoked_at')
                     ->label('Révoqué le')
                     ->dateTime('d/m/Y H:i')
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->sortable(),
             ])
             ->recordActions([
                 Action::make('revoke')
