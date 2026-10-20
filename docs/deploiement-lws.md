@@ -35,6 +35,31 @@ SESSION_DRIVER=database
 Les identifiants MySQL restent ceux de la base LWS existante. `APP_KEY` doit
 être générée pour Cremona uniquement, jamais copiée depuis un autre site.
 
+### Documents métier privés avec Scaleway (activation optionnelle)
+
+Cette configuration ne concerne ni les galeries ni les fichiers éditoriaux des
+sites clients. Elle est activée seulement lorsque Cremona doit déposer de
+nouveaux documents métier confidentiels dans son bucket privé : contrats,
+expertises et pièces de location.
+
+Ajouter au `.env` de Cremona, exclusivement par le canal SFTP sécurisé :
+
+```env
+PRIVATE_DOCUMENTS_DISK=scaleway_private
+SCW_OBJECT_STORAGE_ACCESS_KEY=…
+SCW_OBJECT_STORAGE_SECRET_KEY=…
+SCW_OBJECT_STORAGE_REGION=fr-par
+SCW_OBJECT_STORAGE_ENDPOINT=https://s3.fr-par.scw.cloud
+SCW_OBJECT_STORAGE_PATH_STYLE=false
+SCW_PRIVATE_DOCUMENTS_BUCKET=cremona-private-prod
+```
+
+Ne jamais publier ces valeurs dans Git ou dans Maracuja Control. Les documents
+existants restent sur leur disque historique ; cette activation ne lance aucune
+migration. Après `php artisan config:cache`, déposer et télécharger un document
+de test non confidentiel depuis Cremona, puis vérifier le journal applicatif.
+Le détail fonctionnel est dans `docs/stockage-documents-prives.md`.
+
 ## Préparation et publication
 
 ### Répartition opérationnelle permanente
