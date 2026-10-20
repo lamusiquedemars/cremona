@@ -18,6 +18,8 @@ class PrivateDocument extends Model
 {
     use BelongsToOrganization;
 
+    private const STORAGE_DISKS = ['local', 'scaleway_private'];
+
     protected static function booted(): void
     {
         static::creating(function (self $document): void {
@@ -35,7 +37,7 @@ class PrivateDocument extends Model
                 throw new LogicException('Le contenu d’un document privé ne peut pas être remplacé : créez une nouvelle version.');
             }
 
-            if ($document->disk !== 'local'
+            if (! self::usesAllowedDisk($document->disk)
                 || ! preg_match('/^[a-f0-9]{64}$/', (string) $document->sha256)
                 || $document->size < 0
                 || blank($document->path)
@@ -89,6 +91,22 @@ class PrivateDocument extends Model
     public function getRouteKeyName(): string
     {
         return 'public_id';
+    }
+
+    public static function storageDisk(): string
+    {
+        $disk = (string) config('private-documents.disk', 'local');
+
+        if (! in_array($disk, self::STORAGE_DISKS, true)) {
+            throw new LogicException('Le disque des documents privés doit être local ou scaleway_private.');
+        }
+
+        return $disk;
+    }
+
+    public static function usesAllowedDisk(?string $disk): bool
+    {
+        return in_array($disk, self::STORAGE_DISKS, true);
     }
 
     private static function clean(?string $value): ?string

@@ -60,6 +60,21 @@ return [
             'report' => false,
         ],
 
+        // Documents métier privés uniquement. Ce disque reste inactif tant que
+        // PRIVATE_DOCUMENTS_DISK vaut "local" (la valeur par défaut).
+        'scaleway_private' => [
+            'driver' => 's3',
+            'key' => env('SCW_OBJECT_STORAGE_ACCESS_KEY'),
+            'secret' => env('SCW_OBJECT_STORAGE_SECRET_KEY'),
+            'region' => env('SCW_OBJECT_STORAGE_REGION', 'fr-par'),
+            'bucket' => env('SCW_PRIVATE_DOCUMENTS_BUCKET'),
+            'endpoint' => env('SCW_OBJECT_STORAGE_ENDPOINT', 'https://s3.fr-par.scw.cloud'),
+            'use_path_style_endpoint' => env('SCW_OBJECT_STORAGE_PATH_STYLE', false),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => true,
+        ],
+
     ],
 
     /*

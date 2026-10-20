@@ -43,11 +43,12 @@ class RentalContractGenerator
         $publicId = (string) Str::ulid();
         $filename = (string) Str::uuid().'.pdf';
         $path = 'documents/'.$rental->organization_id.'/'.$publicId.'/'.$filename;
+        $disk = PrivateDocument::storageDisk();
 
-        Storage::disk('local')->put($path, $content);
+        Storage::disk($disk)->put($path, $content);
 
         try {
-            return DB::transaction(function () use ($rental, $type, $actor, $snapshot, $content, $publicId, $path): RentalDocument {
+            return DB::transaction(function () use ($rental, $type, $actor, $snapshot, $content, $publicId, $path, $disk): RentalDocument {
                 $previous = RentalDocument::query()
                     ->where('rental_id', $rental->id)
                     ->where('type', $type)
@@ -63,7 +64,7 @@ class RentalContractGenerator
                     'version_number' => $previous === null ? 1 : $previous->version_number + 1,
                     'title' => $type->getLabel().' '.$rental->reference,
                     'category' => 'Location',
-                    'disk' => 'local',
+                    'disk' => $disk,
                     'path' => $path,
                     'original_name' => $this->filename($rental, $type, $previous === null ? 1 : $previous->version_number + 1),
                     'declared_mime_type' => 'application/pdf',
@@ -95,7 +96,7 @@ class RentalContractGenerator
                 return $document;
             });
         } catch (Throwable $exception) {
-            Storage::disk('local')->delete($path);
+            Storage::disk($disk)->delete($path);
 
             throw $exception;
         }

@@ -65,6 +65,23 @@ class RentalContractGeneratorTest extends TestCase
         });
     }
 
+    public function test_it_can_store_new_private_contracts_on_the_explicit_scaleway_disk(): void
+    {
+        config()->set('private-documents.disk', 'scaleway_private');
+        Storage::fake('scaleway_private');
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $document = app(RentalContractGenerator::class)->generate(
+                $this->completeRental(),
+                RentalDocumentType::RentalContract,
+            );
+
+            $this->assertSame('scaleway_private', $document->privateDocument->disk);
+            $this->assertTrue(Storage::disk('scaleway_private')->exists($document->privateDocument->path));
+        });
+    }
+
     public function test_it_refuses_to_generate_an_insurance_contract_without_an_insurance_amount(): void
     {
         Storage::fake('local');

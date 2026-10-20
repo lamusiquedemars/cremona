@@ -99,21 +99,22 @@ class PrivateDocumentManager
         $extension = $upload->guessExtension() ?: $upload->getClientOriginalExtension();
         $filename = (string) Str::uuid().($extension !== '' ? '.'.strtolower($extension) : '');
         $path = 'documents/'.$organization->getKey().'/'.$publicId.'/'.$filename;
+        $disk = PrivateDocument::storageDisk();
 
         if (! $upload->isValid() || $upload->getSize() === false || $upload->getRealPath() === false) {
             throw new LogicException('Le fichier à déposer est invalide.');
         }
 
         try {
-            Storage::disk('local')->putFileAs(dirname($path), $upload, basename($path));
+            Storage::disk($disk)->putFileAs(dirname($path), $upload, basename($path));
 
-            return DB::transaction(function () use ($data, $upload, $uploader, $path, $publicId): PrivateDocument {
+            return DB::transaction(function () use ($data, $upload, $uploader, $path, $publicId, $disk): PrivateDocument {
                 $document = PrivateDocument::create(array_merge(
                     Arr::only($data, ['title', 'category', 'version_of_id', 'version_number']),
                     [
                         'public_id' => $publicId,
                         'uploaded_by_user_id' => $uploader->getKey(),
-                        'disk' => 'local',
+                        'disk' => $disk,
                         'path' => $path,
                         'original_name' => $upload->getClientOriginalName(),
                         'declared_mime_type' => $upload->getClientMimeType(),
@@ -128,7 +129,7 @@ class PrivateDocumentManager
                 return $document;
             });
         } catch (Throwable $exception) {
-            Storage::disk('local')->delete($path);
+            Storage::disk($disk)->delete($path);
 
             throw $exception;
         }
