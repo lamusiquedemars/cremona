@@ -22,6 +22,14 @@ class RentalContractGeneratorTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config()->set('private-documents.disk', 'local');
+        config()->set('private-documents.allowed_disks', ['local']);
+    }
+
     public function test_it_generates_an_immutable_private_rental_contract_from_a_complete_rental(): void
     {
         Storage::fake('local');

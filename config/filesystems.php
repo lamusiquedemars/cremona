@@ -49,13 +49,34 @@ return [
 
         's3' => [
             'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
+            'key' => env('SCW_OBJECT_STORAGE_ACCESS_KEY', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('SCW_OBJECT_STORAGE_SECRET_KEY', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('SCW_OBJECT_STORAGE_REGION', env('AWS_DEFAULT_REGION')),
+            'bucket' => env('SCW_PRIVATE_DOCUMENTS_BUCKET', env('AWS_BUCKET')),
             'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'endpoint' => env('SCW_OBJECT_STORAGE_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => filter_var(
+                env('SCW_OBJECT_STORAGE_PATH_STYLE', env('AWS_USE_PATH_STYLE_ENDPOINT', false)),
+                FILTER_VALIDATE_BOOLEAN,
+            ),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Nom métier conservé pour les environnements Cremona existants.
+        'scaleway_private' => [
+            'driver' => 's3',
+            'key' => env('SCW_OBJECT_STORAGE_ACCESS_KEY', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('SCW_OBJECT_STORAGE_SECRET_KEY', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('SCW_OBJECT_STORAGE_REGION', env('AWS_DEFAULT_REGION')),
+            'bucket' => env('SCW_PRIVATE_DOCUMENTS_BUCKET', env('AWS_BUCKET')),
+            'endpoint' => env('SCW_OBJECT_STORAGE_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => filter_var(
+                env('SCW_OBJECT_STORAGE_PATH_STYLE', env('AWS_USE_PATH_STYLE_ENDPOINT', false)),
+                FILTER_VALIDATE_BOOLEAN,
+            ),
+            'visibility' => 'private',
             'throw' => false,
             'report' => false,
         ],
