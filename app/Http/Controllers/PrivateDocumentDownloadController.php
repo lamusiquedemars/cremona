@@ -25,7 +25,11 @@ class PrivateDocumentDownloadController extends Controller
             && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $document->organization),
             403,
         );
-        abort_unless($document->disk === 'local' && Storage::disk($document->disk)->exists($document->path), 404);
+        abort_unless(
+            in_array($document->disk, config('private-documents.allowed_disks', ['local']), true)
+            && Storage::disk($document->disk)->exists($document->path),
+            404,
+        );
 
         return Storage::disk($document->disk)->download(
             $document->path,

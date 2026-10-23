@@ -51,7 +51,12 @@ class RentalAcceptanceController extends Controller
         }
 
         $private = $rentalDocument->privateDocument;
-        abort_unless($private !== null && Storage::disk($private->disk)->exists($private->path), 404);
+        abort_unless(
+            $private !== null
+            && in_array($private->disk, config('private-documents.allowed_disks', ['local']), true)
+            && Storage::disk($private->disk)->exists($private->path),
+            404,
+        );
 
         return Storage::disk($private->disk)->download($private->path, $private->original_name, ['Content-Type' => 'application/pdf']);
     }

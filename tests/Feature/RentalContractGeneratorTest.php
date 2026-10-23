@@ -65,6 +65,21 @@ class RentalContractGeneratorTest extends TestCase
         });
     }
 
+    public function test_it_stores_new_private_contracts_on_the_configured_private_disk(): void
+    {
+        config()->set('private-documents.disk', 's3');
+        config()->set('private-documents.allowed_disks', ['local', 's3']);
+        Storage::fake('s3');
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $document = app(RentalContractGenerator::class)->generate($this->completeRental(), RentalDocumentType::RentalContract);
+
+            $this->assertSame('s3', $document->privateDocument->disk);
+            Storage::disk('s3')->assertExists($document->privateDocument->path);
+        });
+    }
+
     public function test_it_refuses_to_generate_an_insurance_contract_without_an_insurance_amount(): void
     {
         Storage::fake('local');

@@ -35,7 +35,7 @@ class PrivateDocument extends Model
                 throw new LogicException('Le contenu d’un document privé ne peut pas être remplacé : créez une nouvelle version.');
             }
 
-            if ($document->disk !== 'local'
+            if (! in_array($document->disk, config('private-documents.allowed_disks', ['local']), true)
                 || ! preg_match('/^[a-f0-9]{64}$/', (string) $document->sha256)
                 || $document->size < 0
                 || blank($document->path)
