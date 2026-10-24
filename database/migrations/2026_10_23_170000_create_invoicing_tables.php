@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -125,17 +124,10 @@ return new class extends Migration
             $table->unique(['organization_id', 'provider', 'external_id'], 'invoice_transmissions_external_unique');
         });
 
-        DB::table('organizations')->where('vertical_pack', 'luthier')->orderBy('id')->each(function (object $organization): void {
-            DB::table('organization_modules')->updateOrInsert(
-                ['organization_id' => $organization->id, 'module' => 'invoicing'],
-                ['enabled' => true, 'configuration' => json_encode([]), 'updated_at' => now(), 'created_at' => now()],
-            );
-        });
     }
 
     public function down(): void
     {
-        DB::table('organization_modules')->where('module', 'invoicing')->delete();
         Schema::dropIfExists('invoice_transmissions');
         Schema::dropIfExists('invoice_payments');
         Schema::dropIfExists('invoice_lines');

@@ -119,7 +119,6 @@ class OrganizationModuleAccessTest extends TestCase
             'crm',
             'appointments',
             'quotes',
-            'invoicing',
             'luthier_catalog',
             'workshop',
             'rentals',
@@ -137,9 +136,9 @@ class OrganizationModuleAccessTest extends TestCase
             'crm',
             'appointments',
             'quotes',
-            'invoicing',
             'marketing',
         ], $preset['modules']);
+        $this->assertArrayHasKey('invoicing', app(OrganizationModuleRegistry::class)->all());
         $this->assertSame('Relation client', $preset['labels']['customer_follow_up']);
     }
 
@@ -159,6 +158,7 @@ class OrganizationModuleAccessTest extends TestCase
                 'modules.luthier_catalog' => true,
                 'modules.workshop' => true,
                 'modules.rentals' => true,
+                'modules.invoicing' => false,
                 'settings.presentation.labels.customer_follow_up' => 'Clients',
                 'settings.presentation.labels.luthier_catalog' => 'Instruments et prestations',
             ])
@@ -168,6 +168,7 @@ class OrganizationModuleAccessTest extends TestCase
                 'modules.luthier_catalog' => false,
                 'modules.workshop' => false,
                 'modules.rentals' => false,
+                'modules.invoicing' => false,
                 'modules.marketing' => true,
                 'settings.presentation.labels.customer_follow_up' => 'Relation client',
             ])

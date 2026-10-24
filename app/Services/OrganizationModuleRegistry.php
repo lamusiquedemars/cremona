@@ -11,24 +11,22 @@ final class OrganizationModuleRegistry
     /** @var array<int, string> */
     private const PACK_PRESETS = [
         '__none__' => [
-            'modules' => ['crm', 'appointments', 'quotes', 'invoicing', 'marketing'],
+            'modules' => ['crm', 'appointments', 'quotes', 'marketing'],
             'labels' => [
                 'customer_follow_up' => 'Relation client',
                 'crm' => 'Contacts, demandes et échanges',
                 'commercial_activity' => 'Activité commerciale',
                 'quotes' => 'Devis et documents',
-                'invoicing' => 'Facturation',
                 'marketing' => 'Campagnes et publicité',
             ],
         ],
         'luthier' => [
-            'modules' => ['crm', 'appointments', 'quotes', 'invoicing', 'luthier_catalog', 'workshop', 'rentals', 'inventory'],
+            'modules' => ['crm', 'appointments', 'quotes', 'luthier_catalog', 'workshop', 'rentals', 'inventory'],
             'labels' => [
                 'customer_follow_up' => 'Clients',
                 'crm' => 'Contacts, demandes et échanges',
                 'commercial_activity' => 'Activité commerciale',
                 'quotes' => 'Devis et documents',
-                'invoicing' => 'Facturation',
                 'workshop' => 'Atelier',
                 'luthier_catalog' => 'Instruments et prestations',
                 'rentals' => 'Locations',

@@ -2,7 +2,7 @@
 
 ## Ce qui est disponible
 
-Le module **Facturation** est activé pour les organisations utilisant le pack luthier. Il permet de créer un brouillon, de composer ses lignes HT et TVA, puis d’émettre une facture.
+Le module **Facturation** est transverse : il se choisit explicitement dans la configuration de chaque organisation, quel que soit son métier. Il permet de créer un brouillon, de composer ses lignes HT et TVA, puis d’émettre une facture.
 
 À l’émission, Cremona attribue un numéro définitif, fige les coordonnées légales de l’émetteur et du client, calcule les totaux, génère un PDF privé et enregistre les règlements sans réouvrir la facture. Une correction doit passer par un avoir.
 
