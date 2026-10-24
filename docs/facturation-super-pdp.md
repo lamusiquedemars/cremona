@@ -30,6 +30,10 @@ Super PDP est le canal réglementaire unique prévu par défaut. Lorsqu’une fa
 
 Cette étape ne prétend pas envoyer une facture : aucun compte ni jeton Super PDP n’est encore configuré dans Cremona. Le connecteur OAuth/API et ses retours de statut feront l’objet du lot d’intégration, après ouverture de l’environnement Super PDP.
 
+## Préparation sandbox (Burger Queen)
+
+La production Cremona dispose des variables de l’application OAuth **sandbox** créée pour Burger Queen. Elles servent exclusivement aux essais techniques et ne sont ni versionnées ni affichées dans l’interface. Lors du passage de Burger Queen vers son entreprise Super PDP réelle, ces identifiants sandbox devront être remplacés par le `client_id` et le `client_secret` de l’application OAuth de production. Tricatel disposera de sa propre application OAuth, car Super PDP rattache chaque application à l’entreprise sélectionnée.
+
 Pennylane reste une copie facultative destinée au comptable (par e-mail d’import des factures de vente) ; ce n’est pas une seconde transmission réglementaire et aucune API Pennylane payante n’est requise.
 
 ## Limites du premier lot
