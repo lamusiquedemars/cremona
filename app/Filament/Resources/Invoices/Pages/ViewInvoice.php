@@ -8,7 +8,6 @@ use App\Models\Invoice;
 use App\Models\InvoicePayment;
 use App\Services\InvoiceWorkflowManager;
 use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -23,6 +22,10 @@ class ViewInvoice extends ViewRecord
 {
     protected static string $resource = InvoiceResource::class;
     protected Width|string|null $maxContentWidth = Width::Full;
+
+    protected array $extraBodyAttributes = [
+        'class' => 'cremona-record-view',
+    ];
 
     public function getTitle(): string|Htmlable { return ($this->record->reference ?: 'Brouillon').' — '.$this->record->title; }
     public function getBreadcrumb(): string { return $this->record->reference ?: 'Brouillon'; }
@@ -43,7 +46,6 @@ class ViewInvoice extends ViewRecord
                         Notification::make()->title('Facture non émise')->body($exception->getMessage())->danger()->send();
                     }
                 }),
-            ActionGroup::make([
                 Action::make('downloadPdf')
                 ->label('Télécharger le PDF')->icon(Heroicon::OutlinedArrowDownTray)
                 ->visible(fn (): bool => $this->record->pdfPrivateDocument !== null)
@@ -63,7 +65,6 @@ class ViewInvoice extends ViewRecord
                     $this->record->refresh();
                     Notification::make()->title('Règlement enregistré')->success()->send();
                 }),
-            ])->label('Actions')->icon(Heroicon::OutlinedEllipsisHorizontal)->button()->color('gray'),
         ];
     }
 }

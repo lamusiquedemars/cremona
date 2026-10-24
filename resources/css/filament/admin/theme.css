@@ -139,12 +139,12 @@ body.fi-body {
  * below the heading: buttons take rows as needed instead of stealing space
  * from the record title. This is the first page using the pattern.
  */
-body.cremona-rental-edit .fi-header {
+body.cremona-record-view .fi-header {
     flex-direction: column;
     align-items: stretch;
 }
 
-body.cremona-rental-edit .fi-header-actions-ctn {
+body.cremona-record-view .fi-header-actions-ctn {
     width: 100%;
     margin-top: 0 !important;
     padding: 0.75rem;
@@ -154,16 +154,16 @@ body.cremona-rental-edit .fi-header-actions-ctn {
     background: rgb(255 254 251 / 0.78);
 }
 
-body.cremona-rental-edit .fi-header-actions-ctn > .fi-ac {
+body.cremona-record-view .fi-header-actions-ctn > .fi-ac {
     width: 100%;
     justify-content: flex-start;
 }
 
-body.cremona-rental-edit .fi-header-actions-ctn .fi-btn {
+body.cremona-record-view .fi-header-actions-ctn .fi-btn {
     flex: 0 1 auto;
 }
 
-.dark body.cremona-rental-edit .fi-header-actions-ctn {
+.dark body.cremona-record-view .fi-header-actions-ctn {
     border-color: rgb(255 255 255 / 0.08);
     background: rgb(23 22 19 / 0.72);
 }

@@ -13,7 +13,6 @@ use App\Services\InvoiceFromQuoteManager;
 use Filament\Notifications\Notification;
 use LogicException;
 use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
@@ -23,6 +22,10 @@ use Illuminate\Contracts\Support\Htmlable;
 class ViewQuote extends ViewRecord
 {
     protected static string $resource = QuoteResource::class;
+
+    protected array $extraBodyAttributes = [
+        'class' => 'cremona-record-view',
+    ];
 
     protected string $view = 'filament.resources.quotes.pages.view-quote';
 
@@ -41,7 +44,6 @@ class ViewQuote extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            ActionGroup::make([
                 Action::make('createInvoice')
                     ->label('Créer la facture')
                     ->icon(\Filament\Support\Icons\Heroicon::OutlinedDocumentCurrencyEuro)
@@ -72,7 +74,6 @@ class ViewQuote extends ViewRecord
                 ->visible(fn (): bool => $this->record->status === QuoteStatus::Draft),
                 DeleteAction::make()->label('Supprimer le brouillon')
                 ->visible(fn (): bool => $this->record->status === QuoteStatus::Draft),
-            ])->label('Actions')->icon(\Filament\Support\Icons\Heroicon::OutlinedEllipsisHorizontal)->button()->color('gray'),
         ];
     }
 

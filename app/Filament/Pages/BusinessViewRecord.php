@@ -10,6 +10,10 @@ abstract class BusinessViewRecord extends ViewRecord
 {
     use HasContextualRecordTitle;
 
+    protected array $extraBodyAttributes = [
+        'class' => 'cremona-record-view',
+    ];
+
     public function getTitle(): string|Htmlable
     {
         return $this->contextualRecordTitle();

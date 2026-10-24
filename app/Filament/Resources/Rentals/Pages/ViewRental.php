@@ -28,7 +28,7 @@ class ViewRental extends BusinessViewRecord
     protected static string $resource = RentalResource::class;
 
     protected array $extraBodyAttributes = [
-        'class' => 'cremona-rental-edit',
+        'class' => 'cremona-record-view',
     ];
 
     public function getTitle(): string|Htmlable
