@@ -123,3 +123,23 @@ Une fois HTTPS actif, ajouter cette URL dans le client OAuth Google :
 ```txt
 https://cremona.maracujadigital.fr/integrations/google-ads/callback
 ```
+
+## Releases atomiques (serveur actuel)
+
+Le déploiement actuel utilise des répertoires `releases/` et un lien symbolique
+`current`. Le code seul ne contient pas les assets Vite, car `public/build` est
+généré et ignoré par Git. Avant de rendre une release active, il faut donc soit
+construire les assets avec la version Node prévue, soit recopier le répertoire
+`public/build` (avec son `manifest.json`) depuis la release active validée.
+
+La vérification obligatoire après bascule est :
+
+```bash
+test -f public/build/manifest.json
+curl -fsS -o /dev/null -w '%{http_code}\n' https://cremona.maracujadigital.fr/dashboard/login
+```
+
+L’absence de ce manifeste provoque un 500 Filament, même si les migrations et
+les caches ont réussi. Les variables privées (dont Scaleway) sont injectées
+seulement dans le `.env` de la release de staging avant les caches ; elles ne
+passent jamais par Git.

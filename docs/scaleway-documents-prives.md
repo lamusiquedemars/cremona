@@ -69,3 +69,12 @@ une décision de conservation distincte.
 Chaque ligne de journal contient la source, la cible, la taille, l’empreinte,
 le nombre de tentatives, l’état et l’heure de vérification. Le fichier source
 reste intact après une migration confirmée.
+
+### État de la première exécution production — 24 octobre 2026
+
+L’inventaire a trouvé quatre entrées de documents historiques dont le chemin
+enregistré ne correspond à aucun fichier dans le stockage local ni dans les
+anciennes releases disponibles. Elles sont marquées `failed` dans le journal et
+ne sont pas migrées. Leur contenu devra être retrouvé dans une sauvegarde
+externe ou redéposé par un utilisateur autorisé ; il ne faut ni créer un faux
+fichier ni modifier leur empreinte pour faire disparaître l’alerte.

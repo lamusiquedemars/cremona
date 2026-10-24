@@ -168,8 +168,8 @@ file unique attendue pour la relation client.
 
 | Priorité | Fonctionnalité | État | Implémentation attendue |
 | --- | --- | --- | --- |
-| P0 | Documents privés sur Scaleway | En cours | Le disque `scaleway-private`, le téléversement direct et les téléchargements authentifiés sont prêts localement et à publier. Aucun bucket ni fichier ne devient public. |
-| P0 | Migration documentaire sécurisée | En cours | La commande d’inventaire et de migration SHA-256, vérification de taille, reprise idempotente et journal sont prêts localement et à publier. Première exécution production à faire après publication, sur un lot pilote. |
+| P0 | Documents privés sur Scaleway | Livré | Le disque `scaleway-private`, le téléversement direct et les téléchargements authentifiés sont actifs en production. Aucun bucket ni fichier ne devient public. |
+| P0 | Migration documentaire sécurisée | En cours | L’inventaire, la copie SHA-256, la vérification de taille, la reprise idempotente et le journal sont actifs. Le premier inventaire production a détecté 4 entrées historiques dont le fichier source est absent ; elles ne sont pas basculées et doivent être retrouvées ou redéposées avant toute migration. |
 | P0 | Politique documentaire | À faire | Définir catégories, conservation, droits par type, rattachements obligatoires et archivage. Le registre versionné existe déjà. |
 | P0 | Configuration des intégrations | À faire | Dans **Configuration de l’organisation**, rendre visibles l’état des documents Scaleway et celui de Super PDP, à côté des connecteurs Google Ads et Brevo. Secrets et clés restent chiffrés côté serveur. Burger Queen est uniquement la société fictive de sandbox Super PDP pour Contempo ; le flux de test est automatique par identifiants serveur. |
 | P1 | Contrats de location | Partiel | Le registre de documents, snapshots et empreintes existe. Restent génération du contrat, modèle versionné, envoi client et signature ou acceptation traçable. |
