@@ -80,6 +80,16 @@ class Organization extends Model
         return $this->hasOne(OrganizationQuoteSettings::class);
     }
 
+    public function invoiceSettings(): HasOne
+    {
+        return $this->hasOne(OrganizationInvoiceSettings::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     public function people(): HasMany
     {
         return $this->hasMany(Person::class);

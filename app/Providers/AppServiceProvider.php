@@ -14,6 +14,10 @@ use App\Models\CrmTask;
 use App\Models\IncomingRequest;
 use App\Models\InstrumentAsset;
 use App\Models\InstrumentCategory;
+use App\Models\Invoice;
+use App\Models\InvoiceLine;
+use App\Models\InvoicePayment;
+use App\Models\InvoiceTransmission;
 use App\Models\MessageAttachment;
 use App\Models\MessageParticipant;
 use App\Models\MessageReference;
@@ -23,6 +27,7 @@ use App\Models\OrganizationIntegration;
 use App\Models\OrganizationLegalProfile;
 use App\Models\OrganizationMembership;
 use App\Models\OrganizationModule;
+use App\Models\OrganizationInvoiceSettings;
 use App\Models\OrganizationQuoteSettings;
 use App\Models\Person;
 use App\Models\PrivateDocument;
@@ -78,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
             'organization_legal_profile' => OrganizationLegalProfile::class,
             'organization_membership' => OrganizationMembership::class,
             'organization_module' => OrganizationModule::class,
+            'organization_invoice_settings' => OrganizationInvoiceSettings::class,
             'organization_quote_settings' => OrganizationQuoteSettings::class,
             'message_attachment' => MessageAttachment::class,
             'message_participant' => MessageParticipant::class,
@@ -85,6 +91,10 @@ class AppServiceProvider extends ServiceProvider
             'message_thread_candidate' => MessageThreadCandidate::class,
             'private_document' => PrivateDocument::class,
             'private_document_link' => PrivateDocumentLink::class,
+            'invoice' => Invoice::class,
+            'invoice_line' => InvoiceLine::class,
+            'invoice_payment' => InvoicePayment::class,
+            'invoice_transmission' => InvoiceTransmission::class,
             'quote' => Quote::class,
             'quote_line' => QuoteLine::class,
             'rental' => Rental::class,

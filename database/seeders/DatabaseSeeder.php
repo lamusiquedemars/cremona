@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         app(OrganizationContext::class)->run($organization, function (): void {
-            foreach (['crm', 'quotes', 'luthier_catalog', 'workshop'] as $module) {
+            foreach (['crm', 'quotes', 'invoicing', 'luthier_catalog', 'workshop'] as $module) {
                 OrganizationModule::query()->updateOrCreate(
                     ['module' => $module],
                     ['enabled' => true, 'configuration' => []],

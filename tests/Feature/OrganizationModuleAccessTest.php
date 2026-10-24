@@ -119,6 +119,7 @@ class OrganizationModuleAccessTest extends TestCase
             'crm',
             'appointments',
             'quotes',
+            'invoicing',
             'luthier_catalog',
             'workshop',
             'rentals',
@@ -136,6 +137,7 @@ class OrganizationModuleAccessTest extends TestCase
             'crm',
             'appointments',
             'quotes',
+            'invoicing',
             'marketing',
         ], $preset['modules']);
         $this->assertSame('Relation client', $preset['labels']['customer_follow_up']);
