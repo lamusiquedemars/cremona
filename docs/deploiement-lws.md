@@ -143,3 +143,10 @@ L’absence de ce manifeste provoque un 500 Filament, même si les migrations et
 les caches ont réussi. Les variables privées (dont Scaleway) sont injectées
 seulement dans le `.env` de la release de staging avant les caches ; elles ne
 passent jamais par Git.
+
+`vendor` et `storage` doivent provenir d'une **release précise déjà validée**
+(par exemple avec `cp -al "$previous/vendor" "$stage/vendor"`). Il ne faut
+jamais créer un lien vers `current/vendor` ou `current/storage` : après la
+bascule de `current`, un tel lien se référerait à lui-même et provoquerait un
+500. Comme l'archive Git contient les répertoires vides de `storage`, supprimer
+d'abord le répertoire de staging avant d'y recopier le stockage partagé.
