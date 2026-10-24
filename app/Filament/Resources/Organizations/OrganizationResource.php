@@ -101,6 +101,19 @@ class OrganizationResource extends Resource
                 ->description('Chaque module est activé et nommé ici. Une capacité inactive est absente du menu, du tableau de bord et des accès directs ; ses données restent conservées.')
                 ->columnSpanFull()
                 ->schema(static::moduleGroups()),
+            Section::make('Documents privés et connexions')
+                ->description('Les états techniques sont visibles ici, mais aucune clé, aucun jeton et aucun secret ne sont affichés dans une organisation.')
+                ->columnSpanFull()
+                ->schema([
+                    Text::make(static::privateDocumentStorageSummary())
+                        ->icon(Heroicon::OutlinedCloud)
+                        ->color(static::privateDocumentStorageReady() ? 'success' : 'warning')
+                        ->columnSpanFull(),
+                    Text::make('Super PDP — environnement de test : les identifiants serveur sont gérés hors de cette interface. Burger Queen est uniquement la société fictive de test du prestataire, jamais une organisation Cremona.')
+                        ->icon(Heroicon::OutlinedDocumentCurrencyEuro)
+                        ->color('gray')
+                        ->columnSpanFull(),
+                ]),
         ]);
     }
 
@@ -206,5 +219,20 @@ class OrganizationResource extends Resource
         }
 
         return false;
+    }
+
+    private static function privateDocumentStorageReady(): bool
+    {
+        return config('private-documents.disk') === 'scaleway-private'
+            && filled(config('filesystems.disks.scaleway-private.bucket'))
+            && filled(config('filesystems.disks.scaleway-private.key'))
+            && filled(config('filesystems.disks.scaleway-private.secret'));
+    }
+
+    private static function privateDocumentStorageSummary(): string
+    {
+        return static::privateDocumentStorageReady()
+            ? 'Documents privés — Scaleway Object Storage est actif. Les téléchargements restent authentifiés par Cremona ; le bucket ne devient pas public.'
+            : 'Documents privés — Scaleway Object Storage est en attente d’activation serveur. Les documents existants restent accessibles sur leur disque enregistré.';
     }
 }

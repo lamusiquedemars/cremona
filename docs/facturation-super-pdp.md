@@ -6,7 +6,10 @@ Le module **Facturation** est transverse : il se choisit explicitement dans la c
 
 À l’émission, Cremona attribue un numéro définitif, fige les coordonnées légales de l’émetteur et du client, calcule les totaux, génère un PDF privé et enregistre les règlements sans réouvrir la facture. Une correction doit passer par un avoir.
 
-Chaque PDF est un document privé : en production, il est enregistré sur l’espace Object Storage Scaleway déjà configuré pour Cremona, et reste accessible seulement aux personnes autorisées dans l’organisation.
+Chaque PDF doit devenir un document privé enregistré directement sur Object
+Storage Scaleway, accessible seulement aux personnes autorisées dans
+l’organisation. Le stockage Scaleway est configuré ; le disque applicatif et
+la migration contrôlée des documents existants font partie du P0 documentaire.
 
 ## Configuration par organisation
 
@@ -35,6 +38,38 @@ Cette étape ne prétend pas envoyer une facture : aucun compte ni jeton Super P
 La production Cremona dispose des variables de l’application OAuth **sandbox** créée pour Burger Queen. Elles servent exclusivement aux essais techniques et ne sont ni versionnées ni affichées dans l’interface. Lors du passage de Burger Queen vers son entreprise Super PDP réelle, ces identifiants sandbox devront être remplacés par le `client_id` et le `client_secret` de l’application OAuth de production. Tricatel disposera de sa propre application OAuth, car Super PDP rattache chaque application à l’entreprise sélectionnée.
 
 Pennylane reste une copie facultative destinée au comptable (par e-mail d’import des factures de vente) ; ce n’est pas une seconde transmission réglementaire et aucune API Pennylane payante n’est requise.
+
+## Plan de configuration visible
+
+Les intégrations doivent être administrables depuis **Configuration de
+l’organisation**, au même endroit que les connecteurs Google Ads ou Brevo. La
+configuration visible explique ce qui est actif et pour quelle organisation ;
+elle ne révèle jamais un secret, un jeton ni une clé d’accès.
+
+| Élément | Portée | Emplacement et règle |
+| --- | --- | --- |
+| Scaleway Object Storage | Infrastructure Cremona partagée | Une fiche d’état globale décrit le stockage privé et sa disponibilité. Chaque organisation voit, dans sa configuration, que ses documents privés y sont conservés. Les clés restent seulement dans l’environnement serveur. |
+| Documents privés | Organisation | La configuration de l’organisation indique l’activation, les droits d’accès et le principe de conservation des PDF, contrats et pièces jointes. |
+| Super PDP | Organisation | La configuration montre le canal choisi, l’environnement (sandbox ou production), l’entreprise Super PDP associée et le dernier contrôle de connexion. Les identifiants sont chiffrés et masqués. |
+| Google Ads, Brevo et autres connecteurs | Organisation | Chaque connecteur conserve sa propre fiche, son état, son dernier contrôle et ses droits, sans mélanger les données d’une autre organisation. |
+
+Pour le pilote Contempo, **Burger Queen est uniquement l’entreprise fictive de
+la sandbox Super PDP** : ce n’est ni une organisation Cremona ni un choix à
+faire par l’utilisateur. Cremona utilisera les identifiants serveur de cette
+application pour ses contrôles et transmissions de test ; aucune autorisation
+OAuth manuelle ne sera demandée au quotidien.
+
+### Lot à réaliser
+
+1. Retirer le parcours OAuth manuel présenté à tort comme une action utilisateur.
+2. Ajouter le client serveur Super PDP (`client_credentials`) et un contrôle de
+   connexion sans créer ni transmettre de facture.
+3. Afficher les états Scaleway et Super PDP dans la configuration de
+   l’organisation, avec une action explicite de **vérification** réservée au
+   diagnostic — et non un bouton de connexion nécessaire au travail quotidien.
+4. Préparer le stockage chiffré des identifiants propres à chaque organisation
+   pour la production, afin de remplacer Burger Queen sans développement
+   supplémentaire lorsque Contempo aura sa véritable entreprise Super PDP.
 
 ## Limites du premier lot
 

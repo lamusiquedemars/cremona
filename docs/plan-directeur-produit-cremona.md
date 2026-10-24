@@ -309,7 +309,14 @@ Présenter recherches, pages trouvées, clics, impressions et tendances issus de
 
 - **Entreprise** : identité, fuseau, présentation et sites rattachés.
 - **Utilisateurs** : membres, rôles, accès par organisation.
-- **Connexions** : email/SMTP/IMAP, Google Ads, agenda, Brevo, OpenAI, GA4, Search Console et futurs prestataires.
+- **Connexions** : email/SMTP/IMAP, Google Ads, agenda, Brevo, OpenAI, GA4,
+  Search Console, Super PDP et futurs prestataires. Chaque fiche appartient à
+  une organisation, affiche son état et son dernier contrôle, mais jamais un
+  secret.
+- **Documents privés** : l’organisation voit que ses documents sont protégés
+  par le stockage Scaleway partagé de Cremona, avec ses règles d’accès et de
+  conservation. Les clés Scaleway restent une configuration globale du serveur
+  et ne sont jamais saisies ni affichées dans une organisation.
 - **Réglages** : préférences non sensibles.
 
 Les secrets ne sont jamais placés dans les écrans métier, migrations, Git, exports ou chat. Les actions externes restent explicites et auditables.

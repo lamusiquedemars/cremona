@@ -5,8 +5,6 @@ namespace App\Filament\Resources\Organizations\Pages;
 use App\Filament\Resources\Organizations\OrganizationResource;
 use App\Services\OrganizationModuleRegistry;
 use App\Filament\Pages\BusinessEditRecord;
-use Filament\Actions\Action;
-use Filament\Support\Icons\Heroicon;
 
 class EditOrganization extends BusinessEditRecord
 {
@@ -14,17 +12,6 @@ class EditOrganization extends BusinessEditRecord
 
     /** @var array<int, string> */
     private array $modules = [];
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Action::make('connectSuperPdpSandbox')
-                ->label('Connecter Super PDP — environnement de test')
-                ->icon(Heroicon::OutlinedArrowTopRightOnSquare)
-                ->color('primary')
-                ->url(fn (): string => route('super-pdp.authorize', ['organization' => $this->record])),
-        ];
-    }
 
     protected function mutateFormDataBeforeFill(array $data): array
     {

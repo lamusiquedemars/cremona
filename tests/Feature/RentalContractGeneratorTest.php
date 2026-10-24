@@ -75,16 +75,16 @@ class RentalContractGeneratorTest extends TestCase
 
     public function test_it_stores_new_private_contracts_on_the_configured_private_disk(): void
     {
-        config()->set('private-documents.disk', 's3');
-        config()->set('private-documents.allowed_disks', ['local', 's3']);
-        Storage::fake('s3');
+        config()->set('private-documents.disk', 'scaleway-private');
+        config()->set('private-documents.allowed_disks', ['local', 'scaleway-private']);
+        Storage::fake('scaleway-private');
         $organization = Organization::factory()->create();
 
         app(OrganizationContext::class)->run($organization, function (): void {
             $document = app(RentalContractGenerator::class)->generate($this->completeRental(), RentalDocumentType::RentalContract);
 
-            $this->assertSame('s3', $document->privateDocument->disk);
-            Storage::disk('s3')->assertExists($document->privateDocument->path);
+            $this->assertSame('scaleway-private', $document->privateDocument->disk);
+            Storage::disk('scaleway-private')->assertExists($document->privateDocument->path);
         });
     }
 

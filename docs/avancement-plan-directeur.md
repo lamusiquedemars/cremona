@@ -1,6 +1,6 @@
 # Avancement du plan directeur Cremona
 
-> Dernière mise à jour : 14 octobre 2026.
+> Dernière mise à jour : 24 octobre 2026.
 >
 > Ce document suit les livraisons du [plan directeur produit](plan-directeur-produit-cremona.md). Il ne remplace pas les critères de fin du plan.
 
@@ -166,26 +166,19 @@ file unique attendue pour la relation client.
 
 ## Reste à faire prioritaire
 
-1. Terminer le produit Relation client : auditer la boîte Atelier Ivo, rendre
-   l’état de relève compréhensible et réunir emails directs, demandes du site,
-   appels et rencontres dans une file de travail cohérente. La suppression
-   distante ne devra jamais fermer une demande automatiquement.
-2. Confirmer, lors de la prochaine création réelle d’un dossier atelier avec
-   devis, la paire de références `AT…` / `D…` partagée ; conserver ce résultat
-   dans le journal de livraison.
-3. Construire l’administration documentaire par organisation : réglages de
-   numérotation, aperçu, droits, coordonnées, conditions et mentions ; voir
-   [Numérotation et administration commerciale](numerotation-et-administration-commerciale.md).
-4. Valider avec Giovanni un dossier de location réel de bout en bout : documents,
-   accord, remise, encaissement manuel, restitution et arrêt/ajustement de
-   l'encaissement. Corriger ensuite uniquement les règles révélées par ce test ;
-   aucun connecteur Dynamics, bancaire ou SEPA n'est engagé.
-5. Vérifier le bridge CMS ↔ Cremona avec deux organisations et une soumission
-   réelle, sans fuite ni doublon sur reprise ; basculer ensuite Atelier Ivo,
-   puis Contempo, sans supprimer les historiques locaux.
-6. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
-7. Poursuivre l’audit des libellés sur les réglages et écrans d’administration
-   peu fréquents, après les parcours opérationnels ci-dessus.
+| Priorité | Fonctionnalité | État | Implémentation attendue |
+| --- | --- | --- | --- |
+| P0 | Documents privés sur Scaleway | En cours | Le disque `scaleway-private`, le téléversement direct et les téléchargements authentifiés sont prêts localement et à publier. Aucun bucket ni fichier ne devient public. |
+| P0 | Migration documentaire sécurisée | En cours | La commande d’inventaire et de migration SHA-256, vérification de taille, reprise idempotente et journal sont prêts localement et à publier. Première exécution production à faire après publication, sur un lot pilote. |
+| P0 | Politique documentaire | À faire | Définir catégories, conservation, droits par type, rattachements obligatoires et archivage. Le registre versionné existe déjà. |
+| P0 | Configuration des intégrations | À faire | Dans **Configuration de l’organisation**, rendre visibles l’état des documents Scaleway et celui de Super PDP, à côté des connecteurs Google Ads et Brevo. Secrets et clés restent chiffrés côté serveur. Burger Queen est uniquement la société fictive de sandbox Super PDP pour Contempo ; le flux de test est automatique par identifiants serveur. |
+| P1 | Contrats de location | Partiel | Le registre de documents, snapshots et empreintes existe. Restent génération du contrat, modèle versionné, envoi client et signature ou acceptation traçable. |
+| P1 | Relation client unifiée | Partiel | Réunir demandes du site, emails IMAP, appels, rencontres et tâches dans une vraie file « À traiter ». Les correspondances importées ne deviennent pas encore une demande qualifiée. |
+| P1 | Bridge site ↔ Cremona | Partiel | Le contrat et l’outbox existent : soumission idempotente, authentifiée et rejouable. Valider deux organisations réelles, puis basculer Contempo sans supprimer son historique local. |
+| P1 | Factures | À cadrer puis construire | Cremona prépare l’acte commercial — devis accepté, client, lignes, échéances — mais la facture légale et les paiements restent dans Super PDP, conformément à l’architecture Maracuja. Cremona affichera numéro, PDF ou lien, statut et éventuel solde ; aucune seconde comptabilité. |
+| P2 | Administration commerciale | À faire | Écran par organisation : coordonnées émetteur, mentions, CGV, conditions, validité, aperçus, droits et réglages de numérotation. Les règles de devis actuelles sont opérationnelles. |
+| P2 | Agenda réel | À faire | Agréger rendez-vous, essais, appels, rappels et échéances de location, sans confondre événements publics du Site Core et suivi client Cremona. |
+| P2 | Validation métier Contempo | À faire | Tester les parcours réels de réparation, location et vente avant toute automatisation, SEPA ou connecteur bancaire. |
 
 ## Dette de contrôle connue
 

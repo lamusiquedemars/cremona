@@ -6,7 +6,6 @@ use App\Http\Controllers\PrivateDocumentDownloadController;
 use App\Http\Controllers\PublicStorageController;
 use App\Http\Controllers\QuotePdfController;
 use App\Http\Controllers\RentalAcceptanceController;
-use App\Http\Controllers\SuperPdpOAuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -47,8 +46,6 @@ Route::middleware('auth')->get('/dashboard', function (Request $request) {
 });
 
 Route::middleware('auth')->group(function (): void {
-    Route::get('/integrations/super-pdp/{organization}/authorize', [SuperPdpOAuthController::class, 'authorize'])->name('super-pdp.authorize');
-    Route::get('/integrations/super-pdp/callback', [SuperPdpOAuthController::class, 'callback'])->name('super-pdp.callback');
     Route::get('/quotes/{publicId}/pdf', QuotePdfController::class)->whereUlid('publicId')->name('quotes.pdf');
     Route::get('/documents/{publicId}/download', PrivateDocumentDownloadController::class)
         ->whereUlid('publicId')
