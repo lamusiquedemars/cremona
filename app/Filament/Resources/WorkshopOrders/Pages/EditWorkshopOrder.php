@@ -5,9 +5,11 @@ namespace App\Filament\Resources\WorkshopOrders\Pages;
 use App\Enums\WorkshopOrderStatus;
 use App\Filament\Pages\BusinessEditRecord;
 use App\Filament\Resources\Quotes\QuoteResource;
+use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
 use App\Services\StockManager;
 use App\Services\WorkshopOrderQuoteManager;
+use App\Services\InvoiceFromQuoteManager;
 use App\Services\WorkshopOrderWorkflowManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
@@ -26,6 +28,21 @@ class EditWorkshopOrder extends BusinessEditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('createInvoice')
+                ->label('Créer la facture')
+                ->icon(Heroicon::OutlinedDocumentCurrencyEuro)
+                ->visible(fn (): bool => $this->record->quote?->status === \App\Enums\QuoteStatus::Accepted && InvoiceResource::canAccess())
+                ->action(function (InvoiceFromQuoteManager $manager): void {
+                    try {
+                        $invoice = $manager->createDraft($this->record->quote);
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Facture non créée')->body($exception->getMessage())->danger()->send();
+
+                        return;
+                    }
+
+                    $this->redirect(InvoiceResource::getUrl($invoice->status === \App\Enums\InvoiceStatus::Draft ? 'edit' : 'view', ['record' => $invoice]));
+                }),
             Action::make('openQuote')
                 ->label(fn (): string => 'Devis '.$this->record->quote?->reference)
                 ->visible(fn (): bool => $this->record->quote !== null && QuoteResource::canAccess())

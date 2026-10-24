@@ -3,10 +3,15 @@
 namespace App\Filament\Resources\Quotes\Pages;
 
 use App\Enums\QuoteStatus;
+use App\Enums\InvoiceStatus;
 use App\Filament\Resources\Quotes\QuoteResource;
+use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
 use App\Models\Quote;
 use App\Services\QuoteDocumentProfileManager;
+use App\Services\InvoiceFromQuoteManager;
+use Filament\Notifications\Notification;
+use LogicException;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -35,6 +40,21 @@ class ViewQuote extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('createInvoice')
+                ->label('Créer la facture')
+                ->icon(\Filament\Support\Icons\Heroicon::OutlinedDocumentCurrencyEuro)
+                ->visible(fn (): bool => $this->record->status === QuoteStatus::Accepted && InvoiceResource::canAccess())
+                ->action(function (InvoiceFromQuoteManager $manager): void {
+                    try {
+                        $invoice = $manager->createDraft($this->record);
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Facture non créée')->body($exception->getMessage())->danger()->send();
+
+                        return;
+                    }
+
+                    $this->redirect(InvoiceResource::getUrl($invoice->status === InvoiceStatus::Draft ? 'edit' : 'view', ['record' => $invoice]));
+                }),
             Action::make('openWorkshopOrder')
                 ->label(fn (): string => 'Dossier atelier '.$this->record->workshopOrder?->reference)
                 ->visible(fn (): bool => $this->record->workshopOrder !== null && WorkshopOrderResource::canAccess())

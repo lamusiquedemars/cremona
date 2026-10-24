@@ -3,22 +3,23 @@
 namespace Tests\Feature;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\QuoteStatus;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
 use App\Models\Organization;
 use App\Models\OrganizationInvoiceSettings;
 use App\Models\OrganizationLegalProfile;
 use App\Models\Person;
+use App\Models\Quote;
 use App\Models\User;
 use App\Services\InvoiceWorkflowManager;
+use App\Services\InvoiceFromQuoteManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use LogicException;
-use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Tests\TestCase;
 
-#[RunTestsInSeparateProcesses]
 class InvoiceWorkflowTest extends TestCase
 {
     use RefreshDatabase;
@@ -90,6 +91,28 @@ class InvoiceWorkflowTest extends TestCase
             $invoice->refresh();
             $this->assertSame(InvoiceStatus::Paid, $invoice->status);
             $this->assertSame('0.00', $invoice->balance_amount);
+        });
+    }
+
+    public function test_an_accepted_quote_creates_one_prefilled_invoice_draft(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $person = Person::query()->create(['display_name' => 'Camille Martin']);
+            OrganizationInvoiceSettings::query()->create(['default_tax_rate' => 5.5]);
+            $quote = Quote::query()->create(['title' => 'Réparation violoncelle', 'person_id' => $person->id, 'status' => QuoteStatus::Accepted]);
+            $quote->lines()->create(['position' => 1, 'description' => 'Réglage', 'quantity' => 2, 'unit_amount' => 50]);
+
+            $invoice = app(InvoiceFromQuoteManager::class)->createDraft($quote);
+            $sameInvoice = app(InvoiceFromQuoteManager::class)->createDraft($quote);
+
+            $this->assertSame($quote->id, $invoice->quote_id);
+            $this->assertSame($person->id, $invoice->person_id);
+            $this->assertSame(InvoiceStatus::Draft, $invoice->status);
+            $this->assertCount(1, $invoice->lines);
+            $this->assertSame('5.50', $invoice->lines->first()->tax_rate);
+            $this->assertSame($invoice->id, $sameInvoice->id);
         });
     }
 

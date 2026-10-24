@@ -104,7 +104,12 @@ class OrganizationPresentation
 
     public function createActionLabel(string $key, string $fallback): string
     {
-        return __('cremona.actions.create', ['item' => $fallback]);
+        return match ($key) {
+            'quotes' => 'Nouveau devis',
+            'documents' => 'Nouveau document',
+            'tasks' => 'Nouvelle tâche',
+            default => 'Nouveau '.$fallback,
+        };
     }
 
     /** @return array<string, array{label: string, items: array<string, string>}> */

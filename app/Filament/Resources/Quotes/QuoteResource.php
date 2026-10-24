@@ -56,11 +56,20 @@ class QuoteResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->columns(3)->components([
-            Section::make(fn (): string => app(OrganizationPresentation::class)->label('quotes', 'Devis'))->columnSpan(2)->schema([
-                TextInput::make('reference')->label(__('common.reference'))->disabled()->dehydrated(false)->placeholder(fn (): string => 'Attribuée automatiquement : D'.now()->format('y').'0001')->helperText('D + année sur 2 chiffres + compteur annuel sur 4 chiffres.'),
-                TextInput::make('title')->label(__('common.subject'))->required()->maxLength(255),
-                Textarea::make('introduction')->label('Introduction')->rows(3),
+        return $schema->columns(12)->components([
+            Section::make(fn (): string => app(OrganizationPresentation::class)->label('quotes', 'Devis'))
+                ->description('Renseignez le client, le document et ses conditions avant de le transmettre.')
+                ->columns(12)->columnSpanFull()->schema([
+                TextInput::make('reference')->label(__('common.reference'))->disabled()->dehydrated(false)->placeholder('Attribuée à l’enregistrement')->helperText('Le numéro est attribué automatiquement.')->columnSpan(3),
+                TextInput::make('title')->label(__('common.subject'))->required()->maxLength(255)->columnSpan(6),
+                Select::make('status')->label(__('common.status'))->options(QuoteStatus::class)->default(QuoteStatus::Draft)->disabled()->dehydrated()->required()->columnSpan(3),
+                Select::make('person_id')->label(__('common.contact'))->relationship('person', 'display_name')->searchable()->preload()->columnSpan(4),
+                Select::make('company_id')->label(__('common.company'))->relationship('company', 'name')->searchable()->preload()->columnSpan(4),
+                Select::make('incoming_request_id')->label(__('common.request'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->preload()->columnSpan(4),
+                DatePicker::make('issued_on')->label('Date du devis')->columnSpan(3), DatePicker::make('valid_until')->label('Valable jusqu’au')->columnSpan(3),
+                TextInput::make('currency')->label(__('common.currency'))->default('EUR')->required()->length(3)->columnSpan(3),
+                TextInput::make('discount_amount')->label('Remise globale')->numeric()->prefix('€')->default(0)->columnSpan(3),
+                Textarea::make('introduction')->label('Introduction')->rows(3)->columnSpanFull(),
                 Repeater::make('lines')->label('Lignes')->relationship()->orderColumn('position')->schema([
                     Select::make('kind')->label(__('common.type'))->options([
                         'service' => 'Prestation',
@@ -72,18 +81,9 @@ class QuoteResource extends Resource
                     TextInput::make('quantity')->label(__('common.quantity'))->numeric()->default(1)->minValue(0.01),
                     TextInput::make('unit_amount')->label('Prix unitaire')->numeric()->prefix('€')->default(0),
                 ])->columns(4)->addActionLabel('Ajouter une ligne')->columnSpanFull(),
-            ]),
-            Section::make(__('common.follow_up'))->columnSpan(1)->schema([
-                Select::make('status')->label(__('common.status'))->options(QuoteStatus::class)->default(QuoteStatus::Draft)->disabled()->dehydrated()->required(),
-                TextInput::make('currency')->label(__('common.currency'))->default('EUR')->required()->length(3),
-                DatePicker::make('issued_on')->label('Date du devis'), DatePicker::make('valid_until')->label('Valable jusqu’au'),
-                TextInput::make('discount_amount')->label('Remise globale')->numeric()->prefix('€')->default(0),
-            ]),
-            Section::make('Destinataire et conditions')->columnSpanFull()->columns(3)->schema([
-                Select::make('person_id')->label(__('common.contact'))->relationship('person', 'display_name')->searchable()->preload(),
-                Select::make('company_id')->label(__('common.company'))->relationship('company', 'name')->searchable()->preload(),
-                Select::make('incoming_request_id')->label(__('common.request'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->preload(),
-                Textarea::make('tax_note')->label('Note fiscale')->rows(2), Textarea::make('payment_terms')->label('Conditions de règlement')->rows(2), Textarea::make('notes')->label(__('common.internal_notes'))->rows(2),
+                Textarea::make('tax_note')->label('Note fiscale')->rows(2)->columnSpan(4),
+                Textarea::make('payment_terms')->label('Conditions de règlement')->rows(2)->columnSpan(4),
+                Textarea::make('notes')->label(__('common.internal_notes'))->rows(2)->helperText('Cette note reste visible uniquement dans Cremona.')->columnSpan(4),
             ]),
         ]);
     }

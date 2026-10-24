@@ -50,10 +50,22 @@ class InvoiceResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->columns(3)->components([
-            Section::make('Facture')->columnSpan(2)->schema([
-                TextInput::make('reference')->label('Numéro')->disabled()->dehydrated(false)->placeholder('Attribué à l’émission')->helperText('Le numéro définitif est attribué une seule fois, à l’émission.'),
-                TextInput::make('title')->label('Objet')->required()->maxLength(255),
+        return $schema->columns(12)->components([
+            Section::make('Informations de facturation')
+                ->description('Préparez la facture, son destinataire et ses conditions avant de lui attribuer son numéro définitif.')
+                ->columns(12)->columnSpanFull()->schema([
+                TextInput::make('reference')->label('Numéro')->disabled()->dehydrated(false)->placeholder('Attribué à l’émission')->helperText('Le numéro définitif est attribué une seule fois, à l’émission.')->columnSpan(3),
+                TextInput::make('title')->label('Objet')->required()->maxLength(255)->columnSpan(6),
+                Select::make('kind')->label('Type')->options(['invoice' => 'Facture', 'credit_note' => 'Avoir'])->default('invoice')->required()->columnSpan(3),
+                Select::make('person_id')->label('Client particulier')->relationship('person', 'display_name')->searchable()->preload()->live()->columnSpan(6),
+                Select::make('company_id')->label('Client professionnel')->relationship('company', 'name')->searchable()->preload()->live()->columnSpan(6),
+                DatePicker::make('issued_on')->label('Date d’émission')->native(false)->columnSpan(3),
+                DatePicker::make('supply_on')->label('Date de livraison / prestation')->native(false)->columnSpan(3),
+                DatePicker::make('due_on')->label('Échéance')->native(false)->columnSpan(3),
+                TextInput::make('currency')->label('Devise')->default(fn (): string => (string) (OrganizationInvoiceSettings::query()->value('currency') ?? 'EUR'))->required()->length(3)->columnSpan(3),
+                Select::make('rental_id')->label('Location liée')->options(fn (): array => Rental::query()->with('instrument')->orderByDesc('created_at')->limit(150)->get()->mapWithKeys(fn (Rental $rental): array => [$rental->id => $rental->reference.' — '.($rental->instrument?->name ?? 'Instrument')])->all())->searchable()->columnSpan(4),
+                Select::make('workshop_order_id')->label('Dossier atelier lié')->options(fn (): array => WorkshopOrder::query()->orderByDesc('created_at')->limit(150)->pluck('reference', 'id')->all())->searchable()->columnSpan(4),
+                Select::make('quote_id')->label('Devis lié')->relationship('quote', 'reference')->searchable()->preload()->columnSpan(4),
                 Textarea::make('introduction')->label('Introduction')->rows(2)->columnSpanFull(),
                 Repeater::make('lines')->relationship()->orderColumn('position')->label('Lignes')->schema([
                     Textarea::make('description')->label('Description')->required()->rows(2)->columnSpan(2),
@@ -64,23 +76,9 @@ class InvoiceResource extends Resource
                     TextInput::make('tax_rate')->label('TVA %')->numeric()->minValue(0)->maxValue(100)->default(fn (): float => (float) (OrganizationInvoiceSettings::query()->value('default_tax_rate') ?? 20)),
                 ])->columns(3)->addActionLabel('Ajouter une ligne')->columnSpanFull()
                     ->disabled(fn (?Invoice $record): bool => $record !== null && $record->status !== InvoiceStatus::Draft),
-            ]),
-            Section::make('Émission')->columnSpan(1)->schema([
-                Select::make('kind')->label('Type')->options(['invoice' => 'Facture', 'credit_note' => 'Avoir'])->default('invoice')->required(),
-                Select::make('person_id')->label('Client particulier')->relationship('person', 'display_name')->searchable()->preload()->live(),
-                Select::make('company_id')->label('Client professionnel')->relationship('company', 'name')->searchable()->preload()->live(),
-                DatePicker::make('issued_on')->label('Date d’émission')->native(false),
-                DatePicker::make('supply_on')->label('Date de livraison / prestation')->native(false),
-                DatePicker::make('due_on')->label('Échéance')->native(false),
-                TextInput::make('currency')->label('Devise')->default(fn (): string => (string) (OrganizationInvoiceSettings::query()->value('currency') ?? 'EUR'))->required()->length(3),
-            ]),
-            Section::make('Origine métier et règlement')->columnSpanFull()->columns(3)->schema([
-                Select::make('rental_id')->label('Location liée')->options(fn (): array => Rental::query()->with('instrument')->orderByDesc('created_at')->limit(150)->get()->mapWithKeys(fn (Rental $rental): array => [$rental->id => $rental->reference.' — '.($rental->instrument?->name ?? 'Instrument')])->all())->searchable(),
-                Select::make('workshop_order_id')->label('Dossier atelier lié')->options(fn (): array => WorkshopOrder::query()->orderByDesc('created_at')->limit(150)->pluck('reference', 'id')->all())->searchable(),
-                Select::make('quote_id')->label('Devis lié')->relationship('quote', 'reference')->searchable()->preload(),
-                Textarea::make('payment_terms')->label('Conditions de règlement')->rows(3),
-                Textarea::make('payment_instructions')->label('Instructions de paiement')->rows(3),
-                Textarea::make('late_payment_terms')->label('Retard de paiement')->rows(3),
+                Textarea::make('payment_terms')->label('Conditions de règlement')->rows(3)->columnSpan(4),
+                Textarea::make('payment_instructions')->label('Instructions de paiement')->rows(3)->columnSpan(4),
+                Textarea::make('late_payment_terms')->label('Retard de paiement')->rows(3)->columnSpan(4),
             ]),
         ]);
     }
