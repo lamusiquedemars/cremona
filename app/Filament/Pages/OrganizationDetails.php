@@ -5,9 +5,12 @@ namespace App\Filament\Pages;
 use App\Enums\OrganizationPermission;
 use App\Models\OrganizationLegalProfile;
 use App\Models\OrganizationInvoiceSettings;
+use App\Models\OrganizationIntegration;
 use App\Models\OrganizationQuoteSettings;
 use App\Models\User;
 use App\Services\OrganizationModuleAccess;
+use App\Services\OrganizationIntegrationManager;
+use App\Services\SuperPdpSandboxClient;
 use App\Support\PrivateDocumentPolicyCatalog;
 use App\Tenancy\OrganizationContext;
 use Filament\Notifications\Notification;
@@ -43,6 +46,9 @@ class OrganizationDetails extends Page
     /** @var array<string, array{retention_months: int, access: string, requires_link: bool}> */
     public array $documentRules = [];
 
+    /** @var array<string, mixed> */
+    public array $integrationStates = [];
+
     public bool $quotesEnabled = false;
 
     public bool $invoicingEnabled = false;
@@ -67,6 +73,7 @@ class OrganizationDetails extends Page
         $this->quotesEnabled = app(OrganizationModuleAccess::class)->enabled('quotes');
         $this->invoicingEnabled = app(OrganizationModuleAccess::class)->enabled('invoicing');
         $this->documentRules = app(PrivateDocumentPolicyCatalog::class)->rules($organization);
+        $this->refreshIntegrationStates();
         $this->identity = array_merge(['display_name' => $organization->name, 'country_code' => 'FR'], $profile?->only(['display_name', 'legal_name', 'contact_name', 'email', 'phone', 'website', 'address_line_1', 'address_line_2', 'postal_code', 'city', 'country_code', 'registration_number', 'vat_number', 'legal_notice']) ?? []);
         $this->quoteRules = $settings?->only(['default_validity_days', 'default_payment_terms', 'default_tax_note', 'terms_url']) ?? [];
         $this->invoiceRules = array_merge([
@@ -130,5 +137,56 @@ class OrganizationDetails extends Page
         $organization->unsetRelation('quoteSettings');
         $organization->unsetRelation('invoiceSettings');
         Notification::make()->title('Coordonnées et mentions légales enregistrées')->success()->send();
+    }
+
+    public function verifySuperPdpSandbox(): void
+    {
+        $organization = app(OrganizationContext::class)->require();
+
+        try {
+            $state = app(SuperPdpSandboxClient::class)->checkConnection();
+            app(OrganizationIntegrationManager::class)->configure(
+                provider: 'super_pdp',
+                name: 'sandbox',
+                credentials: $state,
+                actor: auth()->user(),
+            );
+            $this->refreshIntegrationStates();
+
+            Notification::make()
+                ->title('Connexion Super PDP vérifiée')
+                ->body('Aucune facture n’a été créée ni transmise.')->success()->send();
+        } catch (\Throwable $exception) {
+            report($exception);
+            $this->refreshIntegrationStates();
+            Notification::make()
+                ->title('Vérification Super PDP impossible')
+                ->body('Vérifiez l’environnement sandbox et réessayez. Aucun document ni facture n’a été modifié.')
+                ->danger()->persistent()->send();
+        }
+    }
+
+    private function refreshIntegrationStates(): void
+    {
+        $organization = app(OrganizationContext::class)->require();
+        $superPdp = OrganizationIntegration::query()
+            ->where('provider', 'super_pdp')->where('name', 'sandbox')->first();
+        $credentials = $superPdp?->credentials ?? [];
+        $storageReady = config('private-documents.disk') === 'scaleway-private'
+            && filled(config('filesystems.disks.scaleway-private.bucket'))
+            && filled(config('filesystems.disks.scaleway-private.key'))
+            && filled(config('filesystems.disks.scaleway-private.secret'));
+
+        $this->integrationStates = [
+            'storage_ready' => $storageReady,
+            'super_pdp_configured' => app(SuperPdpSandboxClient::class)->isConfigured(),
+            'super_pdp_company' => (string) config('services.super_pdp.sandbox_company_label', 'Burger Queen'),
+            'super_pdp_status' => $credentials['verification_status'] ?? null,
+            'super_pdp_ready' => in_array($credentials['verification_status'] ?? null, ['verified', 'active'], true),
+            'super_pdp_checked_at' => $credentials['checked_at'] ?? null,
+            'google_ads_count' => OrganizationIntegration::query()->where('provider', 'google_ads')->where('name', 'reporting')->count(),
+            'brevo_count' => OrganizationIntegration::query()->where('provider', 'brevo')->where('name', 'meetings')->count(),
+            'organization_name' => $organization->name,
+        ];
     }
 }

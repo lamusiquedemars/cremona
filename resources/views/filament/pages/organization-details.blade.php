@@ -78,6 +78,28 @@
             </div>
         </x-filament::section>
 
+        <x-filament::section>
+            <x-slot name="heading">Connexions et stockage</x-slot>
+            <x-slot name="description">Chaque état concerne uniquement cette organisation. Les clés, jetons et secrets restent sur le serveur et ne sont jamais affichés ici.</x-slot>
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-white/10">
+                    <div class="flex items-center justify-between gap-3"><p class="font-medium text-gray-900 dark:text-white">Documents privés — Scaleway</p><x-filament::badge :color="$integrationStates['storage_ready'] ? 'success' : 'warning'">{{ $integrationStates['storage_ready'] ? 'Actif' : 'À configurer' }}</x-filament::badge></div>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Les documents de {{ $integrationStates['organization_name'] }} restent privés ; leurs téléchargements sont contrôlés par Cremona.</p>
+                </div>
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-white/10">
+                    <div class="flex items-center justify-between gap-3"><p class="font-medium text-gray-900 dark:text-white">Super PDP</p><x-filament::badge :color="$integrationStates['super_pdp_ready'] ? 'success' : ($integrationStates['super_pdp_configured'] ? 'warning' : 'gray')">{{ $integrationStates['super_pdp_status'] ?: ($integrationStates['super_pdp_configured'] ? 'À vérifier' : 'Non configuré') }}</x-filament::badge></div>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Sandbox : {{ $integrationStates['super_pdp_company'] }} simule cette organisation. Ce n’est pas une organisation Cremona. @if ($integrationStates['super_pdp_checked_at']) Dernier contrôle : {{ \Illuminate\Support\Carbon::parse($integrationStates['super_pdp_checked_at'])->format('d/m/Y H:i') }}. @endif</p>
+                    <div class="mt-3"><x-filament::button wire:click="verifySuperPdpSandbox" type="button" size="sm" :disabled="! $integrationStates['super_pdp_configured']">Vérifier la connexion Super PDP</x-filament::button><p class="mt-2 text-xs text-gray-500">Diagnostic ponctuel : aucun envoi de facture, aucune action à effectuer au quotidien.</p></div>
+                </div>
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-white/10">
+                    <p class="font-medium text-gray-900 dark:text-white">Google Ads</p><p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $integrationStates['google_ads_count'] }} compte configuré pour cette organisation.</p>
+                </div>
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-white/10">
+                    <p class="font-medium text-gray-900 dark:text-white">Brevo Meetings</p><p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $integrationStates['brevo_count'] }} connexion configurée pour cette organisation.</p>
+                </div>
+            </div>
+        </x-filament::section>
+
         <x-filament::button type="submit">Enregistrer</x-filament::button>
     </form>
 </x-filament-panels::page>

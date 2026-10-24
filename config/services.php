@@ -49,7 +49,7 @@ return [
     'super_pdp' => [
         'sandbox_client_id' => env('SUPER_PDP_SANDBOX_CLIENT_ID'),
         'sandbox_client_secret' => env('SUPER_PDP_SANDBOX_CLIENT_SECRET'),
-        'sandbox_redirect_uri' => env('SUPER_PDP_SANDBOX_REDIRECT_URI'),
+        'sandbox_company_label' => env('SUPER_PDP_SANDBOX_COMPANY_LABEL', 'Burger Queen'),
         'api_url' => env('SUPER_PDP_API_URL', 'https://api.superpdp.tech'),
     ],
 

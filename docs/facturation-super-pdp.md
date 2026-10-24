@@ -59,15 +59,15 @@ faire par l’utilisateur. Cremona utilisera les identifiants serveur de cette
 application pour ses contrôles et transmissions de test ; aucune autorisation
 OAuth manuelle ne sera demandée au quotidien.
 
+Le contrôle de connexion utilise OAuth `client_credentials` depuis le serveur :
+il ne redirige personne vers Super PDP et ne conserve pas de jeton utilisateur.
+Dans la configuration de l’organisation, le bouton **Vérifier la connexion
+Super PDP** est seulement un diagnostic ponctuel. Il vérifie le jeton serveur
+et l’état de l’entreprise sandbox ; il ne crée ni ne transmet une facture.
+
 ### Lot à réaliser
 
-1. Retirer le parcours OAuth manuel présenté à tort comme une action utilisateur.
-2. Ajouter le client serveur Super PDP (`client_credentials`) et un contrôle de
-   connexion sans créer ni transmettre de facture.
-3. Afficher les états Scaleway et Super PDP dans la configuration de
-   l’organisation, avec une action explicite de **vérification** réservée au
-   diagnostic — et non un bouton de connexion nécessaire au travail quotidien.
-4. Préparer le stockage chiffré des identifiants propres à chaque organisation
+1. Préparer le stockage chiffré des identifiants propres à chaque organisation
    pour la production, afin de remplacer Burger Queen sans développement
    supplémentaire lorsque Contempo aura sa véritable entreprise Super PDP.
 
