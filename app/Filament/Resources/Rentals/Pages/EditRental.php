@@ -13,20 +13,22 @@ use App\Services\RentalAcceptanceManager;
 use App\Services\RentalContractGenerator;
 use App\Services\RentalManager;
 use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
-use Filament\Support\Enums\Width;
 use Illuminate\Support\Carbon;
 use LogicException;
 
 class EditRental extends BusinessEditRecord
 {
     protected static string $resource = RentalResource::class;
+
+    protected array $extraBodyAttributes = [
+        'class' => 'cremona-rental-edit',
+    ];
 
     protected function getHeaderActions(): array
     {
@@ -48,7 +50,6 @@ class EditRental extends BusinessEditRecord
                     }
                     Notification::make()->title('Demande envoyée')->body('Un lien personnel a été envoyé à '.$request->recipient_email.'.')->success()->send();
                 }),
-            ActionGroup::make([
                 Action::make('cancelAcceptance')
                     ->label('Annuler la demande')
                     ->icon(Heroicon::OutlinedXCircle)
@@ -182,7 +183,7 @@ class EditRental extends BusinessEditRecord
                         }
                         Notification::make()->title('Instrument restitué')->body('L’instrument redevient disponible. Pensez à arrêter ou ajuster l’encaissement.')->success()->send();
                     }),
-                Action::make('completeCollection')
+            Action::make('completeCollection')
                     ->label(fn (): string => $this->record->collection_status === 'to_stop' ? 'Confirmer l’arrêt ou l’ajustement de l’encaissement' : 'Confirmer la mise en place de l’encaissement')
                     ->icon(Heroicon::OutlinedBanknotes)
                     ->visible(fn (): bool => in_array($this->record->collection_status, ['to_set_up', 'to_stop'], true))
@@ -195,13 +196,6 @@ class EditRental extends BusinessEditRecord
                         ]);
                         Notification::make()->title('Encaissement mis à jour')->success()->send();
                     }),
-            ])
-                ->label('Actions')
-                ->icon(Heroicon::OutlinedEllipsisHorizontal)
-                ->button()
-                ->color('gray')
-                ->dropdownWidth(Width::Large)
-                ->dropdownMaxHeight('70vh'),
         ];
     }
 
