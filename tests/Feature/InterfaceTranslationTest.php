@@ -18,11 +18,13 @@ class InterfaceTranslationTest extends TestCase
             app()->setLocale('fr');
 
             $this->assertSame('Contacts', __('cremona.navigation.items.contacts'));
+            $this->assertSame('Facturation', __('cremona.navigation.items.invoicing'));
             $this->assertSame('À faire aujourd’hui', __('cremona.dashboard.priorities'));
 
             app()->setLocale('pt_BR');
 
             $this->assertSame('Contatos', __('cremona.navigation.items.contacts'));
+            $this->assertSame('Faturação', __('cremona.navigation.items.invoicing'));
             $this->assertSame('Clientes', ClientDirectory::getNavigationLabel());
             $this->assertSame('Prioridades de hoje', __('cremona.dashboard.priorities'));
             $this->assertSame('Campanhas ativas', __('cremona.dashboard.active_campaigns'));

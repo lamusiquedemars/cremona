@@ -18,6 +18,7 @@ return [
             'documents' => 'Documentos',
             'instruments' => 'Instrumentos',
             'interventions' => 'Ordens de serviço',
+            'invoicing' => 'Faturação',
             'quotes' => 'Orçamentos',
             'rentals' => 'Locações',
             'requests' => 'Solicitações',

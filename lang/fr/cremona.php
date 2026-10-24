@@ -18,6 +18,7 @@ return [
             'documents' => 'Documents',
             'instruments' => 'Instruments',
             'interventions' => 'Dossiers atelier',
+            'invoicing' => 'Facturation',
             'quotes' => 'Devis',
             'rentals' => 'Locations',
             'requests' => 'Demandes',
