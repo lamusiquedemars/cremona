@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Appointments;
 use App\Enums\AppointmentModality;
 use App\Enums\AppointmentStatus;
 use App\Filament\Concerns\UsesOrganizationPresentation;
+use App\Filament\Resources\Appointments\Pages\CreateAppointment;
+use App\Filament\Resources\Appointments\Pages\EditAppointment;
 use App\Filament\Resources\Appointments\Pages\ListAppointments;
 use App\Filament\Resources\Appointments\Pages\ViewAppointment;
 use App\Filament\Resources\Companies\CompanyResource;
@@ -14,6 +16,8 @@ use App\Models\Appointment;
 use App\Services\OrganizationPresentation;
 use App\Tenancy\OrganizationContext;
 use BackedEnum;
+use Filament\Actions\CreateAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -260,7 +264,11 @@ class AppointmentResource extends Resource
                 SelectFilter::make('status')->label(__('common.status'))->options(AppointmentStatus::class),
                 SelectFilter::make('modality')->label(__('common.modality'))->options(AppointmentModality::class),
             ])
-            ->recordActions([ViewAction::make()])
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make()->label('Modifier')->visible(fn (Appointment $record): bool => $record->provider === 'manual'),
+            ])
+            ->headerActions([CreateAction::make()->label('Nouveau rendez-vous')])
             ->recordUrl(fn (Appointment $record): string => self::getUrl('view', ['record' => $record]));
     }
 
@@ -268,7 +276,9 @@ class AppointmentResource extends Resource
     {
         return [
             'index' => ListAppointments::route('/'),
+            'create' => CreateAppointment::route('/create'),
             'view' => ViewAppointment::route('/{record}'),
+            'edit' => EditAppointment::route('/{record}/edit'),
         ];
     }
 }

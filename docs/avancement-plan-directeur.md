@@ -41,10 +41,18 @@ rarement utilisés.
 
 ### C. Agenda
 
-- Rendez-vous manuels et Brevo disponibles.
-- La navigation conserve le nom `Rendez-vous` conformément au plan.
+- Rendez-vous manuels et Brevo disponibles. Les rendez-vous synchronisés Brevo
+  restent en lecture seule ; les rendez-vous, appels et dépôts saisis dans
+  Cremona peuvent être créés et modifiés par l’équipe.
+- Une vue **Agenda** hebdomadaire réunit rendez-vous, appels, tâches datées,
+  dossiers atelier planifiés et retours de location. Chaque bloc ouvre la fiche
+  d’origine ; aucune copie d’événement n’est créée.
+- La navigation conserve aussi `Rendez-vous` pour la liste détaillée et ses
+  filtres ; `Agenda` est la vue de travail transversale.
 
-État : **non commencé** pour l’agrégation Agenda multi-source.
+État : **première version livrée**. La connexion bidirectionnelle à un agenda
+personnel Google ou Outlook n’est pas incluse : elle nécessitera un connecteur
+et des règles de conflit explicites.
 
 ### D. Offre
 
@@ -177,7 +185,7 @@ file unique attendue pour la relation client.
 | P1 | Bridge site ↔ Cremona | Partiel | Le contrat et l’outbox existent : soumission idempotente, authentifiée et rejouable. Valider deux organisations réelles, puis basculer Contempo sans supprimer son historique local. |
 | P1 | Factures | Partiel | Le module transverse est livré : brouillon, lignes HT/TVA, création idempotente depuis un devis accepté, numéro définitif, snapshots, PDF privé, paiements et avoirs. L’unique reste est le connecteur réglementaire réel Super PDP : il devra transmettre et suivre les retours avec les accès de la véritable entreprise, sans API Pennylane payante ni seconde comptabilité. |
 | P2 | Administration commerciale | À faire | Écran par organisation : coordonnées émetteur, mentions, CGV, conditions, validité, aperçus, droits et réglages de numérotation. Les règles de devis actuelles sont opérationnelles. |
-| P2 | Agenda réel | À faire | Agréger rendez-vous, essais, appels, rappels et échéances de location, sans confondre événements publics du Site Core et suivi client Cremona. |
+| P2 | Agenda réel | Partiel | La vue hebdomadaire réunit les sources internes déjà fiables : rendez-vous/appels, rappels, dossiers atelier planifiés et retours de location. Les essais métier et une éventuelle synchronisation Google/Outlook restent des lots distincts, après validation des règles de conflit. |
 | P2 | Validation métier Contempo | À faire | Tester les parcours réels de réparation, location et vente avant toute automatisation, SEPA ou connecteur bancaire. |
 
 ## Dette de contrôle connue

@@ -88,7 +88,7 @@ class AppointmentTest extends TestCase
         });
     }
 
-    public function test_appointments_are_read_only_projections_for_crm_users(): void
+    public function test_manual_appointments_can_be_managed_without_allowing_brevo_projections_to_be_edited(): void
     {
         $organization = Organization::factory()->create();
         app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
@@ -105,6 +105,16 @@ class AppointmentTest extends TestCase
                 'ends_at' => '2026-09-03 15:00:00',
             ]),
         );
+        $brevoAppointment = app(OrganizationContext::class)->run(
+            $organization,
+            fn () => Appointment::query()->create([
+                'title' => 'Rendez-vous Brevo',
+                'starts_at' => '2026-09-04 14:00:00',
+                'ends_at' => '2026-09-04 15:00:00',
+                'provider' => 'brevo',
+                'external_reference' => 'brevo-read-only',
+            ]),
+        );
 
         $this->actingAs($viewer)
             ->get(AppointmentResource::getUrl('index', tenant: $organization))
@@ -113,13 +123,22 @@ class AppointmentTest extends TestCase
         $this->actingAs($viewer)
             ->get(AppointmentResource::getUrl('view', ['record' => $appointment], tenant: $organization))
             ->assertOk()
-            ->assertDontSee('Modifier le rendez-vous');
+            ->assertDontSee('Modifier');
         $this->actingAs($collaborator)
             ->get(AppointmentResource::getUrl('view', ['record' => $appointment], tenant: $organization))
             ->assertOk()
-            ->assertDontSee('Modifier le rendez-vous');
-        $this->assertFalse(AppointmentResource::hasPage('create'));
-        $this->assertFalse(AppointmentResource::hasPage('edit'));
+            ->assertSee('Modifier');
+        $this->actingAs($collaborator)
+            ->get(AppointmentResource::getUrl('create', tenant: $organization))
+            ->assertOk();
+        $this->actingAs($collaborator)
+            ->get(AppointmentResource::getUrl('edit', ['record' => $appointment], tenant: $organization))
+            ->assertOk();
+        $this->actingAs($collaborator)
+            ->get(AppointmentResource::getUrl('edit', ['record' => $brevoAppointment], tenant: $organization))
+            ->assertForbidden();
+        $this->assertTrue(AppointmentResource::hasPage('create'));
+        $this->assertTrue(AppointmentResource::hasPage('edit'));
     }
 
     public function test_an_appointment_is_visible_from_its_contact_page(): void
