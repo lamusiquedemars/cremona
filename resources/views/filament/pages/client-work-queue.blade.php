@@ -1,11 +1,15 @@
 <x-filament-panels::page>
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-        <h2 class="text-base font-semibold text-gray-950 dark:text-white">Vos prochains suivis client</h2>
-        <p class="mt-1 max-w-3xl text-sm text-gray-600 dark:text-gray-300">Retrouvez au même endroit les demandes reçues, les messages en attente de réponse et les actions à réaliser. Ouvrez un élément pour consulter son historique et le traiter.</p>
+        <h2 class="text-base font-semibold text-gray-950 dark:text-white">Les priorités de votre relation client</h2>
+        <p class="mt-1 max-w-3xl text-sm text-gray-600 dark:text-gray-300">Retrouvez ici les demandes reçues, les messages en attente, les rendez-vous proches et les actions à réaliser. Ouvrez un élément pour consulter son historique et le traiter.</p>
     </div>
 
     <div class="mt-4 inline-flex w-fit rounded-lg bg-gray-100 p-1 dark:bg-white/10" role="tablist" aria-label="Type d’élément à traiter">
-        @foreach (['all' => 'Tout', 'request' => 'Demandes', 'conversation' => 'Messages', 'task' => 'Tâches'] as $key => $label)
+        @php($types = ['all' => 'Tout', 'request' => 'Demandes', 'conversation' => 'Messages', 'task' => 'Tâches'])
+        @if ($this->includesAppointments())
+            @php($types = ['all' => 'Tout', 'request' => 'Demandes', 'conversation' => 'Messages', 'appointment' => 'Rendez-vous', 'task' => 'Tâches'])
+        @endif
+        @foreach ($types as $key => $label)
             <button type="button" wire:click="selectType('{{ $key }}')" role="tab" aria-selected="{{ $type === $key ? 'true' : 'false' }}"
                 @class([
                     'rounded-md px-3 py-1.5 text-sm font-medium transition',

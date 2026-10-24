@@ -2,13 +2,16 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\AppointmentStatus;
 use App\Enums\ConversationStatus;
 use App\Enums\CrmTaskStatus;
 use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationPermission;
+use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\CrmTasks\CrmTaskResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
+use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\CrmTask;
@@ -69,7 +72,8 @@ class ClientWorkQueue extends Page
 
     public function selectType(string $type): void
     {
-        abort_unless(in_array($type, ['all', 'request', 'conversation', 'task'], true), 404);
+        abort_unless(in_array($type, ['all', 'request', 'conversation', 'appointment', 'task'], true), 404);
+        abort_unless($type !== 'appointment' || $this->includesAppointments(), 404);
 
         $this->type = $type;
         $this->resetPage('clientWorkPage');
@@ -81,10 +85,9 @@ class ClientWorkQueue extends Page
         $query = match ($this->type) {
             'request' => $this->requestsQuery(),
             'conversation' => $this->conversationsQuery(),
+            'appointment' => $this->appointmentsQuery(),
             'task' => $this->tasksQuery(),
-            default => $this->requestsQuery()
-                ->unionAll($this->conversationsQuery())
-                ->unionAll($this->tasksQuery()),
+            default => $this->allItemsQuery(),
         };
 
         return DB::query()
@@ -97,6 +100,7 @@ class ClientWorkQueue extends Page
     {
         return match ($item->item_type) {
             'conversation' => ConversationResource::getUrl('view', ['record' => $item->record_key]),
+            'appointment' => AppointmentResource::getUrl('view', ['record' => $item->record_key]),
             'task' => CrmTaskResource::getUrl('view', ['record' => $item->record_key]),
             default => IncomingRequestResource::getUrl('view', ['record' => $item->record_key]),
         };
@@ -106,6 +110,7 @@ class ClientWorkQueue extends Page
     {
         return match ($item->item_type) {
             'conversation' => 'Message à répondre',
+            'appointment' => 'Rendez-vous à préparer',
             'task' => 'Tâche',
             default => 'Demande',
         };
@@ -121,8 +126,28 @@ class ClientWorkQueue extends Page
         return match ($item->item_type) {
             'task' => 'À faire le',
             'conversation' => 'Reçu le',
+            'appointment' => 'Prévu le',
             default => 'Reçue le',
         };
+    }
+
+    public function includesAppointments(): bool
+    {
+        $organization = app(OrganizationContext::class)->current();
+
+        return $organization !== null
+            && app(OrganizationModuleAccess::class)->enabled('appointments', $organization);
+    }
+
+    private function allItemsQuery(): Builder
+    {
+        $query = $this->requestsQuery()
+            ->unionAll($this->conversationsQuery())
+            ->unionAll($this->tasksQuery());
+
+        return $this->includesAppointments()
+            ? $query->unionAll($this->appointmentsQuery())
+            : $query;
     }
 
     private function requestsQuery(): Builder
@@ -194,6 +219,30 @@ class ClientWorkQueue extends Page
             ->selectRaw("COALESCE({$rawTable}.description, 'Action à réaliser') as summary")
             ->selectRaw("COALESCE({$rawTable}.due_at, {$rawTable}.created_at) as sort_at")
             ->whereIn("{$table}.status", [CrmTaskStatus::Open, CrmTaskStatus::InProgress]);
+    }
+
+    private function appointmentsQuery(): Builder
+    {
+        $table = (new Appointment)->getTable();
+        $people = (new Person)->getTable();
+        $companies = (new Company)->getTable();
+        $rawTable = $this->prefixedTable(new Appointment);
+        $rawPeople = $this->prefixedTable(new Person);
+        $rawCompanies = $this->prefixedTable(new Company);
+
+        return Appointment::query()
+            ->leftJoin($people, "{$people}.id", '=', "{$table}.person_id")
+            ->leftJoin($companies, "{$companies}.id", '=', "{$table}.company_id")
+            ->select("{$table}.id")
+            ->select("{$table}.public_id as record_key")
+            ->selectRaw("'appointment' as item_type")
+            ->selectRaw("{$rawTable}.title as title")
+            ->selectRaw("COALESCE({$rawPeople}.display_name, {$rawCompanies}.name, 'Contact à préciser') as contact")
+            ->selectRaw("{$rawTable}.status as state")
+            ->selectRaw("COALESCE({$rawTable}.description, 'Rendez-vous planifié') as summary")
+            ->selectRaw("{$rawTable}.starts_at as sort_at")
+            ->where("{$table}.status", AppointmentStatus::Scheduled)
+            ->where("{$table}.starts_at", '<=', now()->addDays(7));
     }
 
     private function prefixedTable(Model $model): string

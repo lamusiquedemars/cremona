@@ -2,14 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AppointmentStatus;
 use App\Enums\ConversationStatus;
 use App\Enums\CrmTaskStatus;
 use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationRole;
 use App\Filament\Pages\ClientWorkQueue;
+use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\CrmTasks\CrmTaskResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
+use App\Models\Appointment;
 use App\Models\Conversation;
 use App\Models\CrmTask;
 use App\Models\IncomingRequest;
@@ -110,5 +113,52 @@ class ClientWorkQueueTest extends TestCase
             ->assertSeeText('Page 1 sur 2')
             ->assertSeeText('Suivant')
             ->assertSee('clientWorkPage=2');
+    }
+
+    public function test_the_client_work_queue_includes_overdue_and_imminent_appointments_but_not_distant_ones(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
+        $user = User::factory()->create();
+        $user->organizations()->attach($organization, ['role' => OrganizationRole::Collaborator->value]);
+
+        $appointments = app(OrganizationContext::class)->run($organization, function (): array {
+            $overdue = Appointment::query()->create([
+                'title' => 'Rappeler après un essai',
+                'status' => AppointmentStatus::Scheduled,
+                'starts_at' => now()->subDay(),
+                'ends_at' => now()->subDay()->addHour(),
+                'timezone' => 'Europe/Paris',
+                'modality' => 'phone',
+            ]);
+            $imminent = Appointment::query()->create([
+                'title' => 'Essai d’alto',
+                'status' => AppointmentStatus::Scheduled,
+                'starts_at' => now()->addDays(3),
+                'ends_at' => now()->addDays(3)->addHour(),
+                'timezone' => 'Europe/Paris',
+                'modality' => 'in_person',
+            ]);
+            Appointment::query()->create([
+                'title' => 'Rendez-vous du mois prochain',
+                'status' => AppointmentStatus::Scheduled,
+                'starts_at' => now()->addDays(8),
+                'ends_at' => now()->addDays(8)->addHour(),
+                'timezone' => 'Europe/Paris',
+                'modality' => 'video',
+            ]);
+
+            return [$overdue, $imminent];
+        });
+
+        $this->actingAs($user)
+            ->get(ClientWorkQueue::getUrl(tenant: $organization))
+            ->assertOk()
+            ->assertSeeText('Rappeler après un essai')
+            ->assertSeeText('Essai d’alto')
+            ->assertSeeText('Rendez-vous à préparer')
+            ->assertSee(AppointmentResource::getUrl('view', ['record' => $appointments[0]->public_id]))
+            ->assertSee(AppointmentResource::getUrl('view', ['record' => $appointments[1]->public_id]))
+            ->assertDontSeeText('Rendez-vous du mois prochain');
     }
 }
