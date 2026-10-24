@@ -43,6 +43,8 @@ class ClientAgenda extends Page
 
     public string $week;
 
+    public string $agendaView = 'week';
+
     public function mount(): void
     {
         $this->week = $this->weekStart()->toDateString();
@@ -69,34 +71,52 @@ class ClientAgenda extends Page
         return 'Agenda';
     }
 
-    public function previousWeek(): void
+    public function selectView(string $view): void
     {
-        $this->week = $this->weekStart()->subWeek()->toDateString();
+        abort_unless(in_array($view, ['week', 'month'], true), 404);
+
+        $this->agendaView = $view;
     }
 
-    public function nextWeek(): void
+    public function previousPeriod(): void
     {
-        $this->week = $this->weekStart()->addWeek()->toDateString();
+        $this->week = $this->agendaView === 'month'
+            ? $this->anchorDate()->subMonthNoOverflow()->toDateString()
+            : $this->weekStart()->subWeek()->toDateString();
     }
 
-    public function currentWeek(): void
+    public function nextPeriod(): void
     {
-        $this->week = $this->today()->startOfWeek(CarbonInterface::MONDAY)->toDateString();
+        $this->week = $this->agendaView === 'month'
+            ? $this->anchorDate()->addMonthNoOverflow()->toDateString()
+            : $this->weekStart()->addWeek()->toDateString();
+    }
+
+    public function currentPeriod(): void
+    {
+        $this->week = $this->today()->toDateString();
+    }
+
+    public function showWeek(string $date): void
+    {
+        $this->week = CarbonImmutable::parse($date, app(OrganizationContext::class)->require()->timezone())->toDateString();
+        $this->agendaView = 'week';
     }
 
     /** @return Collection<int, CarbonImmutable> */
     public function days(): Collection
     {
-        $start = $this->weekStart();
+        $start = $this->periodStart();
+        $end = $this->periodEnd();
 
-        return collect(range(0, 6))->map(fn (int $offset): CarbonImmutable => $start->addDays($offset));
+        return collect(range(0, $start->diffInDays($end)))->map(fn (int $offset): CarbonImmutable => $start->addDays($offset));
     }
 
     /** @return Collection<int, array{type: string, label: string, title: string, contact: string, starts_at: CarbonImmutable, url: string}> */
     public function events(): Collection
     {
-        $start = $this->weekStart()->startOfDay();
-        $end = $start->addWeek();
+        $start = $this->periodStart()->startOfDay();
+        $end = $this->periodEnd()->addDay()->startOfDay();
         $organization = app(OrganizationContext::class)->require();
         $events = collect();
 
@@ -187,6 +207,31 @@ class ClientAgenda extends Page
             : $this->today();
 
         return $date->startOfWeek(CarbonInterface::MONDAY);
+    }
+
+    private function periodStart(): CarbonImmutable
+    {
+        if ($this->agendaView !== 'month') {
+            return $this->weekStart();
+        }
+
+        return $this->anchorDate()->startOfMonth()->startOfWeek(CarbonInterface::MONDAY);
+    }
+
+    private function periodEnd(): CarbonImmutable
+    {
+        if ($this->agendaView !== 'month') {
+            return $this->weekStart()->addDays(6);
+        }
+
+        return $this->anchorDate()->endOfMonth()->endOfWeek(CarbonInterface::SUNDAY);
+    }
+
+    private function anchorDate(): CarbonImmutable
+    {
+        return filled($this->week ?? null)
+            ? CarbonImmutable::parse($this->week, app(OrganizationContext::class)->require()->timezone())
+            : $this->today();
     }
 
     private function today(): CarbonImmutable
