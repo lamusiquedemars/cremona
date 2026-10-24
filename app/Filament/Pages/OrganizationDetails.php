@@ -43,8 +43,6 @@ class OrganizationDetails extends Page
 
     public bool $invoicingEnabled = false;
 
-    public ?string $superPdpAuthorizeUrl = null;
-
     public static function canAccess(): bool
     {
         $organization = app(OrganizationContext::class)->current();
@@ -64,7 +62,6 @@ class OrganizationDetails extends Page
         $invoiceSettings = $organization->invoiceSettings;
         $this->quotesEnabled = app(OrganizationModuleAccess::class)->enabled('quotes');
         $this->invoicingEnabled = app(OrganizationModuleAccess::class)->enabled('invoicing');
-        $this->superPdpAuthorizeUrl = $this->invoicingEnabled ? route('super-pdp.authorize', ['organization' => $organization]) : null;
         $this->identity = array_merge(['display_name' => $organization->name, 'country_code' => 'FR'], $profile?->only(['display_name', 'legal_name', 'contact_name', 'email', 'phone', 'website', 'address_line_1', 'address_line_2', 'postal_code', 'city', 'country_code', 'registration_number', 'vat_number', 'legal_notice']) ?? []);
         $this->quoteRules = $settings?->only(['default_validity_days', 'default_payment_terms', 'default_tax_note', 'terms_url']) ?? [];
         $this->invoiceRules = array_merge([
