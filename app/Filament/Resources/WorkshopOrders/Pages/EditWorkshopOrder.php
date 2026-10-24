@@ -47,7 +47,7 @@ class EditWorkshopOrder extends BusinessEditRecord
                     $this->redirect(InvoiceResource::getUrl($invoice->status === \App\Enums\InvoiceStatus::Draft ? 'edit' : 'view', ['record' => $invoice]));
                 }),
                 Action::make('openQuote')
-                ->label(fn (): string => 'Devis '.$this->record->quote?->reference)
+                ->label(fn (): string => 'Ouvrir le devis '.$this->record->quote?->reference)
                 ->visible(fn (): bool => $this->record->quote !== null && QuoteResource::canAccess())
                 ->url(fn (): ?string => $this->record->quote ? QuoteResource::getUrl('view', ['record' => $this->record->quote]) : null),
                 Action::make('confirmDiagnosis')
