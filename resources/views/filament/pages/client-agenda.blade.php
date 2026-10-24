@@ -23,7 +23,11 @@
                 <section @class(['min-h-[26rem] p-3', 'bg-primary-50/40 dark:bg-primary-500/5' => $day->isToday()])>
                     <header class="border-b border-gray-100 pb-3 dark:border-white/10">
                         <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ $day->isoFormat('ddd') }}</p>
-                        <p class="mt-1 text-lg font-semibold text-gray-950 dark:text-white">{{ $day->format('d') }}</p>
+                        <p @class([
+                            'mt-1 flex size-8 items-center justify-center rounded-full text-lg font-semibold',
+                            'bg-primary-500 text-primary-950 shadow-sm' => $day->isToday(),
+                            'text-gray-950 dark:text-white' => ! $day->isToday(),
+                        ])>{{ $day->format('d') }}</p>
                     </header>
                     <div class="mt-3 space-y-2">
                         @forelse ($dayEvents as $event)
