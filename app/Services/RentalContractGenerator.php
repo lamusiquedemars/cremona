@@ -63,7 +63,7 @@ class RentalContractGenerator
                     'version_of_id' => $previous?->private_document_id,
                     'version_number' => $previous === null ? 1 : $previous->version_number + 1,
                     'title' => $type->getLabel().' '.$rental->reference,
-                    'category' => 'Location',
+                    'category' => 'rental_contract',
                     'disk' => $disk,
                     'path' => $path,
                     'original_name' => $this->filename($rental, $type, $previous === null ? 1 : $previous->version_number + 1),

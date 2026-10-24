@@ -63,6 +63,21 @@
             </x-filament::section>
         @endif
 
+        <x-filament::section>
+            <x-slot name="heading">Politique documentaire</x-slot>
+            <x-slot name="description">Ces durées sont des valeurs de départ à valider par l’organisation selon son activité et ses obligations. Cremona n’efface rien automatiquement : une revue et une action explicite seront nécessaires à l’échéance.</x-slot>
+            <div class="space-y-4">
+                @foreach (\App\Support\PrivateDocumentPolicyCatalog::definitions() as $key => $definition)
+                    <div class="grid grid-cols-1 items-end gap-x-5 gap-y-3 rounded-lg border border-gray-200 p-4 dark:border-white/10 lg:grid-cols-12">
+                        <div class="lg:col-span-4"><p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ $definition['label'] }}</p></div>
+                        <label class="block lg:col-span-2"><span class="text-sm font-medium text-gray-800 dark:text-gray-100">Conservation (mois)</span><input wire:model="documentRules.{{ $key }}.retention_months" type="number" min="1" max="240" class="mt-1.5 block w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-sm text-gray-950 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-white/15 dark:bg-white/5 dark:text-white"></label>
+                        <label class="block lg:col-span-3"><span class="text-sm font-medium text-gray-800 dark:text-gray-100">Accès</span><select wire:model="documentRules.{{ $key }}.access" class="mt-1.5 block w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-sm text-gray-950 shadow-sm"><option value="standard">Membres autorisés à consulter la relation client</option><option value="restricted">Administrateurs de l’organisation uniquement</option></select></label>
+                        <label class="flex items-center gap-3 lg:col-span-3"><input wire:model="documentRules.{{ $key }}.requires_link" type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"><span class="text-sm font-medium text-gray-800 dark:text-gray-100">Rattachement obligatoire</span></label>
+                    </div>
+                @endforeach
+            </div>
+        </x-filament::section>
+
         <x-filament::button type="submit">Enregistrer</x-filament::button>
     </form>
 </x-filament-panels::page>

@@ -17,6 +17,7 @@ use App\Models\Person;
 use App\Models\PrivateDocument;
 use App\Models\Rental;
 use App\Services\OrganizationPresentation;
+use App\Support\PrivateDocumentPolicyCatalog;
 use BackedEnum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
@@ -74,7 +75,11 @@ class PrivateDocumentResource extends Resource
                     ->label(__('common.internal_title'))
                     ->maxLength(255)
                     ->helperText('Facultatif : le nom du fichier reste toujours visible.'),
-                TextInput::make('category')->label(__('common.category'))->maxLength(100),
+                Select::make('category')->label(__('common.category'))
+                    ->options(PrivateDocumentPolicyCatalog::options())
+                    ->default('general')
+                    ->required()
+                    ->helperText('La catégorie applique la règle de conservation, d’accès et de rattachement définie dans la configuration de l’organisation.'),
             ]),
             Section::make('Rattachements facultatifs')->columnSpan(1)->schema([
                 Select::make('person_ids')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contacts'))->multiple()->options(fn (): array => Person::query()->orderBy('display_name')->pluck('display_name', 'id')->all())->searchable(),

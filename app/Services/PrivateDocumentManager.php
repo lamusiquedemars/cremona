@@ -13,6 +13,8 @@ use App\Models\PrivateDocument;
 use App\Models\PrivateDocumentLink;
 use App\Models\Rental;
 use App\Models\User;
+use App\Enums\OrganizationPermission;
+use App\Support\PrivateDocumentPolicyCatalog;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\UploadedFile;
@@ -36,7 +38,10 @@ class PrivateDocumentManager
         'rental_ids' => Rental::class,
     ];
 
-    public function __construct(private readonly OrganizationContext $context) {}
+    public function __construct(
+        private readonly OrganizationContext $context,
+        private readonly PrivateDocumentPolicyCatalog $policies,
+    ) {}
 
     /** @param array<string, mixed> $data */
     public function create(array $data, UploadedFile $upload, User $uploader): PrivateDocument
@@ -95,6 +100,16 @@ class PrivateDocumentManager
     private function store(array $data, UploadedFile $upload, User $uploader): PrivateDocument
     {
         $organization = $this->context->require();
+        $category = array_key_exists((string) ($data['category'] ?? ''), PrivateDocumentPolicyCatalog::definitions())
+            ? (string) $data['category']
+            : 'general';
+        $policy = $this->policies->ruleFor($organization, $category);
+        if ($policy['access'] === 'restricted' && ! $uploader->hasOrganizationPermission(OrganizationPermission::ManageIntegrations, $organization)) {
+            throw new LogicException('Seul un administrateur de l’organisation peut déposer un document à accès restreint.');
+        }
+        if ($policy['requires_link'] && ! $this->hasRequestedLink($data)) {
+            throw new LogicException('Cette catégorie doit être rattachée à au moins un client, dossier, instrument, location ou autre élément de suivi.');
+        }
         $publicId = (string) Str::ulid();
         $extension = $upload->guessExtension() ?: $upload->getClientOriginalExtension();
         $filename = (string) Str::uuid().($extension !== '' ? '.'.strtolower($extension) : '');
@@ -110,7 +125,7 @@ class PrivateDocumentManager
 
             return DB::transaction(function () use ($data, $disk, $upload, $uploader, $path, $publicId): PrivateDocument {
                 $document = PrivateDocument::create(array_merge(
-                    Arr::only($data, ['title', 'category', 'version_of_id', 'version_number']),
+                    array_merge(Arr::only($data, ['title', 'version_of_id', 'version_number']), ['category' => $category]),
                     [
                         'public_id' => $publicId,
                         'uploaded_by_user_id' => $uploader->getKey(),
@@ -181,6 +196,18 @@ class PrivateDocumentManager
         if ((int) $document->organization_id !== (int) $this->context->require()->getKey()) {
             throw new LogicException('Le document privé ne relève pas de l’organisation active.');
         }
+    }
+
+    /** @param array<string, mixed> $data */
+    private function hasRequestedLink(array $data): bool
+    {
+        foreach (array_keys(self::LINK_FIELDS) as $field) {
+            if (count((array) ($data[$field] ?? [])) > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @param class-string $model */

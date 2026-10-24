@@ -8,6 +8,7 @@ use App\Models\OrganizationInvoiceSettings;
 use App\Models\OrganizationQuoteSettings;
 use App\Models\User;
 use App\Services\OrganizationModuleAccess;
+use App\Support\PrivateDocumentPolicyCatalog;
 use App\Tenancy\OrganizationContext;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -39,6 +40,9 @@ class OrganizationDetails extends Page
     /** @var array<string, mixed> */
     public array $invoiceRules = [];
 
+    /** @var array<string, array{retention_months: int, access: string, requires_link: bool}> */
+    public array $documentRules = [];
+
     public bool $quotesEnabled = false;
 
     public bool $invoicingEnabled = false;
@@ -62,6 +66,7 @@ class OrganizationDetails extends Page
         $invoiceSettings = $organization->invoiceSettings;
         $this->quotesEnabled = app(OrganizationModuleAccess::class)->enabled('quotes');
         $this->invoicingEnabled = app(OrganizationModuleAccess::class)->enabled('invoicing');
+        $this->documentRules = app(PrivateDocumentPolicyCatalog::class)->rules($organization);
         $this->identity = array_merge(['display_name' => $organization->name, 'country_code' => 'FR'], $profile?->only(['display_name', 'legal_name', 'contact_name', 'email', 'phone', 'website', 'address_line_1', 'address_line_2', 'postal_code', 'city', 'country_code', 'registration_number', 'vat_number', 'legal_notice']) ?? []);
         $this->quoteRules = $settings?->only(['default_validity_days', 'default_payment_terms', 'default_tax_note', 'terms_url']) ?? [];
         $this->invoiceRules = array_merge([
@@ -106,6 +111,9 @@ class OrganizationDetails extends Page
             'invoiceRules.pennylane_copy_enabled' => ['boolean'],
             'invoiceRules.pennylane_sales_email' => ['nullable', 'email', 'max:255'],
             'invoiceRules.rental_billing_mode' => ['required', 'in:manual,disabled'],
+            'documentRules.*.retention_months' => ['required', 'integer', 'min:1', 'max:240'],
+            'documentRules.*.access' => ['required', 'in:standard,restricted'],
+            'documentRules.*.requires_link' => ['boolean'],
         ]);
         $organization = app(OrganizationContext::class)->current();
         OrganizationLegalProfile::query()->updateOrCreate(['organization_id' => $organization->id], $data['identity']);
@@ -115,6 +123,9 @@ class OrganizationDetails extends Page
         if ($this->invoicingEnabled) {
             OrganizationInvoiceSettings::query()->updateOrCreate(['organization_id' => $organization->id], $data['invoiceRules']);
         }
+        $settings = $organization->settings ?? [];
+        $settings['document_policy'] = ['categories' => $data['documentRules']];
+        $organization->forceFill(['settings' => $settings])->save();
         $organization->unsetRelation('legalProfile');
         $organization->unsetRelation('quoteSettings');
         $organization->unsetRelation('invoiceSettings');

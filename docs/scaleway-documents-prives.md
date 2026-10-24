@@ -11,6 +11,9 @@ diffuser le fichier.
 Les médias publics du site restent sur leur circuit public ; ils ne partagent
 ni le bucket ni les liens des documents privés.
 
+Les catégories, droits et durées de conservation sont détaillés dans la
+[Politique des documents privés](politique-documents-prives.md).
+
 ## Configuration serveur
 
 Les seules variables nécessaires dans le `.env` du serveur sont :

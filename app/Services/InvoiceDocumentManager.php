@@ -29,7 +29,7 @@ class InvoiceDocumentManager
             Storage::disk($disk)->put($path, $content, ['visibility' => 'private']);
             $document = PrivateDocument::query()->create([
                 'title' => 'Facture '.$invoice->reference,
-                'category' => 'Facture émise',
+                'category' => 'accounting_record',
                 'disk' => $disk,
                 'path' => $path,
                 'original_name' => $filename,
