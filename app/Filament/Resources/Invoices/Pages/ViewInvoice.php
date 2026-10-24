@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\InvoicePayment;
 use App\Services\InvoiceWorkflowManager;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -42,12 +43,13 @@ class ViewInvoice extends ViewRecord
                         Notification::make()->title('Facture non émise')->body($exception->getMessage())->danger()->send();
                     }
                 }),
-            Action::make('downloadPdf')
+            ActionGroup::make([
+                Action::make('downloadPdf')
                 ->label('Télécharger le PDF')->icon(Heroicon::OutlinedArrowDownTray)
                 ->visible(fn (): bool => $this->record->pdfPrivateDocument !== null)
                 ->url(fn (): string => route('private-documents.download', $this->record->pdfPrivateDocument?->public_id))
                 ->openUrlInNewTab(),
-            Action::make('recordPayment')
+                Action::make('recordPayment')
                 ->label('Enregistrer un règlement')->icon(Heroicon::OutlinedBanknotes)->color('success')
                 ->visible(fn (): bool => in_array($this->record->status, [InvoiceStatus::Issued, InvoiceStatus::PartiallyPaid, InvoiceStatus::Overdue], true))
                 ->schema([
@@ -61,6 +63,7 @@ class ViewInvoice extends ViewRecord
                     $this->record->refresh();
                     Notification::make()->title('Règlement enregistré')->success()->send();
                 }),
+            ])->label('Actions')->icon(Heroicon::OutlinedEllipsisHorizontal)->button()->color('gray'),
         ];
     }
 }

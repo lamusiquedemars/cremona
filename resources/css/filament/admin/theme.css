@@ -118,6 +118,20 @@ body.fi-body {
 
 .fi-header-heading {
     letter-spacing: -0.025em;
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
+
+@media (min-width: 40rem) {
+    .fi-header-heading {
+        font-size: 1.875rem;
+    }
+}
+
+/* A record title stays legible; secondary business operations belong in an action menu. */
+.fi-header-actions-ctn {
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .dark body.fi-body {

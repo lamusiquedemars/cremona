@@ -13,6 +13,7 @@ use App\Services\InvoiceFromQuoteManager;
 use Filament\Notifications\Notification;
 use LogicException;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
@@ -55,20 +56,22 @@ class ViewQuote extends ViewRecord
 
                     $this->redirect(InvoiceResource::getUrl($invoice->status === InvoiceStatus::Draft ? 'edit' : 'view', ['record' => $invoice]));
                 }),
-            Action::make('openWorkshopOrder')
+            ActionGroup::make([
+                Action::make('openWorkshopOrder')
                 ->label(fn (): string => 'Dossier atelier '.$this->record->workshopOrder?->reference)
                 ->visible(fn (): bool => $this->record->workshopOrder !== null && WorkshopOrderResource::canAccess())
                 ->url(fn (): ?string => $this->record->workshopOrder ? WorkshopOrderResource::getUrl('edit', ['record' => $this->record->workshopOrder]) : null),
-            Action::make('downloadPdf')
+                Action::make('downloadPdf')
                 ->label('Télécharger le PDF')
                 ->url(fn (): string => route('quotes.pdf', ['publicId' => $this->record->public_id]))
                 ->disabled(fn (): bool => count(app(QuoteDocumentProfileManager::class)->missingIssuerFields($this->record->organization)) > 0)
                 ->tooltip(fn (): ?string => ($missing = app(QuoteDocumentProfileManager::class)->missingIssuerFields($this->record->organization)) === [] ? null : 'Complétez « Coordonnées et mentions légales » : '.implode(', ', $missing).'.')
                 ->openUrlInNewTab(),
-            EditAction::make()->label('Modifier le devis')
+                EditAction::make()->label('Modifier le devis')
                 ->visible(fn (): bool => $this->record->status === QuoteStatus::Draft),
-            DeleteAction::make()->label('Supprimer le brouillon')
+                DeleteAction::make()->label('Supprimer le brouillon')
                 ->visible(fn (): bool => $this->record->status === QuoteStatus::Draft),
+            ])->label('Actions')->icon(\Filament\Support\Icons\Heroicon::OutlinedEllipsisHorizontal)->button()->color('gray'),
         ];
     }
 

@@ -12,6 +12,7 @@ use App\Services\WorkshopOrderQuoteManager;
 use App\Services\InvoiceFromQuoteManager;
 use App\Services\WorkshopOrderWorkflowManager;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
@@ -28,7 +29,8 @@ class EditWorkshopOrder extends BusinessEditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('createInvoice')
+            ActionGroup::make([
+                Action::make('createInvoice')
                 ->label('Créer la facture')
                 ->icon(Heroicon::OutlinedDocumentCurrencyEuro)
                 ->visible(fn (): bool => $this->record->quote?->status === \App\Enums\QuoteStatus::Accepted && InvoiceResource::canAccess())
@@ -43,11 +45,11 @@ class EditWorkshopOrder extends BusinessEditRecord
 
                     $this->redirect(InvoiceResource::getUrl($invoice->status === \App\Enums\InvoiceStatus::Draft ? 'edit' : 'view', ['record' => $invoice]));
                 }),
-            Action::make('openQuote')
+                Action::make('openQuote')
                 ->label(fn (): string => 'Devis '.$this->record->quote?->reference)
                 ->visible(fn (): bool => $this->record->quote !== null && QuoteResource::canAccess())
                 ->url(fn (): ?string => $this->record->quote ? QuoteResource::getUrl('view', ['record' => $this->record->quote]) : null),
-            Action::make('confirmDiagnosis')
+                Action::make('confirmDiagnosis')
                 ->label('Valider le diagnostic')
                 ->icon(Heroicon::OutlinedClipboardDocumentCheck)
                 ->visible(fn (): bool => $this->record->status === WorkshopOrderStatus::Received)
@@ -63,7 +65,7 @@ class EditWorkshopOrder extends BusinessEditRecord
                     }
                     Notification::make()->title('Diagnostic validé')->body('Le dossier est prêt à recevoir ou compléter son devis.')->success()->send();
                 }),
-            Action::make('syncQuote')->label('Créer ou compléter le devis')->icon(Heroicon::OutlinedDocumentCurrencyEuro)->visible(fn (): bool => in_array($this->record->status, [WorkshopOrderStatus::Diagnosed, WorkshopOrderStatus::AwaitingApproval], true))->action(function (WorkshopOrderQuoteManager $manager): void {
+                Action::make('syncQuote')->label('Créer ou compléter le devis')->icon(Heroicon::OutlinedDocumentCurrencyEuro)->visible(fn (): bool => in_array($this->record->status, [WorkshopOrderStatus::Diagnosed, WorkshopOrderStatus::AwaitingApproval], true))->action(function (WorkshopOrderQuoteManager $manager): void {
                 try {
                     $quote = $manager->sync($this->record);
                 } catch (LogicException $exception) {
@@ -74,7 +76,7 @@ class EditWorkshopOrder extends BusinessEditRecord
 
                 Notification::make()->title('Devis mis à jour')->body("Les prestations et articles sélectionnés sont dans le devis {$quote->reference}.")->success()->send();
             }),
-            Action::make('schedule')
+                Action::make('schedule')
                 ->label('Planifier l’intervention')
                 ->icon(Heroicon::OutlinedCalendarDays)
                 ->visible(fn (): bool => in_array($this->record->status, [WorkshopOrderStatus::Diagnosed, WorkshopOrderStatus::AwaitingApproval, WorkshopOrderStatus::Approved], true))
@@ -92,7 +94,7 @@ class EditWorkshopOrder extends BusinessEditRecord
                     }
                     Notification::make()->title('Intervention planifiée')->success()->send();
                 }),
-            Action::make('start')
+                Action::make('start')
                 ->label('Démarrer l’intervention')
                 ->icon(Heroicon::OutlinedPlay)
                 ->color('primary')
@@ -105,7 +107,7 @@ class EditWorkshopOrder extends BusinessEditRecord
                         Notification::make()->title('Intervention non démarrée')->body($exception->getMessage())->danger()->send();
                     }
                 }),
-            Action::make('applyStockConsumption')
+                Action::make('applyStockConsumption')
                 ->label('Déduire le stock consommé')
                 ->icon(Heroicon::OutlinedArchiveBoxXMark)
                 ->requiresConfirmation()
@@ -127,7 +129,7 @@ class EditWorkshopOrder extends BusinessEditRecord
                     }
                     Notification::make()->title($count === 0 ? 'Aucun article à déduire' : 'Stock mis à jour')->body($count === 0 ? 'Tous les articles de ce dossier ont déjà été déduits.' : "{$count} article(s) consommé(s) ont été enregistrés.")->success()->send();
                 }),
-            Action::make('markReady')
+                Action::make('markReady')
                 ->label('Déclarer l’instrument prêt')
                 ->icon(Heroicon::OutlinedCheckCircle)
                 ->color('success')
@@ -141,7 +143,7 @@ class EditWorkshopOrder extends BusinessEditRecord
                         Notification::make()->title('Instrument non déclaré prêt')->body($exception->getMessage())->danger()->send();
                     }
                 }),
-            Action::make('markReturned')
+                Action::make('markReturned')
                 ->label('Enregistrer la restitution')
                 ->icon(Heroicon::OutlinedArrowUturnLeft)
                 ->visible(fn (): bool => $this->record->status === WorkshopOrderStatus::Ready)
@@ -153,6 +155,7 @@ class EditWorkshopOrder extends BusinessEditRecord
                         Notification::make()->title('Restitution non enregistrée')->body($exception->getMessage())->danger()->send();
                     }
                 }),
+            ])->label('Actions du dossier')->icon(Heroicon::OutlinedEllipsisHorizontal)->button()->color('gray')->dropdownWidth(Width::Large)->dropdownMaxHeight('70vh'),
         ];
     }
 
