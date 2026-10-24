@@ -73,4 +73,12 @@ et l’état de l’entreprise sandbox ; il ne crée ni ne transmet une facture.
 
 ## Limites du premier lot
 
-La création de facture est aujourd’hui manuelle, avec des liens possibles vers un devis, une location ou un dossier atelier. Les actions « créer depuis un devis », « facturer une échéance de location » et l’envoi effectif à Super PDP viendront ensuite, une fois les règles de chaque organisation validées.
+Une facture peut être créée manuellement ou depuis un devis accepté : les lignes
+et le client sont alors repris une seule fois dans un brouillon. La facturation
+d’échéance de location reste volontairement manuelle ou désactivée selon
+l’organisation ; elle ne doit pas être automatisée avant validation métier.
+
+L’envoi effectif et le suivi des retours Super PDP restent le prochain lot : il
+nécessite les accès de la véritable entreprise émettrice. La sandbox Burger
+Queen sert à valider la connexion technique, jamais à produire une facture
+légale de Contempo.
