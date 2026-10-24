@@ -8,6 +8,7 @@ use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Rentals\Pages\CreateRental;
 use App\Filament\Resources\Rentals\Pages\EditRental;
 use App\Filament\Resources\Rentals\Pages\ListRentals;
+use App\Filament\Resources\Rentals\Pages\ViewRental;
 use App\Models\InstrumentAsset;
 use App\Models\InstrumentCategory;
 use App\Models\Rental;
@@ -25,6 +26,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -158,12 +160,32 @@ class RentalResource extends Resource
                 'to_stop' => 'À arrêter ou ajuster',
                 'closed' => 'Traité',
             ]),
-        ])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouvelle location')]);
+        ])->recordActions([\Filament\Actions\ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (Rental $record): string => self::getUrl('view', ['record' => $record]))->headerActions([CreateAction::make()->label('Nouvelle location')]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->columns(2)->components([
+            Section::make('Location')->columns(2)->schema([
+                TextEntry::make('reference')->label(__('common.reference')),
+                TextEntry::make('status')->label('Étape du dossier')->badge(),
+                TextEntry::make('instrument.name')->label('Instrument')->placeholder('—'),
+                TextEntry::make('person.display_name')->label('Client')->placeholder('—'),
+                TextEntry::make('starts_on')->label('Début prévu')->date('d/m/Y')->placeholder('—'),
+                TextEntry::make('expected_return_on')->label('Retour prévu')->date('d/m/Y')->placeholder('—'),
+                TextEntry::make('unit_amount')->label('Loyer mensuel')->money('EUR'),
+                TextEntry::make('deposit_amount')->label('Dépôt de garantie')->money('EUR'),
+                TextEntry::make('insurance_monthly_amount')->label('Assurance mensuelle')->money('EUR')->placeholder('—'),
+                TextEntry::make('returned_on')->label('Restitué le')->date('d/m/Y')->placeholder('—'),
+                TextEntry::make('return_notes')->label('Constat de restitution')->placeholder('—')->columnSpanFull(),
+                TextEntry::make('notes')->label(__('common.internal_notes'))->placeholder('—')->columnSpanFull(),
+            ])->columnSpanFull(),
+        ]);
     }
 
     public static function getPages(): array
     {
-        return ['index' => ListRentals::route('/'), 'create' => CreateRental::route('/create'), 'edit' => EditRental::route('/{record}/edit')];
+        return ['index' => ListRentals::route('/'), 'create' => CreateRental::route('/create'), 'view' => ViewRental::route('/{record}'), 'edit' => EditRental::route('/{record}/edit')];
     }
 
     public static function acceptanceLabel(?RentalAcceptanceRequest $request): ?string

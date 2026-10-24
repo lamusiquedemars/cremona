@@ -7,6 +7,7 @@ use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\WorkshopOrders\Pages\CreateWorkshopOrder;
 use App\Filament\Resources\WorkshopOrders\Pages\EditWorkshopOrder;
 use App\Filament\Resources\WorkshopOrders\Pages\ListWorkshopOrders;
+use App\Filament\Resources\WorkshopOrders\Pages\ViewWorkshopOrder;
 use App\Models\IncomingRequest;
 use App\Models\ServiceDefinition;
 use App\Models\StockItem;
@@ -21,6 +22,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -107,11 +110,37 @@ class WorkshopOrderResource extends Resource
     {
         return $table->defaultSort('updated_at', 'desc')->columns([
             TextColumn::make('reference')->label(__('common.reference'))->searchable(['reference', 'previous_reference'])->description(fn (WorkshopOrder $record): ?string => $record->previous_reference ? 'Ancien : '.$record->previous_reference : null)->sortable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap()->sortable(), TextColumn::make('person.display_name')->label('Client')->placeholder('—')->sortable(), TextColumn::make('status')->label(__('common.status'))->badge()->sortable(), TextColumn::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y')->placeholder('—')->sortable(),
-        ])->filters([SelectFilter::make('status')->options(WorkshopOrderStatus::class)])->recordActions([EditAction::make()])->headerActions([CreateAction::make()->label('Nouveau dossier atelier')]);
+        ])->filters([SelectFilter::make('status')->options(WorkshopOrderStatus::class)])->recordActions([\Filament\Actions\ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (WorkshopOrder $record): string => self::getUrl('view', ['record' => $record]))->headerActions([CreateAction::make()->label('Nouveau dossier atelier')]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->columns(2)->components([
+            Section::make('Dossier atelier')->columns(2)->schema([
+                TextEntry::make('reference')->label(__('common.reference')),
+                TextEntry::make('status')->label(__('common.status'))->badge(),
+                TextEntry::make('person.display_name')->label('Client')->placeholder('—'),
+                TextEntry::make('instrument_description')->label('Instrument confié')->placeholder('—'),
+                TextEntry::make('customer_instructions')->label('Demande du client')->placeholder('—')->columnSpanFull(),
+                TextEntry::make('diagnosis')->label('Diagnostic atelier')->placeholder('—')->columnSpanFull(),
+                TextEntry::make('due_at')->label('Intervention prévue le')->dateTime('d/m/Y H:i')->placeholder('—'),
+                TextEntry::make('ready_at')->label('Prêt le')->dateTime('d/m/Y H:i')->placeholder('—'),
+                TextEntry::make('returned_at')->label('Restitué le')->dateTime('d/m/Y H:i')->placeholder('—'),
+                TextEntry::make('notes')->label(__('common.internal_notes'))->placeholder('—')->columnSpanFull(),
+            ]),
+            Section::make('Prestations prévues')->schema([
+                RepeatableEntry::make('services')->hiddenLabel()->schema([
+                    TextEntry::make('label_snapshot')->label('Intitulé'),
+                    TextEntry::make('quantity')->label(__('common.quantity')),
+                    TextEntry::make('unit_amount')->label('Prix HT')->money('EUR'),
+                    TextEntry::make('include_in_quote')->label('À ajouter au devis')->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
+                ])->columns(4),
+            ])->columnSpanFull(),
+        ]);
     }
 
     public static function getPages(): array
     {
-        return ['index' => ListWorkshopOrders::route('/'), 'create' => CreateWorkshopOrder::route('/create'), 'edit' => EditWorkshopOrder::route('/{record}/edit')];
+        return ['index' => ListWorkshopOrders::route('/'), 'create' => CreateWorkshopOrder::route('/create'), 'view' => ViewWorkshopOrder::route('/{record}'), 'edit' => EditWorkshopOrder::route('/{record}/edit')];
     }
 }

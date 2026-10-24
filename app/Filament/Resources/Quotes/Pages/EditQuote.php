@@ -14,19 +14,26 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
 use LogicException;
 
 class EditQuote extends BusinessEditRecord
 {
     protected static string $resource = QuoteResource::class;
 
+    public function getTitle(): string|Htmlable
+    {
+        return "Devis {$this->record->reference} — {$this->record->title}";
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             Action::make('openWorkshopOrder')
                 ->label(fn (): string => 'Dossier atelier '.$this->record->workshopOrder?->reference)
+                ->icon(Heroicon::OutlinedEye)
                 ->visible(fn (): bool => $this->record->workshopOrder !== null && WorkshopOrderResource::canAccess())
-                ->url(fn (): ?string => $this->record->workshopOrder ? WorkshopOrderResource::getUrl('edit', ['record' => $this->record->workshopOrder]) : null),
+                ->url(fn (): ?string => $this->record->workshopOrder ? WorkshopOrderResource::getUrl('view', ['record' => $this->record->workshopOrder]) : null),
             Action::make('markSent')
                 ->label('Marquer comme envoyé')
                 ->icon(Heroicon::OutlinedPaperAirplane)

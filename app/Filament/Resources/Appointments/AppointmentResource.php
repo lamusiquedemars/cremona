@@ -260,7 +260,8 @@ class AppointmentResource extends Resource
                 SelectFilter::make('status')->label(__('common.status'))->options(AppointmentStatus::class),
                 SelectFilter::make('modality')->label(__('common.modality'))->options(AppointmentModality::class),
             ])
-            ->recordActions([ViewAction::make()]);
+            ->recordActions([ViewAction::make()])
+            ->recordUrl(fn (Appointment $record): string => self::getUrl('view', ['record' => $record]));
     }
 
     public static function getPages(): array

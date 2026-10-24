@@ -99,7 +99,8 @@ class ConversationResource extends Resource
             TextColumn::make('last_message_at')->label(__('cremona.crm.last_message'))->dateTime('d/m/Y H:i')->sortable(),
         ])->filters([
             SelectFilter::make('status')->label(__('cremona.crm.status'))->options(ConversationStatus::class),
-        ])->recordActions([ViewAction::make()]);
+        ])->recordActions([ViewAction::make()])
+            ->recordUrl(fn (Conversation $record): string => self::getUrl('view', ['record' => $record]));
     }
 
     public static function getPages(): array

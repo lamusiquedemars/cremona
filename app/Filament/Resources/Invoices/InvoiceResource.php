@@ -132,7 +132,8 @@ class InvoiceResource extends Resource
             TextColumn::make('balance_amount')->label('À régler')->money(fn (Invoice $record) => $record->currency)->sortable(),
             TextColumn::make('due_on')->label('Échéance')->date('d/m/Y')->placeholder('—')->sortable(),
         ])->filters([SelectFilter::make('status')->options(InvoiceStatus::class)])
-            ->recordActions([ViewAction::make(), EditAction::make()->visible(fn (Invoice $record): bool => $record->status === InvoiceStatus::Draft)])
+            ->recordActions([ViewAction::make(), EditAction::make()->label('Modifier')->visible(fn (Invoice $record): bool => $record->status === InvoiceStatus::Draft)])
+            ->recordUrl(fn (Invoice $record): string => self::getUrl('view', ['record' => $record]))
             ->headerActions([CreateAction::make()->label('Nouvelle facture')]);
     }
 

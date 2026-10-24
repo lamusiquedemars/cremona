@@ -312,8 +312,9 @@ class CompanyResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
-            ]);
+                EditAction::make()->label('Modifier'),
+            ])
+            ->recordUrl(fn (Company $record): string => self::getUrl('view', ['record' => $record]));
     }
 
     public static function getRelations(): array

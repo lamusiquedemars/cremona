@@ -19,6 +19,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\HtmlString;
 use LogicException;
@@ -26,6 +27,11 @@ use LogicException;
 class EditWorkshopOrder extends BusinessEditRecord
 {
     protected static string $resource = WorkshopOrderResource::class;
+
+    public function getTitle(): string|Htmlable
+    {
+        return "Dossier {$this->record->reference} — {$this->record->title}";
+    }
 
     protected function getHeaderActions(): array
     {
@@ -48,6 +54,7 @@ class EditWorkshopOrder extends BusinessEditRecord
                 }),
                 Action::make('openQuote')
                 ->label(fn (): string => 'Ouvrir le devis '.$this->record->quote?->reference)
+                ->icon(Heroicon::OutlinedEye)
                 ->visible(fn (): bool => $this->record->quote !== null && QuoteResource::canAccess())
                 ->url(fn (): ?string => $this->record->quote ? QuoteResource::getUrl('view', ['record' => $this->record->quote]) : null),
                 Action::make('confirmDiagnosis')

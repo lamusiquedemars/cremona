@@ -140,7 +140,7 @@ class CrmTaskResource extends Resource
         ])->filters([
             SelectFilter::make('status')->label(__('common.status'))->options(CrmTaskStatus::class),
             SelectFilter::make('priority')->label(__('common.priority'))->options(CrmTaskPriority::class),
-        ])->recordActions([ViewAction::make(), EditAction::make()])->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('tasks', 'Tâche'))]);
+        ])->recordActions([ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (CrmTask $record): string => self::getUrl('view', ['record' => $record]))->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('tasks', 'Tâche'))]);
     }
 
     public static function getPages(): array

@@ -116,7 +116,8 @@ class PrivateDocumentResource extends Resource
             TextColumn::make('category')->label(__('common.category'))->toggleable()->sortable(),
             TextColumn::make('version_number')->label(__('common.version'))->formatStateUsing(fn (int $state): string => 'v'.$state)->sortable(),
             TextColumn::make('created_at')->label('Déposé le')->dateTime('d/m/Y H:i')->sortable(),
-        ])->recordActions([ViewAction::make(), EditAction::make()])
+        ])->recordActions([ViewAction::make(), EditAction::make()->label('Modifier')])
+            ->recordUrl(fn (PrivateDocument $record): string => self::getUrl('view', ['record' => $record]))
             ->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('documents', 'Document'))]);
     }
 

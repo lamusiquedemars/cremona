@@ -8,6 +8,7 @@ use App\Filament\Imports\InstrumentAssetImporter;
 use App\Filament\Resources\InstrumentAssets\Pages\CreateInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\EditInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\ListInstrumentAssets;
+use App\Filament\Resources\InstrumentAssets\Pages\ViewInstrumentAsset;
 use App\Models\InstrumentAsset;
 use App\Support\InstrumentRentalCatalog;
 use App\Tenancy\OrganizationContext;
@@ -21,6 +22,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
@@ -136,14 +138,32 @@ class InstrumentAssetResource extends Resource
             TextColumn::make('status')->label(__('common.state'))->badge()->sortable(),
             IconColumn::make('available_for_sale')->label('Vente')->boolean()->sortable(),
             IconColumn::make('available_for_rental')->label('Location')->boolean()->sortable(),
-        ])->filters([SelectFilter::make('status')->label(__('common.state'))->options(InstrumentAssetStatus::class)])->recordActions([EditAction::make()])->headerActions([
+        ])->filters([SelectFilter::make('status')->label(__('common.state'))->options(InstrumentAssetStatus::class)])->recordActions([\Filament\Actions\ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (InstrumentAsset $record): string => self::getUrl('view', ['record' => $record]))->headerActions([
             ImportAction::make()->label('Importer un parc')->importer(InstrumentAssetImporter::class)->options(fn (): array => ['organization_id' => app(OrganizationContext::class)->require()->getKey()])->maxRows(500)->chunkSize(50),
             CreateAction::make()->label('Nouvel instrument'),
         ]);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->columns(2)->components([
+            Section::make('Fiche instrument')->columns(2)->schema([
+                TextEntry::make('name')->label('Intitulé')->weight('semibold'),
+                TextEntry::make('reference')->label('Référence interne')->placeholder('—'),
+                TextEntry::make('family')->label(__('common.family'))->placeholder('—'),
+                TextEntry::make('rental_size')->label('Taille')->placeholder('—'),
+                TextEntry::make('maker')->label('Luthier / fabricant')->placeholder('—'),
+                TextEntry::make('year')->label('Année')->placeholder('—'),
+                TextEntry::make('status')->label('Disponibilité actuelle')->badge(),
+                TextEntry::make('rentalTier.name')->label('Gamme de location')->placeholder('—'),
+                TextEntry::make('description')->label('Description interne')->placeholder('—')->columnSpanFull(),
+                TextEntry::make('commercial_notes')->label('Note commerciale interne')->placeholder('—')->columnSpanFull(),
+            ])->columnSpanFull(),
+        ]);
+    }
+
     public static function getPages(): array
     {
-        return ['index' => ListInstrumentAssets::route('/'), 'create' => CreateInstrumentAsset::route('/create'), 'edit' => EditInstrumentAsset::route('/{record}/edit')];
+        return ['index' => ListInstrumentAssets::route('/'), 'create' => CreateInstrumentAsset::route('/create'), 'view' => ViewInstrumentAsset::route('/{record}'), 'edit' => EditInstrumentAsset::route('/{record}/edit')];
     }
 }

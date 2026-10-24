@@ -311,8 +311,9 @@ class PersonResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
-            ]);
+                EditAction::make()->label('Modifier'),
+            ])
+            ->recordUrl(fn (Person $record): string => self::getUrl('view', ['record' => $record]));
     }
 
     public static function getRelations(): array

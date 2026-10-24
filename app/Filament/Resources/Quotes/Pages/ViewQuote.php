@@ -59,8 +59,9 @@ class ViewQuote extends ViewRecord
                     }),
                 Action::make('openWorkshopOrder')
                 ->label(fn (): string => 'Ouvrir le dossier atelier '.$this->record->workshopOrder?->reference)
+                ->icon(\Filament\Support\Icons\Heroicon::OutlinedEye)
                 ->visible(fn (): bool => $this->record->workshopOrder !== null && WorkshopOrderResource::canAccess())
-                ->url(fn (): ?string => $this->record->workshopOrder ? WorkshopOrderResource::getUrl('edit', ['record' => $this->record->workshopOrder]) : null),
+                ->url(fn (): ?string => $this->record->workshopOrder ? WorkshopOrderResource::getUrl('view', ['record' => $this->record->workshopOrder]) : null),
                 Action::make('downloadPdf')
                 ->label('Télécharger le PDF')
                 ->url(fn (): string => route('quotes.pdf', ['publicId' => $this->record->public_id]))

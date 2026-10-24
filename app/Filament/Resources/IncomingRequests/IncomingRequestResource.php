@@ -328,7 +328,8 @@ class IncomingRequestResource extends Resource
             ->recordClasses(fn (IncomingRequest $record): ?string => $record->read_at === null ? 'crm-record-unread' : null)
             ->recordActions([
                 ViewAction::make(),
-            ]);
+            ])
+            ->recordUrl(fn (IncomingRequest $record): string => self::getUrl('view', ['record' => $record]));
     }
 
     public static function getPages(): array
