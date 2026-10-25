@@ -5,11 +5,13 @@ namespace App\Filament\Resources\EmailMailboxes;
 use App\Enums\OrganizationPermission;
 use App\Filament\Concerns\UsesOrganizationConfiguration;
 use App\Filament\Resources\EmailMailboxes\Pages\CreateEmailMailbox;
+use App\Filament\Resources\EmailMailboxes\Pages\EditEmailMailbox;
 use App\Filament\Resources\EmailMailboxes\Pages\ListEmailMailboxes;
 use App\Models\EmailMailbox;
 use App\Services\EmailMailboxConnectionTester;
 use App\Services\EmailMailboxSynchronizer;
 use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -49,11 +51,23 @@ class EmailMailboxResource extends Resource
             TextInput::make('imap_host')->label('Serveur IMAP')->required()->maxLength(255),
             TextInput::make('imap_port')->label('Port IMAP')->numeric()->default(993)->required(),
             TextInput::make('imap_username')->label('Identifiant IMAP')->required(),
-            TextInput::make('imap_password')->label('Mot de passe IMAP')->password()->revealable()->required(),
+            TextInput::make('imap_password')
+                ->label('Mot de passe IMAP')
+                ->password()
+                ->revealable()
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->dehydrated(fn ($state): bool => filled($state))
+                ->helperText('Laissez vide pour conserver le mot de passe déjà enregistré.'),
             TextInput::make('smtp_host')->label('Serveur SMTP')->required()->maxLength(255),
             TextInput::make('smtp_port')->label('Port SMTP')->numeric()->default(465)->required(),
             TextInput::make('smtp_username')->label('Identifiant SMTP')->required(),
-            TextInput::make('smtp_password')->label('Mot de passe SMTP')->password()->revealable()->required(),
+            TextInput::make('smtp_password')
+                ->label('Mot de passe SMTP')
+                ->password()
+                ->revealable()
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->dehydrated(fn ($state): bool => filled($state))
+                ->helperText('Laissez vide pour conserver le mot de passe déjà enregistré.'),
             TextInput::make('inbox_folder')->label('Dossier reçu')->default('INBOX')->required(),
             TextInput::make('sent_folder')->label('Dossier envoyés')->maxLength(255),
         ]);
@@ -69,6 +83,7 @@ class EmailMailboxResource extends Resource
             TextColumn::make('last_synced_at')->label('Dernier succès')->dateTime('d/m/Y H:i')->placeholder(__('common.never'))->sortable(),
             TextColumn::make('last_error')->label('Dernier incident')->limit(80)->placeholder('Aucun'),
         ])->recordActions([
+            EditAction::make()->label('Modifier'),
             Action::make('test_imap')
                 ->label('Tester IMAP')
                 ->action(function (EmailMailbox $record): void {
@@ -107,6 +122,10 @@ class EmailMailboxResource extends Resource
 
     public static function getPages(): array
     {
-        return ['index' => ListEmailMailboxes::route('/'), 'create' => CreateEmailMailbox::route('/create')];
+        return [
+            'index' => ListEmailMailboxes::route('/'),
+            'create' => CreateEmailMailbox::route('/create'),
+            'edit' => EditEmailMailbox::route('/{record}/edit'),
+        ];
     }
 }

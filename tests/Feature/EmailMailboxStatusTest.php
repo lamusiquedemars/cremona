@@ -55,4 +55,39 @@ class EmailMailboxStatusTest extends TestCase
             ->assertSeeText('3 nouveau(x)')
             ->assertSeeText('7 déjà connu(s)');
     }
+
+    public function test_an_administrator_can_open_an_existing_mailbox_without_exposing_its_passwords(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['communications']);
+        $user = User::factory()->create();
+        $user->organizations()->attach($organization, ['role' => OrganizationRole::Administrator->value]);
+
+        $mailbox = app(OrganizationContext::class)->run($organization, function (): EmailMailbox {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'email',
+                'name' => 'mailbox',
+                'credentials' => [
+                    'imap_host' => 'imap.example.test', 'imap_port' => 993,
+                    'imap_username' => 'bonjour@example.test', 'imap_password' => 'secret-imap',
+                    'smtp_host' => 'smtp.example.test', 'smtp_port' => 465,
+                    'smtp_username' => 'bonjour@example.test', 'smtp_password' => 'secret-smtp',
+                ],
+                'status' => 'active',
+            ]);
+
+            return EmailMailbox::query()->create([
+                'organization_integration_id' => $integration->id,
+                'address' => 'bonjour@example.test',
+                'status' => 'active',
+            ]);
+        });
+
+        $this->actingAs($user)
+            ->get(EmailMailboxResource::getUrl('edit', ['record' => $mailbox], tenant: $organization))
+            ->assertOk()
+            ->assertSeeText('Boîte email bonjour@example.test')
+            ->assertDontSee('secret-imap')
+            ->assertDontSee('secret-smtp');
+    }
 }
