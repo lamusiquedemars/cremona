@@ -10,8 +10,10 @@ use App\Models\Organization;
 use App\Models\OrganizationIntegration;
 use App\Models\User;
 use App\Services\OrganizationModuleRegistry;
+use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class EmailMailboxStatusTest extends TestCase
@@ -89,5 +91,32 @@ class EmailMailboxStatusTest extends TestCase
             ->assertSeeText('Boîte email bonjour@example.test')
             ->assertDontSee('secret-imap')
             ->assertDontSee('secret-smtp');
+    }
+
+    public function test_an_unreadable_integration_secret_can_be_replaced_without_attempting_to_decrypt_it(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'email',
+                'name' => 'mailbox',
+                'credentials' => ['imap_password' => 'obsolete-secret'],
+                'status' => 'active',
+            ]);
+            DB::table('organization_integrations')->where('id', $integration->id)->update([
+                'credentials' => 'unreadable-ciphertext',
+            ]);
+
+            app(OrganizationIntegrationManager::class)->replaceCredentials($integration->fresh(), [
+                'imap_host' => 'imap.example.test', 'imap_port' => 993,
+                'imap_username' => 'bonjour@example.test', 'imap_password' => 'new-imap-secret',
+                'smtp_host' => 'smtp.example.test', 'smtp_port' => 465,
+                'smtp_username' => 'bonjour@example.test', 'smtp_password' => 'new-smtp-secret',
+            ]);
+
+            $this->assertSame('new-imap-secret', $integration->fresh()->credentials['imap_password']);
+            $this->assertSame('new-smtp-secret', $integration->fresh()->credentials['smtp_password']);
+        });
     }
 }

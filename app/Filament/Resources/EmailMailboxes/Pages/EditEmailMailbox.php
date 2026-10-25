@@ -89,9 +89,8 @@ class EditEmailMailbox extends BusinessEditRecord
             return;
         }
 
-        app(OrganizationIntegrationManager::class)->configure(
-            $this->record->integration->provider,
-            $this->record->integration->name,
+        app(OrganizationIntegrationManager::class)->replaceCredentials(
+            $this->record->integration,
             $this->credentialsToPersist,
             auth()->user(),
         );
