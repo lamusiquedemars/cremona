@@ -1,6 +1,6 @@
 # Avancement du plan directeur Cremona
 
-> Dernière mise à jour : 14 octobre 2026.
+> Dernière mise à jour : 27 octobre 2026.
 >
 > Ce document suit les livraisons du [plan directeur produit](plan-directeur-produit-cremona.md). Il ne remplace pas les critères de fin du plan.
 
@@ -23,11 +23,15 @@
   les entreprises, avec des vues Particuliers et Professionnels. Les modèles,
   droits, URLs et fiches existants sont conservés ; Contacts et Entreprises ne
   sont plus deux entrées de menu concurrentes.
+- La file **À traiter** est livrée : elle réunit, sans les fusionner, les
+  demandes ouvertes, les correspondances auxquelles une réponse est attendue et
+  les tâches ouvertes. Chaque ligne ouvre son objet source ; elle n’introduit ni
+  nouveau modèle CRM ni doublon de données.
 
-État : **en cours**. Le registre de capacités n’est pas encore la source unique.
-Le lot transversal des titres et fils d’Ariane est livré ; restent les libellés
-spécifiques de certains réglages d’administration et le contrôle des écrans
-rarement utilisés.
+État : **en cours**. Le registre de modules, les rubriques globales et la
+présentation éditable fonctionnent mais ne partagent pas encore une source de
+définition unique. Les réglages d’administration peu fréquents restent à
+auditer.
 
 ### B. Accueil et priorités quotidiennes
 
@@ -65,7 +69,9 @@ rarement utilisés.
   principe en production.
 - Aucun catalogue universel n’a été ajouté au noyau.
 
-État : **bridge en cours de validation ; cadrage métier en cours**.
+État : **bridge en cours de validation ; cadrage métier en cours**. La prochaine
+preuve attendue est une soumission réelle sur deux organisations sans fuite ni
+doublon de reprise.
 
 ### E. Devis et documents
 
@@ -129,14 +135,11 @@ référentiels métier ; instruments, dossiers atelier, locations et stock
 restent des opérations. Ces référentiels ne doivent pas être absorbés par la
 Configuration globale de l'organisation.
 
-La fondation documentaire des futurs contrats est désormais livrée : chaque
-`RentalDocument` est rattaché à une location et à un document privé, conserve un
-snapshot, une version de modèle et le SHA-256 du PDF, et ne peut plus être
-modifié une fois généré. Ce registre ne génère pas encore le contrat ni sa
-signature ; ces capacités restent les lots suivants, consignés dans le
+Les contrats de location, d’assurance et l’attestation de restitution sont
+désormais générés, archivés comme documents privés, hashés et versionnés. Leur
+acceptation par lien personnel est interne et traçable ; elle ne prétend pas
+être une signature électronique qualifiée. Le détail reste consigné dans le
 [Plan Location — contrats, signature et prélèvements](plan-location-contrats-signature.md).
-Le lot a été déployé sur LWS le 8 octobre 2026 après application de sa migration
-et reconstruction des caches.
 
 Le cycle opérationnel de Location est désormais livré : **Dossier en préparation,
 Dossier envoyé, Dossier accepté, Instrument remis, Instrument restitué**.
@@ -155,18 +158,35 @@ d'accord, de remise et de restitution sont également livrées.
 - Elle ne suit ni la suppression, ni l’archivage, ni l’état lu d’un message
   dans la boîte distante. Supprimer un email ne doit donc ni effacer ni clore
   une demande ou une correspondance Cremona.
-- Un email direct importé crée une correspondance ; il ne crée pas encore une
-  demande liée dans la file de traitement commune.
+- Un email direct importé crée une correspondance ; il n’est pas transformé
+  automatiquement en demande. La file **À traiter** l’affiche lorsqu’une
+  réponse est attendue, avec les demandes ouvertes et les tâches ouvertes.
+- La configuration de boîte affiche désormais son dernier état de relève, afin
+  de rendre visible ce que Cremona a réellement importé et quand.
 
-État : **partiel**. La connexion technique ne suffit pas encore à offrir la
-file unique attendue pour la relation client.
+État : **partiel mais utilisable**. La file de travail existe ; restent les
+règles de rapprochement et de qualification entre emails directs, appels,
+rencontres et demandes du site.
+
+### H. Documents privés et stockage objet
+
+- Les documents métier restent stockés localement par défaut, sans migration ni
+  copie automatique des historiques.
+- Le disque privé Scaleway est livré comme option explicite par environnement,
+  réservée aux documents confidentiels de Cremona. Les médias éditoriaux et
+  galeries du CMS restent dans leur site propriétaire.
+- Cremona diffuse les documents via sa route authentifiée après contrôle des
+  droits ; le bucket ne devient pas public.
+
+État : **livré, activation de production à planifier séparément** avec un dépôt
+et téléchargement de contrôle non confidentiel.
 
 ## Reste à faire prioritaire
 
-1. Terminer le produit Relation client : auditer la boîte Atelier Ivo, rendre
-   l’état de relève compréhensible et réunir emails directs, demandes du site,
-   appels et rencontres dans une file de travail cohérente. La suppression
-   distante ne devra jamais fermer une demande automatiquement.
+1. Valider le produit Relation client avec la boîte Atelier Ivo : rendre l’état
+   de relève compréhensible et définir, à partir de cas réels, le rapprochement
+   des emails directs, demandes du site, appels et rencontres dans la file À
+   traiter. La suppression distante ne devra jamais fermer une demande.
 2. Confirmer, lors de la prochaine création réelle d’un dossier atelier avec
    devis, la paire de références `AT…` / `D…` partagée ; conserver ce résultat
    dans le journal de livraison.
@@ -181,8 +201,9 @@ file unique attendue pour la relation client.
    réelle, sans fuite ni doublon sur reprise ; basculer ensuite Atelier Ivo,
    puis Contempo, sans supprimer les historiques locaux.
 6. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.
-7. Poursuivre l’audit des libellés sur les réglages et écrans d’administration
-   peu fréquents, après les parcours opérationnels ci-dessus.
+7. Consolider l’architecture de présentation : faire converger le registre de
+   modules, les rubriques globales et les libellés éditables, puis poursuivre
+   l’audit des écrans d’administration peu fréquents.
 
 ## Dette de contrôle connue
 

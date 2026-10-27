@@ -1,8 +1,9 @@
 # Plan directeur produit — Cremona
 
-> Statut : cap produit validé, plan de réalisation à lancer par étapes.
+> Statut : architecture cible validée ; plusieurs fondations produit sont
+> livrées et doivent maintenant être consolidées par des parcours réels.
 >
-> Dernière mise à jour : 8 octobre 2026.
+> Dernière mise à jour : 27 octobre 2026.
 >
 > Ce document est la référence de reprise du chantier. Il décrit la cible ; il ne vaut pas autorisation de supprimer, migrer ou masquer une capacité sans audit, tests et validation explicite.
 >
@@ -25,7 +26,7 @@ Accueil
   Tableau de bord
 
 Suivi client
-  Clients · Demandes · Correspondances · Rendez-vous · Tâches
+  À traiter · Clients · Demandes · Correspondances · Rendez-vous · Tâches
 
 Activité commerciale
   Propositions d’atelier · Documents
@@ -54,65 +55,68 @@ Paramètres
 - **Demande** est le mot courant pour une intention entrante. « Lead » ne doit pas devenir une entrée principale.
 - **Demande client** désigne, dans la réflexion produit, un besoin concret qui mérite un suivi : conseil, réparation, achat, location ou rendez-vous. Une conversation n'est transformée en demande que lorsqu'une action ou une décision commerciale est nécessaire. Le libellé définitif de l'interface reste à valider.
 - **Clients** est l’entrée unique qui réunit les particuliers et les entreprises. Elle appartient à la rubrique **Suivi client**, qui rassemble également les demandes, correspondances, rendez-vous et tâches. Il n’y a ni deuxième entrée Clients, ni rubrique orpheline.
+- **À traiter** est une vue de travail, non une nouvelle table : elle rassemble les demandes ouvertes, les correspondances auxquelles une réponse est attendue et les tâches ouvertes. Chaque élément conserve son modèle, ses règles et son écran propre.
 - Un particulier est un client en propre. Une entreprise est une cliente professionnelle ; ses personnes liées sont des **contacts** avec un rôle (direction, professeur, administration, comptabilité). Le mot « contact » ne sert donc pas à renommer indistinctement tous les clients.
 - **Agenda** est le nom utilisateur de la capacité temporelle. Il pourra réunir rendez-vous, essais, appels, visites et rappels. Tant que seuls les rendez-vous existent, l'interface ne doit pas promettre davantage.
 - **Campagnes**, **Résultats** et **Référencement** expriment une intention de pilotage. Google Ads, GA4 et Search Console restent dans le détail, l'aide ou les connexions.
 - **Devis** reste le nom canonique de la capacité commerciale ; une organisation peut le présenter comme « Proposition d'atelier » sans changer la nature de la donnée ni sa valeur juridique.
 - Les exemples « Clients et atelier », « Dossiers et échéances », « À faire à l'atelier », « archets » ou « violons » sont des exemples de configuration, jamais des noms codés en dur.
 
-## 3. État constaté au 8 septembre 2026
+## 3. État produit au 27 octobre 2026
 
 | Capacité | État | Limite ou suite |
 | --- | --- | --- |
-| Demandes, contacts, entreprises, correspondances | opérationnel | champs encore peu configurables par organisation |
-| Tâches, rendez-vous, documents privés | opérationnel | rendez-vous n'est pas encore un agenda multi-types |
-| Devis | socle opérationnel | PDF, règles d'émission et cycle complet à approfondir |
+| Suivi client | opérationnel, à consolider | Clients unifiés et file **À traiter** livrés ; le rapprochement métier des emails directs, appels et rencontres reste à valider |
+| Tâches, rendez-vous, documents privés | opérationnel | les rendez-vous ne forment pas encore un agenda multi-types ; les documents privés restent locaux par défaut, avec Object Storage Scaleway activable explicitement |
+| Devis et dossiers atelier | opérationnel | PDF, contexte d’organisation, numérotation annuelle et référence partagée dossier/devis livrés ; une création réelle reste à observer |
+| Location Luthier | opérationnel, à valider en situation réelle | contrat, assurance facultative, acceptation interne, remise, restitution et suivi manuel d’encaissement livrés ; aucun prélèvement bancaire n’est géré |
 | Campagnes Google Ads | opérationnel | GA4 et Search Console non connectés |
-| Tableau de bord | présent | doit devenir la synthèse prioritaire de tous les domaines |
-| Adaptation de présentation | opérationnelle | labels, groupes et visibilité ; registre à généraliser |
-| Email, SMTP, import IMAP | opérationnel | formation et usages réels à consolider |
-| Offre | non construite | aucun objet métier ne doit être forcé dans un catalogue universel |
-| Présence en ligne | fondations site seulement | le site public demeure la responsabilité de Maracuja CMS |
-| Résultats et Référencement | non construits | audit comparatif des sources obligatoire |
-| IA | bases de correspondance seulement | aucune automatisation externe sans garde-fous |
+| Tableau de bord | opérationnel | priorités CRM et Location visibles ; la pertinence doit être confirmée avec les usages réels |
+| Modules, packs et présentation | opérationnels | registre de modules, dépendances et personnalisation de présentation livrés ; leur source de définition reste répartie entre registre et présentation |
+| Email, SMTP et relève IMAP | opérationnel, périmètre explicite | import et réponse possibles ; une suppression ou un archivage distant ne ferme jamais une donnée Cremona |
+| Offre et présence en ligne | fondations et pilote Luthier | aucun catalogue universel ; CMS ou Cremona est propriétaire d’un objet, jamais les deux |
+| Résultats, référencement et IA | non construits | audit des sources, des droits et des garde-fous requis avant tout écran ou automatisation |
 
-### 3.1. Réflexion de simplicité — suivi client pour un atelier
+### 3.1. Suivi client : une file de travail sans fusion des données
 
-Le socle actuel expose six ressources distinctes — demandes, contacts,
-entreprises, correspondances, rendez-vous/essais et tâches. Cette découpe est
-correcte pour le modèle de données, mais elle est trop proche de la structure
-interne pour servir de poste de travail quotidien à un luthier. La navigation
-doit présenter une intention de travail, pas obliger l'utilisateur à choisir
-la table où ranger son action.
+Les objets canoniques restent distincts — demandes, personnes, entreprises,
+correspondances, rendez-vous et tâches — car ils ont des cycles, droits et
+preuves différents. La navigation ne les impose plus comme seul point d’entrée :
+la page **À traiter** est une projection de travail des demandes ouvertes, des
+messages entrant restés sans réponse et des tâches ouvertes. Elle ne crée pas de
+copie de données et chaque ligne ouvre son objet source.
 
-Le parcours observé à examiner est le suivant :
+Le parcours de référence devient :
 
 ```text
 Message, formulaire ou appel
-  → boîte de réception ou création rapide
-  → demande client, seulement si un besoin mérite d'être traité
+  → À traiter, correspondance ou création rapide
+  → demande client, seulement si un besoin mérite une qualification
   → réponse, note, tâche, rendez-vous, essai ou devis selon le besoin
   → résultat : réalisé, vendu, essai organisé, sans suite, etc.
 ```
 
-Une demande peut devenir le dossier léger d'un besoin réel ; elle ne duplique
-ni les e-mails ni la fiche client. Un simple message, une information
-ponctuelle ou un spam ne doit pas déclencher de suivi artificiel. Cette règle
-reste à éprouver sur les parcours quotidiens avant de modifier le menu.
+Une demande est le dossier léger d'un besoin réel ; elle ne duplique ni les
+e-mails ni la fiche client. Un simple message, une information ponctuelle ou un
+spam ne doit pas déclencher de suivi artificiel. Un email direct importé reste
+d’abord une correspondance : son rattachement ou sa transformation en demande
+reste explicite. La relève IMAP est une capture et non un miroir de la boîte
+distante ; supprimer un email de la boîte ne clôture jamais une demande.
 
 | Besoin quotidien | Élément affiché | Rôle et règle de simplicité |
 | --- | --- | --- |
-| Retrouver l'historique d'une personne ou d'une structure | Clients | Décision validée : une entrée, avec des vues Particuliers et Professionnels ; les deux modèles existants sont conservés. |
-| Lire, répondre, classer | Correspondances | À comparer avec les demandes : ne pas transformer chaque message en dossier de suivi. |
-| Ne pas oublier un besoin commercial ou atelier | Demandes | À préciser par les cas réels : origine, qualification, action et issue. |
-| Savoir quoi faire et quand | Rendez-vous et Tâches | Leur place dans ou hors de Suivi client reste ouverte ; ce sont des objets transversaux. |
+| Voir ce qui appelle une action | À traiter | Projection unifiée livrée : demandes ouvertes, réponses attendues et tâches ouvertes ; aucune donnée n’est fusionnée. |
+| Retrouver l'historique d'une personne ou d'une structure | Clients | Une entrée livrée, avec vues Particuliers et Professionnels ; les deux modèles existants sont conservés. |
+| Lire, répondre, classer | Correspondances | Reste le lieu de la conversation ; un message ne devient pas automatiquement une demande. |
+| Qualifier un besoin commercial ou atelier | Demandes | Dossier léger avec origine, qualification, action et issue à éprouver par les cas réels. |
+| Savoir quoi faire et quand | Rendez-vous et Tâches | Objets transversaux ; la vue Agenda ne sera créée qu’après audit de leurs règles de coexistence. |
 | Préparer ou suivre une proposition | Propositions d’atelier | Elles restent dans Activité commerciale. |
 | Gérer une opération de lutherie | Atelier | Les dossiers atelier et locations ont leur propre cycle métier. |
 
-La seule décision validée à ce stade est la vue Clients unifiée. Elle ne fusionne
-pas les modèles ni ne supprime les historiques. Les autres évolutions de
-vocabulaire, de regroupement et de chemins de création restent des hypothèses
-à comparer aux usages réels.
+Les décisions validées sont la vue Clients unifiée et la file **À traiter**.
+Elles ne fusionnent pas les modèles ni ne suppriment les historiques. Le
+rapprochement entre un appel, un email direct, un formulaire et une rencontre
+reste un chantier d’usage : il ne doit pas être automatisé avant observation.
 
 Pour un client professionnel, l’entreprise est la partie cliente ; les personnes
 qui y travaillent sont ses contacts liés, avec leur fonction et un contact
@@ -151,7 +155,35 @@ change aucun modèle. Elle vise une zone secondaire de navigation, par exemple
 objets : un référentiel régulièrement utilisé peut mériter un raccourci depuis
 son opération, sans devenir pour autant une entrée principale.
 
-## 4. Architecture à viser
+## 4. Architecture produit et technique
+
+### Structure livrée : cinq niveaux à ne pas confondre
+
+1. **Organisation et isolation** : une organisation est l’unité de données,
+   de droits et de configuration. Toutes les données métier sont isolées par
+   `organization_id` ; une action sans contexte d’organisation est refusée.
+2. **Modules canoniques** : `crm`, `appointments`, `quotes`, `marketing`,
+   `luthier_catalog`, `workshop`, `rentals` et `inventory` sont activés par
+   organisation, avec dépendances contrôlées. Un module porte une capacité ; il
+   ne correspond pas nécessairement à une entrée du menu.
+3. **Rubriques de navigation** : Suivi client, Activité commerciale, Atelier,
+   Catalogue et stock, Marketing et Configuration organisent visuellement les
+   capacités. Ce sont des chapeaux globaux, non des interrupteurs par
+   organisation. Leur libellé peut être adapté dans les limites prévues ; leur
+   identifiant et leur structure ne deviennent pas des données métier libres.
+4. **Packs métier et présentation** : un pack propose un ensemble de modules
+   et de libellés par défaut. Il adapte l’expérience sans dupliquer le noyau,
+   les droits ou les données. Les objets propres — instrument, dossier atelier,
+   location — vivent dans leur module métier.
+5. **Configuration et connexions** : boîtes email, canaux entrants, CMS Bridge,
+   Google Ads, Brevo et stockage objet sont des intégrations administrées. Elles
+   ne sont pas des modules activables dans la navigation quotidienne.
+
+La file **À traiter** est une couche d’expérience au-dessus des objets CRM ; ce
+n’est ni une nouvelle table ni un quatrième type de donnée client. De même, un
+site CMS connecté et Cremona restent deux applications séparées : le bridge
+transmet un événement fiable, sans accès direct à la base de l’autre application
+ni double édition.
 
 ### Registre canonique des capacités
 
@@ -166,11 +198,14 @@ La navigation ne doit pas être une liste de ressources Filament indépendantes.
 
 Les organisations peuvent personnaliser les libellés et la visibilité explicitement prévues. Elles ne peuvent pas renommer un identifiant technique, contourner un droit ou changer le sens d'une donnée.
 
-La personnalisation actuelle (`settings.presentation`) est une première étape. Avant de multiplier les clés, le registre devra devenir la source unique des groupes, des éléments éditables et de leur présentation. Le JSON ne doit pas devenir une structure métier arbitraire.
+Le registre de modules et `settings.presentation` sont aujourd’hui deux couches
+complémentaires. La prochaine consolidation devra les faire converger vers une
+source de définition unique des groupes, éléments éditables et dépendances. Le
+JSON ne doit pas devenir une structure métier arbitraire.
 
 ### Visibilité, droit et données : trois choses distinctes
 
-- Masquer un module le retire de la navigation et des raccourcis ordinaires. Cela ne supprime aucune donnée et ne modifie aucun droit.
+- Masquer un module le retire de la navigation et des raccourcis ordinaires. Cela ne supprime aucune donnée et ne modifie aucun droit. Masquer une rubrique ne doit jamais être utilisé comme mécanisme de permission.
 - Un accès direct, une relation ou une API continue à respecter les politiques d'autorisation et l'isolation de l'organisation.
 - Désactiver une intégration ne détruit ni les historiques synchronisés ni les identifiants nécessaires à leur traçabilité.
 - Réorganiser un écran ne justifie jamais une suppression de table, migration ou fichier sans inventaire et plan de conservation.
@@ -250,18 +285,21 @@ la location, puis l'élever en domaine dédié. Ne pas créer un second `Contrac
 concurrent, et ne pas accumuler assurance, mandat, signature, banque et
 restitution dans une table unique.
 
-Le premier lot ne suppose pas que tous les besoins envisagés seront construits.
-Il doit d'abord stabiliser le cycle de location, une tarification mensuelle par
-grille (famille, taille et gamme) et la preuve de restitution. Les montants sont
-figés au moment de la location ; une exception par instrument reste explicite.
-L'assurance, le suivi manuel des prélèvements, la signature électronique et
-l'import/export bancaire restent des décisions distinctes, prises seulement
-après observation du processus réel.
+Le cycle livré est : **Dossier en préparation → Dossier envoyé → Dossier
+accepté → Instrument remis → Instrument restitué**. Les contrats de location et
+d’assurance, lorsqu’elle est choisie, sont générés, archivés comme documents
+privés immuables et acceptés par lien personnel. Cette acceptation interne est
+traçable ; elle n’est pas présentée comme une signature électronique qualifiée.
 
-**Fin :** une location active ou restituée est compréhensible sans ambiguïté,
-le tarif historique est conservé, les documents privés peuvent être rattachés
-au bon dossier, et aucun mécanisme bancaire ou de signature n'est prétendu
-exister sans preuve adaptée.
+La tarification mensuelle par grille (famille, taille, gamme) est figée dans la
+location ; une exception par instrument reste explicite. À la remise et à la
+restitution, Cremona crée respectivement les actions internes « encaissement à
+mettre en place » et « encaissement à arrêter ou ajuster ». Il n’exécute aucun
+prélèvement, ne stocke ni IBAN ni RUM, et n’intègre pas de banque.
+
+**Suite :** valider un dossier réel avec Giovanni, de l’émission à la
+restitution, puis corriger uniquement les règles révélées par cet usage. Les
+contrats entreprises, prélèvements et signature qualifiée ne sont pas engagés.
 
 ### E. Présence en ligne
 
@@ -303,14 +341,20 @@ Présenter recherches, pages trouvées, clics, impressions et tendances issus de
 
 **Fin :** on répond à « est-ce que ma publicité et ma présence en ligne produisent des résultats ? » avec des chiffres sourcés, non un tableau technique fragmenté.
 
-### G. Paramètres et connexions
+### G. Paramètres, connexions et stockage privé
 
 **But :** sortir les réglages techniques du travail quotidien sans les rendre opaques aux administrateurs autorisés.
 
 - **Entreprise** : identité, fuseau, présentation et sites rattachés.
 - **Utilisateurs** : membres, rôles, accès par organisation.
-- **Connexions** : email/SMTP/IMAP, Google Ads, agenda, Brevo, OpenAI, GA4, Search Console et futurs prestataires.
+- **Connexions** : email/SMTP/IMAP, Google Ads, CMS Bridge, Brevo, agenda, OpenAI, GA4, Search Console et futurs prestataires.
 - **Réglages** : préférences non sensibles.
+
+Les documents métier confidentiels restent locaux par défaut. Une installation
+peut activer explicitement le bucket privé Scaleway pour ce seul flux ; les
+galeries et médias éditoriaux du CMS ne sont ni déplacés ni mélangés à ces
+documents. Cremona contrôle alors le droit avant diffusion et ne livre jamais
+d’URL publique ou présignée.
 
 Les secrets ne sont jamais placés dans les écrans métier, migrations, Git, exports ou chat. Les actions externes restent explicites et auditables.
 
@@ -362,8 +406,20 @@ Garde-fous obligatoires :
 - Quelles données et intégrations existantes ne doivent surtout pas être perturbées ?
 - Quel est le plus petit périmètre utile avant les variantes et automatisations ?
 
-## 8. Point de départ recommandé
+## 8. Priorité produit recommandée
 
-Après l'appropriation d'Atelier Ivo, lancer **B. Accueil et priorités quotidiennes**, parallèlement au cadrage des trois flux Atelier Ivo qui prépareront Agenda et Offre.
+1. **Valider la relation client réelle** : faire fonctionner la file À traiter
+   avec la boîte Atelier Ivo, les demandes du site, les appels et les rencontres,
+   sans automatiser de rapprochement avant observation.
+2. **Valider les domaines déjà construits** : un dossier atelier/devis réel et
+   une location Contempo complète avant toute extension documentaire, bancaire
+   ou commerciale.
+3. **Valider le bridge sur deux organisations** : soumission réelle,
+   idempotence, reprise et absence de fuite ; basculer ensuite les sites un par
+   un sans supprimer leurs historiques.
+4. **Consolider le registre produit** : faire converger registre de modules,
+   rubriques globales et présentation éditable avant d’ajouter de nouveaux packs.
 
-Le chantier **Résultats** ne commence qu'après l'audit comparatif du module Campagnes, des métriques Google Ads existantes, des futures données GA4 et de l'attribution des demandes Cremona.
+Le chantier **Résultats** ne commence qu'après l'audit comparatif du module
+Campagnes, des métriques Google Ads existantes, des futures données GA4 et de
+l'attribution des demandes Cremona.
