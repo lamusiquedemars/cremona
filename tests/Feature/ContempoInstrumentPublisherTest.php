@@ -77,7 +77,7 @@ class ContempoInstrumentPublisherTest extends TestCase
 
             return count($media) === 1
                 && $media[0]['caption'] === 'Table du violon'
-                && str_ends_with($media[0]['url'], '/storage/instruments/violon.jpg');
+                && str_ends_with($media[0]['url'], '/media/instruments/violon.jpg');
         });
     }
 
@@ -112,7 +112,7 @@ class ContempoInstrumentPublisherTest extends TestCase
             app(ContempoInstrumentPublisher::class)->publish($instrument);
         });
 
-        Http::assertSent(fn ($request): bool => str_ends_with($request['media'][0]['url'], '/storage/instruments/violon.jpg')
+        Http::assertSent(fn ($request): bool => str_ends_with($request['media'][0]['url'], '/media/instruments/violon.jpg')
             && $request['attributes'][0]['value'] === '4/4');
     }
 }

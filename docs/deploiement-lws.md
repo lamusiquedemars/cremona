@@ -152,13 +152,7 @@ bascule de `current`, un tel lien se référerait à lui-même et provoquerait u
 d'abord le répertoire de staging avant d'y recopier le stockage partagé.
 
 Les téléversements publics (notamment les photos d'instruments) sont servis
-depuis `public/storage`. Après avoir restauré `storage` dans la release de
-staging, exécuter systématiquement :
-
-```bash
-php artisan storage:link
-```
-
-Ce lien doit être recréé dans chaque release avant la bascule : le code est
-nouveau à chaque déploiement, tandis que les fichiers téléversés restent dans
-le stockage persistant recopié depuis la release validée.
+par la route Laravel `/media/{path}`. Sur cet hébergement, ne pas dépendre du
+lien symbolique `public/storage` : LWS ne le sert pas de façon fiable. Les
+fichiers restent dans `storage/app/public` de la release de staging, recopiée
+depuis la release validée.
