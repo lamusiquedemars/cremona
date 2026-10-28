@@ -8,9 +8,12 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Services\OrganizationModuleAccess;
 use App\Services\OrganizationModuleRegistry;
+use App\Services\UserPasswordSetupLink;
 use App\Tenancy\OrganizationContext;
+use Filament\Auth\Notifications\ResetPassword;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -94,6 +97,23 @@ class UserAccessProfileTest extends TestCase
     {
         $this->get('/platform/password-reset/request')->assertOk();
         $this->get('/dashboard/password-reset/request')->assertOk();
+    }
+
+    public function test_password_setup_links_return_each_user_to_the_right_back_office(): void
+    {
+        Notification::fake();
+        $member = User::factory()->create();
+        $administrator = User::factory()->platformAdministrator()->create();
+
+        app(UserPasswordSetupLink::class)->send($member);
+        app(UserPasswordSetupLink::class)->send($administrator);
+
+        Notification::assertSentTo($member, function (ResetPassword $notification): bool {
+            return str_contains($notification->url, '/dashboard/password-reset/reset');
+        });
+        Notification::assertSentTo($administrator, function (ResetPassword $notification): bool {
+            return str_contains($notification->url, '/platform/password-reset/reset');
+        });
     }
 
 }

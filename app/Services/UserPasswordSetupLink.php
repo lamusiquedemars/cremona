@@ -17,11 +17,13 @@ final class UserPasswordSetupLink
             throw new LogicException('Un compte suspendu ne peut pas recevoir de lien d’accès.');
         }
 
+        $panel = Filament::getPanel($user->is_platform_admin ? 'platform' : 'admin');
+
         $status = Password::broker(Filament::getAuthPasswordBroker())->sendResetLink(
             ['email' => $user->email],
-            function (CanResetPassword $notifiable, string $token): void {
+            function (CanResetPassword $notifiable, string $token) use ($panel): void {
                 $notification = app(ResetPasswordNotification::class, ['token' => $token]);
-                $notification->url = Filament::getResetPasswordUrl($token, $notifiable);
+                $notification->url = $panel->getResetPasswordUrl($token, $notifiable);
                 $notifiable->notify($notification);
             },
         );
