@@ -122,6 +122,17 @@ body.fi-body {
     line-height: 1.2;
 }
 
+/*
+ * The agenda header and its day cells must use the same explicit grid. This
+ * avoids a visual drift when a cached Tailwind bundle does not retain a grid
+ * utility from a Blade view.
+ */
+.cremona-agenda-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(8.75rem, 1fr));
+    min-width: 61.25rem;
+}
+
 @media (min-width: 40rem) {
     .fi-header-heading {
         font-size: 1.875rem;

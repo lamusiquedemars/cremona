@@ -26,13 +26,13 @@
     </div>
 
     <div class="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/5">
-        <div class="grid min-w-[980px] grid-cols-7 border-b border-gray-200 text-xs font-medium uppercase tracking-wide text-gray-500 dark:border-white/10 dark:text-gray-400">
+        <div class="cremona-agenda-grid border-b border-gray-200 text-xs font-medium uppercase tracking-wide text-gray-500 dark:border-white/10 dark:text-gray-400">
             @foreach ($days->take(7) as $day)
                 <div class="px-3 py-2">{{ $day->isoFormat('ddd') }}</div>
             @endforeach
         </div>
         <div @class([
-            'grid min-w-[980px] grid-cols-7 divide-x divide-gray-200 dark:divide-white/10',
+            'cremona-agenda-grid divide-x divide-gray-200 dark:divide-white/10',
             'divide-y' => $agendaView === 'month',
         ])>
             @foreach ($days as $day)
