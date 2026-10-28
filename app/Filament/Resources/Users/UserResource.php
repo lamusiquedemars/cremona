@@ -20,11 +20,11 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -80,12 +80,23 @@ class UserResource extends Resource
                 ->schema([
                     Repeater::make('memberships')->relationship()->label('Organisations accessibles')
                         ->addActionLabel('Ajouter un accès à une organisation')->defaultItems(0)->columns(2)
+                        ->mutateRelationshipDataBeforeFillUsing(function (array $data): array {
+                            if (($data['role'] ?? null) instanceof OrganizationRole) {
+                                $data['role'] = $data['role']->value;
+                            }
+
+                            return $data;
+                        })
                         ->schema([
                             Select::make('organization_id')->label('Organisation')->relationship('organization', 'name')
                                 ->searchable()->preload()->required()->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                             Select::make('role')->label('Profil')->options(OrganizationRole::class)
                                 ->default(OrganizationRole::Collaborator->value)->required()->live()
-                                ->helperText(fn (Get $get): string => self::roleHelp((string) $get('role'))),
+                                ->helperText(function (Get $get): string {
+                                    $role = $get('role');
+
+                                    return self::roleHelp($role instanceof OrganizationRole ? $role->value : (string) $role);
+                                }),
                             Toggle::make('customize_modules')->label('Limiter aux modules cochés')
                                 ->default(false)->live()->dehydrated(false)
                                 ->afterStateHydrated(function (Toggle $component, ?OrganizationMembership $record): void {

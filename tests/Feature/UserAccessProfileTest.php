@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Users\Pages\CreateUser;
+use App\Filament\Resources\Users\Pages\EditUser;
 use App\Models\Organization;
 use App\Models\User;
 use App\Services\OrganizationModuleAccess;
@@ -91,6 +92,25 @@ class UserAccessProfileTest extends TestCase
         $user = User::query()->where('email', 'camille@example.test')->firstOrFail();
         $this->assertNotEmpty($user->password);
         $this->assertTrue($user->isActive());
+    }
+
+    public function test_a_platform_administrator_can_open_a_users_access_profile_for_editing(): void
+    {
+        $administrator = User::factory()->platformAdministrator()->create();
+        $organization = Organization::factory()->create();
+        $member = User::factory()->create(['status' => 'active']);
+        $member->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+            'permissions' => ['modules' => ['crm']],
+        ]);
+        Filament::setCurrentPanel(Filament::getPanel('platform'));
+
+        Livewire::actingAs($administrator)
+            ->test(EditUser::class, ['record' => $member->getKey()])
+            ->assertFormSet([
+                'name' => $member->name,
+                'status' => 'active',
+            ]);
     }
 
     public function test_password_recovery_is_available_from_both_back_offices(): void
