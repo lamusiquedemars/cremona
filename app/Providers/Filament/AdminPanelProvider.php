@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\CremonaLogin;
+use App\Filament\Pages\ClientAgenda;
 use App\Http\Middleware\SetActiveOrganization;
 use App\Models\Organization;
 use App\Services\OrganizationPresentation;
@@ -71,6 +72,9 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
+                // Keep this operational page registered even when Filament's
+                // component discovery cache was built before a release.
+                ClientAgenda::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
