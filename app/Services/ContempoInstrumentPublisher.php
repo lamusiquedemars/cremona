@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\InstrumentAsset;
 use App\Models\OrganizationIntegration;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -14,8 +15,15 @@ class ContempoInstrumentPublisher
     public function publish(InstrumentAsset $instrument): void
     {
         $connection = OrganizationIntegration::query()->where('provider', 'contempo_cms')->where('name', 'instrument_projection')->first();
-        $endpoint = $connection?->credentials['endpoint'] ?? null;
-        $token = $connection?->credentials['token'] ?? null;
+
+        try {
+            $credentials = $connection?->credentials ?? [];
+        } catch (DecryptException) {
+            throw new LogicException('Le connecteur de publication doit être reconfiguré avant de pouvoir synchroniser le site.');
+        }
+
+        $endpoint = $credentials['endpoint'] ?? null;
+        $token = $credentials['token'] ?? null;
         if (blank($endpoint) || blank($token)) {
             throw new LogicException('Aucun connecteur de publication n’est configuré pour cette organisation.');
         }
