@@ -9,6 +9,7 @@ use App\Models\OrganizationIntegration;
 use App\Services\ContempoInstrumentPublisher;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -78,5 +79,35 @@ class ContempoInstrumentPublisherTest extends TestCase
                 && $media[0]['caption'] === 'Table du violon'
                 && str_ends_with($media[0]['url'], '/storage/instruments/violon.jpg');
         });
+    }
+
+    public function test_double_encoded_media_from_an_existing_edit_is_still_published(): void
+    {
+        Storage::fake('public');
+        Http::fake(['https://contempo.test/api/instruments' => Http::response([], 201)]);
+
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            OrganizationIntegration::query()->create([
+                'provider' => 'contempo_cms',
+                'name' => 'instrument_projection',
+                'credentials' => ['endpoint' => 'https://contempo.test/api/instruments', 'token' => 'test-token'],
+                'status' => 'active',
+            ]);
+            $instrument = InstrumentAsset::query()->create([
+                'name' => 'Violon d’essai',
+                'reference' => 'V-001',
+                'status' => InstrumentAssetStatus::Available,
+                'is_site_published' => true,
+            ]);
+            $media = [['path' => 'instruments/violon.jpg', 'is_public' => true]];
+            DB::table('instrument_assets')->where('id', $instrument->id)->update(['media' => json_encode(json_encode($media))]);
+            $instrument->refresh();
+
+            app(ContempoInstrumentPublisher::class)->publish($instrument);
+        });
+
+        Http::assertSent(fn ($request): bool => str_ends_with($request['media'][0]['url'], '/storage/instruments/violon.jpg'));
     }
 }

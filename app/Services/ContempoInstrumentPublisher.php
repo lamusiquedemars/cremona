@@ -38,7 +38,15 @@ class ContempoInstrumentPublisher
     /** @return array<int, array<string, mixed>> */
     private function publicMedia(InstrumentAsset $instrument): array
     {
-        return collect($instrument->media)
+        $media = $instrument->media;
+
+        // Older edit submissions can leave the JSON payload double-encoded.
+        // Accept it while the form continues to present the same media list.
+        if (is_string($media)) {
+            $media = json_decode($media, true) ?: [];
+        }
+
+        return collect($media)
             ->filter(fn (array $media): bool => (bool) ($media['is_public'] ?? false))
             ->map(function (array $media): ?array {
                 $source = $media['path'] ?? $media['url'] ?? null;
