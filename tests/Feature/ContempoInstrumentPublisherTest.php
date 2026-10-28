@@ -102,12 +102,17 @@ class ContempoInstrumentPublisherTest extends TestCase
                 'is_site_published' => true,
             ]);
             $media = [['path' => 'instruments/violon.jpg', 'is_public' => true]];
-            DB::table('instrument_assets')->where('id', $instrument->id)->update(['media' => json_encode(json_encode($media))]);
+            $attributes = [['label' => 'Taille', 'value' => '4/4', 'is_public' => true]];
+            DB::table('instrument_assets')->where('id', $instrument->id)->update([
+                'media' => json_encode(json_encode($media)),
+                'attributes' => json_encode(json_encode($attributes)),
+            ]);
             $instrument->refresh();
 
             app(ContempoInstrumentPublisher::class)->publish($instrument);
         });
 
-        Http::assertSent(fn ($request): bool => str_ends_with($request['media'][0]['url'], '/storage/instruments/violon.jpg'));
+        Http::assertSent(fn ($request): bool => str_ends_with($request['media'][0]['url'], '/storage/instruments/violon.jpg')
+            && $request['attributes'][0]['value'] === '4/4');
     }
 }
