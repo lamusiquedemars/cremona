@@ -1,11 +1,23 @@
 <x-filament-panels::page>
     @php($days = $this->days())
     @php($events = $this->events())
+    @php($firstDay = $days->first())
+    @php($lastDay = $days->last())
+    @php($periodLabel = $agendaView === 'month'
+        ? $firstDay->translatedFormat('F Y')
+        : ($firstDay->isSameMonth($lastDay)
+            ? $firstDay->translatedFormat('F Y')
+            : ($firstDay->isSameYear($lastDay)
+                ? $firstDay->translatedFormat('F') . ' · ' . $lastDay->translatedFormat('F Y')
+                : $firstDay->translatedFormat('F Y') . ' · ' . $lastDay->translatedFormat('F Y'))))
 
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h2 class="text-base font-semibold text-gray-950 dark:text-white">{{ $agendaView === 'month' ? 'La vue d’ensemble de votre mois' : 'Votre semaine de travail' }}</h2>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <h2 class="text-base font-semibold text-gray-950 dark:text-white">{{ $agendaView === 'month' ? 'La vue d’ensemble de votre mois' : 'Votre semaine de travail' }}</h2>
+                    <span class="rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-500/10 dark:text-primary-300">{{ $periodLabel }}</span>
+                </div>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Rendez-vous, appels, rappels, dossiers atelier et retours de location réunis sans modifier leurs fiches d’origine.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
