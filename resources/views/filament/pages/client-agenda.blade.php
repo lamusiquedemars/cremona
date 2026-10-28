@@ -21,14 +21,17 @@
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Rendez-vous, appels, rappels, dossiers atelier et retours de location réunis sans modifier leurs fiches d’origine.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <div class="inline-flex rounded-lg bg-gray-100 p-1 dark:bg-white/10" role="tablist" aria-label="Vue de l’agenda">
-                    @foreach (['week' => 'Semaine', 'month' => 'Mois'] as $value => $label)
-                        <button type="button" wire:click="selectView('{{ $value }}')" @class([
+                <div class="flex items-center gap-2" role="group" aria-label="Affichage de l’agenda">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Affichage</span>
+                    <div class="inline-flex rounded-lg bg-gray-100 p-1 dark:bg-white/10">
+                    @foreach (['week' => 'Vue semaine', 'month' => 'Vue mois'] as $value => $label)
+                        <button type="button" wire:click="selectView('{{ $value }}')" aria-pressed="{{ $agendaView === $value ? 'true' : 'false' }}" @class([
                             'rounded-md px-3 py-1.5 text-sm font-medium transition',
                             'bg-white text-gray-950 shadow-sm dark:bg-white/15 dark:text-white' => $agendaView === $value,
                             'text-gray-600 hover:text-gray-950 dark:text-gray-300 dark:hover:text-white' => $agendaView !== $value,
                         ])>{{ $label }}</button>
                     @endforeach
+                    </div>
                 </div>
                 <button type="button" wire:click="previousPeriod" class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/10">Précédent</button>
                 <button type="button" wire:click="currentPeriod" class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/10">Aujourd’hui</button>
