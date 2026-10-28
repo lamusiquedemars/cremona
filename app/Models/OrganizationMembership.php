@@ -48,4 +48,19 @@ class OrganizationMembership extends Pivot
 
         return $this->role->grants($permission);
     }
+
+    public function canAccessModule(string $module): bool
+    {
+        $modules = data_get($this->permissions, 'modules');
+
+        // L'absence de liste conserve le profil existant. Une liste, même
+        // vide, est un choix explicite de modules autorisés.
+        return ! is_array($modules) || in_array($module, $modules, true);
+    }
+
+    public function canManageModule(string $module): bool
+    {
+        return $this->canAccessModule($module)
+            && $this->role->canManageOperationalData();
+    }
 }

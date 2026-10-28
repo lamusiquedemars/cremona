@@ -1,6 +1,6 @@
 # Avancement du plan directeur Cremona
 
-> Dernière mise à jour : 27 octobre 2026.
+> Dernière mise à jour : 28 octobre 2026.
 >
 > Ce document suit les livraisons du [plan directeur produit](plan-directeur-produit-cremona.md). Il ne remplace pas les critères de fin du plan.
 
@@ -181,6 +181,24 @@ rencontres et demandes du site.
 État : **livré, activation de production à planifier séparément** avec un dépôt
 et téléchargement de contrôle non confidentiel.
 
+### I. Utilisateurs et accès
+
+- L’administration plateforme présente désormais les comptes avec leur état,
+  leurs organisations accessibles et leur dernière connexion.
+- Le profil est défini par organisation : Propriétaire, Administrateur,
+  Collaborateur ou Lecture seule. Il peut hériter de tous les modules actifs
+  de l’organisation, ou être limité à une liste explicite.
+- Cette liste est appliquée au menu, à l’ouverture des ressources et aux
+  actions de création, modification et suppression ; elle n’est pas seulement
+  informative.
+- Un compte peut être suspendu sans effacer son historique. Création de compte,
+  oubli et renouvellement du mot de passe utilisent un lien personnel par
+  e-mail ; le mot de passe n’est pas communiqué par un administrateur.
+
+État : **livré pour l’administration centrale**. La délégation de la gestion
+des membres à un administrateur client n’est pas engagée : elle doit être
+conçue séparément avec son périmètre de sécurité.
+
 ## Reste à faire prioritaire
 
 1. Valider le produit Relation client avec la boîte Atelier Ivo : rendre l’état
@@ -204,6 +222,9 @@ et téléchargement de contrôle non confidentiel.
 7. Consolider l’architecture de présentation : faire converger le registre de
    modules, les rubriques globales et les libellés éditables, puis poursuivre
    l’audit des écrans d’administration peu fréquents.
+8. Après validation d’usage, concevoir la délégation limitée de la gestion des
+   membres à l’administrateur d’une organisation, sans accès à la plateforme ni
+   aux autres organisations.
 
 ## Dette de contrôle connue
 

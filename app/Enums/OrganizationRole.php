@@ -25,6 +25,15 @@ enum OrganizationRole: string
     }
 
     /**
+     * Les profils définissent le niveau d'action ; la sélection de modules est
+     * ensuite portée par l'appartenance à une organisation.
+     */
+    public function canManageOperationalData(): bool
+    {
+        return $this !== self::Viewer;
+    }
+
+    /**
      * @return array<OrganizationPermission>
      */
     public function permissions(): array

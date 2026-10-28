@@ -3,7 +3,7 @@
 > Statut : architecture cible validée ; plusieurs fondations produit sont
 > livrées et doivent maintenant être consolidées par des parcours réels.
 >
-> Dernière mise à jour : 27 octobre 2026.
+> Dernière mise à jour : 28 octobre 2026.
 >
 > Ce document est la référence de reprise du chantier. Il décrit la cible ; il ne vaut pas autorisation de supprimer, migrer ou masquer une capacité sans audit, tests et validation explicite.
 >
@@ -73,6 +73,7 @@ Paramètres
 | Campagnes Google Ads | opérationnel | GA4 et Search Console non connectés |
 | Tableau de bord | opérationnel | priorités CRM et Location visibles ; la pertinence doit être confirmée avec les usages réels |
 | Modules, packs et présentation | opérationnels | registre de modules, dépendances et personnalisation de présentation livrés ; leur source de définition reste répartie entre registre et présentation |
+| Utilisateurs et accès | opérationnel | compte actif ou suspendu, profils par organisation, modules autorisés effectivement contrôlés et récupération de mot de passe livrés ; délégation de l’administration des membres à un client reste à concevoir |
 | Email, SMTP et relève IMAP | opérationnel, périmètre explicite | import et réponse possibles ; une suppression ou un archivage distant ne ferme jamais une donnée Cremona |
 | Offre et présence en ligne | fondations et pilote Luthier | aucun catalogue universel ; CMS ou Cremona est propriétaire d’un objet, jamais les deux |
 | Résultats, référencement et IA | non construits | audit des sources, des droits et des garde-fous requis avant tout écran ou automatisation |
@@ -346,7 +347,17 @@ Présenter recherches, pages trouvées, clics, impressions et tendances issus de
 **But :** sortir les réglages techniques du travail quotidien sans les rendre opaques aux administrateurs autorisés.
 
 - **Entreprise** : identité, fuseau, présentation et sites rattachés.
-- **Utilisateurs** : membres, rôles, accès par organisation.
+- **Utilisateurs et accès** : une personne possède un compte unique, mais un
+  profil par organisation. Le profil fixe son niveau d’action (Propriétaire,
+  Administrateur, Collaborateur ou Lecture seule) ; il peut être limité à une
+  liste explicite de modules actifs de l’organisation. Cette limitation est
+  appliquée aux menus et aux actions, pas seulement affichée.
+- **Cycle de compte** : un compte est actif ou suspendu. La création et le
+  renouvellement du mot de passe passent par un lien personnel envoyé par
+  e-mail ; aucun administrateur n’a à connaître ni communiquer un mot de
+  passe. La date de dernière connexion sert seulement au suivi administratif.
+- **Administration de plateforme** : elle reste distincte des profils client
+  et donne accès à toutes les organisations ; elle est réservée à Maracuja.
 - **Connexions** : email/SMTP/IMAP, Google Ads, CMS Bridge, Brevo, agenda, OpenAI, GA4, Search Console et futurs prestataires.
 - **Réglages** : préférences non sensibles.
 
@@ -419,6 +430,10 @@ Garde-fous obligatoires :
    un sans supprimer leurs historiques.
 4. **Consolider le registre produit** : faire converger registre de modules,
    rubriques globales et présentation éditable avant d’ajouter de nouveaux packs.
+5. **Déléguer les accès avec prudence** : après usage réel, concevoir un écran
+   limité permettant au propriétaire ou à l’administrateur d’une organisation
+   de gérer ses propres membres, sans lui exposer l’administration de la
+   plateforme ni les autres organisations.
 
 Le chantier **Résultats** ne commence qu'après l'audit comparatif du module
 Campagnes, des métriques Google Ads existantes, des futures données GA4 et de

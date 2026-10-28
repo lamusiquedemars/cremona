@@ -19,7 +19,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 
-#[Fillable(['name', 'email', 'password', 'is_platform_admin'])]
+#[Fillable(['name', 'email', 'password', 'is_platform_admin', 'status', 'invited_at', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants
 {
@@ -39,6 +39,8 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_platform_admin' => 'boolean',
+            'invited_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
     }
 
@@ -79,6 +81,10 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         OrganizationPermission $permission,
         Organization $organization,
     ): bool {
+        if (! $this->isActive()) {
+            return false;
+        }
+
         if ($this->is_platform_admin) {
             return true;
         }
@@ -90,8 +96,51 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         return $membership?->grants($permission) ?? false;
     }
 
+    public function canAccessOrganizationModule(string $module, Organization $organization): bool
+    {
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        if ($this->is_platform_admin) {
+            return true;
+        }
+
+        $membership = $this->memberships()
+            ->where('organization_id', $organization->getKey())
+            ->first();
+
+        return $membership?->canAccessModule($module) ?? false;
+    }
+
+    public function canManageOrganizationModule(string $module, Organization $organization): bool
+    {
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        if ($this->is_platform_admin) {
+            return true;
+        }
+
+        $membership = $this->memberships()
+            ->where('organization_id', $organization->getKey())
+            ->first();
+
+        return $membership?->canManageModule($module) ?? false;
+    }
+
+    public function isActive(): bool
+    {
+        return ($this->attributes['status'] ?? 'active') === 'active';
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
+        if (! $this->isActive()) {
+            return false;
+        }
+
         if ($panel->getId() === 'platform') {
             return $this->is_platform_admin;
         }
@@ -101,6 +150,10 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function getTenants(Panel $panel): array|Collection
     {
+        if (! $this->isActive()) {
+            return collect();
+        }
+
         if ($this->is_platform_admin) {
             return Organization::query()->where('status', 'active')->orderBy('name')->get();
         }
@@ -110,7 +163,7 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function canAccessTenant(Model $tenant): bool
     {
-        if (! $tenant instanceof Organization || ! $tenant->is_active) {
+        if (! $this->isActive() || ! $tenant instanceof Organization || ! $tenant->is_active) {
             return false;
         }
 
