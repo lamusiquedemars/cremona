@@ -36,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('dashboard')
             ->login(CremonaLogin::class)
+            ->passwordReset()
             ->brandName(fn (): string => (string) config('cremona.pwa.name', 'Cremona'))
             ->favicon(fn (): string => asset((string) config('cremona.pwa.icon_192', 'favicon.ico')))
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('pwa.head')->render())
