@@ -40,6 +40,6 @@ trait UsesOrganizationConfiguration
 
     protected static function configurationPermission(): OrganizationPermission
     {
-        return OrganizationPermission::ManageIntegrations;
+        return OrganizationPermission::ManageOrganizationSettings;
     }
 }

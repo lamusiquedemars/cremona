@@ -151,6 +151,29 @@ change aucun modèle. Elle vise une zone secondaire de navigation, par exemple
 objets : un référentiel régulièrement utilisé peut mériter un raccourci depuis
 son opération, sans devenir pour autant une entrée principale.
 
+### 3.3. Délégation maîtrisée des réglages et référentiels
+
+Le rôle d'une personne dans une organisation règle le travail quotidien ; il
+ne donne pas, par défaut, accès aux paramètres techniques ni aux référentiels
+qui modifient les règles commerciales. Un propriétaire ou administrateur côté
+client peut donc gérer les opérations sans risquer de modifier les modules, les
+connecteurs, les mentions légales ou les tarifs de référence.
+
+Trois autorisations particulières, attribuées par un administrateur plateforme
+dans la fiche de l'utilisateur, permettent une délégation explicite et
+réversible :
+
+| Autorisation | Couvre | Ne couvre pas |
+| --- | --- | --- |
+| Gérer la configuration de l’organisation | identité, utilisateurs, modules, boîtes email, intégrations et connecteurs | les tarifs et modèles métier |
+| Gérer les modèles commerciaux | lignes de devis enregistrées et prestations réutilisables | les réglages d'organisation et les tarifs de location |
+| Gérer les tarifs de location et d’assurance | gammes, grilles de location et formules d'assurance | les réglages et modèles commerciaux |
+
+Un lien direct ne contourne jamais cette règle : la permission est contrôlée
+côté serveur pour la navigation, les pages, les actions et les intégrations.
+Les administrateurs plateforme conservent l'accès complet afin d'assurer la
+mise en place et le support.
+
 ## 4. Architecture à viser
 
 ### Registre canonique des capacités

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RentalTiers;
 
+use App\Enums\OrganizationPermission;
 use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\RentalTiers\Pages\ManageRentalTiers;
 use App\Models\RentalTier;
@@ -21,12 +22,21 @@ class RentalTierResource extends Resource
     use UsesOrganizationModule;
 
     protected static ?string $model = RentalTier::class;
+
     protected static string $organizationModule = 'luthier_catalog';
+
+    protected static ?OrganizationPermission $organizationAccessPermission = OrganizationPermission::ManageRentalPricing;
+
     protected static ?string $navigationLabel = 'Gammes de location';
+
     protected static ?string $modelLabel = 'gamme de location';
+
     protected static ?string $pluralModelLabel = 'gammes de location';
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedAdjustmentsHorizontal;
-    protected static string|\UnitEnum|null $navigationGroup = 'Atelier';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Référentiels métier';
+
     protected static ?int $navigationSort = 58;
 
     public static function form(Schema $schema): Schema

@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrganizationPermission;
 use App\Enums\OrganizationRole;
+use App\Filament\Pages\OrganizationDetails;
+use App\Filament\Resources\QuoteLineTemplates\QuoteLineTemplateResource;
+use App\Filament\Resources\RentalTiers\RentalTierResource;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Models\Organization;
@@ -64,6 +68,74 @@ class UserAccessProfileTest extends TestCase
 
         $this->assertTrue($user->canAccessOrganizationModule('crm', $organization));
         $this->assertFalse($user->canManageOrganizationModule('crm', $organization));
+    }
+
+    public function test_an_organization_owner_does_not_receive_configuration_or_reference_data_by_default(): void
+    {
+        $organization = Organization::factory()->create();
+        $owner = User::factory()->create();
+        $owner->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
+
+        $this->assertFalse($owner->hasOrganizationPermission(OrganizationPermission::ManageOrganizationSettings, $organization));
+        $this->assertFalse($owner->hasOrganizationPermission(OrganizationPermission::ManageCommercialReferences, $organization));
+        $this->assertFalse($owner->hasOrganizationPermission(OrganizationPermission::ManageRentalPricing, $organization));
+        $this->assertFalse($owner->hasOrganizationPermission(OrganizationPermission::ManageIntegrations, $organization));
+    }
+
+    public function test_a_particular_authorization_can_delegate_one_management_area_without_opening_all_settings(): void
+    {
+        $organization = Organization::factory()->create();
+        $manager = User::factory()->create();
+        $manager->organizations()->attach($organization, [
+            'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageRentalPricing->value]],
+        ]);
+
+        $this->assertTrue($manager->hasOrganizationPermission(OrganizationPermission::ManageRentalPricing, $organization));
+        $this->assertFalse($manager->hasOrganizationPermission(OrganizationPermission::ManageCommercialReferences, $organization));
+        $this->assertFalse($manager->hasOrganizationPermission(OrganizationPermission::ManageOrganizationSettings, $organization));
+    }
+
+    public function test_the_settings_authorization_covers_configuration_without_becoming_a_reference_data_authorization(): void
+    {
+        $organization = Organization::factory()->create();
+        $manager = User::factory()->create();
+        $manager->organizations()->attach($organization, [
+            'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageOrganizationSettings->value]],
+        ]);
+
+        $this->assertTrue($manager->hasOrganizationPermission(OrganizationPermission::ManageOrganizationSettings, $organization));
+        $this->assertTrue($manager->hasOrganizationPermission(OrganizationPermission::ManageIntegrations, $organization));
+        $this->assertFalse($manager->hasOrganizationPermission(OrganizationPermission::ManageCommercialReferences, $organization));
+    }
+
+    public function test_special_authorizations_control_the_navigation_and_direct_access_to_secondary_areas(): void
+    {
+        $organization = Organization::factory()->create();
+        $owner = User::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['quotes', 'luthier_catalog']);
+        $owner->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
+        $this->actingAs($owner);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $this->assertFalse(OrganizationDetails::canAccess());
+            $this->assertFalse(QuoteLineTemplateResource::canAccess());
+            $this->assertFalse(RentalTierResource::canAccess());
+        });
+
+        $owner->organizations()->updateExistingPivot($organization, [
+            'permissions' => ['capabilities' => [
+                OrganizationPermission::ManageOrganizationSettings->value,
+                OrganizationPermission::ManageRentalPricing->value,
+            ]],
+        ]);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $this->assertTrue(OrganizationDetails::canAccess());
+            $this->assertFalse(QuoteLineTemplateResource::canAccess());
+            $this->assertTrue(RentalTierResource::canAccess());
+        });
     }
 
     public function test_a_suspended_account_cannot_access_any_panel(): void
@@ -155,5 +227,4 @@ class UserAccessProfileTest extends TestCase
             return str_contains($notification->url, '/platform/password-reset/reset');
         });
     }
-
 }

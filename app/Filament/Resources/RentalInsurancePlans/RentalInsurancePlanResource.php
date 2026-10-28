@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RentalInsurancePlans;
 
+use App\Enums\OrganizationPermission;
 use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\RentalInsurancePlans\Pages\ManageRentalInsurancePlans;
 use App\Models\RentalInsurancePlan;
@@ -30,6 +31,8 @@ class RentalInsurancePlanResource extends Resource
 
     protected static string $organizationModule = 'luthier_catalog';
 
+    protected static ?OrganizationPermission $organizationAccessPermission = OrganizationPermission::ManageRentalPricing;
+
     protected static ?string $navigationLabel = 'Formules d’assurance';
 
     protected static ?string $modelLabel = 'formule d’assurance';
@@ -38,7 +41,7 @@ class RentalInsurancePlanResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Atelier';
+    protected static string|\UnitEnum|null $navigationGroup = 'Référentiels métier';
 
     protected static ?int $navigationSort = 60;
 

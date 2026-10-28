@@ -2,18 +2,21 @@
 
 namespace App\Filament\Resources\Organizations\RelationManagers;
 
+use App\Enums\OrganizationPermission;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -36,6 +39,9 @@ class MembersRelationManager extends RelationManager
                     ->formatStateUsing(fn (OrganizationRole|string $state): string => $state instanceof OrganizationRole ? $state->label() : OrganizationRole::from($state)->label())->sortable(),
                 TextColumn::make('modules')->label('Modules autorisés')
                     ->state(fn (User $record): string => $this->moduleSummary($record))
+                    ->wrap(),
+                TextColumn::make('capabilities')->label('Autorisations particulières')
+                    ->state(fn (User $record): string => $this->capabilitySummary($record))
                     ->wrap(),
             ])
             ->headerActions([
@@ -63,14 +69,14 @@ class MembersRelationManager extends RelationManager
                         return $data;
                     })
                     ->mutateFormDataUsing(fn (array $data): array => self::normalizeAccessData($data)),
-                \Filament\Actions\Action::make('open_user')
+                Action::make('open_user')
                     ->label('Ouvrir la fiche utilisateur')
                     ->url(fn (User $record): string => UserResource::getUrl('edit', ['record' => $record])),
                 DetachAction::make()->label('Retirer de l’organisation'),
             ]);
     }
 
-    /** @return array<int, \Filament\Forms\Components\Component> */
+    /** @return array<int, Component> */
     private function accessFields(): array
     {
         return [
@@ -98,6 +104,11 @@ class MembersRelationManager extends RelationManager
                 ->bulkToggleable()
                 ->visible(fn (Get $get): bool => (bool) $get('customize_modules'))
                 ->helperText('Une liste vide retire l’accès à tous les modules, sans supprimer le compte.'),
+            CheckboxList::make('permissions.capabilities')
+                ->label('Autorisations particulières')
+                ->options(OrganizationPermission::delegableOptions())
+                ->columns(1)
+                ->helperText('Exception ponctuelle au profil : ces accès donnent la main sur des réglages ou des référentiels normalement réservés à Maracuja.'),
         ];
     }
 
@@ -117,6 +128,21 @@ class MembersRelationManager extends RelationManager
 
         return collect($modules)
             ->map(fn (string $module): string => $available[$module] ?? $module)
+            ->implode(' · ');
+    }
+
+    private function capabilitySummary(User $record): string
+    {
+        $capabilities = data_get($record->pivot?->permissions, 'capabilities', []);
+
+        if (! is_array($capabilities) || $capabilities === []) {
+            return 'Aucune';
+        }
+
+        $options = OrganizationPermission::delegableOptions();
+
+        return collect($capabilities)
+            ->map(fn (string $capability): string => $options[$capability] ?? $capability)
             ->implode(' · ');
     }
 

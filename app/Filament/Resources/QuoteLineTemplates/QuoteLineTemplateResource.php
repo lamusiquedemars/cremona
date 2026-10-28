@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\QuoteLineTemplates;
 
+use App\Enums\OrganizationPermission;
 use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\QuoteLineTemplates\Pages\CreateQuoteLineTemplate;
 use App\Filament\Resources\QuoteLineTemplates\Pages\EditQuoteLineTemplate;
@@ -29,6 +30,8 @@ class QuoteLineTemplateResource extends Resource
 
     protected static string $organizationModule = 'quotes';
 
+    protected static ?OrganizationPermission $organizationAccessPermission = OrganizationPermission::ManageCommercialReferences;
+
     protected static ?string $navigationLabel = 'Lignes de devis enregistrées';
 
     protected static ?string $modelLabel = 'ligne de devis enregistrée';
@@ -37,7 +40,7 @@ class QuoteLineTemplateResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Catalogue et stock';
+    protected static string|\UnitEnum|null $navigationGroup = 'Référentiels métier';
 
     protected static ?int $navigationSort = 65;
 

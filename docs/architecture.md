@@ -37,7 +37,9 @@ Les permissions fines viendront compléter le rôle lorsque les premiers modules
 
 `organization_modules` active une capacité pour une organisation et conserve sa configuration non sensible. Les secrets d’intégration auront un stockage chiffré dédié.
 
-Les **rubriques du menu** regroupent visuellement des modules ; elles ne sont pas elles-mêmes des capacités activables. Les connexions techniques — boîtes email, Brevo, Google Ads, canaux entrants et connecteurs de publication — ne sont pas des modules métier : elles sont regroupées dans **Configuration de l’organisation** et accessibles seulement aux propriétaires, administrateurs ou administrateurs de plateforme.
+Les **rubriques du menu** regroupent visuellement des modules ; elles ne sont pas elles-mêmes des capacités activables. Les connexions techniques — boîtes email, Brevo, Google Ads, canaux entrants et connecteurs de publication — ne sont pas des modules métier : elles sont regroupées dans **Configuration de l’organisation**. Cette zone est réservée aux administrateurs de plateforme par défaut ; elle ne peut être déléguée à un membre d’organisation que par l’autorisation particulière explicite `manage_organization_settings`.
+
+Les référentiels métier (modèles commerciaux, tarifs de location et formules d’assurance) suivent le même principe : ils constituent une zone secondaire, distincte de la configuration technique et du travail quotidien. Les permissions `manage_commercial_references` et `manage_rental_pricing` peuvent être déléguées séparément, sans ouvrir l’ensemble des réglages.
 
 Les premiers packs prévus sont :
 

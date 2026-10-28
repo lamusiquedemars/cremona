@@ -39,19 +39,17 @@ enum OrganizationRole: string
     public function permissions(): array
     {
         return match ($this) {
-            self::Owner => OrganizationPermission::cases(),
+            self::Owner => array_values(array_filter(
+                OrganizationPermission::cases(),
+                fn (OrganizationPermission $permission): bool => ! $permission->requiresExplicitGrant(),
+            )),
             self::Administrator => [
-                OrganizationPermission::ManageMembers,
-                OrganizationPermission::ManageModules,
-                OrganizationPermission::ManageIntegrations,
-                OrganizationPermission::ViewAuditLog,
                 OrganizationPermission::ViewCrm,
                 OrganizationPermission::ManageCrm,
                 OrganizationPermission::ViewCorrespondence,
                 OrganizationPermission::ReplyCorrespondence,
                 OrganizationPermission::ManageCorrespondenceLinks,
                 OrganizationPermission::EraseCorrespondence,
-                OrganizationPermission::ManageEmailMailboxes,
             ],
             self::Collaborator => [
                 OrganizationPermission::ViewCrm,

@@ -67,6 +67,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('workshop', 'Atelier')),
                 NavigationGroup::make('Catalogue et stock'),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('marketing', 'Marketing')),
+                NavigationGroup::make('Référentiels métier'),
                 NavigationGroup::make('Configuration de l’organisation'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\InstrumentCategories;
 
+use App\Enums\OrganizationPermission;
 use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\InstrumentCategories\Pages\ManageInstrumentCategories;
 use App\Models\InstrumentCategory;
@@ -31,6 +32,8 @@ class InstrumentCategoryResource extends Resource
 
     protected static string $organizationModule = 'luthier_catalog';
 
+    protected static ?OrganizationPermission $organizationAccessPermission = OrganizationPermission::ManageRentalPricing;
+
     protected static ?string $navigationLabel = 'Grilles de location';
 
     protected static ?string $modelLabel = 'grille de location';
@@ -39,7 +42,7 @@ class InstrumentCategoryResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Atelier';
+    protected static string|\UnitEnum|null $navigationGroup = 'Référentiels métier';
 
     protected static ?int $navigationSort = 59;
 

@@ -3,13 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Enums\OrganizationPermission;
-use App\Models\OrganizationLegalProfile;
-use App\Models\OrganizationInvoiceSettings;
 use App\Models\OrganizationIntegration;
+use App\Models\OrganizationInvoiceSettings;
+use App\Models\OrganizationLegalProfile;
 use App\Models\OrganizationQuoteSettings;
 use App\Models\User;
-use App\Services\OrganizationModuleAccess;
 use App\Services\OrganizationIntegrationManager;
+use App\Services\OrganizationModuleAccess;
 use App\Services\SuperPdpSandboxClient;
 use App\Support\PrivateDocumentPolicyCatalog;
 use App\Tenancy\OrganizationContext;
@@ -60,7 +60,7 @@ class OrganizationDetails extends Page
 
         return $organization !== null
             && $user instanceof User
-            && $user->hasOrganizationPermission(OrganizationPermission::ManageIntegrations, $organization);
+            && $user->hasOrganizationPermission(OrganizationPermission::ManageOrganizationSettings, $organization);
     }
 
     public function mount(): void

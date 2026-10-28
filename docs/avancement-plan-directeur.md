@@ -140,6 +140,14 @@ référentiels métier ; instruments, dossiers atelier, locations et stock
 restent des opérations. Ces référentiels ne doivent pas être absorbés par la
 Configuration globale de l'organisation.
 
+Cette frontière est désormais appliquée dans les accès : les réglages de
+l'organisation, modèles commerciaux et tarifs de location/assurance ne sont
+plus ouverts par défaut aux membres côté client, y compris au propriétaire de
+l'organisation. Trois délégations explicites et indépendantes permettent de
+confier ponctuellement la configuration, les modèles commerciaux ou les tarifs
+de location/assurance. Les ressources concernées vivent dans la rubrique
+secondaire **Référentiels métier** et restent protégées côté serveur.
+
 La fondation documentaire des futurs contrats est désormais livrée : chaque
 `RentalDocument` est rattaché à une location et à un document privé, conserve un
 snapshot, une version de modèle et le SHA-256 du PDF, et ne peut plus être

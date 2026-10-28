@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Enums\OrganizationPermission;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
@@ -23,8 +24,8 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -34,11 +35,17 @@ use Illuminate\Support\Arr;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
     protected static ?string $modelLabel = 'utilisateur';
+
     protected static ?string $pluralModelLabel = 'utilisateurs';
+
     protected static bool $isScopedToTenant = false;
+
     protected static ?string $navigationLabel = 'Utilisateurs et accès';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Plateforme';
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
     public static function shouldRegisterNavigation(): bool
@@ -111,9 +118,14 @@ class UserResource extends Resource
                                 ->columns(2)->bulkToggleable()
                                 ->visible(fn (Get $get): bool => (bool) $get('customize_modules'))
                                 ->helperText('Cette liste remplace le profil pour les modules : une liste vide retire tous les modules.'),
+                            CheckboxList::make('permissions.capabilities')->label('Autorisations particulières')
+                                ->options(OrganizationPermission::delegableOptions())
+                                ->columns(1)
+                                ->helperText('Exception ponctuelle au profil : ces accès donnent la main sur des réglages ou des référentiels normalement réservés à Maracuja.'),
                         ])
                         ->itemLabel(function (array $state): ?string {
                             $organizationId = $state['organization_id'] ?? null;
+
                             return $organizationId ? Organization::query()->find($organizationId)?->name : 'Nouvel accès';
                         })->collapsible(),
                 ]),
@@ -151,9 +163,12 @@ class UserResource extends Resource
     /** @return array<string, string> */
     public static function availableModules(int|string|null $organizationId): array
     {
-        if (! $organizationId || ! ($organization = Organization::query()->find($organizationId))) return [];
+        if (! $organizationId || ! ($organization = Organization::query()->find($organizationId))) {
+            return [];
+        }
         $registry = app(OrganizationModuleRegistry::class);
         $definitions = $registry->all();
+
         return collect($registry->enabledFor($organization))
             ->mapWithKeys(fn (string $module): array => [$module => $definitions[$module]['label'] ?? $module])->all();
     }
@@ -162,10 +177,13 @@ class UserResource extends Resource
     public static function normalizeMembershipData(array $data): array
     {
         foreach ($data['memberships'] ?? [] as $key => $membership) {
-            if (! ($membership['customize_modules'] ?? false)) Arr::forget($membership, 'permissions.modules');
+            if (! ($membership['customize_modules'] ?? false)) {
+                Arr::forget($membership, 'permissions.modules');
+            }
             unset($membership['customize_modules']);
             $data['memberships'][$key] = $membership;
         }
+
         return $data;
     }
 

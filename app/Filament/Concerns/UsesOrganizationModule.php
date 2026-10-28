@@ -2,8 +2,9 @@
 
 namespace App\Filament\Concerns;
 
-use App\Services\OrganizationModuleAccess;
 use App\Models\User;
+use App\Services\OrganizationModuleAccess;
+use App\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Model;
 
 trait UsesOrganizationModule
@@ -50,7 +51,8 @@ trait UsesOrganizationModule
         $user = auth()->user();
 
         return $user instanceof User
-            && app(OrganizationModuleAccess::class)->accessibleBy($user, static::$organizationModule);
+            && app(OrganizationModuleAccess::class)->accessibleBy($user, static::$organizationModule)
+            && static::userHasAdditionalPermission($user);
     }
 
     private static function userCanManageOrganizationModule(): bool
@@ -58,6 +60,17 @@ trait UsesOrganizationModule
         $user = auth()->user();
 
         return $user instanceof User
-            && app(OrganizationModuleAccess::class)->manageableBy($user, static::$organizationModule);
+            && app(OrganizationModuleAccess::class)->manageableBy($user, static::$organizationModule)
+            && static::userHasAdditionalPermission($user);
+    }
+
+    private static function userHasAdditionalPermission(User $user): bool
+    {
+        $permission = property_exists(static::class, 'organizationAccessPermission')
+            ? static::$organizationAccessPermission
+            : null;
+
+        return $permission === null
+            || $user->hasOrganizationPermission($permission, app(OrganizationContext::class)->require());
     }
 }

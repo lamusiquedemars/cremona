@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ServiceDefinitions;
 
+use App\Enums\OrganizationPermission;
 use App\Filament\Concerns\UsesOrganizationModule;
 use App\Filament\Resources\ServiceDefinitions\Pages\CreateServiceDefinition;
 use App\Filament\Resources\ServiceDefinitions\Pages\EditServiceDefinition;
@@ -28,6 +29,8 @@ class ServiceDefinitionResource extends Resource
 
     protected static string $organizationModule = 'luthier_catalog';
 
+    protected static ?OrganizationPermission $organizationAccessPermission = OrganizationPermission::ManageCommercialReferences;
+
     protected static ?string $navigationLabel = 'Prestations atelier';
 
     protected static ?string $modelLabel = 'prestation atelier';
@@ -36,7 +39,7 @@ class ServiceDefinitionResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Catalogue et stock';
+    protected static string|\UnitEnum|null $navigationGroup = 'Référentiels métier';
 
     protected static ?int $navigationSort = 70;
 
