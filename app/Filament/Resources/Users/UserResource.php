@@ -65,9 +65,12 @@ class UserResource extends Resource
                         ->helperText('Un compte suspendu ne peut plus se connecter, sans perdre ses accès ni son historique.'),
                     Toggle::make('is_platform_admin')->label('Administrateur de la plateforme')
                         ->helperText('Réservé à l’équipe qui administre toutes les organisations. Ce n’est pas un rôle client.'),
-                    TextInput::make('password')->label('Mot de passe')->password()->minLength(12)
+                    TextInput::make('password')->label('Nouveau mot de passe')->password()->minLength(12)
                         ->dehydrated(fn ($state): bool => filled($state))
-                        ->helperText('Laissez vide : la personne choisira elle-même son mot de passe à partir du lien envoyé.'),
+                        ->helperText('Laissez vide pour conserver le mot de passe actuel. Si vous le modifiez, confirmez-le dans le champ suivant.'),
+                    TextInput::make('password_confirmation')->label('Confirmer le nouveau mot de passe')->password()
+                        ->same('password')->requiredWith('password')->dehydrated(false)
+                        ->helperText('Les deux saisies doivent être identiques avant l’enregistrement.'),
                     Toggle::make('send_password_setup_link')->label('Envoyer un lien de création du mot de passe')
                         ->default(true)->visibleOn('create')->dehydrated(false)
                         ->helperText('Un e-mail sécurisé est envoyé après la création du compte.'),

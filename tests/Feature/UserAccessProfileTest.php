@@ -14,6 +14,7 @@ use App\Tenancy\OrganizationContext;
 use Filament\Auth\Notifications\ResetPassword;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -111,6 +112,25 @@ class UserAccessProfileTest extends TestCase
                 'name' => $member->name,
                 'status' => 'active',
             ]);
+    }
+
+    public function test_a_platform_administrator_can_replace_a_users_password(): void
+    {
+        $administrator = User::factory()->platformAdministrator()->create();
+        $member = User::factory()->create(['password' => 'old-password-that-must-not-work']);
+        Filament::setCurrentPanel(Filament::getPanel('platform'));
+
+        Livewire::actingAs($administrator)
+            ->test(EditUser::class, ['record' => $member->getKey()])
+            ->fillForm([
+                'password' => 'new-password-that-must-work',
+                'password_confirmation' => 'new-password-that-must-work',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue(Hash::check('new-password-that-must-work', $member->fresh()->password));
+        $this->assertFalse(Hash::check('old-password-that-must-not-work', $member->fresh()->password));
     }
 
     public function test_password_recovery_is_available_from_both_back_offices(): void
