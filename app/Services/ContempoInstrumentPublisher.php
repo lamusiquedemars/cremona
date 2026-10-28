@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\InstrumentAsset;
 use App\Models\OrganizationIntegration;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -40,7 +41,7 @@ class ContempoInstrumentPublisher
 
                 $media['url'] = Str::startsWith($source, ['http://', 'https://'])
                     ? $source
-                    : url('/media/'.ltrim($source, '/'));
+                    : Storage::disk('public')->url($source);
                 unset($media['path']);
 
                 return $media;

@@ -150,3 +150,15 @@ jamais créer un lien vers `current/vendor` ou `current/storage` : après la
 bascule de `current`, un tel lien se référerait à lui-même et provoquerait un
 500. Comme l'archive Git contient les répertoires vides de `storage`, supprimer
 d'abord le répertoire de staging avant d'y recopier le stockage partagé.
+
+Les téléversements publics (notamment les photos d'instruments) sont servis
+depuis `public/storage`. Après avoir restauré `storage` dans la release de
+staging, exécuter systématiquement :
+
+```bash
+php artisan storage:link
+```
+
+Ce lien doit être recréé dans chaque release avant la bascule : le code est
+nouveau à chaque déploiement, tandis que les fichiers téléversés restent dans
+le stockage persistant recopié depuis la release validée.
