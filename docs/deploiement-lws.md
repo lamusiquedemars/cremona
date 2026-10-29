@@ -126,6 +126,18 @@ https://cremona.maracujadigital.fr/integrations/google-ads/callback
 
 ## Releases atomiques (serveur actuel)
 
+La seule commande de publication autorisée est :
+
+```bash
+bash scripts/deploy-lws-release.sh
+```
+
+Elle refuse une bascule si le stockage persistant n'est pas présent ou si la
+release de staging contient autre chose que les fichiers vides attendus dans
+`storage/app`. Ne pas effectuer de publication manuelle à partir d'une archive
+Git ou d'un copier-coller de commandes : cette protection est précisément là
+pour empêcher qu'une release écrase les médias.
+
 Le déploiement actuel utilise des répertoires `releases/` et un lien symbolique
 `current`. Le code seul ne contient pas les assets Vite, car `public/build` est
 généré et ignoré par Git. Avant de rendre une release active, il faut donc soit
@@ -157,6 +169,11 @@ créer ou conserver ce lien vers `../../../shared/storage/app` (depuis
 release et ne jamais l'écraser : c'est ce qui garantit qu'une photo ajoutée dans
 Cremona survit à tous les déploiements. Les caches et journaux restent dans le
 `storage/` propre à chaque release.
+
+Ce répertoire reste volontairement inscriptible par le processus web : c'est
+nécessaire aux téléversements. Sa protection ne repose donc pas sur un droit en
+lecture seule — qui empêcherait aussi l'ajout d'une photo — mais sur son
+isolement hors des releases et sur le contrôle bloquant du script de publication.
 
 Les téléversements publics (notamment les photos d'instruments) sont servis
 par la route Laravel `/media/{path}`. Sur cet hébergement, ne pas dépendre du
