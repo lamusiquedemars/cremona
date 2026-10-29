@@ -16,15 +16,27 @@ class EditInstrumentAsset extends BusinessEditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         foreach (['attributes', 'media'] as $field) {
-            if (! is_string($data[$field] ?? null)) {
-                continue;
-            }
-
-            $decoded = json_decode($data[$field], true);
-            $data[$field] = is_array($decoded) ? $decoded : [];
+            $data[$field] = $this->decodeArrayValue($data[$field] ?? null);
         }
 
         return $data;
+    }
+
+    private function decodeArrayValue(mixed $value): array
+    {
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            if (is_array($value)) {
+                return $value;
+            }
+
+            if (! is_string($value)) {
+                return [];
+            }
+
+            $value = json_decode($value, true);
+        }
+
+        return is_array($value) ? $value : [];
     }
 
     protected function getHeaderActions(): array

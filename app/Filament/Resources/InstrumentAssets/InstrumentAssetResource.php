@@ -98,7 +98,18 @@ class InstrumentAssetResource extends Resource
                     Checkbox::make('is_public')->label('Visible sur le site')->default(true)->columnSpan(2),
                 ])->columns(12)->columnSpanFull()->helperText('Choisissez une caractéristique connue, ou « Autre caractéristique ». Seules les lignes cochées sont visibles sur le site.'),
                 Repeater::make('media')->label('Photos')->schema([
-                    FileUpload::make('path')->label('Photo')->image()->imageEditor()->disk('public')->directory('instruments')->visibility('public')->maxSize(10240)->required()->columnSpan(6),
+                    FileUpload::make('path')->label('Photo')->image()->imageEditor()->disk('public')->directory('instruments')->visibility('public')->maxSize(10240)
+                        ->getUploadedFileUsing(static function (FileUpload $component, string $file, string|array|null $storedFileNames): ?array {
+                            $uploadedFile = $component->getUploadedFile($file, $storedFileNames);
+
+                            if ($uploadedFile !== null) {
+                                // LWS ne sert pas de manière fiable /storage. Les photos Cremona passent par /media.
+                                $uploadedFile['url'] = url('/media/'.ltrim($file, '/'));
+                            }
+
+                            return $uploadedFile;
+                        })
+                        ->required()->columnSpan(6),
                     Grid::make(1)->schema([
                         Checkbox::make('is_public')->label('Visible sur le site'),
                         TextInput::make('caption')->label('Légende'),

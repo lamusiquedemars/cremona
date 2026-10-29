@@ -9,6 +9,7 @@ use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use ReflectionMethod;
+use ReflectionClass;
 use Tests\TestCase;
 
 class InstrumentAssetFilamentTest extends TestCase
@@ -38,5 +39,20 @@ class InstrumentAssetFilamentTest extends TestCase
 
         $saveHook = new ReflectionMethod(EditInstrumentAsset::class, 'mutateFormDataBeforeSave');
         $this->assertNotSame(EditInstrumentAsset::class, $saveHook->getDeclaringClass()->getName());
+    }
+
+    public function test_edit_form_recovers_legacy_double_encoded_photos_for_the_preview(): void
+    {
+        $page = (new ReflectionClass(EditInstrumentAsset::class))->newInstanceWithoutConstructor();
+        $hydrate = new ReflectionMethod(EditInstrumentAsset::class, 'mutateFormDataBeforeFill');
+        $photos = [['path' => 'instruments/violon.jpg', 'is_public' => true]];
+
+        $data = $hydrate->invoke($page, [
+            'media' => json_encode(json_encode($photos)),
+            'attributes' => json_encode(json_encode([])),
+        ]);
+
+        $this->assertSame($photos, $data['media']);
+        $this->assertSame([], $data['attributes']);
     }
 }
