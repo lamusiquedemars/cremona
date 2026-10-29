@@ -88,8 +88,16 @@
                 </div>
                 <div class="rounded-lg border border-gray-200 p-4 dark:border-white/10">
                     <div class="flex items-center justify-between gap-3"><p class="font-medium text-gray-900 dark:text-white">Super PDP</p><x-filament::badge :color="$integrationStates['super_pdp_ready'] ? 'success' : ($integrationStates['super_pdp_configured'] ? 'warning' : 'gray')">{{ $integrationStates['super_pdp_status'] ?: ($integrationStates['super_pdp_configured'] ? 'À vérifier' : 'Non configuré') }}</x-filament::badge></div>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Sandbox : {{ $integrationStates['super_pdp_company'] }} simule cette organisation. Ce n’est pas une organisation Cremona. @if ($integrationStates['super_pdp_checked_at']) Dernier contrôle : {{ \Illuminate\Support\Carbon::parse($integrationStates['super_pdp_checked_at'])->format('d/m/Y H:i') }}. @endif</p>
-                    <div class="mt-3"><x-filament::button wire:click="verifySuperPdpSandbox" type="button" size="sm" :disabled="! $integrationStates['super_pdp_configured']">Vérifier la connexion Super PDP</x-filament::button><p class="mt-2 text-xs text-gray-500">Diagnostic ponctuel : aucun envoi de facture, aucune action à effectuer au quotidien.</p></div>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $integrationStates['super_pdp_environment'] }} : {{ $integrationStates['super_pdp_company'] }}. @if ($integrationStates['super_pdp_checked_at']) Dernier contrôle : {{ \Illuminate\Support\Carbon::parse($integrationStates['super_pdp_checked_at'])->format('d/m/Y H:i') }}. @endif</p>
+                    <div class="mt-3 space-y-3">
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <label class="block"><span class="text-xs font-medium text-gray-700 dark:text-gray-200">Client ID de production</span><input wire:model="superPdpProductionCredentials.client_id" type="text" autocomplete="off" class="mt-1 block w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-sm text-gray-950 shadow-sm dark:border-white/15 dark:bg-white/5 dark:text-white"></label>
+                            <label class="block"><span class="text-xs font-medium text-gray-700 dark:text-gray-200">Client secret de production</span><input wire:model="superPdpProductionCredentials.client_secret" type="password" autocomplete="new-password" class="mt-1 block w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-sm text-gray-950 shadow-sm dark:border-white/15 dark:bg-white/5 dark:text-white"></label>
+                        </div>
+                        <x-filament::button wire:click="connectSuperPdpProduction" type="button" size="sm">Enregistrer et vérifier la production</x-filament::button>
+                        <p class="text-xs text-gray-500">Le secret est chiffré côté serveur et n’est jamais réaffiché. Cette vérification ne transmet aucune facture.</p>
+                        <x-filament::button wire:click="verifySuperPdpSandbox" type="button" size="sm" color="gray" :disabled="! $integrationStates['super_pdp_configured']">Vérifier la sandbox</x-filament::button>
+                    </div>
                 </div>
                 <div class="rounded-lg border border-gray-200 p-4 dark:border-white/10">
                     <p class="font-medium text-gray-900 dark:text-white">Google Ads</p><p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $integrationStates['google_ads_count'] }} compte configuré pour cette organisation.</p>

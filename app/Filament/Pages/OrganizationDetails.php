@@ -10,6 +10,7 @@ use App\Models\OrganizationQuoteSettings;
 use App\Models\User;
 use App\Services\OrganizationIntegrationManager;
 use App\Services\OrganizationModuleAccess;
+use App\Services\SuperPdpClient;
 use App\Services\SuperPdpSandboxClient;
 use App\Support\PrivateDocumentPolicyCatalog;
 use App\Tenancy\OrganizationContext;
@@ -48,6 +49,9 @@ class OrganizationDetails extends Page
 
     /** @var array<string, mixed> */
     public array $integrationStates = [];
+
+    /** @var array{client_id: string, client_secret: string} */
+    public array $superPdpProductionCredentials = ['client_id' => '', 'client_secret' => ''];
 
     public bool $quotesEnabled = false;
 
@@ -166,12 +170,46 @@ class OrganizationDetails extends Page
         }
     }
 
+    public function connectSuperPdpProduction(SuperPdpClient $client): void
+    {
+        $data = $this->validate([
+            'superPdpProductionCredentials.client_id' => ['required', 'string', 'max:255'],
+            'superPdpProductionCredentials.client_secret' => ['required', 'string', 'max:2048'],
+        ]);
+
+        try {
+            $state = $client->checkConnection(
+                $data['superPdpProductionCredentials']['client_id'],
+                $data['superPdpProductionCredentials']['client_secret'],
+            );
+            app(OrganizationIntegrationManager::class)->configure(
+                provider: 'super_pdp',
+                name: 'production',
+                credentials: array_merge($data['superPdpProductionCredentials'], $state),
+                actor: auth()->user(),
+            );
+            $this->superPdpProductionCredentials = ['client_id' => '', 'client_secret' => ''];
+            $this->refreshIntegrationStates();
+
+            Notification::make()->title('Connexion Super PDP de production vérifiée')->success()->send();
+        } catch (\Throwable $exception) {
+            report($exception);
+            $this->refreshIntegrationStates();
+            Notification::make()
+                ->title('Connexion Super PDP impossible')
+                ->body('Vérifiez l’identifiant, le secret et la validation de l’entreprise dans Super PDP.')
+                ->danger()->persistent()->send();
+        }
+    }
+
     private function refreshIntegrationStates(): void
     {
         $organization = app(OrganizationContext::class)->require();
-        $superPdp = OrganizationIntegration::query()
+        $superPdpProduction = OrganizationIntegration::query()
+            ->where('provider', 'super_pdp')->where('name', 'production')->first();
+        $superPdpSandbox = OrganizationIntegration::query()
             ->where('provider', 'super_pdp')->where('name', 'sandbox')->first();
-        $credentials = $superPdp?->credentials ?? [];
+        $credentials = $superPdpProduction?->credentials ?? $superPdpSandbox?->credentials ?? [];
         $storageReady = config('private-documents.disk') === 'scaleway-private'
             && filled(config('filesystems.disks.scaleway-private.bucket'))
             && filled(config('filesystems.disks.scaleway-private.key'))
@@ -179,8 +217,9 @@ class OrganizationDetails extends Page
 
         $this->integrationStates = [
             'storage_ready' => $storageReady,
-            'super_pdp_configured' => app(SuperPdpSandboxClient::class)->isConfigured(),
-            'super_pdp_company' => (string) config('services.super_pdp.sandbox_company_label', 'Burger Queen'),
+            'super_pdp_configured' => $superPdpProduction !== null || app(SuperPdpSandboxClient::class)->isConfigured(),
+            'super_pdp_environment' => $superPdpProduction !== null ? 'Production' : 'Sandbox',
+            'super_pdp_company' => $superPdpProduction !== null ? $organization->name : (string) config('services.super_pdp.sandbox_company_label', 'Burger Queen'),
             'super_pdp_status' => $credentials['verification_status'] ?? null,
             'super_pdp_ready' => in_array($credentials['verification_status'] ?? null, ['verified', 'active'], true),
             'super_pdp_checked_at' => $credentials['checked_at'] ?? null,
