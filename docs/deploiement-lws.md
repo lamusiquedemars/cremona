@@ -144,15 +144,22 @@ les caches ont réussi. Les variables privées (dont Scaleway) sont injectées
 seulement dans le `.env` de la release de staging avant les caches ; elles ne
 passent jamais par Git.
 
-`vendor` et `storage` doivent provenir d'une **release précise déjà validée**
-(par exemple avec `cp -al "$previous/vendor" "$stage/vendor"`). Il ne faut
-jamais créer un lien vers `current/vendor` ou `current/storage` : après la
-bascule de `current`, un tel lien se référerait à lui-même et provoquerait un
-500. Comme l'archive Git contient les répertoires vides de `storage`, supprimer
-d'abord le répertoire de staging avant d'y recopier le stockage partagé.
+`vendor` doit provenir d'une **release précise déjà validée** (par exemple avec
+`cp -al "$previous/vendor" "$stage/vendor"`). Il ne faut jamais créer un lien
+vers `current/vendor` : après la bascule de `current`, un tel lien se référerait
+à lui-même et provoquerait un 500.
+
+Les données téléversées ne font plus partie d'une release. Sur le serveur, elles
+sont conservées dans `$app/shared/storage/app`, hors de `releases/`; dans chaque
+release, `storage/app` est un lien vers ce répertoire partagé. Avant la bascule,
+créer ou conserver ce lien vers `../../../shared/storage/app` (depuis
+`$stage/storage/app`). Ne jamais recréer ce répertoire depuis une ancienne
+release et ne jamais l'écraser : c'est ce qui garantit qu'une photo ajoutée dans
+Cremona survit à tous les déploiements. Les caches et journaux restent dans le
+`storage/` propre à chaque release.
 
 Les téléversements publics (notamment les photos d'instruments) sont servis
 par la route Laravel `/media/{path}`. Sur cet hébergement, ne pas dépendre du
 lien symbolique `public/storage` : LWS ne le sert pas de façon fiable. Les
-fichiers restent dans `storage/app/public` de la release de staging, recopiée
-depuis la release validée.
+fichiers restent dans `storage/app/public`, donc dans le stockage partagé hors
+des releases.

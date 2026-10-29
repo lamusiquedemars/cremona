@@ -4,7 +4,6 @@ namespace App\Filament\Resources\InstrumentAssets\Pages;
 
 use App\Filament\Resources\InstrumentAssets\InstrumentAssetResource;
 use App\Services\ContempoInstrumentPublisher;
-use App\Services\InstrumentRentalPricing;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use App\Filament\Pages\BusinessEditRecord;
@@ -26,14 +25,6 @@ class EditInstrumentAsset extends BusinessEditRecord
         }
 
         return $data;
-    }
-
-    protected function mutateFormDataBeforeSave(array $data): array
-    {
-        $this->record->fill($data);
-        app(InstrumentRentalPricing::class)->applyToInstrument($this->record);
-
-        return $this->record->getAttributes();
     }
 
     protected function getHeaderActions(): array
