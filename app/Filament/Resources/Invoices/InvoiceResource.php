@@ -119,6 +119,13 @@ class InvoiceResource extends Resource
                     TextEntry::make('status')->label('État')->badge()->formatStateUsing(fn (?string $state): string => match ($state) {
                         'awaiting_configuration' => 'En attente de configuration',
                         'ready_to_transmit' => 'Prête à transmettre',
+                        'validated' => 'Document validé',
+                        'validation_failed' => 'Validation refusée',
+                        'submitting' => 'Transmission en cours',
+                        'submitted' => 'Remise à Super PDP',
+                        'submission_failed' => 'Transmission refusée',
+                        'sent' => 'Envoyée',
+                        'rejected' => 'Rejetée',
                         default => str($state ?? '—')->replace('_', ' ')->headline()->toString(),
                     }),
                     TextEntry::make('metadata.message')->label('Information')->placeholder('—'),

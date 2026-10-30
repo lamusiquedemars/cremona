@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\QuoteStatus;
+use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
 use App\Models\Organization;
@@ -141,6 +142,31 @@ class InvoiceWorkflowTest extends TestCase
             $this->assertSame('Camille Martin', $payload['buyer']['name']);
             $this->assertSame('120.00', $payload['totals']['total_with_vat']);
             $this->assertSame('S', $payload['vat_break_down'][0]['vat_category_code']);
+        });
+    }
+
+    public function test_a_business_recipient_keeps_its_regulatory_identifiers_in_the_electronic_invoice(): void
+    {
+        config(['private-documents.disk' => 'local']);
+        Storage::fake('local');
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $this->legalProfile();
+            $company = Company::query()->create([
+                'name' => 'Client Pro', 'legal_name' => 'Client Pro SAS', 'registration_number' => '12345678900012',
+                'vat_number' => 'FR12123456789', 'address_line_1' => '3 rue du Client', 'postal_code' => '69002', 'city' => 'Lyon', 'country_code' => 'FR',
+            ]);
+            $invoice = Invoice::query()->create(['title' => 'Réparation professionnelle', 'company_id' => $company->id]);
+            $invoice->lines()->create(['position' => 1, 'description' => 'Réglage', 'quantity' => 1, 'unit_amount' => 100, 'tax_rate' => 20]);
+            $invoice = app(InvoiceWorkflowManager::class)->issue($invoice);
+
+            $payload = app(En16931InvoiceFactory::class)->make($invoice);
+
+            $this->assertSame('12345678900012', $invoice->recipient_snapshot['registration_number']);
+            $this->assertSame('FR12123456789', $payload['buyer']['vat_identifier']);
+            $this->assertSame('0002', $payload['buyer']['identifiers'][0]['scheme']);
+            $this->assertSame('12345678900012', $payload['buyer']['identifiers'][0]['value']);
         });
     }
 

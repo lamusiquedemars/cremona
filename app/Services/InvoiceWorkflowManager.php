@@ -126,7 +126,9 @@ class InvoiceWorkflowManager
         }
         foreach (['display_name', 'legal_name', 'email', 'address_line_1', 'postal_code', 'city', 'country_code', 'registration_number'] as $field) {
             if (blank($profile->{$field})) {
-                throw new LogicException('Complétez « '.match ($field) { 'display_name' => 'Nom affiché', 'legal_name' => 'Raison sociale', 'registration_number' => 'SIRET ou numéro d’immatriculation', default => $field }. ' » avant d’émettre une facture.');
+                throw new LogicException('Complétez « '.match ($field) {
+                    'display_name' => 'Nom affiché', 'legal_name' => 'Raison sociale', 'registration_number' => 'SIRET ou numéro d’immatriculation', default => $field
+                }.' » avant d’émettre une facture.');
             }
         }
 
@@ -150,6 +152,8 @@ class InvoiceWorkflowManager
 
         return [
             'name' => $recipient instanceof Company ? ($recipient->legal_name ?: $recipient->name) : $recipient->display_name,
+            'registration_number' => $recipient instanceof Company ? $recipient->registration_number : null,
+            'vat_number' => $recipient instanceof Company ? $recipient->vat_number : null,
             'email' => $email,
             'address_line_1' => $recipient->address_line_1,
             'address_line_2' => $recipient->address_line_2,

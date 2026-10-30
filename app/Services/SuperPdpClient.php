@@ -61,6 +61,26 @@ class SuperPdpClient
             ->json();
     }
 
+    /** @return array<string, mixed> */
+    public function submitCii(string $clientId, string $clientSecret, string $content, string $externalId, string $processingRule): array
+    {
+        return $this->authenticated($clientId, $clientSecret)
+            ->withBody($content, 'application/xml')
+            ->post($this->endpoint('/v1.beta/invoices?external_id='.urlencode($externalId).'&processing_rule='.urlencode($processingRule)))
+            ->throw()
+            ->json();
+    }
+
+    /** @return array<string, mixed> */
+    public function invoiceEvents(string $clientId, string $clientSecret, string $invoiceId): array
+    {
+        return $this->authenticated($clientId, $clientSecret)
+            ->acceptJson()
+            ->get($this->endpoint('/v1.beta/invoice_events'), ['invoice_id' => $invoiceId])
+            ->throw()
+            ->json();
+    }
+
     private function authenticated(string $clientId, string $clientSecret): PendingRequest
     {
         try {

@@ -7,6 +7,7 @@ use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Models\InvoicePayment;
 use App\Services\InvoiceElectronicDocumentManager;
 use App\Services\InvoiceWorkflowManager;
+use App\Services\SuperPdpTransmissionManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -80,6 +81,37 @@ class ViewInvoice extends ViewRecord
                 ->visible(fn (): bool => $this->record->pdfPrivateDocument !== null)
                 ->url(fn (): string => route('private-documents.download', $this->record->pdfPrivateDocument?->public_id))
                 ->openUrlInNewTab(),
+            Action::make('submitToSuperPdp')
+                ->label('Transmettre à Super PDP')->icon(Heroicon::OutlinedPaperAirplane)->color('danger')
+                ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->whereIn('status', ['validated', 'submission_failed'])->exists())
+                ->requiresConfirmation()
+                ->modalHeading('Transmettre la facture à Super PDP')
+                ->modalDescription('Cette action transmet réellement la facture électronique au réseau Super PDP. Elle est irréversible ; vérifiez la facture et son destinataire.')
+                ->action(function (SuperPdpTransmissionManager $manager): void {
+                    try {
+                        $manager->submit($this->record);
+                        $this->record->refresh();
+                        Notification::make()->title('Facture remise à Super PDP')->body('La remise est enregistrée. Actualisez ensuite les statuts de traitement.')->success()->send();
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Transmission impossible')->body($exception->getMessage())->danger()->send();
+                    } catch (Throwable) {
+                        Notification::make()->title('Transmission impossible')->body('Super PDP a renvoyé une erreur technique. Vérifiez le journal avant toute nouvelle tentative.')->danger()->send();
+                    }
+                }),
+            Action::make('synchronizeSuperPdp')
+                ->label('Actualiser les statuts Super PDP')->icon(Heroicon::OutlinedArrowPath)->color('gray')
+                ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->whereIn('status', ['submitted', 'sent', 'rejected'])->exists())
+                ->action(function (SuperPdpTransmissionManager $manager): void {
+                    try {
+                        $manager->synchronize($this->record);
+                        $this->record->refresh();
+                        Notification::make()->title('Statuts Super PDP actualisés')->success()->send();
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Actualisation impossible')->body($exception->getMessage())->danger()->send();
+                    } catch (Throwable) {
+                        Notification::make()->title('Actualisation impossible')->body('Super PDP a renvoyé une erreur technique.')->danger()->send();
+                    }
+                }),
             Action::make('recordPayment')
                 ->label('Enregistrer un règlement')->icon(Heroicon::OutlinedBanknotes)->color('success')
                 ->visible(fn (): bool => in_array($this->record->status, [InvoiceStatus::Issued, InvoiceStatus::PartiallyPaid, InvoiceStatus::Overdue], true))

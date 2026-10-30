@@ -114,6 +114,15 @@ class CompanyResource extends Resource
                                 ->label(__('common.legal_name'))
                                 ->maxLength(255)
                                 ->columnSpan(6),
+                            TextInput::make('registration_number')
+                                ->label('SIREN ou SIRET')
+                                ->helperText('Indispensable pour transmettre une facture B2B française.')
+                                ->maxLength(32)
+                                ->columnSpan(6),
+                            TextInput::make('vat_number')
+                                ->label('N° TVA intracommunautaire')
+                                ->maxLength(32)
+                                ->columnSpan(6),
                             TextInput::make('website')
                                 ->label(__('common.website'))
                                 ->url()
@@ -190,6 +199,16 @@ class CompanyResource extends Resource
                                 ->url(fn (?string $state): ?string => $state)
                                 ->openUrlInNewTab()
                                 ->placeholder('—')
+                                ->columnSpan(6),
+                            TextEntry::make('registration_number')
+                                ->label('SIREN ou SIRET')
+                                ->placeholder('—')
+                                ->copyable()
+                                ->columnSpan(6),
+                            TextEntry::make('vat_number')
+                                ->label('N° TVA intracommunautaire')
+                                ->placeholder('—')
+                                ->copyable()
                                 ->columnSpan(6),
                             TextEntry::make('primary_email')
                                 ->label('E-mail général')

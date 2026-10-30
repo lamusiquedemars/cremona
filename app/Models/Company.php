@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
     'assigned_user_id',
     'name',
     'legal_name',
+    'registration_number',
+    'vat_number',
     'website',
     'address_line_1',
     'address_line_2',

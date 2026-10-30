@@ -95,6 +95,12 @@ class En16931InvoiceFactory
             if (filled($party['vat_number'] ?? null)) {
                 $result['vat_identifier'] = $party['vat_number'];
             }
+        } elseif (filled($party['vat_number'] ?? null)) {
+            $result['vat_identifier'] = $party['vat_number'];
+        }
+        if (filled($party['registration_number'] ?? null)) {
+            $number = preg_replace('/\s+/', '', (string) $party['registration_number']);
+            $result['identifiers'] = [['scheme' => strlen($number) === 14 ? '0002' : '0009', 'value' => $number]];
         }
 
         return array_filter($result, fn ($value): bool => $value !== null);
