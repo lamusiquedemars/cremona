@@ -148,6 +148,12 @@ confier ponctuellement la configuration, les modèles commerciaux ou les tarifs
 de location/assurance. Les ressources concernées vivent dans la rubrique
 secondaire **Référentiels métier** et restent protégées côté serveur.
 
+Les photos d’instruments sont maintenant traçables : chaque ajout, retrait,
+modification de légende ou changement de visibilité inscrit un événement avec
+l’auteur et l’horodatage. Le journal reste réservé à l’administration
+plateforme, tandis que les fichiers restent hors des releases dans le stockage
+partagé protégé par le script de publication.
+
 La fondation documentaire des futurs contrats est désormais livrée : chaque
 `RentalDocument` est rattaché à une location et à un document privé, conserve un
 snapshot, une version de modèle et le SHA-256 du PDF, et ne peut plus être

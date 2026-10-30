@@ -10,19 +10,22 @@ use App\Filament\Resources\InstrumentAssets\Pages\EditInstrumentAsset;
 use App\Filament\Resources\InstrumentAssets\Pages\ListInstrumentAssets;
 use App\Filament\Resources\InstrumentAssets\Pages\ViewInstrumentAsset;
 use App\Models\InstrumentAsset;
+use App\Models\User;
 use App\Support\InstrumentRentalCatalog;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ImportAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Resource;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
@@ -149,7 +152,7 @@ class InstrumentAssetResource extends Resource
             TextColumn::make('status')->label(__('common.state'))->badge()->sortable(),
             IconColumn::make('available_for_sale')->label('Vente')->boolean()->sortable(),
             IconColumn::make('available_for_rental')->label('Location')->boolean()->sortable(),
-        ])->filters([SelectFilter::make('status')->label(__('common.state'))->options(InstrumentAssetStatus::class)])->recordActions([\Filament\Actions\ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (InstrumentAsset $record): string => self::getUrl('view', ['record' => $record]))->headerActions([
+        ])->filters([SelectFilter::make('status')->label(__('common.state'))->options(InstrumentAssetStatus::class)])->recordActions([ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (InstrumentAsset $record): string => self::getUrl('view', ['record' => $record]))->headerActions([
             ImportAction::make()->label('Importer un parc')->importer(InstrumentAssetImporter::class)->options(fn (): array => ['organization_id' => app(OrganizationContext::class)->require()->getKey()])->maxRows(500)->chunkSize(50),
             CreateAction::make()->label('Nouvel instrument'),
         ]);
@@ -170,6 +173,24 @@ class InstrumentAssetResource extends Resource
                 TextEntry::make('description')->label('Description interne')->placeholder('—')->columnSpanFull(),
                 TextEntry::make('commercial_notes')->label('Note commerciale interne')->placeholder('—')->columnSpanFull(),
             ])->columnSpanFull(),
+            Section::make('Historique des photos')
+                ->description('Journal technique des ajouts, retraits et modifications de visibilité. Réservé à l’administration Cremona.')
+                ->visible(fn (): bool => auth()->user() instanceof User && auth()->user()->is_platform_admin)
+                ->columnSpanFull()
+                ->schema([
+                    RepeatableEntry::make('mediaAuditLogs')->label('')
+                        ->placeholder('Aucune modification de photo enregistrée.')
+                        ->schema([
+                            TextEntry::make('event')->label('Action')->formatStateUsing(fn (string $state): string => match ($state) {
+                                'instrument_media.photo_added' => 'Photo ajoutée',
+                                'instrument_media.photo_removed' => 'Photo retirée',
+                                default => 'Photo modifiée',
+                            }),
+                            TextEntry::make('metadata.photo_path')->label('Fichier')->copyable(),
+                            TextEntry::make('actor.name')->label('Par')->placeholder('Processus système'),
+                            TextEntry::make('created_at')->label('Le')->dateTime('d/m/Y H:i'),
+                        ])->columns(4),
+                ]),
         ]);
     }
 

@@ -41,6 +41,21 @@ Les **rubriques du menu** regroupent visuellement des modules ; elles ne sont pa
 
 Les référentiels métier (modèles commerciaux, tarifs de location et formules d’assurance) suivent le même principe : ils constituent une zone secondaire, distincte de la configuration technique et du travail quotidien. Les permissions `manage_commercial_references` et `manage_rental_pricing` peuvent être déléguées séparément, sans ouvrir l’ensemble des réglages.
 
+### Traçabilité des médias d’instruments
+
+Chaque ajout, retrait ou modification d’une photo d’instrument est inscrit dans
+le journal d’audit de l’organisation. L’événement conserve l’instrument, le
+chemin du fichier, l’auteur, la date, ainsi que l’ancienne et la nouvelle
+légende ou visibilité lorsque ces propriétés changent. Il ne duplique jamais
+le fichier image. Cet historique est visible uniquement aux administrateurs de
+plateforme dans la fiche de l’instrument ; les utilisateurs métier ne voient
+pas la zone technique.
+
+Cette traçabilité complète la règle de déploiement : les médias vivent dans
+`shared/storage/app`, hors des releases. Une publication ne doit jamais
+remplacer ce répertoire ; le script `scripts/deploy-lws-release.sh` bloque une
+release qui ne respecte pas ce lien de stockage persistant.
+
 Les premiers packs prévus sont :
 
 - Luthier : musiciens, instruments, interventions, documents ;

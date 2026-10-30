@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\InstrumentAssetStatus;
+use App\Services\InstrumentMediaAuditLogger;
 use App\Services\InstrumentRentalPricing;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,9 @@ class InstrumentAsset extends Model
 
     protected $guarded = [];
 
+    /** @var array<int, mixed> */
+    private array $mediaBeforeUpdate = [];
+
     protected static function booted(): void
     {
         static::saving(function (self $instrument): void {
@@ -28,6 +32,24 @@ class InstrumentAsset extends Model
             }
 
             app(InstrumentRentalPricing::class)->applyToInstrument($instrument);
+        });
+
+        static::updating(function (self $instrument): void {
+            if ($instrument->isDirty('media')) {
+                $instrument->mediaBeforeUpdate = self::decodeMedia($instrument->getRawOriginal('media'));
+            }
+        });
+
+        static::created(function (self $instrument): void {
+            $actor = auth()->user();
+            app(InstrumentMediaAuditLogger::class)->recordChanges($instrument, [], $instrument->media ?? [], $actor instanceof User ? $actor : null);
+        });
+
+        static::updated(function (self $instrument): void {
+            if ($instrument->wasChanged('media')) {
+                $actor = auth()->user();
+                app(InstrumentMediaAuditLogger::class)->recordChanges($instrument, $instrument->mediaBeforeUpdate, $instrument->media ?? [], $actor instanceof User ? $actor : null);
+            }
         });
     }
 
@@ -53,6 +75,14 @@ class InstrumentAsset extends Model
         return $this->hasMany(Rental::class);
     }
 
+    public function mediaAuditLogs(): HasMany
+    {
+        return $this->hasMany(OrganizationAuditLog::class, 'subject_id')
+            ->where('subject_type', $this->getMorphClass())
+            ->whereIn('event', ['instrument_media.photo_added', 'instrument_media.photo_removed', 'instrument_media.photo_updated'])
+            ->latest('created_at');
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(InstrumentCategory::class, 'instrument_category_id');
@@ -70,5 +100,21 @@ class InstrumentAsset extends Model
         }
 
         return $this->category?->monthlyAmountOn() ?? 0.0;
+    }
+
+    /** @return array<int, mixed> */
+    private static function decodeMedia(mixed $value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (! is_string($value)) {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 }
