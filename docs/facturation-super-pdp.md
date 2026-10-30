@@ -1,5 +1,52 @@
 # Facturation et Super PDP
 
+> État de référence — 30 octobre 2026. Cette section prévaut sur les notes
+> historiques qui suivent.
+
+## Pilote Ivo Correia : état actuel
+
+Le connecteur **Super PDP production** est configuré par organisation avec des
+identifiants serveur chiffrés. Une facture émise est immuable, reçoit son
+numéro définitif, son PDF privé et une ligne de transmission réglementaire.
+
+Le parcours disponible est volontairement contrôlé :
+
+1. émettre une **vraie** facture (ne jamais créer de facture de test, son
+   numéro est définitif) ;
+2. utiliser **Valider le document électronique** : Cremona produit les données
+   EN 16931, demande à Super PDP un CII, puis enregistre le CII et le rapport
+   de validation en documents privés ; cette étape n'envoie rien ;
+3. relire la facture, le client et le journal ;
+4. seulement si la validation est positive, confirmer **Transmettre à Super
+   PDP** ;
+5. utiliser **Actualiser les statuts Super PDP** pour relever les événements
+   de traitement.
+
+L'envoi reste toujours manuel et confirmé. L'identifiant externe est stable
+pour éviter les doublons lors d'une nouvelle tentative. Les statuts affichés
+incluent notamment : document validé, remise à Super PDP, envoyée et rejetée.
+
+### Préparation par Ivo avant la première facture réelle
+
+- Vérifier dans le profil légal de l'organisation : raison sociale, SIRET,
+  adresse, e-mail, numéro de TVA si assujetti, et instructions de règlement.
+- Pour un **client professionnel français**, compléter sa fiche entreprise :
+  raison sociale, adresse complète, SIREN ou SIRET et, si disponible, numéro
+  de TVA intracommunautaire. Cremona bloque l'envoi B2B sans SIREN/SIRET.
+- Pour un **particulier**, renseigner son nom et son adresse complète.
+- Créer ensuite une facture correspondant à une opération réelle et la faire
+  valider dans Cremona avant toute transmission.
+
+### Prochains développements, hors pilote immédiat
+
+1. Planifier la synchronisation automatique des événements Super PDP, tout en
+   conservant l'action manuelle de contrôle.
+2. Ajouter l'e-reporting des transactions et paiements selon le régime de TVA.
+3. Générer un Factur-X lisible en complément du CII si le besoin de diffusion
+   PDF hybride est confirmé.
+4. Compléter le cycle des avoirs et factures rectificatives avec leur
+   transmission réglementaire et leurs références de facture d'origine.
+
 ## Ce qui est disponible
 
 Le module **Facturation** est transverse : il se choisit explicitement dans la configuration de chaque organisation, quel que soit son métier. Il permet de créer un brouillon, de composer ses lignes HT et TVA, puis d’émettre une facture.
