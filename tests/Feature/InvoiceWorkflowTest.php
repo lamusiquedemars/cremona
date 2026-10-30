@@ -12,8 +12,9 @@ use App\Models\OrganizationLegalProfile;
 use App\Models\Person;
 use App\Models\Quote;
 use App\Models\User;
-use App\Services\InvoiceWorkflowManager;
+use App\Services\En16931InvoiceFactory;
 use App\Services\InvoiceFromQuoteManager;
+use App\Services\InvoiceWorkflowManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -113,6 +114,33 @@ class InvoiceWorkflowTest extends TestCase
             $this->assertCount(1, $invoice->lines);
             $this->assertSame('5.50', $invoice->lines->first()->tax_rate);
             $this->assertSame($invoice->id, $sameInvoice->id);
+        });
+    }
+
+    public function test_an_issued_invoice_can_be_mapped_to_the_en16931_semantic_model(): void
+    {
+        config(['private-documents.disk' => 'local']);
+        Storage::fake('local');
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $this->legalProfile();
+            $person = Person::query()->create([
+                'display_name' => 'Camille Martin', 'address_line_1' => '2 rue du Client',
+                'postal_code' => '69001', 'city' => 'Lyon', 'country_code' => 'FR',
+            ]);
+            $invoice = Invoice::query()->create(['title' => 'Réparation violoncelle', 'person_id' => $person->id]);
+            $invoice->lines()->create(['position' => 1, 'description' => 'Réglage', 'quantity' => 1, 'unit_amount' => 100, 'tax_rate' => 20]);
+            $invoice = app(InvoiceWorkflowManager::class)->issue($invoice);
+
+            $payload = app(En16931InvoiceFactory::class)->make($invoice);
+
+            $this->assertSame($invoice->reference, $payload['number']);
+            $this->assertSame(380, $payload['type_code']);
+            $this->assertSame('Contempo', $payload['seller']['name']);
+            $this->assertSame('Camille Martin', $payload['buyer']['name']);
+            $this->assertSame('120.00', $payload['totals']['total_with_vat']);
+            $this->assertSame('S', $payload['vat_break_down'][0]['vat_category_code']);
         });
     }
 

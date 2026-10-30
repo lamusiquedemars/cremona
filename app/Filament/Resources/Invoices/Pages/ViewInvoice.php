@@ -4,8 +4,8 @@ namespace App\Filament\Resources\Invoices\Pages;
 
 use App\Enums\InvoiceStatus;
 use App\Filament\Resources\Invoices\InvoiceResource;
-use App\Models\Invoice;
 use App\Models\InvoicePayment;
+use App\Services\InvoiceElectronicDocumentManager;
 use App\Services\InvoiceWorkflowManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -17,18 +17,27 @@ use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use LogicException;
+use Throwable;
 
 class ViewInvoice extends ViewRecord
 {
     protected static string $resource = InvoiceResource::class;
+
     protected Width|string|null $maxContentWidth = Width::Full;
 
     protected array $extraBodyAttributes = [
         'class' => 'cremona-record-view',
     ];
 
-    public function getTitle(): string|Htmlable { return ($this->record->reference ?: 'Brouillon').' — '.$this->record->title; }
-    public function getBreadcrumb(): string { return $this->record->reference ?: 'Brouillon'; }
+    public function getTitle(): string|Htmlable
+    {
+        return ($this->record->reference ?: 'Brouillon').' — '.$this->record->title;
+    }
+
+    public function getBreadcrumb(): string
+    {
+        return $this->record->reference ?: 'Brouillon';
+    }
 
     protected function getHeaderActions(): array
     {
@@ -46,12 +55,32 @@ class ViewInvoice extends ViewRecord
                         Notification::make()->title('Facture non émise')->body($exception->getMessage())->danger()->send();
                     }
                 }),
-                Action::make('downloadPdf')
+            Action::make('generateElectronicDocument')
+                ->label('Valider le document électronique')->icon(Heroicon::OutlinedShieldCheck)->color('warning')
+                ->visible(fn (): bool => $this->record->status !== InvoiceStatus::Draft)
+                ->requiresConfirmation()
+                ->modalHeading('Générer et valider le document CII')
+                ->modalDescription('Super PDP convertira et validera le document électronique. Cette action ne transmet pas la facture au client ni à l’administration.')
+                ->action(function (InvoiceElectronicDocumentManager $manager): void {
+                    try {
+                        $result = $manager->generateAndValidate($this->record);
+                        $this->record->refresh();
+                        Notification::make()
+                            ->title($result['valid'] ? 'Document électronique validé' : 'Document électronique à corriger')
+                            ->body($result['valid'] ? 'Le CII est conservé dans Cremona. Aucune facture n’a été transmise.' : 'Le rapport Super PDP est enregistré dans le journal de transmission. Aucune facture n’a été transmise.')
+                            ->{$result['valid'] ? 'success' : 'warning'}()->send();
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Validation impossible')->body($exception->getMessage())->danger()->send();
+                    } catch (Throwable) {
+                        Notification::make()->title('Validation impossible')->body('Super PDP a renvoyé une erreur technique. La facture n’a pas été transmise.')->danger()->send();
+                    }
+                }),
+            Action::make('downloadPdf')
                 ->label('Télécharger le PDF')->icon(Heroicon::OutlinedArrowDownTray)
                 ->visible(fn (): bool => $this->record->pdfPrivateDocument !== null)
                 ->url(fn (): string => route('private-documents.download', $this->record->pdfPrivateDocument?->public_id))
                 ->openUrlInNewTab(),
-                Action::make('recordPayment')
+            Action::make('recordPayment')
                 ->label('Enregistrer un règlement')->icon(Heroicon::OutlinedBanknotes)->color('success')
                 ->visible(fn (): bool => in_array($this->record->status, [InvoiceStatus::Issued, InvoiceStatus::PartiallyPaid, InvoiceStatus::Overdue], true))
                 ->schema([

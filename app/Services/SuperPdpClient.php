@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use LogicException;
 
@@ -38,6 +39,42 @@ class SuperPdpClient
             'verification_status' => is_scalar($session['company_verification_status'] ?? null) ? (string) $session['company_verification_status'] : 'unknown',
             'checked_at' => now()->toIso8601String(),
         ];
+    }
+
+    /** @param array<string, mixed> $invoice */
+    public function convertEn16931ToCii(string $clientId, string $clientSecret, array $invoice): string
+    {
+        return $this->authenticated($clientId, $clientSecret)
+            ->accept('application/xml')
+            ->post($this->endpoint('/v1.beta/invoices/convert?from=en16931&to=cii'), $invoice)
+            ->throw()
+            ->body();
+    }
+
+    /** @return array<string, mixed> */
+    public function validateCii(string $clientId, string $clientSecret, string $content, string $filename): array
+    {
+        return $this->authenticated($clientId, $clientSecret)
+            ->attach('file_name', $content, $filename)
+            ->post($this->endpoint('/v1.beta/validation_reports'))
+            ->throw()
+            ->json();
+    }
+
+    private function authenticated(string $clientId, string $clientSecret): PendingRequest
+    {
+        try {
+            $token = Http::asForm()->acceptJson()->timeout(15)->post($this->endpoint('/oauth2/token'), [
+                'grant_type' => 'client_credentials', 'client_id' => $clientId, 'client_secret' => $clientSecret,
+            ])->throw()->json('access_token');
+        } catch (ConnectionException $exception) {
+            throw new LogicException('Super PDP est temporairement inaccessible. Réessayez plus tard.', previous: $exception);
+        }
+        if (! is_string($token) || $token === '') {
+            throw new LogicException('Super PDP n’a pas retourné de jeton serveur exploitable.');
+        }
+
+        return Http::timeout(30)->withToken($token);
     }
 
     private function endpoint(string $path): string
