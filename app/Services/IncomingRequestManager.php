@@ -141,6 +141,24 @@ class IncomingRequestManager
                 ]);
             }
 
+            if ($request->source_channel === 'website') {
+                $resolved = app(WebsiteContactResolver::class)->resolve(
+                    $request->name_snapshot,
+                    $request->email_snapshot,
+                    $request->phone_snapshot,
+                    $request->source,
+                );
+
+                if ($resolved !== null) {
+                    $request->update(['person_id' => $resolved['person']->getKey()]);
+                    $this->activity(
+                        $request,
+                        $resolved['created'] ? 'person_created_and_linked' : 'person_linked',
+                        relatedPerson: $resolved['person'],
+                    );
+                }
+            }
+
             $this->activity($request, 'received');
             app(CorrespondenceManager::class)->createForIncomingRequest($request);
 

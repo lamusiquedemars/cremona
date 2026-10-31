@@ -3,6 +3,7 @@
     use App\Enums\MessageParticipantRole;
     use App\Support\EmailReplyComposer;
     use App\Support\EmailReplyExcerpt;
+    use App\Support\WebsiteFormEmail;
 
     $messages = collect($getState());
     $latest = $messages->last();
@@ -17,9 +18,12 @@
                 $from = $message->participants->first(fn ($participant) => $participant->role === MessageParticipantRole::From);
                 $to = $message->participants->first(fn ($participant) => $participant->role === MessageParticipantRole::To);
                 $inbound = $message->direction === MessageDirection::Inbound;
+                $websiteForm = $inbound ? WebsiteFormEmail::parse($message->subject ?? '', $message->body_text) : null;
                 $author = $inbound ? ($from?->name ?: $from?->address ?: __('cremona.crm.unknown_sender')) : __('cremona.crm.you');
+                $author = $websiteForm['name'] ?? $author;
                 $recipient = $inbound ? ($to?->name ?: $to?->address ?: $message->mailbox?->address) : ($to?->name ?: $to?->address);
-                $parts = EmailReplyExcerpt::split($message->body_text);
+                $parts = EmailReplyExcerpt::split($websiteForm['message'] ?? $message->body_text);
+                $displaySubject = $websiteForm['subject'] ?? $message->subject;
                 $previous = $messages->slice(0, -1)->last();
 
                 if (! $inbound && $previous !== null) {
@@ -44,8 +48,8 @@
                     <time class="cremona-conversation-message-date">{{ __('cremona.crm.on_date', ['date' => $message->authored_at?->format('d/m/Y H:i')]) }}</time>
                 </header>
 
-                @if ($message->subject)
-                    <div class="cremona-conversation-message-subject">{{ __('cremona.crm.subject').': '.$message->subject }}</div>
+                @if ($displaySubject)
+                    <div class="cremona-conversation-message-subject">{{ __('cremona.crm.subject').': '.$displaySubject }}</div>
                 @endif
 
                 <div class="cremona-conversation-message-body">{{ $parts['reply'] }}</div>

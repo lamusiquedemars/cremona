@@ -35,11 +35,11 @@ class IncomingRequestApiTest extends TestCase
 
         $this->assertSame($first->json('data.id'), $second->json('data.id'));
         $this->assertSame(1, $this->within($organization, fn (): int => IncomingRequest::query()->count()));
-        $this->assertSame(0, $this->within($organization, fn (): int => Person::query()->count()));
+        $this->assertSame(1, $this->within($organization, fn (): int => Person::query()->count()));
 
         $request = $this->within(
             $organization,
-            fn (): IncomingRequest => IncomingRequest::query()->with(['answers', 'consents'])->sole(),
+            fn (): IncomingRequest => IncomingRequest::query()->with(['answers', 'consents', 'person.contactMethods'])->sole(),
         );
         $this->assertSame('Camille Martin', $request->name_snapshot);
         $this->assertSame('site-42', $request->source_site_reference);
@@ -52,6 +52,9 @@ class IncomingRequestApiTest extends TestCase
         $this->assertSame('1.00', $request->attribution_confidence);
         $this->assertCount(1, $request->answers);
         $this->assertCount(1, $request->consents);
+        $this->assertNotNull($request->person);
+        $this->assertSame('Camille Martin', $request->person->display_name);
+        $this->assertSame('camille@example.test', $request->person->contactMethods->sole()->value);
     }
 
     public function test_invalid_or_revoked_credentials_are_rejected(): void

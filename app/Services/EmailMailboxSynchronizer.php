@@ -210,12 +210,19 @@ class EmailMailboxSynchronizer
         $references = array_values(array_filter(array_map('strval', $source->getReferences()->toArray())));
         $subject = EmailHeaderDecoder::text((string) $source->getSubject());
         $body = $this->body($source);
-        $isWebsiteFormNotification = $role === 'inbox'
-            && WebsiteFormEmail::isNotification($subject, $body);
+        $websiteForm = $role === 'inbox' ? WebsiteFormEmail::parse($subject, $body) : null;
+        $isWebsiteFormNotification = $websiteForm !== null;
+        $contact = $websiteForm === null ? null : app(WebsiteContactResolver::class)->resolve(
+            $websiteForm['name'],
+            $websiteForm['email'],
+            $websiteForm['phone'],
+            'website_form_email',
+        );
         $conversation = $this->findConversation($inReplyTo, $references)
             ?? Conversation::query()->create([
                 'initial_channel' => $isWebsiteFormNotification ? MessageChannel::Website : MessageChannel::Email,
-                'subject' => $subject,
+                'person_id' => $contact['person']->getKey() ?? null,
+                'subject' => $websiteForm['subject'] ?? $subject,
                 'status' => ConversationStatus::Open,
             ]);
         $authoredAt = $this->authoredAt($source);
@@ -224,8 +231,8 @@ class EmailMailboxSynchronizer
             'email_mailbox_id' => $mailbox->getKey(),
             'direction' => $direction,
             'channel' => MessageChannel::Email,
-            'subject' => $subject,
-            'body_text' => $body,
+            'subject' => $websiteForm['subject'] ?? $subject,
+            'body_text' => $websiteForm['message'] ?? $body,
             'message_id' => $messageId,
             'in_reply_to' => $inReplyTo,
             'transport_status' => $direction === MessageDirection::Inbound ? MessageTransportStatus::Received : MessageTransportStatus::Accepted,
@@ -236,7 +243,12 @@ class EmailMailboxSynchronizer
             'accepted_at' => $direction === MessageDirection::Outbound ? $authoredAt : null,
         ]);
 
-        foreach ($this->participants($source) as $participant) {
+        foreach ($websiteForm === null ? $this->participants($source) : [[
+            'role' => MessageParticipantRole::From,
+            'name' => $websiteForm['name'],
+            'address' => $websiteForm['email'],
+            'position' => 0,
+        ]] as $participant) {
             $message->participants()->create($participant);
         }
         foreach ($references as $position => $reference) {
