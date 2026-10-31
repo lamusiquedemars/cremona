@@ -81,4 +81,26 @@ curl -fsS -o /dev/null https://cremona.maracujadigital.fr/dashboard/login
 test -d "$shared_storage/public"
 REMOTE
 
+# The application keeps its data in shared/storage. Releases only contain
+# immutable code, dependencies and generated caches: retain a short rollback
+# window rather than silently exhausting the cPanel account quota.
+ssh "$deploy_host" "APP_PATH='$application_path' bash -s" <<'REMOTE'
+set -euo pipefail
+
+retention_dir="$(mktemp -d)"
+trap 'rm -rf -- "$retention_dir"' EXIT
+active_release="$(readlink -f "$APP_PATH/current")"
+printf '%s\n' "$active_release" > "$retention_dir/keep"
+find "$APP_PATH/releases" -mindepth 2 -maxdepth 2 -name DEPLOYED_OK -printf '%T@ %h\n' \
+    | sort -nr | awk '!seen[$2]++ { print $2 }' | head -n 5 >> "$retention_dir/keep"
+sort -u "$retention_dir/keep" -o "$retention_dir/keep"
+find "$APP_PATH/releases" -mindepth 1 -maxdepth 1 -type d -print > "$retention_dir/releases"
+
+while IFS= read -r old_release; do
+    if ! grep -Fxq "$old_release" "$retention_dir/keep"; then
+        rm -rf -- "$old_release"
+    fi
+done < "$retention_dir/releases"
+REMOTE
+
 echo "Cremona publiée : $release"
