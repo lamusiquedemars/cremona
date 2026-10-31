@@ -82,6 +82,32 @@ class SuperPdpTransmissionManager
         return $transmission->fresh();
     }
 
+    public function reconcileUnknownSubmission(Invoice $invoice): InvoiceTransmission
+    {
+        $transmission = InvoiceTransmission::query()->where('invoice_id', $invoice->id)->where('provider', 'super_pdp')->latest()->firstOrFail();
+        if ($transmission->status !== 'submission_unknown' || blank($transmission->external_id)) {
+            throw new LogicException('Cette transmission ne nécessite pas de réconciliation.');
+        }
+
+        $credentials = $this->credentials($invoice);
+        $remote = $this->findOutgoingInvoice($credentials['client_id'], $credentials['client_secret'], $transmission->external_id);
+        if ($remote === null || ! is_numeric(data_get($remote, 'id'))) {
+            throw new LogicException('Aucune facture correspondante n’a été trouvée dans Super PDP. Ne retransmettez pas sans vérification manuelle.');
+        }
+
+        $transmission->update([
+            'status' => 'submitted',
+            'submitted_at' => $transmission->submitted_at ?? now(),
+            'last_error' => null,
+            'metadata' => array_merge($transmission->metadata ?? [], [
+                'message' => 'Transmission réconciliée à partir de Super PDP. Actualisez les statuts de traitement.',
+                'super_pdp_invoice_id' => data_get($remote, 'id'),
+            ]),
+        ]);
+
+        return $transmission->fresh();
+    }
+
     /** @return array<int, array<string, mixed>> */
     private function allEvents(string $clientId, string $clientSecret, string $invoiceId): array
     {
@@ -100,6 +126,28 @@ class SuperPdpTransmissionManager
         } while (data_get($page, 'has_after') === true && $cursor !== null && $cursor !== $previousCursor);
 
         return array_values($events);
+    }
+
+    /** @return array<string, mixed>|null */
+    private function findOutgoingInvoice(string $clientId, string $clientSecret, string $externalId): ?array
+    {
+        $cursor = null;
+
+        for ($pageNumber = 0; $pageNumber < 10; $pageNumber++) {
+            $page = app(SuperPdpClient::class)->outgoingInvoices($clientId, $clientSecret, $cursor);
+            $invoices = collect(data_get($page, 'data', []))->filter(fn ($invoice): bool => is_array($invoice))->values();
+            $match = $invoices->first(fn (array $remote): bool => data_get($remote, 'external_id') === $externalId);
+            if ($match !== null) {
+                return $match;
+            }
+            $lastId = $invoices->pluck('id')->filter(fn ($id): bool => is_numeric($id))->last();
+            $cursor = is_numeric($lastId) ? (int) $lastId : null;
+            if (data_get($page, 'has_more') !== true || $cursor === null) {
+                break;
+            }
+        }
+
+        return null;
     }
 
     /** @return array{client_id: string, client_secret: string} */

@@ -87,6 +87,23 @@ class SuperPdpClient
             ->json();
     }
 
+    /** @return array<string, mixed> */
+    public function outgoingInvoices(string $clientId, string $clientSecret, ?int $endingBeforeId = null): array
+    {
+        $query = array_filter([
+            'direction' => 'out',
+            'order' => 'desc',
+            'limit' => 1000,
+            'ending_before_id' => $endingBeforeId,
+        ], fn ($value): bool => $value !== null);
+
+        return $this->authenticated($clientId, $clientSecret)
+            ->acceptJson()
+            ->get($this->endpoint('/v1.beta/invoices'), $query)
+            ->throw()
+            ->json();
+    }
+
     private function authenticated(string $clientId, string $clientSecret): PendingRequest
     {
         try {

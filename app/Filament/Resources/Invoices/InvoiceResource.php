@@ -139,6 +139,12 @@ class InvoiceResource extends Resource
                     }),
                     TextEntry::make('metadata.message')->label('Information')->placeholder('—'),
                     TextEntry::make('last_error')->label('Information ou erreur')->placeholder('—')->columnSpan(2),
+                    RepeatableEntry::make('metadata.events')->label('Événements Super PDP')->schema([
+                        TextEntry::make('status_code')->label('Code'),
+                        TextEntry::make('status_text')->label('Statut')->placeholder('—'),
+                        TextEntry::make('created_at')->label('Date')->dateTime('d/m/Y H:i')->placeholder('—'),
+                        TextEntry::make('data.reason')->label('Motif')->placeholder('—'),
+                    ])->columns(4)->columnSpanFull(),
                     TextEntry::make('created_at')->label('Créée le')->dateTime('d/m/Y H:i'),
                 ])->columns(4),
             ])->visible(fn (Invoice $record): bool => $record->status !== InvoiceStatus::Draft),

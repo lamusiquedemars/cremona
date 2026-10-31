@@ -51,7 +51,7 @@ class ViewInvoice extends ViewRecord
                     try {
                         $manager->issue($this->record);
                         $this->record->refresh();
-                        Notification::make()->title('Facture émise')->body('Le numéro définitif a été attribué. La transmission Super PDP reste en attente de la connexion de l’organisation.')->success()->send();
+                        Notification::make()->title('Facture émise')->body('Le numéro définitif a été attribué. Validez ensuite le document électronique avant toute transmission.')->success()->send();
                     } catch (LogicException $exception) {
                         Notification::make()->title('Facture non émise')->body($exception->getMessage())->danger()->send();
                     }
@@ -100,7 +100,7 @@ class ViewInvoice extends ViewRecord
                 }),
             Action::make('synchronizeSuperPdp')
                 ->label('Actualiser les statuts Super PDP')->icon(Heroicon::OutlinedArrowPath)->color('gray')
-                ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->whereIn('status', ['submitted', 'sent', 'rejected'])->exists())
+                ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->whereIn('status', ['submitted', 'sent', 'rejected', 'refused', 'invalid'])->exists())
                 ->action(function (SuperPdpTransmissionManager $manager): void {
                     try {
                         $manager->synchronize($this->record);
@@ -110,6 +110,22 @@ class ViewInvoice extends ViewRecord
                         Notification::make()->title('Actualisation impossible')->body($exception->getMessage())->danger()->send();
                     } catch (Throwable) {
                         Notification::make()->title('Actualisation impossible')->body('Super PDP a renvoyé une erreur technique.')->danger()->send();
+                    }
+                }),
+            Action::make('reconcileUnknownSuperPdpSubmission')
+                ->label('Rechercher la transmission dans Super PDP')->icon(Heroicon::OutlinedMagnifyingGlass)->color('warning')
+                ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->where('status', 'submission_unknown')->exists())
+                ->requiresConfirmation()
+                ->modalDescription('Cette recherche ne transmet aucun document. Elle tente seulement de retrouver une facture déjà reçue par Super PDP.')
+                ->action(function (SuperPdpTransmissionManager $manager): void {
+                    try {
+                        $manager->reconcileUnknownSubmission($this->record);
+                        $this->record->refresh();
+                        Notification::make()->title('Transmission Super PDP retrouvée')->success()->send();
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Transmission non retrouvée')->body($exception->getMessage())->warning()->send();
+                    } catch (Throwable) {
+                        Notification::make()->title('Recherche impossible')->body('Super PDP est temporairement inaccessible. Ne retransmettez pas la facture.')->danger()->send();
                     }
                 }),
             Action::make('recordPayment')
