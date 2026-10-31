@@ -94,6 +94,7 @@ class InvoiceWorkflowManager
             ])->save();
             app(InvoiceDocumentManager::class)->ensurePdf($invoice->fresh(['organization', 'lines']));
             $this->queueRegulatoryTransmission($invoice, $settings);
+            app(ElectronicReportingManager::class)->queueInvoice($invoice);
 
             return $invoice->fresh(['lines', 'transmissions', 'pdfPrivateDocument']);
         });

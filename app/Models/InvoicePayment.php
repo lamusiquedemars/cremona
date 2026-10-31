@@ -23,7 +23,10 @@ class InvoicePayment extends Model
                 throw new \LogicException('Le montant d’un règlement doit être positif.');
             }
         });
-        static::saved(fn (self $payment) => app(\App\Services\InvoiceWorkflowManager::class)->refreshPayments($payment->invoice));
+        static::saved(function (self $payment): void {
+            app(\App\Services\InvoiceWorkflowManager::class)->refreshPayments($payment->invoice);
+            app(\App\Services\ElectronicReportingManager::class)->queuePayment($payment);
+        });
         static::deleting(function (self $payment): void {
             $invoice = Invoice::withoutGlobalScopes()->find($payment->invoice_id);
             if ($invoice?->status === \App\Enums\InvoiceStatus::Paid) {
