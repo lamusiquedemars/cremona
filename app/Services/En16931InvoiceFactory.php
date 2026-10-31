@@ -20,24 +20,27 @@ class En16931InvoiceFactory
         $this->requireAddress($issuer, 'émetteur');
         $this->requireAddress($recipient, 'client');
 
-        $vatBreakdown = $invoice->lines->groupBy(fn ($line): string => (string) $line->tax_rate)
-            ->map(function ($lines, string $rate): array {
-                $taxable = round((float) $lines->sum('net_amount'), 2);
-                $tax = round((float) $lines->sum('tax_amount'), 2);
-                $category = (float) $rate === 0.0 ? 'E' : 'S';
-                $breakdown = [
-                    'vat_category_code' => $category,
-                    'vat_category_taxable_amount' => $this->decimal($taxable),
-                    'vat_category_tax_amount' => $this->decimal($tax),
-                ];
-                if ($category === 'S') {
-                    $breakdown['vat_category_rate'] = $this->decimal((float) $rate);
-                } else {
-                    $breakdown['vat_exemption_reason'] = 'TVA non applicable, art. 293 B du CGI';
-                }
+        $vatBreakdown = $invoice->lines->groupBy(fn ($line): string => implode('|', [
+            $line->tax_category, $line->tax_rate, $line->tax_exemption_reason,
+        ]))->map(function ($lines): array {
+            $first = $lines->first();
+            $vat = $this->vatInformation($first);
+            $taxable = round((float) $lines->sum('net_amount'), 2);
+            $tax = round((float) $lines->sum('tax_amount'), 2);
+            $breakdown = [
+                'vat_category_code' => $vat['code'],
+                'vat_category_taxable_amount' => $this->decimal($taxable),
+                'vat_category_tax_amount' => $this->decimal($tax),
+            ];
+            if ($vat['rate'] !== null) {
+                $breakdown['vat_category_rate'] = $vat['rate'];
+            }
+            if ($vat['reason'] !== null) {
+                $breakdown['vat_exemption_reason'] = $vat['reason'];
+            }
 
-                return $breakdown;
-            })->values()->all();
+            return $breakdown;
+        })->values()->all();
 
         return [
             'number' => $invoice->reference,
@@ -57,24 +60,55 @@ class En16931InvoiceFactory
                 'total_vat_amount' => ['amount' => $this->decimal((float) $invoice->tax_amount), 'currency_code' => $invoice->currency],
             ],
             'vat_break_down' => $vatBreakdown,
-            'lines' => $invoice->lines->map(fn ($line): array => [
-                'identifier' => (string) $line->position,
-                'invoiced_quantity' => $this->decimal((float) $line->quantity),
-                'invoiced_quantity_code' => 'C62',
-                'net_amount' => $this->decimal((float) $line->net_amount),
-                'price_details' => [
-                    'item_net_price' => $this->decimal((float) $line->unit_amount),
-                    'item_price_base_quantity' => '1',
-                    'quantity_unit_code' => 'C62',
-                ],
-                'item_information' => ['name' => str($line->description)->limit(100, '')->toString(), 'description' => $line->description],
-                'vat_information' => array_filter([
-                    'invoiced_item_vat_category_code' => (float) $line->tax_rate === 0.0 ? 'E' : 'S',
-                    'invoiced_item_vat_rate' => (float) $line->tax_rate === 0.0 ? null : $this->decimal((float) $line->tax_rate),
-                    'exemption_reason' => (float) $line->tax_rate === 0.0 ? 'TVA non applicable, art. 293 B du CGI' : null,
-                ]),
-            ])->all(),
+            'lines' => $invoice->lines->map(function ($line): array {
+                $vat = $this->vatInformation($line);
+
+                return [
+                    'identifier' => (string) $line->position,
+                    'invoiced_quantity' => $this->decimal((float) $line->quantity),
+                    'invoiced_quantity_code' => 'C62',
+                    'net_amount' => $this->decimal((float) $line->net_amount),
+                    'price_details' => [
+                        'item_net_price' => $this->decimal((float) $line->unit_amount),
+                        'item_price_base_quantity' => '1',
+                        'quantity_unit_code' => 'C62',
+                    ],
+                    'item_information' => ['name' => str($line->description)->limit(100, '')->toString(), 'description' => $line->description],
+                    'vat_information' => array_filter([
+                        'invoiced_item_vat_category_code' => $vat['code'],
+                        'invoiced_item_vat_rate' => $vat['rate'],
+                        'exemption_reason' => $vat['reason'],
+                    ]),
+                ];
+            })->all(),
         ];
+    }
+
+    /** @return array{code: string, rate: ?string, reason: ?string} */
+    private function vatInformation(object $line): array
+    {
+        $category = (string) $line->tax_category;
+        $rate = (float) $line->tax_rate;
+        $code = match ($category) {
+            'standard' => 'S',
+            'exempt' => 'E',
+            'zero_rated' => 'Z',
+            'reverse_charge' => 'AE',
+            'out_of_scope' => 'O',
+            default => throw new LogicException('La catégorie TVA de chaque ligne doit être renseignée.'),
+        };
+        if ($category === 'standard' && $rate <= 0) {
+            throw new LogicException('Une ligne à TVA à 0 % doit utiliser une catégorie et un motif TVA explicites.');
+        }
+        if ($category !== 'standard' && $rate !== 0.0) {
+            throw new LogicException('Une ligne exonérée, à taux zéro, autoliquidée ou hors champ doit avoir une TVA à 0 %.');
+        }
+        $reason = trim((string) $line->tax_exemption_reason);
+        if ($category !== 'standard' && $reason === '') {
+            throw new LogicException('Complétez le motif TVA de chaque ligne à TVA non standard.');
+        }
+
+        return ['code' => $code, 'rate' => $category === 'standard' ? $this->decimal($rate) : null, 'reason' => $reason !== '' ? $reason : null];
     }
 
     /** @param array<string, mixed> $party @return array<string, mixed> */

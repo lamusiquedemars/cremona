@@ -17,25 +17,32 @@ class SuperPdpTransmissionManager
             throw new LogicException('Renseignez le SIREN ou SIRET du client professionnel avant la transmission.');
         }
 
-        return DB::transaction(function () use ($invoice): InvoiceTransmission {
+        $transmission = DB::transaction(function () use ($invoice): InvoiceTransmission {
             $transmission = InvoiceTransmission::query()->where('invoice_id', $invoice->id)->where('provider', 'super_pdp')
                 ->lockForUpdate()->latest()->firstOrFail();
-            if (! in_array($transmission->status, ['validated', 'submission_failed'], true) || $transmission->electronic_private_document_id === null) {
+            if ($transmission->status !== 'validated' || $transmission->electronic_private_document_id === null) {
                 throw new LogicException('Validez d’abord le document électronique avant sa transmission.');
             }
-            $document = $transmission->electronicPrivateDocument()->firstOrFail();
-            $content = Storage::disk($document->disk)->get($document->path);
-            $credentials = $this->credentials($invoice);
             $externalId = $transmission->external_id ?: 'crm-'.$invoice->public_id;
             $transmission->update(['status' => 'submitting', 'external_id' => $externalId, 'last_error' => null]);
 
-            try {
-                $remote = app(SuperPdpClient::class)->submitCii($credentials['client_id'], $credentials['client_secret'], $content, $externalId, $this->processingRule($invoice));
-            } catch (\Throwable $exception) {
-                $transmission->update(['status' => 'submission_failed', 'last_error' => 'Super PDP n’a pas accepté la transmission.']);
-                throw $exception;
-            }
+            return $transmission;
+        });
 
+        try {
+            $document = $transmission->electronicPrivateDocument()->firstOrFail();
+            $content = Storage::disk($document->disk)->get($document->path);
+            $credentials = $this->credentials($invoice);
+            $remote = app(SuperPdpClient::class)->submitCii($credentials['client_id'], $credentials['client_secret'], $content, $transmission->external_id, $this->processingRule($invoice));
+            if (! is_numeric(data_get($remote, 'id'))) {
+                throw new LogicException('La réponse Super PDP ne contient pas d’identifiant de facture.');
+            }
+        } catch (\Throwable $exception) {
+            $transmission->update(['status' => 'submission_unknown', 'last_error' => 'Résultat de transmission inconnu. Vérifiez Super PDP avant toute nouvelle tentative.']);
+            throw $exception;
+        }
+
+        return DB::transaction(function () use ($invoice, $transmission, $remote): InvoiceTransmission {
             $transmission->update([
                 'status' => 'submitted', 'submitted_at' => now(),
                 'metadata' => array_merge($transmission->metadata ?? [], ['message' => 'Facture remise à Super PDP. Les statuts de traitement restent à suivre.', 'super_pdp_invoice_id' => data_get($remote, 'id')]),
@@ -54,18 +61,45 @@ class SuperPdpTransmissionManager
             throw new LogicException('La facture n’a pas encore été remise à Super PDP.');
         }
         $credentials = $this->credentials($invoice);
-        $events = app(SuperPdpClient::class)->invoiceEvents($credentials['client_id'], $credentials['client_secret'], (string) $remoteId);
-        $codes = collect(data_get($events, 'data', []))->pluck('status_code')->filter()->values()->all();
-        $status = in_array('api:rejected', $codes, true) || in_array('fr:210', $codes, true) ? 'rejected'
-            : (in_array('api:sent', $codes, true) || in_array('fr:201', $codes, true) ? 'sent' : 'submitted');
+        $events = $this->allEvents($credentials['client_id'], $credentials['client_secret'], (string) $remoteId);
+        $codes = collect($events)->pluck('status_code')->filter()->values()->all();
+        $status = in_array('api:rejected', $codes, true) || in_array('fr:213', $codes, true) ? 'rejected'
+            : (in_array('fr:210', $codes, true) ? 'refused'
+                : (in_array('api:invalid', $codes, true) || in_array('fr:501', $codes, true) ? 'invalid'
+                    : (in_array('api:sent', $codes, true) || in_array('fr:201', $codes, true) ? 'sent' : 'submitted')));
         $transmission->update([
             'status' => $status,
-            'completed_at' => in_array($status, ['sent', 'rejected'], true) ? now() : null,
-            'last_error' => $status === 'rejected' ? 'Super PDP a signalé un rejet. Consultez le journal des événements.' : null,
-            'metadata' => array_merge($transmission->metadata ?? [], ['message' => $status === 'rejected' ? 'Facture rejetée par le réseau de facturation.' : 'Statuts Super PDP synchronisés.', 'events' => data_get($events, 'data', [])]),
+            'completed_at' => in_array($status, ['sent', 'rejected', 'refused', 'invalid'], true) ? now() : null,
+            'last_error' => match ($status) {
+                'rejected' => 'Super PDP a signalé un rejet. Consultez le journal des événements.',
+                'refused' => 'Le destinataire a refusé la facture. Consultez le journal des événements.',
+                'invalid' => 'Super PDP a signalé un document invalide ou inadmissible. Consultez le journal des événements.',
+                default => null,
+            },
+            'metadata' => array_merge($transmission->metadata ?? [], ['message' => $status === 'rejected' ? 'Facture rejetée par le réseau de facturation.' : 'Statuts Super PDP synchronisés.', 'events' => $events]),
         ]);
 
         return $transmission->fresh();
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function allEvents(string $clientId, string $clientSecret, string $invoiceId): array
+    {
+        $events = [];
+        $cursor = null;
+
+        do {
+            $previousCursor = $cursor;
+            $page = app(SuperPdpClient::class)->invoiceEvents($clientId, $clientSecret, $invoiceId, $cursor);
+            $data = collect(data_get($page, 'data', []))->filter(fn ($event): bool => is_array($event))->values();
+            foreach ($data as $event) {
+                $events[(string) data_get($event, 'id', count($events))] = $event;
+            }
+            $lastId = $data->pluck('id')->filter(fn ($id): bool => is_numeric($id))->last();
+            $cursor = is_numeric($lastId) ? (int) $lastId : null;
+        } while (data_get($page, 'has_after') === true && $cursor !== null && $cursor !== $previousCursor);
+
+        return array_values($events);
     }
 
     /** @return array{client_id: string, client_secret: string} */
@@ -83,6 +117,10 @@ class SuperPdpTransmissionManager
 
     private function processingRule(Invoice $invoice): string
     {
-        return $invoice->company_id === null ? 'B2C' : 'B2B';
+        if ($invoice->company_id === null) {
+            return 'B2C';
+        }
+
+        return strtoupper((string) data_get($invoice->recipient_snapshot, 'country_code')) === 'FR' ? 'B2B' : 'B2BInt';
     }
 }

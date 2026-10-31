@@ -170,6 +170,43 @@ class InvoiceWorkflowTest extends TestCase
         });
     }
 
+    public function test_an_electronic_invoice_requires_an_explicit_reason_for_non_standard_vat(): void
+    {
+        config(['private-documents.disk' => 'local']);
+        Storage::fake('local');
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $this->legalProfile();
+            $person = Person::query()->create([
+                'display_name' => 'Camille Martin', 'address_line_1' => '2 rue du Client',
+                'postal_code' => '69001', 'city' => 'Lyon', 'country_code' => 'FR',
+            ]);
+            $invoice = Invoice::query()->create(['title' => 'Prestation exonérée', 'person_id' => $person->id]);
+            $line = $invoice->lines()->create([
+                'position' => 1, 'description' => 'Prestation', 'quantity' => 1, 'unit_amount' => 100,
+                'tax_rate' => 0, 'tax_category' => 'exempt',
+            ]);
+            $invoice = app(InvoiceWorkflowManager::class)->issue($invoice);
+
+            try {
+                app(En16931InvoiceFactory::class)->make($invoice);
+                $this->fail('Le motif TVA est obligatoire.');
+            } catch (LogicException $exception) {
+                $this->assertStringContainsString('motif TVA', $exception->getMessage());
+            }
+
+            $second = Invoice::query()->create(['title' => 'Prestation exonérée conforme', 'person_id' => $person->id]);
+            $second->lines()->create([
+                'position' => 1, 'description' => 'Prestation', 'quantity' => 1, 'unit_amount' => 100,
+                'tax_rate' => 0, 'tax_category' => 'exempt', 'tax_exemption_reason' => 'TVA non applicable, art. 293 B du CGI',
+            ]);
+            $payload = app(En16931InvoiceFactory::class)->make(app(InvoiceWorkflowManager::class)->issue($second));
+            $this->assertSame('E', $payload['vat_break_down'][0]['vat_category_code']);
+            $this->assertSame('TVA non applicable, art. 293 B du CGI', $payload['lines'][0]['vat_information']['exemption_reason']);
+        });
+    }
+
     private function legalProfile(): void
     {
         OrganizationLegalProfile::query()->create([

@@ -58,7 +58,7 @@ class ViewInvoice extends ViewRecord
                 }),
             Action::make('generateElectronicDocument')
                 ->label('Valider le document électronique')->icon(Heroicon::OutlinedShieldCheck)->color('warning')
-                ->visible(fn (): bool => $this->record->status !== InvoiceStatus::Draft)
+                ->visible(fn (): bool => $this->record->status !== InvoiceStatus::Draft && $this->record->transmissions()->where('provider', 'super_pdp')->whereIn('status', ['awaiting_configuration', 'ready_to_transmit', 'validated', 'validation_failed'])->exists())
                 ->requiresConfirmation()
                 ->modalHeading('Générer et valider le document CII')
                 ->modalDescription('Super PDP convertira et validera le document électronique. Cette action ne transmet pas la facture au client ni à l’administration.')
@@ -83,7 +83,7 @@ class ViewInvoice extends ViewRecord
                 ->openUrlInNewTab(),
             Action::make('submitToSuperPdp')
                 ->label('Transmettre à Super PDP')->icon(Heroicon::OutlinedPaperAirplane)->color('danger')
-                ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->whereIn('status', ['validated', 'submission_failed'])->exists())
+                ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->where('status', 'validated')->exists())
                 ->requiresConfirmation()
                 ->modalHeading('Transmettre la facture à Super PDP')
                 ->modalDescription('Cette action transmet réellement la facture électronique au réseau Super PDP. Elle est irréversible ; vérifiez la facture et son destinataire.')
@@ -95,7 +95,7 @@ class ViewInvoice extends ViewRecord
                     } catch (LogicException $exception) {
                         Notification::make()->title('Transmission impossible')->body($exception->getMessage())->danger()->send();
                     } catch (Throwable) {
-                        Notification::make()->title('Transmission impossible')->body('Super PDP a renvoyé une erreur technique. Vérifiez le journal avant toute nouvelle tentative.')->danger()->send();
+                        Notification::make()->title('Transmission à vérifier')->body('Le résultat peut être inconnu. Vérifiez Super PDP avant toute nouvelle tentative.')->danger()->send();
                     }
                 }),
             Action::make('synchronizeSuperPdp')

@@ -198,7 +198,7 @@ file unique attendue pour la relation client.
 | P1 | Relation client unifiée | Livré | La file « À traiter » réunit les demandes du site, les messages nécessitant une réponse, les tâches ouvertes et les rendez-vous/appels planifiés en retard ou dans les sept jours. Un email importé ne devient une demande qu’à l’action explicite de l’équipe ; il conserve ainsi son historique sans créer de faux prospect. Les rendez-vous plus éloignés restent dans l’agenda. |
 | P1 | Messagerie client synchronisée | Partiel | La boîte réelle Atelier Ivo est relevée automatiquement toutes les 15 minutes. La relève est incrémentale par UID IMAP, reprend par lots et détecte une réinitialisation distante sans créer de doublons. Restent le rapprochement avec le client, la qualification explicite et la création proposée de tâches ou rendez-vous. L’e-mail alimentera la file et l’agenda ; il ne créera pas une seconde interface à surveiller. |
 | P1 | Bridge site ↔ Cremona | Partiel | Le contrat et l’outbox existent : soumission idempotente, authentifiée et rejouable. Valider deux organisations réelles, puis basculer Contempo sans supprimer son historique local. |
-| P1 | Factures | Partiel | Le module transverse est livré : brouillon, lignes HT/TVA, création idempotente depuis un devis accepté, numéro définitif, snapshots, PDF privé, paiements et avoirs. L’unique reste est le connecteur réglementaire réel Super PDP : il devra transmettre et suivre les retours avec les accès de la véritable entreprise, sans API Pennylane payante ni seconde comptabilité. |
+| P0–P2 | Facturation électronique compatible | Partiel | Socle transverse et connecteur Super PDP présents ; Atelier Ivo Incidit est déjà raccordé selon confirmation d’Ivo. Restent la qualification fiscale, la fiabilité de l’émission, les corrections, la réception, l’e-reporting, la conservation et les preuves de compatibilité. Périmètre, dépendances et critères : [facturation et Super PDP](facturation-super-pdp.md#chantier-solution-compatible--périmètre-et-backlog). |
 | P2 | Administration commerciale | À faire | Écran par organisation : coordonnées émetteur, mentions, CGV, conditions, validité, aperçus, droits et réglages de numérotation. Les règles de devis actuelles sont opérationnelles. |
 | P2 | Agenda réel | Partiel | Les vues semaine et mois réunissent les sources internes déjà fiables : rendez-vous/appels, rappels, dossiers atelier planifiés et retours de location. Les essais métier, l’alimentation par la messagerie synchronisée et une éventuelle synchronisation Google/Outlook restent des lots distincts, après validation des règles de conflit. |
 | P2 | Validation métier Contempo | À faire | Tester les parcours réels de réparation, location et vente avant toute automatisation, SEPA ou connecteur bancaire. |
@@ -213,3 +213,78 @@ Le correctif PDF, la numérotation annuelle des devis et la numérotation
 partagée dossier atelier / devis sont actifs en production. Le chantier restant
 concerne l’administration documentaire réutilisable et la confirmation d’une
 première paire de références créée en situation réelle.
+
+
+## Complément produit — offre artisans
+
+Ces horizons commerciaux complètent les priorités techniques ci-dessus sans
+les remplacer : les P0 existants, la validation Contempo et les travaux métier
+engagés conservent leur importance. Les durées sont des ordres de grandeur en
+jours ouvrés, à confirmer après recette. Les fonctions déjà livrées restent
+identifiées dans le suivi historique ; les points ci-dessous décrivent le reste.
+
+### P1 commercial — fiabilité et simplicité du parcours
+
+- **Bridge site → gestion — amélioration et recette** (complète la ligne P1
+  « Bridge site ↔ Cremona » ci-dessus ; 3–8 j, partagé avec Site Core). Résultat :
+  une demande de formulaire arrive une seule fois dans la bonne organisation,
+  avec une installation reproductible. Acceptation : deux sites et deux
+  organisations réelles ou pilotes isolées ; refus d'un jeton ou d'une référence
+  non autorisés ; test de doublon, panne, reprise et visibilité des échecs et
+  de la réception ; procédure de configuration et contrôle après installation.
+  Dépendances : connecteur Site Core, accès et sites pilotes. La reprise
+  d'historique et la bascule Contempo restent des décisions distinctes.
+- **CRM essentiel — correction et recette** (complète « Relation client
+  unifiée » et « Messagerie client synchronisée » ; 2–5 j hors évolutions de
+  messagerie déjà suivies). Résultat : un artisan non technicien suit un prospect
+  ou client depuis une demande du site ou une saisie manuelle jusqu'aux actions
+  suivantes. Acceptation : parcours testé avec recherche, historique, notes,
+  document, tâche et rendez-vous, droits et organisation corrects ; corrections
+  nécessaires identifiées et effectuées ; absence d'obligation de connecter une
+  boîte e-mail. Dépendances : utilisateur pilote, modules CRM et agenda ; bridge
+  uniquement pour le parcours provenant du site.
+- **Accès et navigation — amélioration** (complète le chantier A ; 2–5 j après
+  inventaire des mécanismes existants). Résultat : accès lisible aux outils
+  activés et identité de l'entreprise respectée. Acceptation : un utilisateur
+  pilote trouve le site et la gestion avec des libellés cohérents, ne voit pas
+  de module désactivé et comprend les connexions nécessaires ; droits vérifiés
+  côté serveur. Dépendances : configuration de l'organisation et coordination
+  avec le site. Évaluer les accès existants avant toute décision ; ni fusion des
+  applications ni SSO ne sont des prérequis de cette tâche.
+
+### P2 commercial — prestations et devis
+
+- **Prestations et dossiers transverses — étude puis amélioration éventuelle**
+  (complète le cadrage Offre et le pack luthier ; étude 2–4 j, réalisation à
+  estimer après cas pilote). Résultat : déterminer le plus petit socle adapté à
+  plusieurs métiers pour description, prix et informations utiles, liens avec
+  client et demande, dossier ou intervention, statuts et reprise en devis si
+  utile. Acceptation de l'étude : au moins un parcours hors lutherie documenté,
+  choix de réutilisation et limites des modèles existants, critères et estimation
+  de réalisation. Une éventuelle livraison doit tester le parcours et préserver
+  intégralement les spécialisations et usages Contempo. Dépendances : artisan
+  pilote, CRM et règles de devis ; aucune refonte universelle présupposée.
+- **Devis — correction et recette** (complète les chantiers E et
+  « Administration commerciale » ; 2–5 j hors développements révélés par la
+  recette). Résultat : devis simple à produire et suivre à partir d'un client
+  et, si pertinent, de prestations existantes. Acceptation : création, lignes,
+  totaux, numérotation, mentions et conditions, PDF, suivi et droits vérifiés
+  sur un cas réel ou pilote ; adaptations du modèle et corrections consignées.
+  Dépendances : paramètres et validation des mentions par l'entreprise. La
+  facturation électronique n'est pas une condition de vente des devis.
+
+### P3 commercial — extensions conditionnelles
+
+- **Facturation / Super PDP — chantier prioritaire en cours** : les lots P0 à
+  P2 et le jalon d'usage du logo sont suivis dans
+  [Facturation et Super PDP](facturation-super-pdp.md#chantier-solution-compatible--périmètre-et-backlog).
+  Atelier Ivo Incidit est déjà raccordé selon confirmation d'Ivo ; la connexion
+  seule ne démontre pas la compatibilité des fonctions. Estimation à établir
+  après confirmation des contrats techniques et du périmètre réglementaire.
+- **Sites existants, dont WordPress — étude d'intégration** (nouveau ; 1–3 j
+  d'étude, réalisation à estimer). Résultat : déterminer comment utiliser l'API
+  de demandes depuis un site existant sans imposer sa refonte. Acceptation : cas
+  commercial identifié, contrat, authentification, isolation, idempotence,
+  reprise et exploitation décrits ; décision explicite avant développement.
+  Dépendances : formulaire et environnement du site choisi. Aucun connecteur
+  générique complexe n'est engagé par cette entrée.

@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\OrganizationIntegration;
 use App\Models\PrivateDocument;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use LogicException;
 use Throwable;
 
@@ -15,6 +17,8 @@ class InvoiceElectronicDocumentManager
     public function generateAndValidate(Invoice $invoice): array
     {
         $invoice->loadMissing('transmissions');
+        $transmission = $invoice->transmissions()->where('provider', 'super_pdp')->latest()->firstOrFail();
+        $this->ensureValidationAllowed($transmission->status);
         $integration = OrganizationIntegration::withoutGlobalScopes()
             ->where('organization_id', $invoice->organization_id)
             ->where('provider', 'super_pdp')->where('name', 'production')->where('status', 'active')->first();
@@ -31,37 +35,50 @@ class InvoiceElectronicDocumentManager
             throw new LogicException('Super PDP n’a pas retourné de document CII exploitable.');
         }
         $filename = 'Facture-'.$invoice->reference.'.xml';
-        $path = 'documents/'.$invoice->organization_id.'/invoices/'.$invoice->public_id.'/'.$filename;
+        $path = 'documents/'.$invoice->organization_id.'/invoices/'.$invoice->public_id.'/'.Str::uuid().'/'.$filename;
         $disk = (string) config('private-documents.disk', 'local');
         $report = app(SuperPdpClient::class)->validateCii($clientId, $clientSecret, $content, $filename);
         $validation = data_get($report, 'data.0', []);
         $valid = data_get($validation, 'is_valid') === true;
 
         try {
-            Storage::disk($disk)->put($path, $content, ['visibility' => 'private']);
-            $document = PrivateDocument::query()->create([
-                'title' => 'Document électronique '.$invoice->reference,
-                'category' => 'accounting_record', 'disk' => $disk, 'path' => $path, 'original_name' => $filename,
-                'declared_mime_type' => 'application/xml', 'detected_mime_type' => 'application/xml',
-                'size' => strlen($content), 'sha256' => hash('sha256', $content),
-            ]);
-            $transmission = $invoice->transmissions()->where('provider', 'super_pdp')->latest()->firstOrFail();
-            $transmission->update([
-                'electronic_private_document_id' => $document->id,
-                'payload_sha256' => $document->sha256,
-                'status' => $valid ? 'validated' : 'validation_failed',
-                'last_error' => $valid ? null : (string) (data_get($validation, 'error') ?? 'Le document électronique a été refusé lors de la validation.'),
-                'metadata' => array_merge($transmission->metadata ?? [], [
-                    'message' => $valid ? 'Document CII validé par Super PDP. Il n’a pas été transmis.' : 'Document CII généré mais non valide : aucune transmission possible.',
-                    'format' => 'cii', 'validation_report' => $validation,
-                ]),
-                'completed_at' => now(),
-            ]);
+            if (! Storage::disk($disk)->put($path, $content, ['visibility' => 'private'])) {
+                throw new LogicException('Le document électronique n’a pas pu être conservé.');
+            }
 
-            return ['document' => $document, 'valid' => $valid];
+            return DB::transaction(function () use ($invoice, $transmission, $disk, $path, $content, $filename, $validation, $valid): array {
+                $transmission = $invoice->transmissions()->whereKey($transmission->id)->lockForUpdate()->firstOrFail();
+                $this->ensureValidationAllowed($transmission->status);
+                $document = PrivateDocument::query()->create([
+                    'title' => 'Document électronique '.$invoice->reference,
+                    'category' => 'accounting_record', 'disk' => $disk, 'path' => $path, 'original_name' => $filename,
+                    'declared_mime_type' => 'application/xml', 'detected_mime_type' => 'application/xml',
+                    'size' => strlen($content), 'sha256' => hash('sha256', $content),
+                ]);
+                $transmission->update([
+                    'electronic_private_document_id' => $document->id,
+                    'payload_sha256' => $document->sha256,
+                    'status' => $valid ? 'validated' : 'validation_failed',
+                    'last_error' => $valid ? null : (string) (data_get($validation, 'error') ?? 'Le document électronique a été refusé lors de la validation.'),
+                    'metadata' => array_merge($transmission->metadata ?? [], [
+                        'message' => $valid ? 'Document CII validé par Super PDP. Il n’a pas été transmis.' : 'Document CII généré mais non valide : aucune transmission possible.',
+                        'format' => 'cii', 'validation_report' => $validation,
+                    ]),
+                    'completed_at' => now(),
+                ]);
+
+                return ['document' => $document, 'valid' => $valid];
+            });
         } catch (Throwable $exception) {
             Storage::disk($disk)->delete($path);
             throw $exception;
+        }
+    }
+
+    private function ensureValidationAllowed(string $status): void
+    {
+        if (! in_array($status, ['awaiting_configuration', 'ready_to_transmit', 'validated', 'validation_failed'], true)) {
+            throw new LogicException('Ce document ne peut plus être validé après le début de sa transmission.');
         }
     }
 }

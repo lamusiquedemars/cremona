@@ -56,4 +56,20 @@ class SuperPdpSandboxClientTest extends TestCase
         Http::assertSent(fn (Request $request): bool => str_starts_with($request->url(), 'https://api.superpdp.test/v1.beta/invoice_events?')
             && str_contains($request->url(), 'invoice_id=123'));
     }
+
+    public function test_it_can_request_events_after_a_cursor(): void
+    {
+        config()->set('services.super_pdp.api_url', 'https://api.superpdp.test');
+        Http::fake([
+            'https://api.superpdp.test/oauth2/token' => Http::response(['access_token' => 'server-token'], 200),
+            'https://api.superpdp.test/v1.beta/invoice_events*' => Http::response(['data' => [], 'has_after' => false], 200),
+        ]);
+
+        app(SuperPdpClient::class)->invoiceEvents('client-id', 'client-secret', '123', 456);
+
+        Http::assertSent(fn (Request $request): bool => str_starts_with($request->url(), 'https://api.superpdp.test/v1.beta/invoice_events?')
+            && str_contains($request->url(), 'invoice_id=123')
+            && str_contains($request->url(), 'starting_after_id=456')
+            && str_contains($request->url(), 'limit=1000'));
+    }
 }

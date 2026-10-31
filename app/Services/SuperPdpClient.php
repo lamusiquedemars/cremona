@@ -72,11 +72,17 @@ class SuperPdpClient
     }
 
     /** @return array<string, mixed> */
-    public function invoiceEvents(string $clientId, string $clientSecret, string $invoiceId): array
+    public function invoiceEvents(string $clientId, string $clientSecret, string $invoiceId, ?int $startingAfterId = null): array
     {
+        $query = array_filter([
+            'invoice_id' => $invoiceId,
+            'starting_after_id' => $startingAfterId,
+            'limit' => 1000,
+        ], fn ($value): bool => $value !== null);
+
         return $this->authenticated($clientId, $clientSecret)
             ->acceptJson()
-            ->get($this->endpoint('/v1.beta/invoice_events'), ['invoice_id' => $invoiceId])
+            ->get($this->endpoint('/v1.beta/invoice_events'), $query)
             ->throw()
             ->json();
     }
