@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\OrganizationRole;
+use App\Enums\OrganizationPermission;
 use App\Filament\Resources\EmailMailboxes\EmailMailboxResource;
 use App\Models\EmailMailbox;
 use App\Models\EmailSyncRun;
@@ -25,7 +26,10 @@ class EmailMailboxStatusTest extends TestCase
         $organization = Organization::factory()->create();
         app(OrganizationModuleRegistry::class)->sync($organization, ['communications']);
         $user = User::factory()->create();
-        $user->organizations()->attach($organization, ['role' => OrganizationRole::Administrator->value]);
+        $user->organizations()->attach($organization, [
+            'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageOrganizationSettings->value]],
+        ]);
 
         app(OrganizationContext::class)->run($organization, function (): void {
             $integration = OrganizationIntegration::query()->create([
@@ -58,12 +62,15 @@ class EmailMailboxStatusTest extends TestCase
             ->assertSeeText('7 déjà connu(s)');
     }
 
-    public function test_an_administrator_can_open_an_existing_mailbox_without_exposing_its_passwords(): void
+    public function test_an_administrator_with_organization_configuration_access_can_open_an_existing_mailbox_without_exposing_passwords(): void
     {
         $organization = Organization::factory()->create();
         app(OrganizationModuleRegistry::class)->sync($organization, ['communications']);
         $user = User::factory()->create();
-        $user->organizations()->attach($organization, ['role' => OrganizationRole::Administrator->value]);
+        $user->organizations()->attach($organization, [
+            'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageOrganizationSettings->value]],
+        ]);
 
         $mailbox = app(OrganizationContext::class)->run($organization, function (): EmailMailbox {
             $integration = OrganizationIntegration::query()->create([

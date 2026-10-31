@@ -1,6 +1,6 @@
 # Avancement du plan directeur Cremona
 
-> Dernière mise à jour : 24 octobre 2026.
+> Dernière mise à jour : 31 octobre 2026.
 >
 > Ce document suit les livraisons du [plan directeur produit](plan-directeur-produit-cremona.md). Il ne remplace pas les critères de fin du plan.
 
@@ -196,7 +196,7 @@ file unique attendue pour la relation client.
 | P0 | Configuration des intégrations | Livré | Scaleway, Super PDP, Google Ads et Brevo sont présentés dans **Configuration de l’organisation**. Super PDP utilise le flux serveur automatique ; la sandbox Burger Queen de Contempo est validée `verified` en production. Les secrets restent côté serveur. |
 | P1 | Contrats de location | Livré | Contrat PDF versionné et figé, envoi d’un lien personnel, consultation des documents, acceptation nominative horodatée avec preuve, puis attestation de restitution sont opérationnels. Il s’agit d’une acceptation tracée, non d’une signature électronique qualifiée. |
 | P1 | Relation client unifiée | Livré | La file « À traiter » réunit les demandes du site, les messages nécessitant une réponse, les tâches ouvertes et les rendez-vous/appels planifiés en retard ou dans les sept jours. Un email importé ne devient une demande qu’à l’action explicite de l’équipe ; il conserve ainsi son historique sans créer de faux prospect. Les rendez-vous plus éloignés restent dans l’agenda. |
-| P1 | Messagerie client synchronisée | Partiel | IMAP/SMTP permet déjà de relever et répondre depuis Cremona. Reste à connecter une boîte réelle et industrialiser la relève incrémentale, le rapprochement avec le client, la qualification explicite et la création proposée de tâches ou rendez-vous. L’e-mail alimentera la file et l’agenda ; il ne créera pas une seconde interface à surveiller. |
+| P1 | Messagerie client synchronisée | Partiel | La boîte réelle Atelier Ivo est relevée automatiquement toutes les 15 minutes. La relève est incrémentale par UID IMAP, reprend par lots et détecte une réinitialisation distante sans créer de doublons. Restent le rapprochement avec le client, la qualification explicite et la création proposée de tâches ou rendez-vous. L’e-mail alimentera la file et l’agenda ; il ne créera pas une seconde interface à surveiller. |
 | P1 | Bridge site ↔ Cremona | Partiel | Le contrat et l’outbox existent : soumission idempotente, authentifiée et rejouable. Valider deux organisations réelles, puis basculer Contempo sans supprimer son historique local. |
 | P1 | Factures | Partiel | Le module transverse est livré : brouillon, lignes HT/TVA, création idempotente depuis un devis accepté, numéro définitif, snapshots, PDF privé, paiements et avoirs. L’unique reste est le connecteur réglementaire réel Super PDP : il devra transmettre et suivre les retours avec les accès de la véritable entreprise, sans API Pennylane payante ni seconde comptabilité. |
 | P2 | Administration commerciale | À faire | Écran par organisation : coordonnées émetteur, mentions, CGV, conditions, validité, aperçus, droits et réglages de numérotation. Les règles de devis actuelles sont opérationnelles. |

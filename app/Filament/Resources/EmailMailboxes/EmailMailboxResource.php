@@ -108,7 +108,7 @@ class EmailMailboxResource extends Resource
                 ->label('Relever maintenant')
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->requiresConfirmation()
-                ->modalDescription('Lit au plus 50 messages récents dans INBOX et, si configuré, dans Envoyés. Aucun message distant ne sera modifié.')
+                ->modalDescription('Relève au plus 50 nouveaux messages par dossier. Pour une nouvelle boîte, elle initialise l’historique avec les 50 messages les plus récents. Aucun message distant ne sera modifié.')
                 ->action(function (EmailMailbox $record): void {
                     $result = app(EmailMailboxSynchronizer::class)->sync($record);
                     Notification::make()

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use LogicException;
 use Throwable;
 use Webklex\PHPIMAP\ClientManager;
+use Webklex\PHPIMAP\Folder;
 use Webklex\PHPIMAP\Message as ImapMessage;
 
 class EmailMailboxSynchronizer
@@ -55,14 +56,23 @@ class EmailMailboxSynchronizer
                 );
                 $trackedFolder->update(['sync_status' => 'syncing', 'last_error' => null, 'last_error_at' => null]);
 
-                foreach ($folder->messages()->all()->setFetchOrderDesc()->limit(self::BATCH_SIZE)->get() as $message) {
-                    [$created, $ignored] = $this->import($mailbox, $trackedFolder, $message, $role);
+                $remoteCursor = $this->remoteCursor($folder);
+                $isInitialSync = $this->shouldBootstrap($trackedFolder, $remoteCursor['uid_validity']);
+                $lastProcessedUid = $isInitialSync ? null : $trackedFolder->last_uid;
+
+                foreach ($this->messagesToImport($folder, $isInitialSync, $lastProcessedUid) as $message) {
+                    [$created, $ignored] = $this->import($mailbox, $trackedFolder, $message, $role, $remoteCursor['uid_validity']);
                     $imported += $created;
                     $skipped += $ignored;
+                    $lastProcessedUid = max((int) ($lastProcessedUid ?? 0), (int) $message->getUid());
                 }
 
                 $trackedFolder->update([
                     'sync_status' => 'idle',
+                    'uid_validity' => $remoteCursor['uid_validity'],
+                    // When a first sync finds an empty folder, UIDNEXT still marks the
+                    // point from which the next message must be read.
+                    'last_uid' => $lastProcessedUid ?? max(0, $remoteCursor['uid_next'] - 1),
                     'last_synced_at' => now(),
                 ]);
             }
@@ -126,8 +136,47 @@ class EmailMailboxSynchronizer
         ]);
     }
 
+    /** @return array{uid_validity: ?string, uid_next: int} */
+    private function remoteCursor(Folder $folder): array
+    {
+        $status = $folder->status();
+        $uidValidity = $status['uidvalidity'] ?? null;
+
+        return [
+            'uid_validity' => $uidValidity === null ? null : (string) $uidValidity,
+            'uid_next' => max(1, (int) ($status['uidnext'] ?? 1)),
+        ];
+    }
+
+    private function shouldBootstrap(EmailFolder $folder, ?string $remoteUidValidity): bool
+    {
+        if ($folder->last_uid === null) {
+            return true;
+        }
+
+        return $folder->uid_validity !== null
+            && $remoteUidValidity !== null
+            && $folder->uid_validity !== $remoteUidValidity;
+    }
+
+    /** @return iterable<ImapMessage> */
+    private function messagesToImport(Folder $folder, bool $isInitialSync, ?int $lastUid): iterable
+    {
+        $query = $folder->messages();
+
+        if ($isInitialSync) {
+            return $query->all()->setFetchOrderDesc()->limit(self::BATCH_SIZE)->get();
+        }
+
+        return $query
+            ->whereUid((max(0, (int) $lastUid) + 1).':*')
+            ->setFetchOrderAsc()
+            ->limit(self::BATCH_SIZE)
+            ->get();
+    }
+
     /** @return array{0: int, 1: int} */
-    private function import(EmailMailbox $mailbox, EmailFolder $folder, ImapMessage $source, string $role): array
+    private function import(EmailMailbox $mailbox, EmailFolder $folder, ImapMessage $source, string $role, ?string $uidValidity): array
     {
         if (TechnicalEmailNotification::isSource($mailbox, $source, $role)) {
             return [0, 1];
@@ -148,6 +197,7 @@ class EmailMailboxSynchronizer
             EmailMessageCopy::query()->create([
                 'email_folder_id' => $folder->getKey(),
                 'conversation_message_id' => $message->getKey(),
+                'uid_validity' => $uidValidity,
                 'uid' => $uid,
                 'synchronized_at' => now(),
             ]);
