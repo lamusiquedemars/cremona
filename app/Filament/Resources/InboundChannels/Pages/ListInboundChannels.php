@@ -42,10 +42,8 @@ class ListInboundChannels extends ListRecords
                         ->placeholder('atelierivoincidit.fr')
                         ->helperText('Chaque référence doit correspondre exactement à celle déclarée dans l’environnement du site. Ce jeton sera refusé pour tout autre site.')
                         ->required()
-                        ->minItems(1)
                         ->maxItems(20)
-                        ->rule('distinct')
-                        ->nestedRecursiveRules(['string', 'max:255']),
+                        ->rules(['array', 'min:1']),
                 ])
                 ->action(function (array $data): void {
                     Gate::authorize('create', OrganizationIntegration::class);
