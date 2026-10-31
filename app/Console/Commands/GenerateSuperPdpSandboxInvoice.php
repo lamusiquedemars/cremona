@@ -25,8 +25,7 @@ class GenerateSuperPdpSandboxInvoice extends Command
 
             return self::SUCCESS;
         } catch (Throwable $exception) {
-            report($exception);
-            $this->error('Génération sandbox impossible.');
+            $this->error('Génération sandbox impossible : '.$exception->getMessage());
 
             return self::FAILURE;
         }
