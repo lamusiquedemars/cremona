@@ -58,6 +58,9 @@ class ElectronicReportingManager
                     'payment_method' => $payment->method,
                     'payment_reference' => $payment->reference,
                     'recipient' => $invoice->recipient_snapshot,
+                    'submission_strategy' => $scope === 'b2c'
+                        ? 'requires_super_pdp_invoice_event'
+                        : 'manual_b2bint_after_contract_review',
                 ],
                 'remote_id' => null,
                 'submitted_at' => null,
@@ -122,6 +125,9 @@ class ElectronicReportingManager
             'total_amount' => $invoice->total_amount,
             'issuer' => $invoice->issuer_snapshot,
             'recipient' => $invoice->recipient_snapshot,
+            'submission_strategy' => $scope === 'b2c'
+                ? 'automatic_from_super_pdp_invoice'
+                : 'manual_b2bint_after_contract_review',
         ];
     }
 }

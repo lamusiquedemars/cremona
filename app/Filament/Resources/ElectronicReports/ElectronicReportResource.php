@@ -55,6 +55,12 @@ class ElectronicReportResource extends Resource
             ]),
             Section::make('Transmission')->columnSpan(1)->schema([
                 TextEntry::make('remote_id')->label('Identifiant Super PDP')->placeholder('Non transmis'),
+                TextEntry::make('payload.submission_strategy')->label('Mode de transmission')->formatStateUsing(fn (?string $state): string => match ($state) {
+                    'automatic_from_super_pdp_invoice' => 'Automatique après la facture Super PDP',
+                    'requires_super_pdp_invoice_event' => 'Après événement de facture Super PDP',
+                    'manual_b2bint_after_contract_review' => 'Manuel après revue du contrat',
+                    default => 'À qualifier',
+                }),
                 TextEntry::make('submitted_at')->label('Transmise le')->dateTime('d/m/Y H:i')->placeholder('Non transmise'),
                 TextEntry::make('acknowledged_at')->label('Accusé le')->dateTime('d/m/Y H:i')->placeholder('Aucun accusé'),
                 TextEntry::make('last_error')->label('Erreur')->placeholder('—'),
