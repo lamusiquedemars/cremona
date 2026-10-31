@@ -23,7 +23,7 @@ final class WebsiteFormEmail
      * Decodes the exact legacy notification template emitted by Maracuja sites.
      * Replies and manually composed emails are intentionally excluded.
      *
-     * @return array{name: string, email: string, phone: ?string, subject: ?string, message: string}|null
+     * @return array{name: ?string, email: string, phone: ?string, subject: ?string, message: string}|null
      */
     public static function parse(string $subject, string $body): ?array
     {
@@ -31,29 +31,33 @@ final class WebsiteFormEmail
             return null;
         }
 
-        $pattern = '/^nouveau message reçu depuis le site\.\s+'
-            .'nom\s*:\s*(?<name>[^\r\n]+)\s+'
-            .'email\s*:\s*(?<email>[^\r\n]+)'
-            .'(?:\s+téléphone\s*:\s*(?<phone>[^\r\n]+))?'
-            .'(?:\s+sujet\s*:\s*(?<subject>[^\r\n]+))?'
-            .'\s+message\s*:\s*(?<message>.+)$/isu';
+        $labels = 'nom|email|téléphone|sujet|message';
+        $email = self::field($body, 'email', $labels);
+        $message = self::field($body, 'message', $labels, true);
 
-        if (preg_match($pattern, trim($body), $matches) !== 1) {
-            return null;
-        }
-
-        $message = trim($matches['message']);
-        if ($message === '') {
+        if ($email === null || ! filter_var($email, FILTER_VALIDATE_EMAIL) || $message === null) {
             return null;
         }
 
         return [
-            'name' => trim($matches['name']),
-            'email' => trim($matches['email']),
-            'phone' => self::clean($matches['phone'] ?? null),
-            'subject' => self::clean($matches['subject'] ?? null),
+            'name' => self::field($body, 'nom', $labels),
+            'email' => $email,
+            'phone' => self::field($body, 'téléphone', $labels),
+            'subject' => self::field($body, 'sujet', $labels),
             'message' => $message,
         ];
+    }
+
+    private static function field(string $body, string $label, string $labels, bool $restOfMessage = false): ?string
+    {
+        $ending = $restOfMessage ? '$' : "(?=\\s+(?:{$labels})\\s*:|$)";
+        $pattern = "/(?:^|\\s){$label}\\s*:\\s*(.+?){$ending}/isu";
+
+        if (preg_match($pattern, $body, $matches) !== 1) {
+            return null;
+        }
+
+        return self::clean($matches[1]);
     }
 
     private static function clean(?string $value): ?string

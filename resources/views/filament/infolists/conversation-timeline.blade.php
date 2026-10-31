@@ -21,7 +21,7 @@
                 $inbound = $message->direction === MessageDirection::Inbound;
                 $websiteForm = $inbound ? WebsiteFormEmail::parse($message->subject ?? '', $message->body_text) : null;
                 $author = $inbound ? ($from?->name ?: $from?->address ?: __('cremona.crm.unknown_sender')) : __('cremona.crm.you');
-                $author = $websiteForm['name'] ?? $author;
+                $author = $websiteForm['name'] ?? $websiteForm['email'] ?? $author;
                 $senderAddress = $websiteForm['email'] ?? $from?->address;
                 $recipient = $inbound ? ($to?->name ?: $to?->address ?: $message->mailbox?->address) : ($to?->name ?: $to?->address);
                 $parts = EmailReplyExcerpt::split(EmailBodyText::forDisplay($websiteForm['message'] ?? $message->body_text));
@@ -44,10 +44,12 @@
                 <header class="cremona-conversation-message-header">
                     <div>
                         <div class="cremona-conversation-message-author">{{ __('cremona.crm.from', ['name' => $author]) }}</div>
-                        @if ($senderAddress)
+                        @if ($senderAddress && $senderAddress !== $author)
                             <div class="cremona-conversation-message-email">{{ $senderAddress }}</div>
                         @endif
-                        <div class="cremona-conversation-message-recipient">{{ __('cremona.crm.to', ['name' => $recipient ?: '—']) }}</div>
+                        @if (! $inbound && $recipient)
+                            <div class="cremona-conversation-message-recipient">{{ __('cremona.crm.to', ['name' => $recipient]) }}</div>
+                        @endif
                     </div>
                     <time class="cremona-conversation-message-date">{{ __('cremona.crm.on_date', ['date' => $message->authored_at?->format('d/m/Y H:i')]) }}</time>
                 </header>

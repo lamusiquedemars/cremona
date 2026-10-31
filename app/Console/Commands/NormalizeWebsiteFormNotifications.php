@@ -57,8 +57,8 @@ class NormalizeWebsiteFormNotifications extends Command
                             $updates['person_id'] = $resolved['person']->getKey();
                             $linked++;
                         }
-                        if ($form['subject'] !== null && $conversation->subject === $message->subject) {
-                            $updates['subject'] = $form['subject'];
+                        if ($conversation->subject === $message->subject) {
+                            $updates['subject'] = $form['subject'] ?? 'Message du site';
                         }
                         if ($updates !== []) {
                             $conversation->update($updates);

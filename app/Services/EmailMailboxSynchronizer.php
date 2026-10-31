@@ -223,7 +223,7 @@ class EmailMailboxSynchronizer
             ?? Conversation::query()->create([
                 'initial_channel' => $isWebsiteFormNotification ? MessageChannel::Website : MessageChannel::Email,
                 'person_id' => $contact['person']->getKey() ?? null,
-                'subject' => $websiteForm['subject'] ?? $subject,
+                'subject' => $websiteForm['subject'] ?? ($isWebsiteFormNotification ? 'Message du site' : $subject),
                 'status' => ConversationStatus::Open,
             ]);
         $authoredAt = $this->authoredAt($source);
@@ -232,7 +232,7 @@ class EmailMailboxSynchronizer
             'email_mailbox_id' => $mailbox->getKey(),
             'direction' => $direction,
             'channel' => MessageChannel::Email,
-            'subject' => $websiteForm['subject'] ?? $subject,
+            'subject' => $websiteForm['subject'] ?? ($isWebsiteFormNotification ? 'Message du site' : $subject),
             'body_text' => $websiteForm['message'] ?? $body,
             'message_id' => $messageId,
             'in_reply_to' => $inReplyTo,

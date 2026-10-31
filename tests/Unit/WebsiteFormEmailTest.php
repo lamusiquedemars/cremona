@@ -48,4 +48,21 @@ TEXT);
             'message' => 'Je souhaiterais prendre rendez-vous.',
         ], $form);
     }
+
+    #[Test]
+    public function it_extracts_the_compact_legacy_form_without_a_name(): void
+    {
+        $form = WebsiteFormEmail::parse(
+            'Nouveau message depuis le site',
+            'Nouveau message reçu depuis le site. Email : ivocore@gmail.com Message : test pont cremona',
+        );
+
+        $this->assertSame([
+            'name' => null,
+            'email' => 'ivocore@gmail.com',
+            'phone' => null,
+            'subject' => null,
+            'message' => 'test pont cremona',
+        ], $form);
+    }
 }
