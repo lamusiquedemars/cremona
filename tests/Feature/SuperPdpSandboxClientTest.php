@@ -89,4 +89,35 @@ class SuperPdpSandboxClientTest extends TestCase
             && str_contains($request->url(), 'ending_before_id=456')
             && str_contains($request->url(), 'limit=1000'));
     }
+
+    public function test_it_lists_incoming_invoices_after_a_cursor(): void
+    {
+        config()->set('services.super_pdp.api_url', 'https://api.superpdp.test');
+        Http::fake([
+            'https://api.superpdp.test/oauth2/token' => Http::response(['access_token' => 'server-token'], 200),
+            'https://api.superpdp.test/v1.beta/invoices*' => Http::response(['data' => [], 'has_after' => false], 200),
+        ]);
+
+        app(SuperPdpClient::class)->incomingInvoices('client-id', 'client-secret', 456);
+
+        Http::assertSent(fn (Request $request): bool => str_starts_with($request->url(), 'https://api.superpdp.test/v1.beta/invoices?')
+            && str_contains($request->url(), 'direction=in')
+            && str_contains($request->url(), 'order=asc')
+            && str_contains($request->url(), 'starting_after_id=456')
+            && str_contains($request->url(), 'limit=1000'));
+    }
+
+    public function test_it_downloads_an_original_incoming_invoice(): void
+    {
+        config()->set('services.super_pdp.api_url', 'https://api.superpdp.test');
+        Http::fake([
+            'https://api.superpdp.test/oauth2/token' => Http::response(['access_token' => 'server-token'], 200),
+            'https://api.superpdp.test/v1.beta/invoices/123?format=original' => Http::response('<Invoice />', 200, ['Content-Type' => 'application/xml; charset=utf-8']),
+        ]);
+
+        $original = app(SuperPdpClient::class)->originalInvoice('client-id', 'client-secret', '123');
+
+        $this->assertSame('<Invoice />', $original['content']);
+        $this->assertSame('application/xml', $original['mime_type']);
+    }
 }

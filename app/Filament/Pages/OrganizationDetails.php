@@ -9,6 +9,7 @@ use App\Models\OrganizationLegalProfile;
 use App\Models\OrganizationQuoteSettings;
 use App\Models\User;
 use App\Services\OrganizationIntegrationManager;
+use App\Services\IncomingSuperPdpInvoiceSynchronizer;
 use App\Services\OrganizationModuleAccess;
 use App\Services\SuperPdpClient;
 use App\Services\SuperPdpSandboxClient;
@@ -200,6 +201,25 @@ class OrganizationDetails extends Page
             Notification::make()
                 ->title('Connexion Super PDP impossible')
                 ->body('Vérifiez l’identifiant, le secret et la validation de l’entreprise dans Super PDP.')
+                ->danger()->persistent()->send();
+        }
+    }
+
+    public function synchronizeIncomingSuperPdpInvoices(IncomingSuperPdpInvoiceSynchronizer $synchronizer): void
+    {
+        try {
+            $result = $synchronizer->synchronize(app(OrganizationContext::class)->require());
+            $this->refreshIntegrationStates();
+
+            Notification::make()
+                ->title('Factures reçues Super PDP synchronisées')
+                ->body($result['created'].' nouvelle(s), '.$result['updated'].' mise(s) à jour, '.$result['documents'].' original(aux) conservé(s).')
+                ->success()->send();
+        } catch (\Throwable $exception) {
+            report($exception);
+            Notification::make()
+                ->title('Synchronisation des factures reçues impossible')
+                ->body($exception instanceof \LogicException ? $exception->getMessage() : 'Super PDP est temporairement inaccessible. Réessayez plus tard.')
                 ->danger()->persistent()->send();
         }
     }

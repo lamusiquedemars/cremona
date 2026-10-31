@@ -108,6 +108,10 @@
                         </div>
                         <x-filament::button wire:click="connectSuperPdpProduction" type="button" size="sm">Enregistrer et vérifier la production</x-filament::button>
                         <p class="text-xs text-gray-500">Le secret est chiffré côté serveur et n’est jamais réaffiché. Cette vérification ne transmet aucune facture.</p>
+                        @if ($integrationStates['super_pdp_configured'])
+                            <x-filament::button wire:click="synchronizeIncomingSuperPdpInvoices" wire:loading.attr="disabled" wire:target="synchronizeIncomingSuperPdpInvoices" type="button" size="sm" color="gray">Synchroniser les factures reçues</x-filament::button>
+                            <p class="text-xs text-gray-500">Télécharge les nouvelles factures reçues depuis Super PDP et conserve leur original dans les documents privés. Aucune facture n’est transmise.</p>
+                        @endif
                         @if ($integrationStates['super_pdp_sandbox_available'])
                             <x-filament::button wire:click="verifySuperPdpSandbox" type="button" size="sm" color="gray">Vérifier la sandbox</x-filament::button>
                         @endif
