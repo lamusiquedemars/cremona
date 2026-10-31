@@ -16,7 +16,21 @@ class SyncEmailMailboxes extends Command
 
     public function handle(EmailMailboxSynchronizer $synchronizer, OrganizationContext $context): int
     {
-        $mailboxes = EmailMailbox::withoutGlobalScopes()->with('organization')->where('status', 'active')->get();
+        $mailboxes = EmailMailbox::withoutGlobalScopes()
+            ->with('organization')
+            ->where(function ($query): void {
+                $query->where('status', 'active')
+                    ->orWhere(function ($query): void {
+                        // A transient IMAP error must not silence a mailbox forever.
+                        // Paused mailboxes remain an explicit human choice and are excluded.
+                        $query->where('status', 'degraded')
+                            ->where(function ($query): void {
+                                $query->whereNull('last_error_at')
+                                    ->orWhere('last_error_at', '<=', now()->subHour());
+                            });
+                    });
+            })
+            ->get();
         $failures = 0;
 
         foreach ($mailboxes as $mailbox) {
