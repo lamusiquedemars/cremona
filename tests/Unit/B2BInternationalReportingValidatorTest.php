@@ -8,6 +8,7 @@ use App\Models\InvoicePayment;
 use App\Models\InvoiceTransmission;
 use App\Services\B2BInternationalReportingDraftFactory;
 use App\Services\ElectronicReportingPaymentDraftFactory;
+use App\Services\En16931InvoiceFactory;
 use App\Services\B2BInternationalReportingValidator;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
@@ -74,5 +75,26 @@ class B2BInternationalReportingValidatorTest extends TestCase
 
         $this->assertSame(123, $draft['invoice_event_id']);
         $this->assertSame('60.00', $draft['subtotals'][0]['amount']);
+    }
+
+    public function test_it_includes_the_original_reference_in_a_credit_note_payload(): void
+    {
+        $original = new Invoice;
+        $original->forceFill(['reference' => 'FAC-2026-00001', 'issued_on' => '2026-10-01']);
+        $credit = new Invoice;
+        $credit->forceFill([
+            'kind' => 'credit_note', 'reference' => 'AV-2026-00001', 'issued_on' => '2026-10-31', 'issued_at' => '2026-10-31 10:00:00', 'currency' => 'EUR',
+            'subtotal_amount' => 100, 'tax_amount' => 20, 'total_amount' => 120, 'balance_amount' => 120,
+            'issuer_snapshot' => ['legal_name' => 'Atelier', 'email' => 'contact@example.test', 'address_line_1' => '1 rue', 'postal_code' => '75001', 'city' => 'Paris', 'country_code' => 'FR'],
+            'recipient_snapshot' => ['name' => 'Client', 'address_line_1' => '2 rue', 'postal_code' => '1000', 'city' => 'Bruxelles', 'country_code' => 'BE'],
+        ]);
+        $line = new InvoiceLine;
+        $line->forceFill(['position' => 1, 'description' => 'Correction', 'quantity' => 1, 'unit_amount' => 100, 'net_amount' => 100, 'tax_amount' => 20, 'tax_rate' => 20, 'tax_category' => 'standard']);
+        $credit->setRelation('lines', new Collection([$line]));
+        $credit->setRelation('creditNoteFor', $original);
+
+        $payload = app(En16931InvoiceFactory::class)->make($credit);
+
+        $this->assertSame('FAC-2026-00001', $payload['preceding_invoice_reference']['number']);
     }
 }
