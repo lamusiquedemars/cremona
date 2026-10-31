@@ -62,7 +62,9 @@ class InvoiceResource extends Resource
                 ->columns(12)->columnSpanFull()->schema([
                     TextInput::make('reference')->label('Numéro')->disabled()->dehydrated(false)->placeholder('Attribué à l’émission')->helperText('Le numéro définitif est attribué une seule fois, à l’émission.')->columnSpan(3),
                     TextInput::make('title')->label('Objet')->required()->maxLength(255)->columnSpan(6),
-                    Select::make('kind')->label('Type')->options(['invoice' => 'Facture', 'credit_note' => 'Avoir'])->default('invoice')->required()->columnSpan(3),
+                    Select::make('kind')->label('Type')->options(['invoice' => 'Facture', 'credit_note' => 'Avoir'])->default('invoice')->required()->live()->columnSpan(3),
+                    Select::make('credit_note_for_invoice_id')->label('Facture d’origine')->relationship('creditNoteFor', 'reference', fn ($query) => $query->whereIn('status', [InvoiceStatus::Issued, InvoiceStatus::PartiallyPaid, InvoiceStatus::Paid, InvoiceStatus::Overdue]))
+                        ->searchable()->preload()->visible(fn ($get): bool => $get('kind') === 'credit_note')->required(fn ($get): bool => $get('kind') === 'credit_note')->columnSpan(6),
                     Select::make('person_id')->label('Client particulier')->relationship('person', 'display_name')->searchable()->preload()->live()->columnSpan(6),
                     Select::make('company_id')->label('Client professionnel')->relationship('company', 'name')->searchable()->preload()->live()->columnSpan(6),
                     DatePicker::make('issued_on')->label('Date d’émission')->native(false)->columnSpan(3),
