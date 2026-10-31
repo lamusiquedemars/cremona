@@ -28,7 +28,12 @@ class ElectronicReportingManager
                 'occurred_on' => $invoice->issued_on,
                 'amount' => $invoice->total_amount,
                 'currency' => $invoice->currency,
-                'payload' => array_merge($this->invoicePayload($invoice, $scope), ['missing_requirements' => $missing]),
+                'payload' => array_merge($this->invoicePayload($invoice, $scope), array_filter([
+                    'missing_requirements' => $missing,
+                    'b2bint_draft' => $scope === 'b2b_international'
+                        ? app(B2BInternationalReportingDraftFactory::class)->make($invoice)
+                        : null,
+                ], fn (mixed $value): bool => $value !== null)),
                 'remote_id' => null,
                 'submitted_at' => null,
                 'acknowledged_at' => null,
