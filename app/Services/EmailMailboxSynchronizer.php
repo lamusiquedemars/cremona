@@ -14,6 +14,7 @@ use App\Models\EmailFolder;
 use App\Models\EmailMailbox;
 use App\Models\EmailMessageCopy;
 use App\Support\EmailHeaderDecoder;
+use App\Support\EmailBodyText;
 use App\Support\WebsiteFormEmail;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
@@ -291,10 +292,10 @@ class EmailMailboxSynchronizer
     {
         $body = trim($message->getTextBody());
         if ($body === '') {
-            $body = trim(strip_tags($message->getHTMLBody()));
+            $body = $message->getHTMLBody();
         }
 
-        return $body !== '' ? $body : '(Message sans contenu texte)';
+        return EmailBodyText::forDisplay($body);
     }
 
     private function authoredAt(ImapMessage $message): CarbonImmutable

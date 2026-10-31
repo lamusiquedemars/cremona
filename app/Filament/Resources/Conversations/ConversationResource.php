@@ -64,25 +64,22 @@ class ConversationResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make('Échange')->columnSpanFull()->schema([
-                Grid::make(['default' => 1, 'sm' => 2, 'lg' => 3])->schema([
-                    TextEntry::make('initial_channel')
-                        ->label('Origine')
-                        ->badge()
-                        ->formatStateUsing(fn (MessageChannel|string $state): string => self::originLabel($state)),
-                    TextEntry::make('last_message_at')->label('Dernier message')->dateTime('d/m/Y H:i')->placeholder('—'),
-                    TextEntry::make('status')->label(__('cremona.crm.status'))->badge(),
-                ]),
-                ViewEntry::make('conversation_timeline')
-                    ->hiddenLabel()
-                    ->state(fn (Conversation $record) => $record->messages()
-                        ->with(['participants', 'mailbox'])
-                        ->orderBy('authored_at')
-                        ->get()
-                        ->values())
-                    ->view('filament.infolists.conversation-timeline')
-                    ->columnSpanFull(),
+            Grid::make(['default' => 1, 'sm' => 2])->columnSpanFull()->schema([
+                TextEntry::make('initial_channel')
+                    ->label('Origine')
+                    ->badge()
+                    ->formatStateUsing(fn (MessageChannel|string $state): string => self::originLabel($state)),
+                TextEntry::make('status')->label(__('cremona.crm.status'))->badge(),
             ]),
+            ViewEntry::make('conversation_timeline')
+                ->hiddenLabel()
+                ->state(fn (Conversation $record) => $record->messages()
+                    ->with(['participants', 'mailbox'])
+                    ->orderBy('authored_at')
+                    ->get()
+                    ->values())
+                ->view('filament.infolists.conversation-timeline')
+                ->columnSpanFull(),
             Section::make('Informations liées')->columnSpan(2)->columns(2)->schema([
                 TextEntry::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder(__('cremona.crm.unlinked')),
                 TextEntry::make('company.name')->label(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))->placeholder('—'),

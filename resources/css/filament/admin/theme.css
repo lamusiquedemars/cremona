@@ -140,8 +140,8 @@ body.fi-body {
 }
 
 .cremona-conversation-message-recipient,
+.cremona-conversation-message-email,
 .cremona-conversation-message-date,
-.cremona-conversation-message-subject,
 .cremona-conversation-quoted,
 .cremona-conversation-history-item > :last-child {
     color: rgb(100 95 88);
@@ -152,12 +152,12 @@ body.fi-body {
     margin-top: 0.15rem;
 }
 
-.cremona-conversation-message-date {
-    white-space: nowrap;
+.cremona-conversation-message-email {
+    margin-top: 0.1rem;
 }
 
-.cremona-conversation-message-subject {
-    margin-bottom: 0.85rem;
+.cremona-conversation-message-date {
+    white-space: nowrap;
 }
 
 .cremona-conversation-message-body {

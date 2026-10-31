@@ -3,6 +3,7 @@
     use App\Enums\MessageParticipantRole;
     use App\Support\EmailReplyComposer;
     use App\Support\EmailReplyExcerpt;
+    use App\Support\EmailBodyText;
     use App\Support\WebsiteFormEmail;
 
     $messages = collect($getState());
@@ -21,9 +22,9 @@
                 $websiteForm = $inbound ? WebsiteFormEmail::parse($message->subject ?? '', $message->body_text) : null;
                 $author = $inbound ? ($from?->name ?: $from?->address ?: __('cremona.crm.unknown_sender')) : __('cremona.crm.you');
                 $author = $websiteForm['name'] ?? $author;
+                $senderAddress = $websiteForm['email'] ?? $from?->address;
                 $recipient = $inbound ? ($to?->name ?: $to?->address ?: $message->mailbox?->address) : ($to?->name ?: $to?->address);
-                $parts = EmailReplyExcerpt::split($websiteForm['message'] ?? $message->body_text);
-                $displaySubject = $websiteForm['subject'] ?? $message->subject;
+                $parts = EmailReplyExcerpt::split(EmailBodyText::forDisplay($websiteForm['message'] ?? $message->body_text));
                 $previous = $messages->slice(0, -1)->last();
 
                 if (! $inbound && $previous !== null) {
@@ -43,14 +44,13 @@
                 <header class="cremona-conversation-message-header">
                     <div>
                         <div class="cremona-conversation-message-author">{{ __('cremona.crm.from', ['name' => $author]) }}</div>
+                        @if ($senderAddress)
+                            <div class="cremona-conversation-message-email">{{ $senderAddress }}</div>
+                        @endif
                         <div class="cremona-conversation-message-recipient">{{ __('cremona.crm.to', ['name' => $recipient ?: '—']) }}</div>
                     </div>
                     <time class="cremona-conversation-message-date">{{ __('cremona.crm.on_date', ['date' => $message->authored_at?->format('d/m/Y H:i')]) }}</time>
                 </header>
-
-                @if ($displaySubject)
-                    <div class="cremona-conversation-message-subject">{{ __('cremona.crm.subject').': '.$displaySubject }}</div>
-                @endif
 
                 <div class="cremona-conversation-message-body">{{ $parts['reply'] }}</div>
 
