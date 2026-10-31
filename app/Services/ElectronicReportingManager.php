@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\ElectronicReport;
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
+use App\Models\OrganizationIntegration;
+use LogicException;
 
 class ElectronicReportingManager
 {
@@ -63,6 +65,35 @@ class ElectronicReportingManager
                 'last_error' => null,
             ],
         );
+    }
+
+    /** @return array<string, mixed> */
+    public function preview(ElectronicReport $report): array
+    {
+        if (! in_array($report->status, ['pending_review', 'previewed'], true)) {
+            throw new LogicException('Cette opération ne peut plus être prévisualisée dans son état actuel.');
+        }
+        $integration = OrganizationIntegration::withoutGlobalScopes()
+            ->where('organization_id', $report->organization_id)
+            ->where('provider', 'super_pdp')->where('name', 'production')->where('status', 'active')->first();
+        $credentials = $integration?->credentials ?? [];
+        if (! is_string($credentials['client_id'] ?? null) || ! is_string($credentials['client_secret'] ?? null)) {
+            throw new LogicException('Connectez Super PDP en production avant de prévisualiser l’e-reporting.');
+        }
+
+        $preview = app(SuperPdpClient::class)->ereportingPreview(
+            $credentials['client_id'],
+            $credentials['client_secret'],
+            $report->occurred_on->toDateString(),
+            $report->kind,
+        );
+        $report->update([
+            'status' => 'previewed',
+            'payload' => array_merge($report->payload, ['super_pdp_preview' => $preview, 'previewed_at' => now()->toIso8601String()]),
+            'last_error' => null,
+        ]);
+
+        return $preview;
     }
 
     private function scope(Invoice $invoice): ?string

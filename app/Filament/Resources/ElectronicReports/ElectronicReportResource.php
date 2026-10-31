@@ -49,7 +49,9 @@ class ElectronicReportResource extends Resource
                 TextEntry::make('scope')->label('Périmètre')->badge()->formatStateUsing(fn (string $state): string => $state === 'b2c' ? 'B2C' : 'B2B international'),
                 TextEntry::make('occurred_on')->label('Date')->date('d/m/Y'),
                 TextEntry::make('amount')->label('Montant')->money(fn (ElectronicReport $record): string => $record->currency),
-                TextEntry::make('status')->label('État')->badge()->formatStateUsing(fn (string $state): string => $state === 'pending_review' ? 'À contrôler' : $state),
+                TextEntry::make('status')->label('État')->badge()->formatStateUsing(fn (string $state): string => match ($state) {
+                    'pending_review' => 'À contrôler', 'previewed' => 'Aperçu contrôlé', default => $state,
+                }),
             ]),
             Section::make('Transmission')->columnSpan(1)->schema([
                 TextEntry::make('remote_id')->label('Identifiant Super PDP')->placeholder('Non transmis'),
@@ -71,9 +73,11 @@ class ElectronicReportResource extends Resource
             TextColumn::make('scope')->label('Périmètre')->badge()->formatStateUsing(fn (string $state): string => $state === 'b2c' ? 'B2C' : 'B2B international'),
             TextColumn::make('amount')->label('Montant')->money(fn (ElectronicReport $record): string => $record->currency),
             TextColumn::make('occurred_on')->label('Date')->date('d/m/Y')->sortable(),
-            TextColumn::make('status')->label('État')->badge()->formatStateUsing(fn (string $state): string => $state === 'pending_review' ? 'À contrôler' : $state),
+            TextColumn::make('status')->label('État')->badge()->formatStateUsing(fn (string $state): string => match ($state) {
+                'pending_review' => 'À contrôler', 'previewed' => 'Aperçu contrôlé', default => $state,
+            }),
         ])->filters([
-            SelectFilter::make('status')->options(['pending_review' => 'À contrôler', 'submitted' => 'Transmise', 'acknowledged' => 'Accusée', 'rejected' => 'Rejetée']),
+            SelectFilter::make('status')->options(['pending_review' => 'À contrôler', 'previewed' => 'Aperçu contrôlé', 'submitted' => 'Transmise', 'acknowledged' => 'Accusée', 'rejected' => 'Rejetée']),
             SelectFilter::make('scope')->options(['b2c' => 'B2C', 'b2b_international' => 'B2B international']),
         ])->recordActions([ViewAction::make()])
             ->recordUrl(fn (ElectronicReport $record): string => self::getUrl('view', ['record' => $record]));

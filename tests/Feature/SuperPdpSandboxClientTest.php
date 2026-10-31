@@ -120,4 +120,22 @@ class SuperPdpSandboxClientTest extends TestCase
         $this->assertSame('<Invoice />', $original['content']);
         $this->assertSame('application/xml', $original['mime_type']);
     }
+
+    public function test_it_requests_an_e_reporting_preview_without_creating_a_declaration(): void
+    {
+        config()->set('services.super_pdp.api_url', 'https://api.superpdp.test');
+        Http::fake([
+            'https://api.superpdp.test/oauth2/token' => Http::response(['access_token' => 'server-token'], 200),
+            'https://api.superpdp.test/v1.beta/ereportings/preview*' => Http::response(['data' => ['period' => '2026-10']], 200),
+        ]);
+
+        $preview = app(SuperPdpClient::class)->ereportingPreview('client-id', 'client-secret', '2026-10-31', 'transaction');
+
+        $this->assertSame('2026-10', $preview['data']['period']);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+            && str_starts_with($request->url(), 'https://api.superpdp.test/v1.beta/ereportings/preview?')
+            && str_contains($request->url(), 'date=2026-10-31')
+            && str_contains($request->url(), 'kind=transaction')
+            && str_contains($request->url(), 'role_code=SE'));
+    }
 }

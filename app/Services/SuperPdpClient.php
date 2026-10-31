@@ -134,6 +134,20 @@ class SuperPdpClient
         ];
     }
 
+    /** @return array<string, mixed> */
+    public function ereportingPreview(string $clientId, string $clientSecret, string $date, string $kind, string $roleCode = 'SE'): array
+    {
+        return $this->authenticated($clientId, $clientSecret)
+            ->acceptJson()
+            ->get($this->endpoint('/v1.beta/ereportings/preview'), [
+                'date' => $date,
+                'kind' => $kind,
+                'role_code' => $roleCode,
+            ])
+            ->throw()
+            ->json() ?? [];
+    }
+
     private function authenticated(string $clientId, string $clientSecret): PendingRequest
     {
         try {
