@@ -63,4 +63,16 @@ class SuperPdpSandboxClient
 
         app(SuperPdpClient::class)->updateVatRegime($clientId, $clientSecret, 'monthly');
     }
+
+    /** @return array<string, mixed> */
+    public function ereportingPreview(string $date, string $kind): array
+    {
+        $clientId = config('services.super_pdp.sandbox_client_id');
+        $clientSecret = config('services.super_pdp.sandbox_client_secret');
+        if (! is_string($clientId) || $clientId === '' || ! is_string($clientSecret) || $clientSecret === '') {
+            throw new LogicException('Les identifiants serveur Super PDP sandbox ne sont pas configurés.');
+        }
+
+        return app(SuperPdpClient::class)->ereportingPreview($clientId, $clientSecret, $date, $kind);
+    }
 }
