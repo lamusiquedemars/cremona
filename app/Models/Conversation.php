@@ -99,6 +99,16 @@ class Conversation extends Model
         return $this->hasMany(ConversationUserState::class);
     }
 
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(CrmTask::class);
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'public_id';

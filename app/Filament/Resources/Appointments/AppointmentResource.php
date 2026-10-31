@@ -10,6 +10,7 @@ use App\Filament\Resources\Appointments\Pages\EditAppointment;
 use App\Filament\Resources\Appointments\Pages\ListAppointments;
 use App\Filament\Resources\Appointments\Pages\ViewAppointment;
 use App\Filament\Resources\Companies\CompanyResource;
+use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use App\Filament\Resources\People\PersonResource;
 use App\Models\Appointment;
@@ -159,6 +160,11 @@ class AppointmentResource extends Resource
                             ->relationship('incomingRequest', 'subject')
                             ->searchable(['subject', 'name_snapshot'])
                             ->preload(),
+                        Select::make('conversation_id')
+                            ->label(__('common.conversation'))
+                            ->relationship('conversation', 'subject')
+                            ->searchable()
+                            ->preload(),
                     ]),
                 Section::make(__('common.modality'))
                     ->columnSpan(1)
@@ -234,6 +240,12 @@ class AppointmentResource extends Resource
                         ->label(__('common.request_origin'))
                         ->url(fn (Appointment $record): ?string => $record->incomingRequest
                             ? IncomingRequestResource::getUrl('view', ['record' => $record->incomingRequest])
+                            : null)
+                        ->placeholder('—'),
+                    TextEntry::make('conversation.subject')
+                        ->label(__('common.conversation'))
+                        ->url(fn (Appointment $record): ?string => $record->conversation
+                            ? ConversationResource::getUrl('view', ['record' => $record->conversation])
                             : null)
                         ->placeholder('—'),
                 ]),

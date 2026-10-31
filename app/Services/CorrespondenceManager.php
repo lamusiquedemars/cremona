@@ -284,6 +284,47 @@ class CorrespondenceManager
         });
     }
 
+    /**
+     * @param  array{person_id?: int|string|null, company_id?: int|string|null, incoming_request_id?: int|string|null}  $context
+     */
+    public function updateContext(Conversation $conversation, array $context, User $actor): void
+    {
+        $this->assertOwned($conversation->organization_id);
+
+        $requestId = $context['incoming_request_id'] ?? null;
+        if ($requestId !== null && Conversation::query()
+            ->where('incoming_request_id', $requestId)
+            ->whereKeyNot($conversation->getKey())
+            ->exists()) {
+            throw new LogicException('Cette demande est déjà liée à une autre correspondance.');
+        }
+
+        DB::transaction(function () use ($conversation, $context, $actor): void {
+            $attributes = [
+                'person_id' => $context['person_id'] ?? null,
+                'company_id' => $context['company_id'] ?? null,
+                'incoming_request_id' => $context['incoming_request_id'] ?? null,
+            ];
+            $before = [
+                'person_id' => $conversation->person_id,
+                'company_id' => $conversation->company_id,
+                'incoming_request_id' => $conversation->incoming_request_id,
+            ];
+
+            $conversation->fill($attributes);
+
+            if (! $conversation->isDirty()) {
+                return;
+            }
+
+            $conversation->save();
+            $this->auditLogger->record('correspondence.context_updated', $conversation, $actor, [
+                'before' => $before,
+                'after' => $attributes,
+            ]);
+        });
+    }
+
     public function proposeThreadCandidate(
         ConversationMessage $message,
         Conversation $conversation,

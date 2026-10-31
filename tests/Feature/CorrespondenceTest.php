@@ -3,22 +3,26 @@
 namespace Tests\Feature;
 
 use App\Enums\ConversationStatus;
+use App\Enums\IncomingRequestStatus;
 use App\Enums\MessageDirection;
 use App\Enums\MessageParticipantRole;
 use App\Enums\MessageThreadingStatus;
 use App\Enums\MessageTransportStatus;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Conversations\ConversationResource;
+use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\ConversationUserState;
 use App\Models\EmailMailbox;
+use App\Models\IncomingRequest;
 use App\Models\MessageAttachment;
 use App\Models\MessageParticipant;
 use App\Models\MessageReference;
 use App\Models\MessageThreadCandidate;
 use App\Models\Organization;
 use App\Models\OrganizationIntegration;
+use App\Models\Person;
 use App\Models\User;
 use App\Services\CorrespondenceManager;
 use App\Services\IncomingRequestManager;
@@ -97,6 +101,45 @@ class CorrespondenceTest extends TestCase
             $this->assertSame(64, strlen($request->payload_fingerprint));
             $this->assertSame($request->id, $conversation->fresh()->incoming_request_id);
             $this->assertSame($request->id, app(IncomingRequestManager::class)->createFromConversation($conversation->fresh())->id);
+        });
+    }
+
+    public function test_a_correspondence_can_be_explicitly_linked_to_its_client_context_and_is_audited(): void
+    {
+        $organization = Organization::factory()->create();
+        $actor = User::factory()->create();
+        $actor->organizations()->attach($organization);
+
+        app(OrganizationContext::class)->run($organization, function () use ($actor, $organization): void {
+            $person = Person::query()->create(['display_name' => 'Camille Martin']);
+            $company = Company::query()->create(['name' => 'Atelier Martin']);
+            $request = IncomingRequest::query()->create([
+                'subject' => 'Une demande existante',
+                'message' => 'Une demande existante.',
+                'status' => IncomingRequestStatus::New,
+                'received_at' => now(),
+                'payload_fingerprint' => hash('sha256', 'context-link-request'),
+            ]);
+            $conversation = Conversation::query()->create([
+                'initial_channel' => 'email',
+                'subject' => 'Relier cet échange',
+            ]);
+
+            app(CorrespondenceManager::class)->updateContext($conversation, [
+                'person_id' => $person->id,
+                'company_id' => $company->id,
+                'incoming_request_id' => $request->id,
+            ], $actor);
+
+            $conversation->refresh();
+            $this->assertSame($person->id, $conversation->person_id);
+            $this->assertSame($company->id, $conversation->company_id);
+            $this->assertSame($request->id, $conversation->incoming_request_id);
+            $this->assertDatabaseHas('organization_audit_logs', [
+                'organization_id' => $organization->id,
+                'event' => 'correspondence.context_updated',
+                'subject_id' => $conversation->id,
+            ]);
         });
     }
 
@@ -179,7 +222,7 @@ class CorrespondenceTest extends TestCase
     public function test_the_correspondence_interface_obeys_the_validated_permissions(): void
     {
         $organization = Organization::factory()->create();
-        app(OrganizationModuleRegistry::class)->sync($organization, ['crm']);
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
@@ -200,7 +243,10 @@ class CorrespondenceTest extends TestCase
         $this->actingAs($collaborator)
             ->get(ConversationResource::getUrl('view', ['record' => $conversation], tenant: $organization))
             ->assertOk()
-            ->assertSee('Répondre');
+            ->assertSee('Répondre')
+            ->assertSee('Rattacher un client ou une demande')
+            ->assertSee('Créer une tâche de suivi')
+            ->assertSee('Planifier un rendez-vous');
     }
 
     public function test_every_correspondence_record_is_isolated_and_attachments_cannot_use_public_storage(): void

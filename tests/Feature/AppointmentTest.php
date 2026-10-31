@@ -8,6 +8,7 @@ use App\Enums\OrganizationRole;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\People\PersonResource;
 use App\Models\Appointment;
+use App\Models\Conversation;
 use App\Models\Organization;
 use App\Models\Person;
 use App\Models\User;
@@ -86,6 +87,25 @@ class AppointmentTest extends TestCase
                 'ends_at' => '2026-09-03 14:00:00',
             ]);
         });
+    }
+
+    public function test_an_appointment_cannot_be_linked_to_a_conversation_from_another_organization(): void
+    {
+        $firstOrganization = Organization::factory()->create();
+        $secondOrganization = Organization::factory()->create();
+        $conversation = app(OrganizationContext::class)->run(
+            $firstOrganization,
+            fn () => Conversation::query()->create(['initial_channel' => 'email']),
+        );
+
+        $this->expectException(LogicException::class);
+
+        app(OrganizationContext::class)->run($secondOrganization, fn () => Appointment::query()->create([
+            'conversation_id' => $conversation->id,
+            'title' => 'Rendez-vous hors organisation',
+            'starts_at' => '2026-09-03 14:00:00',
+            'ends_at' => '2026-09-03 15:00:00',
+        ]));
     }
 
     public function test_manual_appointments_can_be_managed_without_allowing_brevo_projections_to_be_edited(): void

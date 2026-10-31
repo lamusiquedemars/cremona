@@ -18,6 +18,7 @@ use LogicException;
     'person_id',
     'company_id',
     'incoming_request_id',
+    'conversation_id',
     'title',
     'status',
     'starts_at',
@@ -71,6 +72,7 @@ class Appointment extends Model
                 Person::class => $appointment->person_id,
                 Company::class => $appointment->company_id,
                 IncomingRequest::class => $appointment->incoming_request_id,
+                Conversation::class => $appointment->conversation_id,
             ] as $model => $id) {
                 if ($id !== null && ! $model::query()->whereKey($id)->exists()) {
                     throw new LogicException('An appointment relation does not belong to the active organization.');
@@ -109,6 +111,11 @@ class Appointment extends Model
     public function incomingRequest(): BelongsTo
     {
         return $this->belongsTo(IncomingRequest::class);
+    }
+
+    public function conversation(): BelongsTo
+    {
+        return $this->belongsTo(Conversation::class);
     }
 
     public function getRouteKeyName(): string
