@@ -52,4 +52,15 @@ class SuperPdpSandboxClient
 
         return app(SuperPdpClient::class)->submitCii($clientId, $clientSecret, $content, 'sandbox-'.Str::uuid(), $b2c ? 'B2C' : 'B2B');
     }
+
+    public function setMonthlyVatRegime(): void
+    {
+        $clientId = config('services.super_pdp.sandbox_client_id');
+        $clientSecret = config('services.super_pdp.sandbox_client_secret');
+        if (! is_string($clientId) || $clientId === '' || ! is_string($clientSecret) || $clientSecret === '') {
+            throw new LogicException('Les identifiants serveur Super PDP sandbox ne sont pas configurés.');
+        }
+
+        app(SuperPdpClient::class)->updateVatRegime($clientId, $clientSecret, 'monthly');
+    }
 }

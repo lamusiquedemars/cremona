@@ -169,6 +169,14 @@ class SuperPdpClient
             ->body();
     }
 
+    public function updateVatRegime(string $clientId, string $clientSecret, string $vatRegime): void
+    {
+        $this->authenticated($clientId, $clientSecret)
+            ->acceptJson()
+            ->patch($this->endpoint('/v1.beta/companies'), ['vat_regime' => $vatRegime])
+            ->throw();
+    }
+
     private function authenticated(string $clientId, string $clientSecret): PendingRequest
     {
         try {
