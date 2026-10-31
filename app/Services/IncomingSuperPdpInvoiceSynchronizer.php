@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\IncomingInvoice;
+use App\Models\IncomingInvoiceEvent;
 use App\Models\Organization;
 use App\Models\OrganizationIntegration;
 use App\Models\PrivateDocument;
@@ -16,13 +17,13 @@ use Throwable;
 
 class IncomingSuperPdpInvoiceSynchronizer
 {
-    /** @return array{created: int, updated: int, documents: int} */
+    /** @return array{created: int, updated: int, documents: int, events: int} */
     public function synchronize(Organization $organization): array
     {
         return app(OrganizationContext::class)->run($organization, function () use ($organization): array {
             $credentials = $this->credentials($organization);
             $cursor = IncomingInvoice::query()->where('provider', 'super_pdp')->max('remote_id');
-            $result = ['created' => 0, 'updated' => 0, 'documents' => 0];
+            $result = ['created' => 0, 'updated' => 0, 'documents' => 0, 'events' => 0];
 
             for ($pageNumber = 0; $pageNumber < 100; $pageNumber++) {
                 $page = app(SuperPdpClient::class)->incomingInvoices(
@@ -35,9 +36,10 @@ class IncomingSuperPdpInvoiceSynchronizer
                     ->values();
 
                 foreach ($invoices as $remote) {
-                    $stored = $this->storeInvoice($remote);
+                    $stored = $this->storeInvoice($remote, $credentials);
                     $result[$stored['created'] ? 'created' : 'updated']++;
                     $result['documents'] += $stored['document'] ? 1 : 0;
+                    $result['events'] += $stored['events'];
                 }
 
                 $lastId = $invoices->pluck('id')->filter(fn (mixed $id): bool => is_numeric($id))->last();
@@ -54,9 +56,10 @@ class IncomingSuperPdpInvoiceSynchronizer
     }
 
     /** @param array<string, mixed> $remote
-     *  @return array{created: bool, document: bool}
+     *  @param array{client_id: string, client_secret: string} $credentials
+     *  @return array{created: bool, document: bool, events: int}
      */
-    private function storeInvoice(array $remote): array
+    private function storeInvoice(array $remote, array $credentials): array
     {
         $remoteId = (int) data_get($remote, 'id');
         $incoming = IncomingInvoice::query()->firstOrNew(['provider' => 'super_pdp', 'remote_id' => $remoteId]);
@@ -70,57 +73,95 @@ class IncomingSuperPdpInvoiceSynchronizer
             'synchronized_at' => now(),
         ])->save();
 
-        if ($incoming->original_private_document_id !== null) {
-            return ['created' => $created, 'document' => false];
-        }
-
-        $credentials = $this->credentials($incoming->organization);
-        $original = app(SuperPdpClient::class)->originalInvoice($credentials['client_id'], $credentials['client_secret'], (string) $remoteId);
-        if ($original['content'] === '') {
-            throw new LogicException('Super PDP a retourné une facture reçue vide.');
-        }
-
-        $mimeType = $this->mimeType($original['mime_type']);
-        $extension = match ($mimeType) {
-            'application/pdf' => 'pdf',
-            'application/xml', 'text/xml' => 'xml',
-            default => 'bin',
-        };
-        $filename = 'Facture-recue-Super-PDP-'.$remoteId.'.'.$extension;
-        $disk = (string) config('private-documents.disk', 'local');
-        $path = 'documents/'.$incoming->organization_id.'/incoming-invoices/super-pdp-'.$remoteId.'/'.Str::uuid().'/'.$filename;
-
-        try {
-            if (! Storage::disk($disk)->put($path, $original['content'], ['visibility' => 'private'])) {
-                throw new LogicException('La facture reçue n’a pas pu être conservée.');
+        $documentStored = false;
+        if ($incoming->original_private_document_id === null) {
+            $original = app(SuperPdpClient::class)->originalInvoice($credentials['client_id'], $credentials['client_secret'], (string) $remoteId);
+            if ($original['content'] === '') {
+                throw new LogicException('Super PDP a retourné une facture reçue vide.');
             }
 
-            $documentStored = DB::transaction(function () use ($incoming, $disk, $path, $filename, $mimeType, $original): bool {
-                $locked = IncomingInvoice::query()->lockForUpdate()->findOrFail($incoming->id);
-                if ($locked->original_private_document_id !== null) {
-                    return false;
-                }
-                $document = PrivateDocument::query()->create([
-                    'title' => 'Facture reçue '.($locked->reference ?: '#'.$locked->remote_id),
-                    'category' => 'accounting_record',
-                    'disk' => $disk,
-                    'path' => $path,
-                    'original_name' => $filename,
-                    'declared_mime_type' => $mimeType,
-                    'detected_mime_type' => $mimeType,
-                    'size' => strlen($original['content']),
-                    'sha256' => hash('sha256', $original['content']),
-                ]);
-                $locked->update(['original_private_document_id' => $document->id]);
+            $mimeType = $this->mimeType($original['mime_type']);
+            $extension = match ($mimeType) {
+                'application/pdf' => 'pdf',
+                'application/xml', 'text/xml' => 'xml',
+                default => 'bin',
+            };
+            $filename = 'Facture-recue-Super-PDP-'.$remoteId.'.'.$extension;
+            $disk = (string) config('private-documents.disk', 'local');
+            $path = 'documents/'.$incoming->organization_id.'/incoming-invoices/super-pdp-'.$remoteId.'/'.Str::uuid().'/'.$filename;
 
-                return true;
-            });
-        } catch (Throwable $exception) {
-            Storage::disk($disk)->delete($path);
-            throw $exception;
+            try {
+                if (! Storage::disk($disk)->put($path, $original['content'], ['visibility' => 'private'])) {
+                    throw new LogicException('La facture reçue n’a pas pu être conservée.');
+                }
+
+                $documentStored = DB::transaction(function () use ($incoming, $disk, $path, $filename, $mimeType, $original): bool {
+                    $locked = IncomingInvoice::query()->lockForUpdate()->findOrFail($incoming->id);
+                    if ($locked->original_private_document_id !== null) {
+                        return false;
+                    }
+                    $document = PrivateDocument::query()->create([
+                        'title' => 'Facture reçue '.($locked->reference ?: '#'.$locked->remote_id),
+                        'category' => 'accounting_record',
+                        'disk' => $disk,
+                        'path' => $path,
+                        'original_name' => $filename,
+                        'declared_mime_type' => $mimeType,
+                        'detected_mime_type' => $mimeType,
+                        'size' => strlen($original['content']),
+                        'sha256' => hash('sha256', $original['content']),
+                    ]);
+                    $locked->update(['original_private_document_id' => $document->id]);
+
+                    return true;
+                });
+            } catch (Throwable $exception) {
+                Storage::disk($disk)->delete($path);
+                throw $exception;
+            }
         }
 
-        return ['created' => $created, 'document' => $documentStored];
+        return ['created' => $created, 'document' => $documentStored, 'events' => $this->synchronizeEvents($incoming, $credentials)];
+    }
+
+    /** @param array{client_id: string, client_secret: string} $credentials */
+    private function synchronizeEvents(IncomingInvoice $incoming, array $credentials): int
+    {
+        $cursor = null;
+        $stored = 0;
+
+        do {
+            $page = app(SuperPdpClient::class)->invoiceEvents($credentials['client_id'], $credentials['client_secret'], (string) $incoming->remote_id, $cursor);
+            $events = collect(data_get($page, 'data', []))
+                ->filter(fn (mixed $event): bool => is_array($event) && filled(data_get($event, 'id')))
+                ->values();
+            foreach ($events as $event) {
+                $remoteId = (string) data_get($event, 'id');
+                $record = IncomingInvoiceEvent::query()->firstOrNew(['incoming_invoice_id' => $incoming->id, 'remote_id' => $remoteId]);
+                $record->fill([
+                    'status_code' => $this->string($event, ['status_code']),
+                    'status_text' => $this->string($event, ['status_text', 'status']),
+                    'occurred_at' => $this->dateTime($event, ['created_at', 'occurred_at']),
+                    'payload' => $event,
+                ])->save();
+                $stored += $record->wasRecentlyCreated ? 1 : 0;
+            }
+            $lastId = $events->pluck('id')->filter(fn (mixed $id): bool => is_numeric($id))->last();
+            $nextCursor = is_numeric($lastId) ? (int) $lastId : null;
+            $hasNextPage = data_get($page, 'has_after') === true;
+            if (! $hasNextPage || $nextCursor === null || $nextCursor === $cursor) {
+                break;
+            }
+            $cursor = $nextCursor;
+        } while (true);
+
+        $latest = IncomingInvoiceEvent::query()->where('incoming_invoice_id', $incoming->id)
+            ->orderByDesc('occurred_at')->orderByDesc('id')->first();
+        if ($latest?->status_code !== null) {
+            $incoming->update(['status' => $latest->status_code, 'synchronized_at' => now()]);
+        }
+
+        return $stored;
     }
 
     /** @return array{client_id: string, client_secret: string} */
@@ -160,6 +201,21 @@ class IncomingSuperPdpInvoiceSynchronizer
 
         try {
             return Carbon::parse($value)->toDateString();
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    /** @param array<string, mixed> $data @param array<int, string> $paths */
+    private function dateTime(array $data, array $paths): ?string
+    {
+        $value = $this->string($data, $paths);
+        if ($value === null) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->toDateTimeString();
         } catch (Throwable) {
             return null;
         }

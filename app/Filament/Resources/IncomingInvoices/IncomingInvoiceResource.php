@@ -7,6 +7,7 @@ use App\Filament\Resources\IncomingInvoices\Pages\ListIncomingInvoices;
 use App\Filament\Resources\IncomingInvoices\Pages\ViewIncomingInvoice;
 use App\Models\IncomingInvoice;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -52,6 +53,13 @@ class IncomingInvoiceResource extends Resource
                 TextEntry::make('provider')->label('Canal')->formatStateUsing(fn (): string => 'Super PDP'),
                 TextEntry::make('synchronized_at')->label('Dernière synchronisation')->dateTime('d/m/Y H:i')->placeholder('—'),
                 TextEntry::make('originalPrivateDocument.original_name')->label('Original conservé')->placeholder('Pas encore téléchargé'),
+            ]),
+            Section::make('Événements Super PDP')->columnSpanFull()->schema([
+                RepeatableEntry::make('events')->label('Journal de réception')->schema([
+                    TextEntry::make('status_code')->label('Code')->badge()->placeholder('—'),
+                    TextEntry::make('status_text')->label('Statut')->placeholder('—'),
+                    TextEntry::make('occurred_at')->label('Date')->dateTime('d/m/Y H:i')->placeholder('—'),
+                ])->columns(3),
             ]),
         ]);
     }

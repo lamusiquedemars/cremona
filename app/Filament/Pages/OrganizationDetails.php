@@ -213,7 +213,7 @@ class OrganizationDetails extends Page
 
             Notification::make()
                 ->title('Factures reçues Super PDP synchronisées')
-                ->body($result['created'].' nouvelle(s), '.$result['updated'].' mise(s) à jour, '.$result['documents'].' original(aux) conservé(s).')
+                ->body($result['created'].' nouvelle(s), '.$result['updated'].' mise(s) à jour, '.$result['documents'].' original(aux) et '.$result['events'].' nouvel(aux) événement(s) conservé(s).')
                 ->success()->send();
         } catch (\Throwable $exception) {
             report($exception);
