@@ -186,6 +186,23 @@ incluent notamment : document validé, remise à Super PDP, envoyée et rejetée
 4. Compléter le cycle des avoirs et factures rectificatives avec leur
    transmission réglementaire et leurs références de facture d'origine.
 
+### Recette sandbox à conserver avant toute revendication de compatibilité
+
+Exécuter avec une entreprise sandbox, sans facture métier réelle, et conserver
+la date, la version API, les requêtes anonymisées et les réponses :
+
+1. facture B2B France : validation CII, remise, événements et rejet ;
+2. facture B2C : vérifier l'alimentation automatique de l'e-reporting, sans
+   créer une seconde transaction depuis Cremona ;
+3. facture B2B internationale et paiement : comparer le brouillon Cremona au
+   schéma accepté par Super PDP avant d'activer une écriture ;
+4. facture reçue : original, événements, doublon et export ;
+5. avoir : référence de facture d'origine et parcours de correction.
+
+Le résultat attendu est une preuve par scénario, pas seulement une réponse HTTP
+positive. Toute écriture réglementaire reste désactivée tant que ce jeu de
+preuves n'est pas complet.
+
 ## Ce qui est disponible
 
 Le module **Facturation** est transverse : il se choisit explicitement dans la configuration de chaque organisation, quel que soit son métier. Il permet de créer un brouillon, de composer ses lignes HT et TVA, puis d’émettre une facture.
