@@ -16,6 +16,8 @@ final class EmailBodyText
             $body = mb_convert_encoding($body, 'UTF-8', 'Windows-1252');
         }
 
+        $body = self::withoutCssBlocks($body);
+
         // Some senders put HTML in the text MIME part, sometimes escaped as
         // &lt;p&gt;…&lt;/p&gt;. Decode entities first, then preserve meaningful line
         // breaks before removing the resulting markup.
@@ -34,5 +36,34 @@ final class EmailBodyText
         $body = preg_replace("/\n{3,}/", "\n\n", $body) ?? $body;
 
         return trim($body) !== '' ? trim($body) : '(Message sans contenu texte)';
+    }
+
+    private static function withoutCssBlocks(string $body): string
+    {
+        $cssDepth = 0;
+        $lines = [];
+
+        foreach (preg_split('/\R/u', $body) ?: [] as $line) {
+            $trimmed = trim($line);
+            if ($cssDepth > 0) {
+                $cssDepth += substr_count($line, '{') - substr_count($line, '}');
+
+                continue;
+            }
+
+            // This deliberately targets CSS selectors and at-rules, not prose
+            // containing a brace. It also handles malformed email text parts
+            // where a prior importer has already stripped the <style> tags.
+            $startsCss = preg_match('/^(?:@(?:media|font-face|keyframes)\b|(?:body|html|table|td|a|[.#][\w-]+)[\w\s,>+~:#.\[\]="\'\-]*\{)/iu', $trimmed) === 1;
+            if ($startsCss) {
+                $cssDepth = substr_count($line, '{') - substr_count($line, '}');
+
+                continue;
+            }
+
+            $lines[] = $line;
+        }
+
+        return implode("\n", $lines);
     }
 }

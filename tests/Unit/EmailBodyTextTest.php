@@ -23,4 +23,20 @@ class EmailBodyTextTest extends TestCase
 
         $this->assertSame("Bonjour !\nDeuxième ligne", $body);
     }
+
+    #[Test]
+    public function it_removes_css_leaked_into_a_plain_text_part(): void
+    {
+        $body = EmailBodyText::forDisplay(<<<'TEXT'
+Votre pompe à chaleur
+body, table, td, a { -webkit-text-size-adjust: 100%; }
+@media only screen and (max-width: 650px) {
+  .container { width: 100% !important; }
+}
+VOTRE FACTURE DE CHAUFFAGE VA EXPLOSER
+L’État finance jusqu’à 100 % de l’installation.
+TEXT);
+
+        $this->assertSame("Votre pompe à chaleur\nVOTRE FACTURE DE CHAUFFAGE VA EXPLOSER\nL’État finance jusqu’à 100 % de l’installation.", $body);
+    }
 }
