@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\IncomingRequestStatus;
+use App\Enums\OrganizationPermission;
 use App\Enums\OrganizationRole;
 use App\Filament\Pages\ClientDirectory;
 use App\Filament\Resources\Companies\CompanyResource;
@@ -650,6 +651,7 @@ class CrmFilamentTest extends TestCase
         $collaborator = User::factory()->create();
         $administrator->organizations()->attach($organization, [
             'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageIntegrations->value]],
         ]);
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -679,6 +681,7 @@ class CrmFilamentTest extends TestCase
         $administrator = User::factory()->create();
         $administrator->organizations()->attach($organization, [
             'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageIntegrations->value]],
         ]);
 
         $this->actingAs($administrator);
@@ -686,7 +689,10 @@ class CrmFilamentTest extends TestCase
         Filament::setTenant($organization, isQuiet: true);
 
         Livewire::test(ListInboundChannels::class)
-            ->callAction('createChannel', data: ['name' => 'atelierivoincidit-contact'])
+            ->callAction('createChannel', data: [
+                'name' => 'atelierivoincidit-contact',
+                'site_references' => ['atelierivoincidit.fr'],
+            ])
             ->assertHasNoActionErrors();
 
         $this->assertDatabaseHas('organization_integrations', [

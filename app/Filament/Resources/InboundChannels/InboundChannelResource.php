@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\InboundChannels;
 
+use App\Enums\OrganizationPermission;
 use App\Filament\Concerns\UsesOrganizationConfiguration;
 use App\Filament\Resources\InboundChannels\Pages\ListInboundChannels;
 use App\Models\OrganizationIntegration;
@@ -36,6 +37,11 @@ class InboundChannelResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?int $navigationSort = 80;
+
+    protected static function configurationPermission(): OrganizationPermission
+    {
+        return OrganizationPermission::ManageIntegrations;
+    }
 
     public static function getEloquentQuery(): Builder
     {

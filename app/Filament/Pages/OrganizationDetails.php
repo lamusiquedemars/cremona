@@ -90,6 +90,7 @@ class OrganizationDetails extends Page
 
     public function save(): void
     {
+        $this->normalizeSaveState();
         $this->normalizeUrls();
         $data = $this->validate([
             'identity.display_name' => ['nullable', 'string', 'max:255'],
@@ -244,6 +245,28 @@ class OrganizationDetails extends Page
             $this->{$section}[$field] = $value;
         }
         $country = trim((string) ($this->identity['country_code'] ?? ''));
-        $this->identity['country_code'] = $country === '' ? null : strtoupper($country);
+        $this->identity['country_code'] = match (strtolower($country)) {
+            '', 'france' => $country === '' ? null : 'FR',
+            default => strtoupper($country),
+        };
+    }
+
+    private function normalizeSaveState(): void
+    {
+        $this->invoiceRules = array_replace([
+            'reference_prefix' => 'FAC', 'currency' => 'EUR', 'default_tax_rate' => 20,
+            'vat_regime' => 'standard', 'regulatory_provider' => 'super_pdp',
+            'super_pdp_enabled' => false, 'pennylane_copy_enabled' => false,
+            'rental_billing_mode' => 'manual',
+        ], $this->invoiceRules);
+        foreach (['super_pdp_enabled', 'pennylane_copy_enabled'] as $field) {
+            $this->invoiceRules[$field] = filter_var($this->invoiceRules[$field], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $defaults = app(PrivateDocumentPolicyCatalog::class)->rules(app(OrganizationContext::class)->require());
+        foreach ($defaults as $category => $rule) {
+            $this->documentRules[$category] = array_replace($rule, is_array($this->documentRules[$category] ?? null) ? $this->documentRules[$category] : []);
+            $this->documentRules[$category]['requires_link'] = filter_var($this->documentRules[$category]['requires_link'], FILTER_VALIDATE_BOOLEAN);
+        }
     }
 }
