@@ -59,6 +59,12 @@ class InvoiceWorkflowManager
             if ($invoice->lines->isEmpty()) {
                 throw new LogicException('Ajoutez au moins une ligne avant d’émettre la facture.');
             }
+            if ($invoice->kind === 'credit_note') {
+                $original = $invoice->creditNoteFor;
+                if ($original === null || $original->organization_id !== $invoice->organization_id || $original->issued_at === null || blank($original->reference)) {
+                    throw new LogicException('Un avoir doit référencer une facture émise de la même organisation.');
+                }
+            }
 
             $issuer = $this->issuerSnapshot($invoice);
             $recipient = $this->recipientSnapshot($invoice);

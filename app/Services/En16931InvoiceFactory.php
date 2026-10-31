@@ -10,7 +10,7 @@ class En16931InvoiceFactory
     /** @return array<string, mixed> */
     public function make(Invoice $invoice): array
     {
-        $invoice->loadMissing('lines');
+        $invoice->loadMissing('lines', 'creditNoteFor');
         if ($invoice->issued_at === null || blank($invoice->reference)) {
             throw new LogicException('Émettez la facture avant de générer son document électronique.');
         }
@@ -42,7 +42,7 @@ class En16931InvoiceFactory
             return $breakdown;
         })->values()->all();
 
-        return [
+        $payload = [
             'number' => $invoice->reference,
             'issue_date' => $invoice->issued_on?->format('Y-m-d') ?? $invoice->issued_at->format('Y-m-d'),
             'type_code' => $invoice->kind === 'credit_note' ? 381 : 380,
@@ -82,6 +82,18 @@ class En16931InvoiceFactory
                 ];
             })->all(),
         ];
+        if ($invoice->kind === 'credit_note') {
+            $original = $invoice->creditNoteFor;
+            if ($original === null || blank($original->reference) || $original->issued_on === null) {
+                throw new LogicException('L’avoir doit référencer une facture d’origine émise avant sa validation électronique.');
+            }
+            $payload['preceding_invoice_reference'] = [
+                'number' => $original->reference,
+                'issue_date' => $original->issued_on->format('Y-m-d'),
+            ];
+        }
+
+        return $payload;
     }
 
     /** @return array{code: string, rate: ?string, reason: ?string} */
