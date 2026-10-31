@@ -187,7 +187,7 @@ class EmailMailboxSynchronizer
             return [0, 1];
         }
 
-        return DB::transaction(function () use ($mailbox, $folder, $source, $role, $uid): array {
+        return DB::transaction(function () use ($mailbox, $folder, $source, $role, $uid, $uidValidity): array {
             $messageId = trim((string) $source->getMessageId());
             $existing = $messageId === '' ? null : ConversationMessage::query()
                 ->where('message_id_hash', ConversationMessage::headerHash(ConversationMessage::canonicalHeaderId($messageId)))
