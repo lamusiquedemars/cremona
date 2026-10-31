@@ -10,6 +10,7 @@ use App\Models\OrganizationQuoteSettings;
 use App\Models\User;
 use App\Services\OrganizationIntegrationManager;
 use App\Services\IncomingSuperPdpInvoiceSynchronizer;
+use App\Services\ElectronicReportingReceiptSynchronizer;
 use App\Services\OrganizationModuleAccess;
 use App\Services\SuperPdpClient;
 use App\Services\SuperPdpSandboxClient;
@@ -219,6 +220,19 @@ class OrganizationDetails extends Page
             report($exception);
             Notification::make()
                 ->title('Synchronisation des factures reçues impossible')
+                ->body($exception instanceof \LogicException ? $exception->getMessage() : 'Super PDP est temporairement inaccessible. Réessayez plus tard.')
+                ->danger()->persistent()->send();
+        }
+    }
+
+    public function synchronizeElectronicReportingReceipts(ElectronicReportingReceiptSynchronizer $synchronizer): void
+    {
+        try {
+            $count = $synchronizer->synchronize(app(OrganizationContext::class)->require());
+            Notification::make()->title('Accusés e-reporting Super PDP actualisés')->body($count.' lot(s) relevé(s).')->success()->send();
+        } catch (\Throwable $exception) {
+            report($exception);
+            Notification::make()->title('Actualisation e-reporting impossible')
                 ->body($exception instanceof \LogicException ? $exception->getMessage() : 'Super PDP est temporairement inaccessible. Réessayez plus tard.')
                 ->danger()->persistent()->send();
         }

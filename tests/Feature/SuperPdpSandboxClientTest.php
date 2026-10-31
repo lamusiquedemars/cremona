@@ -138,4 +138,20 @@ class SuperPdpSandboxClientTest extends TestCase
             && str_contains($request->url(), 'kind=transaction')
             && str_contains($request->url(), 'role_code=SE'));
     }
+
+    public function test_it_lists_seller_e_reporting_receipts_after_a_cursor(): void
+    {
+        config()->set('services.super_pdp.api_url', 'https://api.superpdp.test');
+        Http::fake([
+            'https://api.superpdp.test/oauth2/token' => Http::response(['access_token' => 'server-token'], 200),
+            'https://api.superpdp.test/v1.beta/ereportings*' => Http::response(['data' => [], 'has_more' => false], 200),
+        ]);
+
+        app(SuperPdpClient::class)->ereportings('client-id', 'client-secret', 456);
+
+        Http::assertSent(fn (Request $request): bool => str_starts_with($request->url(), 'https://api.superpdp.test/v1.beta/ereportings?')
+            && str_contains($request->url(), 'role_code=SE')
+            && str_contains($request->url(), 'starting_after_id=456')
+            && str_contains($request->url(), 'limit=1000'));
+    }
 }

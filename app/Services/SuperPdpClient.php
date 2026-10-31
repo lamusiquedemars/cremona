@@ -148,6 +148,18 @@ class SuperPdpClient
             ->json() ?? [];
     }
 
+    /** @return array<string, mixed> */
+    public function ereportings(string $clientId, string $clientSecret, ?int $startingAfterId = null): array
+    {
+        return $this->authenticated($clientId, $clientSecret)
+            ->acceptJson()
+            ->get($this->endpoint('/v1.beta/ereportings'), array_filter([
+                'role_code' => 'SE', 'order' => 'asc', 'limit' => 1000, 'starting_after_id' => $startingAfterId,
+            ], fn (mixed $value): bool => $value !== null))
+            ->throw()
+            ->json();
+    }
+
     private function authenticated(string $clientId, string $clientSecret): PendingRequest
     {
         try {

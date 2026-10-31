@@ -111,6 +111,8 @@
                         @if ($integrationStates['super_pdp_configured'])
                             <x-filament::button wire:click="synchronizeIncomingSuperPdpInvoices" wire:loading.attr="disabled" wire:target="synchronizeIncomingSuperPdpInvoices" type="button" size="sm" color="gray">Synchroniser les factures reçues</x-filament::button>
                             <p class="text-xs text-gray-500">Télécharge les nouvelles factures reçues depuis Super PDP et conserve leur original dans les documents privés. Aucune facture n’est transmise.</p>
+                            <x-filament::button wire:click="synchronizeElectronicReportingReceipts" wire:loading.attr="disabled" wire:target="synchronizeElectronicReportingReceipts" type="button" size="sm" color="gray">Actualiser les accusés e-reporting</x-filament::button>
+                            <p class="text-xs text-gray-500">Relève les lots agrégés et leurs événements depuis Super PDP. Cette action est en lecture seule.</p>
                         @endif
                         @if ($integrationStates['super_pdp_sandbox_available'])
                             <x-filament::button wire:click="verifySuperPdpSandbox" type="button" size="sm" color="gray">Vérifier la sandbox</x-filament::button>
