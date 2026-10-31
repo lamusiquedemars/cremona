@@ -24,7 +24,7 @@ class ElectronicReportingBatchResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Activité commerciale';
+    protected static string|\UnitEnum|null $navigationGroup = 'Facturation électronique';
 
     protected static ?string $navigationLabel = 'Accusés e-reporting';
 

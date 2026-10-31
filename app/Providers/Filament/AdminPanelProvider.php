@@ -64,6 +64,8 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('customer_follow_up', 'Suivi client')),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('commercial_activity', 'Activité commerciale')),
+                NavigationGroup::make('Achats et fournisseurs'),
+                NavigationGroup::make('Facturation électronique'),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('workshop', 'Atelier')),
                 NavigationGroup::make('Catalogue et stock'),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('marketing', 'Marketing')),
