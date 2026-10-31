@@ -16,10 +16,19 @@ final class EmailBodyText
             $body = mb_convert_encoding($body, 'UTF-8', 'Windows-1252');
         }
 
-        // Some senders put HTML in the text MIME part. Preserve meaningful
-        // line breaks before removing markup, then decode HTML entities.
+        // Some senders put HTML in the text MIME part, sometimes escaped as
+        // &lt;p&gt;…&lt;/p&gt;. Decode entities first, then preserve meaningful line
+        // breaks before removing the resulting markup.
+        for ($pass = 0; $pass < 2; $pass++) {
+            $decoded = html_entity_decode($body, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if ($decoded === $body) {
+                break;
+            }
+
+            $body = $decoded;
+        }
         $body = preg_replace('/<(?:br|\\/p|\\/div|\\/li|\\/h[1-6])\\b[^>]*>/iu', "\n", $body) ?? $body;
-        $body = html_entity_decode(strip_tags($body), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $body = strip_tags($body);
         $body = str_replace(["\r\n", "\r"], "\n", $body);
         $body = preg_replace("/[^\\S\n]+/u", ' ', $body) ?? $body;
         $body = preg_replace("/\n{3,}/", "\n\n", $body) ?? $body;
