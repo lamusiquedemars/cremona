@@ -50,7 +50,7 @@ class ElectronicReportResource extends Resource
                 TextEntry::make('occurred_on')->label('Date')->date('d/m/Y'),
                 TextEntry::make('amount')->label('Montant')->money(fn (ElectronicReport $record): string => $record->currency),
                 TextEntry::make('status')->label('État')->badge()->formatStateUsing(fn (string $state): string => match ($state) {
-                    'pending_review' => 'À contrôler', 'previewed' => 'Aperçu contrôlé', default => $state,
+                    'pending_review' => 'À contrôler', 'needs_completion' => 'À compléter', 'previewed' => 'Aperçu contrôlé', default => $state,
                 }),
             ]),
             Section::make('Transmission')->columnSpan(1)->schema([
@@ -80,10 +80,10 @@ class ElectronicReportResource extends Resource
             TextColumn::make('amount')->label('Montant')->money(fn (ElectronicReport $record): string => $record->currency),
             TextColumn::make('occurred_on')->label('Date')->date('d/m/Y')->sortable(),
             TextColumn::make('status')->label('État')->badge()->formatStateUsing(fn (string $state): string => match ($state) {
-                'pending_review' => 'À contrôler', 'previewed' => 'Aperçu contrôlé', default => $state,
+                'pending_review' => 'À contrôler', 'needs_completion' => 'À compléter', 'previewed' => 'Aperçu contrôlé', default => $state,
             }),
         ])->filters([
-            SelectFilter::make('status')->options(['pending_review' => 'À contrôler', 'previewed' => 'Aperçu contrôlé', 'submitted' => 'Transmise', 'acknowledged' => 'Accusée', 'rejected' => 'Rejetée']),
+            SelectFilter::make('status')->options(['pending_review' => 'À contrôler', 'needs_completion' => 'À compléter', 'previewed' => 'Aperçu contrôlé', 'submitted' => 'Transmise', 'acknowledged' => 'Accusée', 'rejected' => 'Rejetée']),
             SelectFilter::make('scope')->options(['b2c' => 'B2C', 'b2b_international' => 'B2B international']),
         ])->recordActions([ViewAction::make()])
             ->recordUrl(fn (ElectronicReport $record): string => self::getUrl('view', ['record' => $record]));

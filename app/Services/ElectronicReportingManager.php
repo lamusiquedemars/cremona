@@ -17,16 +17,18 @@ class ElectronicReportingManager
             return null;
         }
 
+        $missing = $scope === 'b2b_international' ? app(B2BInternationalReportingValidator::class)->missing($invoice) : [];
+
         return ElectronicReport::query()->updateOrCreate(
             ['source_type' => Invoice::class, 'source_id' => $invoice->id, 'kind' => 'transaction'],
             [
                 'invoice_id' => $invoice->id,
                 'scope' => $scope,
-                'status' => 'pending_review',
+                'status' => $missing === [] ? 'pending_review' : 'needs_completion',
                 'occurred_on' => $invoice->issued_on,
                 'amount' => $invoice->total_amount,
                 'currency' => $invoice->currency,
-                'payload' => $this->invoicePayload($invoice, $scope),
+                'payload' => array_merge($this->invoicePayload($invoice, $scope), ['missing_requirements' => $missing]),
                 'remote_id' => null,
                 'submitted_at' => null,
                 'acknowledged_at' => null,
