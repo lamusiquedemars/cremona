@@ -30,8 +30,8 @@ class SuperPdpClient
             $session = Http::acceptJson()->timeout(15)->withToken($accessToken)
                 ->get($this->endpoint('/v1.beta/oauth2_sessions/me'))
                 ->throw()->json();
-        } catch (ConnectionException $exception) {
-            throw new LogicException('Super PDP est temporairement inaccessible. Réessayez plus tard.', previous: $exception);
+        } catch (ConnectionException) {
+            throw new LogicException('Super PDP est temporairement inaccessible. Réessayez plus tard.');
         }
 
         return [
@@ -175,8 +175,8 @@ class SuperPdpClient
             $token = Http::asForm()->acceptJson()->timeout(15)->post($this->endpoint('/oauth2/token'), [
                 'grant_type' => 'client_credentials', 'client_id' => $clientId, 'client_secret' => $clientSecret,
             ])->throw()->json('access_token');
-        } catch (ConnectionException $exception) {
-            throw new LogicException('Super PDP est temporairement inaccessible. Réessayez plus tard.', previous: $exception);
+        } catch (ConnectionException) {
+            throw new LogicException('Super PDP est temporairement inaccessible. Réessayez plus tard.');
         }
         if (! is_string($token) || $token === '') {
             throw new LogicException('Super PDP n’a pas retourné de jeton serveur exploitable.');
