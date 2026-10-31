@@ -154,4 +154,20 @@ class SuperPdpSandboxClientTest extends TestCase
             && str_contains($request->url(), 'starting_after_id=456')
             && str_contains($request->url(), 'limit=1000'));
     }
+
+    public function test_it_generates_a_non_submitted_b2c_sandbox_invoice(): void
+    {
+        config()->set('services.super_pdp.api_url', 'https://api.superpdp.test');
+        Http::fake([
+            'https://api.superpdp.test/oauth2/token' => Http::response(['access_token' => 'server-token'], 200),
+            'https://api.superpdp.test/v1.beta/invoices/generate_test_invoice*' => Http::response('<Invoice />', 200),
+        ]);
+
+        $content = app(SuperPdpClient::class)->generateSandboxInvoice('client-id', 'client-secret', true);
+
+        $this->assertSame('<Invoice />', $content);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+            && str_contains($request->url(), 'format=cii')
+            && str_contains($request->url(), 'b2c=1'));
+    }
 }

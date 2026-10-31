@@ -160,6 +160,15 @@ class SuperPdpClient
             ->json();
     }
 
+    public function generateSandboxInvoice(string $clientId, string $clientSecret, bool $b2c = false): string
+    {
+        return $this->authenticated($clientId, $clientSecret)
+            ->accept('application/xml')
+            ->get($this->endpoint('/v1.beta/invoices/generate_test_invoice'), ['format' => 'cii', 'b2c' => $b2c])
+            ->throw()
+            ->body();
+    }
+
     private function authenticated(string $clientId, string $clientSecret): PendingRequest
     {
         try {

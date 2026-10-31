@@ -23,4 +23,15 @@ class SuperPdpSandboxClient
         return filled(config('services.super_pdp.sandbox_client_id'))
             && filled(config('services.super_pdp.sandbox_client_secret'));
     }
+
+    public function generateTestInvoice(bool $b2c = false): string
+    {
+        $clientId = config('services.super_pdp.sandbox_client_id');
+        $clientSecret = config('services.super_pdp.sandbox_client_secret');
+        if (! is_string($clientId) || $clientId === '' || ! is_string($clientSecret) || $clientSecret === '') {
+            throw new LogicException('Les identifiants serveur Super PDP sandbox ne sont pas configurés.');
+        }
+
+        return app(SuperPdpClient::class)->generateSandboxInvoice($clientId, $clientSecret, $b2c);
+    }
 }
