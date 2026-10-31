@@ -203,6 +203,15 @@ Le résultat attendu est une preuve par scénario, pas seulement une réponse HT
 positive. Toute écriture réglementaire reste désactivée tant que ce jeu de
 preuves n'est pas complet.
 
+### Résultats sandbox — 31 octobre 2026
+
+- B2C fictive remise sous l’identifiant `1621554` : événement `api:uploaded`.
+- B2B fictive remise sous l’identifiant `1621556` : événements `api:uploaded`,
+  `fr:200`, `fr:201`, `fr:202` et `fr:203` relevés dans cet ordre.
+
+Ces résultats attestent de la remise sandbox et du suivi événementiel. Ils ne
+valident pas encore le flux B2B international ni les paiements e-reporting.
+
 ## Ce qui est disponible
 
 Le module **Facturation** est transverse : il se choisit explicitement dans la configuration de chaque organisation, quel que soit son métier. Il permet de créer un brouillon, de composer ses lignes HT et TVA, puis d’émettre une facture.
