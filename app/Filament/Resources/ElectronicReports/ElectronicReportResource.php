@@ -52,6 +52,7 @@ class ElectronicReportResource extends Resource
                 TextEntry::make('status')->label('État')->badge()->formatStateUsing(fn (string $state): string => match ($state) {
                     'pending_review' => 'À contrôler', 'needs_completion' => 'À compléter', 'previewed' => 'Aperçu contrôlé', default => $state,
                 }),
+                TextEntry::make('payload.missing_requirements')->label('Éléments à compléter')->formatStateUsing(fn (?array $state): string => filled($state) ? implode(', ', $state) : '—'),
             ]),
             Section::make('Transmission')->columnSpan(1)->schema([
                 TextEntry::make('remote_id')->label('Identifiant Super PDP')->placeholder('Non transmis'),
