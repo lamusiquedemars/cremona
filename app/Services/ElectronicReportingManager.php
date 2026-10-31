@@ -50,12 +50,15 @@ class ElectronicReportingManager
             return null;
         }
 
+        $draft = app(ElectronicReportingPaymentDraftFactory::class)->make($payment, $invoice);
+        $requiresEvent = $draft['invoice_event_id'] === null;
+
         return ElectronicReport::query()->updateOrCreate(
             ['source_type' => InvoicePayment::class, 'source_id' => $payment->id, 'kind' => 'payment'],
             [
                 'invoice_id' => $invoice->id,
                 'scope' => $scope,
-                'status' => 'pending_review',
+                'status' => $requiresEvent ? 'needs_completion' : 'pending_review',
                 'occurred_on' => $payment->paid_on,
                 'amount' => $payment->amount,
                 'currency' => $invoice->currency,
@@ -65,6 +68,8 @@ class ElectronicReportingManager
                     'payment_method' => $payment->method,
                     'payment_reference' => $payment->reference,
                     'recipient' => $invoice->recipient_snapshot,
+                    'payment_draft' => $draft,
+                    'missing_requirements' => $requiresEvent ? ['événement Super PDP de la facture'] : [],
                     'submission_strategy' => $scope === 'b2c'
                         ? 'requires_super_pdp_invoice_event'
                         : 'manual_b2bint_after_contract_review',

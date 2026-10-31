@@ -4,7 +4,10 @@ namespace Tests\Unit;
 
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
+use App\Models\InvoicePayment;
+use App\Models\InvoiceTransmission;
 use App\Services\B2BInternationalReportingDraftFactory;
+use App\Services\ElectronicReportingPaymentDraftFactory;
 use App\Services\B2BInternationalReportingValidator;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
@@ -55,5 +58,21 @@ class B2BInternationalReportingValidatorTest extends TestCase
         $this->assertSame('out', $draft['direction']);
         $this->assertSame('BE0123456789', $draft['buyer']['tax_registration_id']);
         $this->assertSame('S', $draft['lines'][0]['tax_category_code']);
+    }
+
+    public function test_it_requires_a_super_pdp_invoice_event_for_a_payment_draft(): void
+    {
+        $invoice = new Invoice;
+        $invoice->forceFill(['reference' => 'FAC-2026-00001', 'total_amount' => 120, 'subtotal_amount' => 100, 'tax_amount' => 20, 'currency' => 'EUR']);
+        $invoice->setRelation('transmissions', new Collection([
+            new InvoiceTransmission(['provider' => 'super_pdp', 'metadata' => ['events' => [['id' => 123]]]]),
+        ]));
+        $payment = new InvoicePayment;
+        $payment->forceFill(['paid_on' => '2026-10-31', 'amount' => 60]);
+
+        $draft = app(ElectronicReportingPaymentDraftFactory::class)->make($payment, $invoice);
+
+        $this->assertSame(123, $draft['invoice_event_id']);
+        $this->assertSame('60.00', $draft['subtotals'][0]['amount']);
     }
 }
