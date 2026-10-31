@@ -116,6 +116,102 @@ body.fi-body {
     font-weight: 600;
 }
 
+/* Correspondence is read before it is managed: keep the message central and
+   make its operational context present but visually secondary. */
+.cremona-conversation-thread {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.cremona-conversation-message {
+    padding: 0.25rem 0 0.5rem;
+}
+
+.cremona-conversation-message-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.cremona-conversation-message-author {
+    font-weight: 650;
+}
+
+.cremona-conversation-message-recipient,
+.cremona-conversation-message-date,
+.cremona-conversation-message-subject,
+.cremona-conversation-quoted,
+.cremona-conversation-history-item > :last-child {
+    color: rgb(100 95 88);
+    font-size: 0.875rem;
+}
+
+.cremona-conversation-message-recipient {
+    margin-top: 0.15rem;
+}
+
+.cremona-conversation-message-date {
+    white-space: nowrap;
+}
+
+.cremona-conversation-message-subject {
+    margin-bottom: 0.85rem;
+}
+
+.cremona-conversation-message-body {
+    max-width: 78ch;
+    white-space: pre-wrap;
+    line-height: 1.7;
+}
+
+.cremona-conversation-quoted {
+    margin-top: 1rem;
+}
+
+.cremona-conversation-quoted summary,
+.cremona-conversation-history summary {
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.cremona-conversation-quoted pre {
+    margin: 0.75rem 0 0;
+    border-left: 2px solid rgb(var(--cremona-line));
+    padding-left: 1rem;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    font: inherit;
+    line-height: 1.55;
+}
+
+.cremona-conversation-history summary {
+    font-weight: 600;
+}
+
+.cremona-conversation-history > div {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.cremona-conversation-history-item {
+    border-left: 2px solid rgb(var(--cremona-line));
+    padding-left: 1rem;
+}
+
+.cremona-conversation-history-item > :first-child {
+    font-weight: 600;
+}
+
+@media (max-width: 40rem) {
+    .cremona-conversation-message-header {
+        display: grid;
+        gap: 0.35rem;
+    }
+}
+
 .fi-header-heading {
     letter-spacing: -0.025em;
     font-size: 1.5rem;

@@ -10,7 +10,7 @@
 @endphp
 
 <x-dynamic-component :component="$getEntryWrapperView()" :entry="$entry">
-    <div style="display: grid; gap: 1rem;">
+    <div class="cremona-conversation-thread">
         @if ($latest)
             @php
                 $message = $latest;
@@ -35,41 +35,41 @@
                 }
             @endphp
 
-            <article style="border: 1px solid rgb(225 219 208); border-radius: 14px; background: rgb(255 254 251); padding: 1.25rem;">
-                <header style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem;">
+            <article class="cremona-conversation-message">
+                <header class="cremona-conversation-message-header">
                     <div>
-                        <div style="font-weight: 650;">{{ __('cremona.crm.from', ['name' => $author]) }}</div>
-                        <div style="margin-top: .15rem; color: rgb(100 95 88); font-size: .875rem;">{{ __('cremona.crm.to', ['name' => $recipient ?: '—']) }}</div>
+                        <div class="cremona-conversation-message-author">{{ __('cremona.crm.from', ['name' => $author]) }}</div>
+                        <div class="cremona-conversation-message-recipient">{{ __('cremona.crm.to', ['name' => $recipient ?: '—']) }}</div>
                     </div>
-                    <time style="color: rgb(100 95 88); font-size: .875rem; white-space: nowrap;">{{ __('cremona.crm.on_date', ['date' => $message->authored_at?->format('d/m/Y H:i')]) }}</time>
+                    <time class="cremona-conversation-message-date">{{ __('cremona.crm.on_date', ['date' => $message->authored_at?->format('d/m/Y H:i')]) }}</time>
                 </header>
 
                 @if ($message->subject)
-                    <div style="margin-bottom: .85rem; color: rgb(100 95 88); font-size: .875rem;">{{ __('cremona.crm.subject').': '.$message->subject }}</div>
+                    <div class="cremona-conversation-message-subject">{{ __('cremona.crm.subject').': '.$message->subject }}</div>
                 @endif
 
-                <div style="white-space: pre-wrap; line-height: 1.6;">{{ $parts['reply'] }}</div>
+                <div class="cremona-conversation-message-body">{{ $parts['reply'] }}</div>
 
                 @if ($parts['quoted'])
-                    <details style="margin-top: 1rem; color: rgb(100 95 88);">
-                        <summary style="cursor: pointer; font-size: .875rem;">{{ __('cremona.crm.show_quoted_content') }}</summary>
-                        <pre style="margin: .75rem 0 0; border-left: 2px solid rgb(225 219 208); padding-left: 1rem; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.55;">{{ EmailReplyExcerpt::quotedForDisplay($parts['quoted']) }}</pre>
+                    <details class="cremona-conversation-quoted">
+                        <summary>{{ __('cremona.crm.show_quoted_content') }}</summary>
+                        <pre>{{ EmailReplyExcerpt::quotedForDisplay($parts['quoted']) }}</pre>
                     </details>
                 @endif
             </article>
         @endif
 
         @if ($history->isNotEmpty())
-            <details>
-                <summary style="cursor: pointer; font-weight: 600;">{{ trans_choice('cremona.crm.history', $history->count(), ['count' => $history->count()]) }}</summary>
-                <div style="display: grid; gap: .75rem; margin-top: .75rem;">
+            <details class="cremona-conversation-history">
+                <summary>{{ trans_choice('cremona.crm.history', $history->count(), ['count' => $history->count()]) }}</summary>
+                <div>
                     @foreach ($history as $message)
                         @php
                             $from = $message->participants->first(fn ($participant) => $participant->role === MessageParticipantRole::From);
                         @endphp
-                        <div style="border-left: 2px solid rgb(225 219 208); padding-left: 1rem;">
-                            <div style="font-weight: 600;">{{ $from?->name ?: $from?->address ?: __('cremona.crm.you') }}</div>
-                            <div style="color: rgb(100 95 88); font-size: .875rem;">{{ $message->authored_at?->format('d/m/Y H:i') }} · {{ $message->subject ?: __('cremona.crm.untitled') }}</div>
+                        <div class="cremona-conversation-history-item">
+                            <div>{{ $from?->name ?: $from?->address ?: __('cremona.crm.you') }}</div>
+                            <div>{{ $message->authored_at?->format('d/m/Y H:i') }} · {{ $message->subject ?: __('cremona.crm.untitled') }}</div>
                         </div>
                     @endforeach
                 </div>

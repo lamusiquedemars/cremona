@@ -9,12 +9,12 @@ use App\Filament\Resources\Conversations\Pages\ListConversations;
 use App\Filament\Resources\Conversations\Pages\ViewConversation;
 use App\Models\Conversation;
 use App\Services\OrganizationPresentation;
-use App\Support\TechnicalEmailNotification;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -64,32 +64,32 @@ class ConversationResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->columns(3)->components([
-            Section::make(__('cremona.crm.context'))->columnSpan(2)->schema([
-                TextEntry::make('subject')->label(__('cremona.crm.subject'))->placeholder(__('cremona.crm.untitled'))->weight('semibold'),
-                TextEntry::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder(__('cremona.crm.unlinked')),
-                TextEntry::make('company.name')->label(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))->placeholder('—'),
-                TextEntry::make('incomingRequest.subject')->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))->placeholder('—'),
-                TextEntry::make('initial_channel')
-                    ->label('Origine')
-                    ->badge()
-                    ->formatStateUsing(fn (MessageChannel|string $state): string => self::originLabel($state)),
-            ]),
-            Section::make(__('cremona.crm.follow_up'))->columnSpan(1)->schema([
-                TextEntry::make('status')->label(__('cremona.crm.status'))->badge(),
-                TextEntry::make('assignedUser.name')->label(__('cremona.crm.assignee'))->placeholder(__('cremona.crm.unassigned')),
-                TextEntry::make('last_message_at')->label(__('cremona.crm.last_message'))->dateTime('d/m/Y H:i')->placeholder('—'),
-            ]),
-            Section::make(__('cremona.crm.conversation_thread'))->columnSpanFull()->schema([
+            Section::make('Échange')->columnSpanFull()->schema([
+                Grid::make(['default' => 1, 'sm' => 2, 'lg' => 3])->schema([
+                    TextEntry::make('initial_channel')
+                        ->label('Origine')
+                        ->badge()
+                        ->formatStateUsing(fn (MessageChannel|string $state): string => self::originLabel($state)),
+                    TextEntry::make('last_message_at')->label('Dernier message')->dateTime('d/m/Y H:i')->placeholder('—'),
+                    TextEntry::make('status')->label(__('cremona.crm.status'))->badge(),
+                ]),
                 ViewEntry::make('conversation_timeline')
                     ->hiddenLabel()
                     ->state(fn (Conversation $record) => $record->messages()
                         ->with(['participants', 'mailbox'])
                         ->orderBy('authored_at')
                         ->get()
-                        ->reject(fn ($message): bool => TechnicalEmailNotification::isStored($message))
                         ->values())
                     ->view('filament.infolists.conversation-timeline')
                     ->columnSpanFull(),
+            ]),
+            Section::make('Informations liées')->columnSpan(2)->columns(2)->schema([
+                TextEntry::make('person.display_name')->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))->placeholder(__('cremona.crm.unlinked')),
+                TextEntry::make('company.name')->label(fn (): string => app(OrganizationPresentation::class)->label('companies', 'Entreprise'))->placeholder('—'),
+                TextEntry::make('incomingRequest.subject')->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))->placeholder('—'),
+            ]),
+            Section::make(__('cremona.crm.follow_up'))->columnSpan(1)->schema([
+                TextEntry::make('assignedUser.name')->label(__('cremona.crm.assignee'))->placeholder(__('cremona.crm.unassigned')),
             ]),
         ]);
     }

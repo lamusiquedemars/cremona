@@ -20,8 +20,15 @@ if [[ -n "$(git -C "$repository_root" status --porcelain)" ]]; then
     exit 1
 fi
 
+# Assets Vite are deliberately ignored by Git. Build them locally with the
+# code that is about to be released, then ship that exact build to staging.
+(cd "$repository_root" && npm run build)
+
 git -C "$repository_root" archive --format=tar HEAD \
     | ssh "$deploy_host" "mkdir -p '$stage_path' && tar -xf - -C '$stage_path'"
+
+tar -C "$repository_root/public/build" -cf - . \
+    | ssh "$deploy_host" "mkdir -p '$stage_path/public/build' && tar -xf - -C '$stage_path/public/build'"
 
 ssh "$deploy_host" "APP_PATH='$application_path' STAGE_PATH='$stage_path' bash -s" <<'REMOTE'
 set -euo pipefail
@@ -53,7 +60,6 @@ test "$(readlink -f "$STAGE_PATH/storage/app")" = "$shared_storage"
 # Le code et les dépendances peuvent être propres à une release ; jamais les médias.
 cp "$previous_release/.env" "$STAGE_PATH/.env"
 cp -al "$previous_release/vendor" "$STAGE_PATH/vendor"
-cp -al "$previous_release/public/build" "$STAGE_PATH/public/build"
 
 cd "$STAGE_PATH"
 php artisan migrate --force
