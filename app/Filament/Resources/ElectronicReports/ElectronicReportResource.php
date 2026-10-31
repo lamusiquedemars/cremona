@@ -30,9 +30,7 @@ class ElectronicReportResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentChartBar;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Facturation électronique';
-
-    protected static ?string $navigationLabel = 'E-reporting';
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $modelLabel = 'opération e-reporting';
 

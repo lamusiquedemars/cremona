@@ -30,9 +30,7 @@ class IncomingInvoiceResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedInboxArrowDown;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Achats et fournisseurs';
-
-    protected static ?string $navigationLabel = 'Factures reçues';
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $modelLabel = 'facture reçue';
 
