@@ -181,8 +181,20 @@ class OrganizationIntegrationManager
         }
 
         DB::transaction(function () use ($integration, $actor): void {
-            $integration->update([
-                'credentials' => [],
+            // Une intégration peut avoir été créée avec une ancienne APP_KEY.
+            // Ne jamais charger ses credentials pour pouvoir la révoquer : la
+            // révocation doit rester possible, précisément en cas d'incident.
+            DB::table($integration->getTable())
+                ->where('id', $integration->getKey())
+                ->where('organization_id', $integration->organization_id)
+                ->update([
+                    'credentials' => app('encrypter')->encrypt(json_encode([]), false),
+                    'token_hash' => null,
+                    'status' => 'revoked',
+                    'revoked_at' => now(),
+                ]);
+
+            $integration->forceFill([
                 'status' => 'revoked',
                 'revoked_at' => now(),
             ]);
