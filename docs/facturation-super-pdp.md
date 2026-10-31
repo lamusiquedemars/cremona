@@ -208,6 +208,8 @@ preuves n'est pas complet.
 - B2C fictive remise sous l’identifiant `1621554` : événement `api:uploaded`.
 - B2B fictive remise sous l’identifiant `1621556` : événements `api:uploaded`,
   `fr:200`, `fr:201`, `fr:202` et `fr:203` relevés dans cet ordre.
+- Aperçus e-reporting `transaction` et `payment` lus le même jour : tableaux
+  vides. Aucune déclaration n’a été créée par Cremona pour ce contrôle.
 
 Ces résultats attestent de la remise sandbox et du suivi événementiel. Ils ne
 valident pas encore le flux B2B international ni les paiements e-reporting.
