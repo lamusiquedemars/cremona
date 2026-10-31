@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -64,7 +65,7 @@ class InboundChannelResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label(__('common.channel'))
-                    ->description('Maracuja CMS')
+                    ->description('Site web connecté')
                     ->searchable()
                     ->sortable()
                     ->weight('medium'),
@@ -88,6 +89,15 @@ class InboundChannelResource extends Resource
                     ->dateTime('d/m/Y H:i')
                     ->placeholder('—')
                     ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->label('État du canal')
+                    ->options([
+                        'active' => 'Actifs',
+                        'revoked' => 'Révoqués',
+                    ])
+                    ->default('active'),
             ])
             ->recordActions([
                 Action::make('revoke')
