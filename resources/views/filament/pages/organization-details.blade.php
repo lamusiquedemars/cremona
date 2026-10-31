@@ -1,5 +1,17 @@
 <x-filament-panels::page>
     <form wire:submit="save" class="organization-details-form space-y-6">
+        @if ($errors->any())
+            <x-filament::section compact>
+                <div class="rounded-lg border border-danger-300 bg-danger-50 px-4 py-3 text-sm text-danger-800 dark:border-danger-500/40 dark:bg-danger-500/10 dark:text-danger-200">
+                    <p class="font-medium">Certaines informations ne peuvent pas être enregistrées :</p>
+                    <ul class="mt-1 list-disc space-y-1 pl-5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </x-filament::section>
+        @endif
         <x-filament::section>
             <x-slot name="heading">Coordonnées et mentions légales</x-slot>
             <x-slot name="description">Ces informations décrivent l’organisation. Elles sont réutilisées par les documents et ne dépendent pas du module Devis.</x-slot>
@@ -96,7 +108,9 @@
                         </div>
                         <x-filament::button wire:click="connectSuperPdpProduction" type="button" size="sm">Enregistrer et vérifier la production</x-filament::button>
                         <p class="text-xs text-gray-500">Le secret est chiffré côté serveur et n’est jamais réaffiché. Cette vérification ne transmet aucune facture.</p>
-                        <x-filament::button wire:click="verifySuperPdpSandbox" type="button" size="sm" color="gray" :disabled="! $integrationStates['super_pdp_configured']">Vérifier la sandbox</x-filament::button>
+                        @if ($integrationStates['super_pdp_sandbox_available'])
+                            <x-filament::button wire:click="verifySuperPdpSandbox" type="button" size="sm" color="gray">Vérifier la sandbox</x-filament::button>
+                        @endif
                     </div>
                 </div>
                 <div class="rounded-lg border border-gray-200 p-4 dark:border-white/10">

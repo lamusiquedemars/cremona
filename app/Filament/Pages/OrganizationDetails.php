@@ -90,6 +90,7 @@ class OrganizationDetails extends Page
 
     public function save(): void
     {
+        $this->normalizeUrls();
         $data = $this->validate([
             'identity.display_name' => ['nullable', 'string', 'max:255'],
             'identity.legal_name' => ['nullable', 'string', 'max:255'],
@@ -209,7 +210,8 @@ class OrganizationDetails extends Page
             ->where('provider', 'super_pdp')->where('name', 'production')->first();
         $superPdpSandbox = OrganizationIntegration::query()
             ->where('provider', 'super_pdp')->where('name', 'sandbox')->first();
-        $credentials = $superPdpProduction?->credentials ?? $superPdpSandbox?->credentials ?? [];
+        $productionCredentials = $superPdpProduction?->credentials ?? [];
+        $sandboxCredentials = $superPdpSandbox?->credentials ?? [];
         $storageReady = config('private-documents.disk') === 'scaleway-private'
             && filled(config('filesystems.disks.scaleway-private.bucket'))
             && filled(config('filesystems.disks.scaleway-private.key'))
@@ -217,15 +219,31 @@ class OrganizationDetails extends Page
 
         $this->integrationStates = [
             'storage_ready' => $storageReady,
-            'super_pdp_configured' => $superPdpProduction !== null || app(SuperPdpSandboxClient::class)->isConfigured(),
-            'super_pdp_environment' => $superPdpProduction !== null ? 'Production' : 'Sandbox',
-            'super_pdp_company' => $superPdpProduction !== null ? $organization->name : (string) config('services.super_pdp.sandbox_company_label', 'Burger Queen'),
-            'super_pdp_status' => $credentials['verification_status'] ?? null,
-            'super_pdp_ready' => in_array($credentials['verification_status'] ?? null, ['verified', 'active'], true),
-            'super_pdp_checked_at' => $credentials['checked_at'] ?? null,
+            'super_pdp_configured' => $superPdpProduction !== null,
+            'super_pdp_environment' => $superPdpProduction !== null ? 'Production' : ($superPdpSandbox !== null ? 'Sandbox de test' : 'Production non connectée'),
+            'super_pdp_company' => $superPdpProduction !== null
+                ? $organization->name.(filled($productionCredentials['company_id'] ?? null) ? ' — compte #'.$productionCredentials['company_id'] : '')
+                : ($superPdpSandbox !== null ? (string) config('services.super_pdp.sandbox_company_label', 'Burger Queen').' (test)' : '—'),
+            'super_pdp_status' => $productionCredentials['verification_status'] ?? $sandboxCredentials['verification_status'] ?? null,
+            'super_pdp_ready' => in_array($productionCredentials['verification_status'] ?? null, ['verified', 'active'], true),
+            'super_pdp_checked_at' => $productionCredentials['checked_at'] ?? $sandboxCredentials['checked_at'] ?? null,
+            'super_pdp_sandbox_available' => app(SuperPdpSandboxClient::class)->isConfigured(),
             'google_ads_count' => OrganizationIntegration::query()->where('provider', 'google_ads')->where('name', 'reporting')->count(),
             'brevo_count' => OrganizationIntegration::query()->where('provider', 'brevo')->where('name', 'meetings')->count(),
             'organization_name' => $organization->name,
         ];
+    }
+
+    private function normalizeUrls(): void
+    {
+        foreach ([['identity', 'website'], ['quoteRules', 'terms_url']] as [$section, $field]) {
+            $value = trim((string) ($this->{$section}[$field] ?? ''));
+            if ($value !== '' && ! preg_match('#^[a-z][a-z0-9+.-]*://#i', $value)) {
+                $value = 'https://'.$value;
+            }
+            $this->{$section}[$field] = $value;
+        }
+        $country = trim((string) ($this->identity['country_code'] ?? ''));
+        $this->identity['country_code'] = $country === '' ? null : strtoupper($country);
     }
 }
