@@ -14,7 +14,7 @@ use App\Models\EmailFolder;
 use App\Models\EmailMailbox;
 use App\Models\EmailMessageCopy;
 use App\Support\EmailHeaderDecoder;
-use App\Support\TechnicalEmailNotification;
+use App\Support\WebsiteFormEmail;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -178,10 +178,6 @@ class EmailMailboxSynchronizer
     /** @return array{0: int, 1: int} */
     private function import(EmailMailbox $mailbox, EmailFolder $folder, ImapMessage $source, string $role, ?string $uidValidity): array
     {
-        if (TechnicalEmailNotification::isSource($mailbox, $source, $role)) {
-            return [0, 1];
-        }
-
         $uid = (int) $source->getUid();
         if (EmailMessageCopy::query()->where('email_folder_id', $folder->getKey())->where('uid', $uid)->exists()) {
             return [0, 1];
@@ -213,9 +209,12 @@ class EmailMailboxSynchronizer
         $inReplyTo = trim((string) $source->getInReplyTo()) ?: null;
         $references = array_values(array_filter(array_map('strval', $source->getReferences()->toArray())));
         $subject = EmailHeaderDecoder::text((string) $source->getSubject());
+        $body = $this->body($source);
+        $isWebsiteFormNotification = $role === 'inbox'
+            && WebsiteFormEmail::isNotification($subject, $body);
         $conversation = $this->findConversation($inReplyTo, $references)
             ?? Conversation::query()->create([
-                'initial_channel' => MessageChannel::Email,
+                'initial_channel' => $isWebsiteFormNotification ? MessageChannel::Website : MessageChannel::Email,
                 'subject' => $subject,
                 'status' => ConversationStatus::Open,
             ]);
@@ -226,12 +225,12 @@ class EmailMailboxSynchronizer
             'direction' => $direction,
             'channel' => MessageChannel::Email,
             'subject' => $subject,
-            'body_text' => $this->body($source),
+            'body_text' => $body,
             'message_id' => $messageId,
             'in_reply_to' => $inReplyTo,
             'transport_status' => $direction === MessageDirection::Inbound ? MessageTransportStatus::Received : MessageTransportStatus::Accepted,
             'threading_status' => MessageThreadingStatus::Matched,
-            'payload_fingerprint' => hash('sha256', implode('|', [$messageId, $inReplyTo, $this->body($source)])),
+            'payload_fingerprint' => hash('sha256', implode('|', [$messageId, $inReplyTo, $body])),
             'authored_at' => $authoredAt,
             'received_at' => $direction === MessageDirection::Inbound ? now() : null,
             'accepted_at' => $direction === MessageDirection::Outbound ? $authoredAt : null,
