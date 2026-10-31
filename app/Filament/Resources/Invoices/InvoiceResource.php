@@ -46,7 +46,7 @@ class InvoiceResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Activité commerciale';
 
-    protected static ?string $navigationLabel = 'Facturation';
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $modelLabel = 'facture';
 
