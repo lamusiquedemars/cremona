@@ -128,11 +128,12 @@ class OrganizationIntegrationManager
         string $provider,
         string $name,
         ?User $actor = null,
+        array $credentials = [],
     ): array {
-        return DB::transaction(function () use ($provider, $name, $actor): array {
+        return DB::transaction(function () use ($provider, $name, $actor, $credentials): array {
             $keyId = (string) Str::ulid();
             $secret = Str::random(64);
-            $integration = $this->create($provider, $name, [], $actor);
+            $integration = $this->create($provider, $name, $credentials, $actor);
             $integration->update([
                 'key_id' => $keyId,
                 'token_hash' => hash('sha256', $secret),

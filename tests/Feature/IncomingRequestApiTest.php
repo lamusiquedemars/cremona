@@ -78,8 +78,11 @@ class IncomingRequestApiTest extends TestCase
     public function test_a_site_reference_can_be_restricted_to_an_integration(): void
     {
         $organization = Organization::factory()->create();
-        $issued = app(OrganizationContext::class)->run($organization, fn (): array => app(OrganizationIntegrationManager::class)->createApiToken('maracuja_cms', 'site', null));
-        app(OrganizationContext::class)->run($organization, fn () => $issued['integration']->update(['credentials' => ['site_references' => ['site-42']]]));
+        $issued = app(OrganizationContext::class)->run($organization, fn (): array => app(OrganizationIntegrationManager::class)->createApiToken(
+            'maracuja_cms',
+            'site',
+            credentials: ['site_references' => ['site-42']],
+        ));
 
         $this->withToken($issued['token'])->withHeader('Idempotency-Key', 'site-42:one')->postJson('/api/v1/incoming-requests', $this->payload())->assertCreated();
         $payload = $this->payload();

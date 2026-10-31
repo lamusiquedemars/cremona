@@ -8,6 +8,7 @@ use App\Services\OrganizationIntegrationManager;
 use App\Tenancy\OrganizationContext;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TagsInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Icons\Heroicon;
@@ -36,11 +37,22 @@ class ListInboundChannels extends ListRecords
                                 ->where('organization_id', app(OrganizationContext::class)->require()->getKey())
                                 ->where('provider', 'maracuja_cms'),
                         ]),
+                    TagsInput::make('site_references')
+                        ->label('Sites autorisés')
+                        ->placeholder('atelierivoincidit.fr')
+                        ->helperText('Chaque référence doit correspondre exactement à celle déclarée dans l’environnement du site. Ce jeton sera refusé pour tout autre site.')
+                        ->required()
+                        ->minItems(1)
+                        ->maxItems(20)
+                        ->rule('distinct')
+                        ->nestedRecursiveRules(['string', 'max:255']),
                 ])
                 ->action(function (array $data): void {
                     Gate::authorize('create', OrganizationIntegration::class);
                     $issued = app(OrganizationIntegrationManager::class)
-                        ->createApiToken('maracuja_cms', $data['name'], auth()->user());
+                        ->createApiToken('maracuja_cms', $data['name'], auth()->user(), [
+                            'site_references' => array_values($data['site_references']),
+                        ]);
                     $token = $issued['token'];
 
                     Notification::make()
