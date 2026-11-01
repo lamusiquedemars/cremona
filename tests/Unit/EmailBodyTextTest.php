@@ -45,6 +45,6 @@ TEXT);
     {
         $body = EmailBodyText::forDisplay("Titre\n \n\t\n\n\nPremier paragraphe\n\n  \n\nSecond paragraphe");
 
-        $this->assertSame("Titre\n\nPremier paragraphe\n\nSecond paragraphe", $body);
+        $this->assertSame("Titre\nPremier paragraphe\nSecond paragraphe", $body);
     }
 }

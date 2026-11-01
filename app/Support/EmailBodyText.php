@@ -33,14 +33,15 @@ final class EmailBodyText
         $body = strip_tags($body);
         $body = str_replace(["\r\n", "\r"], "\n", $body);
         // Table-based email layouts produce hundreds of indentation-only
-        // lines once markup is removed. Trim each line before retaining at
-        // most one empty line as a paragraph separator.
+        // lines once markup is removed. A semantic paragraph cannot be
+        // recovered reliably from this flattened markup, so retain a single
+        // line break between meaningful text blocks and discard blank layout.
         $body = implode("\n", array_map(
-            static fn (string $line): string => trim($line),
+            static fn (string $line): string => preg_replace('/^[\\p{Z}\\s]+|[\\p{Z}\\s]+$/u', '', $line) ?? $line,
             preg_split('/\n/u', $body) ?: [],
         ));
         $body = preg_replace("/[^\\S\n]+/u", ' ', $body) ?? $body;
-        $body = preg_replace("/\n{3,}/", "\n\n", $body) ?? $body;
+        $body = preg_replace("/\n{2,}/", "\n", $body) ?? $body;
 
         return trim($body) !== '' ? trim($body) : '(Message sans contenu texte)';
     }
