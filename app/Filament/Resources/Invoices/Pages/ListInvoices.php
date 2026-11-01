@@ -5,8 +5,8 @@ namespace App\Filament\Resources\Invoices\Pages;
 use App\Enums\InvoiceStatus;
 use App\Filament\Pages\BillingHome;
 use App\Filament\Resources\Invoices\InvoiceResource;
-use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListInvoices extends ListRecords

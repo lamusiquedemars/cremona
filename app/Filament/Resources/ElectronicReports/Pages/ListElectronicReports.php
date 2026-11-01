@@ -4,8 +4,8 @@ namespace App\Filament\Resources\ElectronicReports\Pages;
 
 use App\Filament\Pages\BillingHome;
 use App\Filament\Resources\ElectronicReports\ElectronicReportResource;
-use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListElectronicReports extends ListRecords
