@@ -39,4 +39,12 @@ TEXT);
 
         $this->assertSame("Votre pompe à chaleur\nVOTRE FACTURE DE CHAUFFAGE VA EXPLOSER\nL’État finance jusqu’à 100 % de l’installation.", $body);
     }
+
+    #[Test]
+    public function it_compacts_blank_lines_left_by_table_based_email_layouts(): void
+    {
+        $body = EmailBodyText::forDisplay("Titre\n \n\t\n\n\nPremier paragraphe\n\n  \n\nSecond paragraphe");
+
+        $this->assertSame("Titre\n\nPremier paragraphe\n\nSecond paragraphe", $body);
+    }
 }
