@@ -26,7 +26,7 @@ class ElectronicReportingBatchResource extends Resource
 
     protected static bool $shouldRegisterNavigation = false;
 
-    protected static ?string $pluralModelLabel = 'accusés e-reporting';
+    protected static ?string $pluralModelLabel = 'suivi des transmissions';
 
     protected static ?int $navigationSort = 73;
 

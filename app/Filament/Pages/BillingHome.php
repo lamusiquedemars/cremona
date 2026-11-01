@@ -57,9 +57,12 @@ class BillingHome extends Page
         return [
             'create_invoice' => InvoiceResource::getUrl('create'),
             'sales' => InvoiceResource::getUrl('index'),
+            'drafts' => InvoiceResource::getUrl('index').'?tab=drafts',
+            'to_collect' => InvoiceResource::getUrl('index').'?tab=to-collect',
             'received' => IncomingInvoiceResource::getUrl('index'),
             'reports' => ElectronicReportResource::getUrl('index'),
-            'receipts' => ElectronicReportingBatchResource::getUrl('index'),
+            'reports_to_review' => ElectronicReportResource::getUrl('index').'?tab=to-review',
+            'transmissions' => ElectronicReportingBatchResource::getUrl('index'),
         ];
     }
 }
