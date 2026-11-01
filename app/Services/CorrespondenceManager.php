@@ -15,6 +15,7 @@ use App\Models\EmailMailbox;
 use App\Models\IncomingRequest;
 use App\Models\MessageThreadCandidate;
 use App\Models\User;
+use App\Support\EmailReplyContent;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Support\Facades\DB;
 use LogicException;
@@ -156,19 +157,21 @@ class CorrespondenceManager
 
         return DB::transaction(function () use ($conversation, $body, $participants, $author, $subject, $mailbox): ConversationMessage {
             $previous = $conversation->messages()->latest('authored_at')->first();
+            $content = EmailReplyContent::fromMarkdown($body);
             $message = $conversation->messages()->create([
                 'email_mailbox_id' => $mailbox->getKey(),
                 'author_user_id' => $author->getKey(),
                 'direction' => MessageDirection::Outbound,
                 'channel' => MessageChannel::Email,
                 'subject' => $this->replySubject($subject ?? $conversation->subject),
-                'body_text' => $body,
+                'body_text' => $content['text'],
+                'body_html_sanitized' => $content['html'],
                 'in_reply_to' => $previous?->message_id,
                 'transport_status' => MessageTransportStatus::Draft,
                 'threading_status' => MessageThreadingStatus::Matched,
                 'payload_fingerprint' => $this->fingerprint([
                     'conversation' => $conversation->getKey(),
-                    'body' => $body,
+                    'body' => $content['text'],
                     'participants' => $participants,
                 ]),
                 'authored_at' => now(),
@@ -201,7 +204,7 @@ class CorrespondenceManager
 
     private function replySubject(?string $subject): string
     {
-        $subject = trim((string) $subject);
+        $subject = trim((string) $subject) ?: 'Votre message';
 
         return preg_match('/^(?:re|r[eé]p)\s*:/ui', $subject) === 1
             ? $subject

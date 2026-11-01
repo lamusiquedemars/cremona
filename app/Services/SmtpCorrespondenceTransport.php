@@ -8,6 +8,8 @@ use App\Enums\MessageTransportStatus;
 use App\Models\ConversationMessage;
 use App\Models\EmailMailbox;
 use App\Support\EmailReplyComposer;
+use App\Support\EmailBodyText;
+use App\Support\WebsiteFormEmail;
 use LogicException;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 use Symfony\Component\Mime\Address;
@@ -83,13 +85,18 @@ class SmtpCorrespondenceTransport implements CorrespondenceTransport
             ->latest('authored_at')
             ->first();
         $author = $previous?->participants->firstWhere('role', MessageParticipantRole::From);
+        $websiteForm = $previous === null ? null : WebsiteFormEmail::parse(
+            $previous->subject ?? '',
+            $previous->body_text,
+        );
 
         return $this->replyComposer->compose(
             $message->body_text,
-            $previous?->body_text,
-            $author?->name ?: $author?->address ?: $previous?->author?->name ?: $previous?->mailbox?->display_name,
+            $websiteForm['message'] ?? ($previous === null ? null : EmailBodyText::forDisplay($previous->body_text)),
+            $websiteForm['name'] ?? $websiteForm['email'] ?? ($author?->name ?: $author?->address ?: $previous?->author?->name ?: $previous?->mailbox?->display_name),
             $previous?->authored_at,
             $message->organization->timezone(),
+            $message->body_html_sanitized,
         );
     }
 

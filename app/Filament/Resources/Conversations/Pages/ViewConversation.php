@@ -24,6 +24,7 @@ use App\Services\CorrespondenceManager;
 use App\Services\IncomingRequestManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -164,7 +165,16 @@ class ViewConversation extends BusinessViewRecord
                         ->label(__('cremona.crm.subject'))
                         ->default(fn (): string => $this->replySubject())
                         ->maxLength(255),
-                    Textarea::make('body')->label(__('cremona.crm.message'))->required()->rows(8)->maxLength(10000),
+                    MarkdownEditor::make('body')
+                        ->label(__('cremona.crm.message'))
+                        ->toolbarButtons([
+                            ['bold', 'italic', 'link'],
+                            ['bulletList', 'orderedList'],
+                            ['undo', 'redo'],
+                        ])
+                        ->minHeight('12rem')
+                        ->required()
+                        ->maxLength(10000),
                     ViewField::make('reply_context')
                         ->hiddenLabel()
                         ->view('filament.forms.reply-context', fn (): array => [
@@ -235,6 +245,11 @@ class ViewConversation extends BusinessViewRecord
     private function replySubject(): string
     {
         $subject = trim((string) $this->record->subject);
+        if ($subject === '') {
+            $subject = $this->record->initial_channel->value === 'website'
+                ? 'Message du site'
+                : 'Votre message';
+        }
 
         return preg_match('/^(?:re|r[eé]p)\s*:/ui', $subject) === 1
             ? $subject

@@ -14,13 +14,14 @@ class EmailReplyComposer
         ?string $quotedAuthor = null,
         ?DateTimeInterface $quotedAt = null,
         string $timezone = 'UTC',
+        ?string $replyHtml = null,
     ): array {
         $reply = trim($reply);
 
         if (blank($quotedBody) || $quotedAt === null) {
             return [
                 'text' => $reply,
-                'html' => $this->paragraphs($reply),
+                'html' => $replyHtml ?? $this->paragraphs($reply),
             ];
         }
 
@@ -31,7 +32,7 @@ class EmailReplyComposer
 
         return [
             'text' => $reply."\n\n{$introduction}\n".$this->quotedText($quotedBody),
-            'html' => $this->paragraphs($reply)
+            'html' => ($replyHtml ?? $this->paragraphs($reply))
                 .'<p style="margin: 24px 0 8px;">'.e($introduction).'</p>'
                 .'<blockquote style="margin: 0; padding-left: 16px; border-left: 2px solid #d1d5db; color: #4b5563;">'
                 .$this->lineBreaks($quotedBody)
