@@ -1,8 +1,41 @@
 # Avancement du plan directeur Cremona
 
-> Dernière mise à jour : 31 octobre 2026.
+> Dernière mise à jour : 1er novembre 2026.
 >
 > Ce document suit les livraisons du [plan directeur produit](plan-directeur-produit-cremona.md). Il ne remplace pas les critères de fin du plan.
+
+## Carte des responsabilités — Cremona et Site Core
+
+Le backlog est organisé par capacité et non par application. Une donnée a un
+propriétaire ; l'autre application peut en recevoir un lien, un état ou une
+projection en lecture seule, mais jamais une seconde fiche éditable.
+
+| Capacité | Propriétaire | Rôle de l'autre application | Décision produit |
+| --- | --- | --- | --- |
+| Pages, contenus, SEO, médias publics, formulaires et anti-spam | **Site Core** | Cremona reçoit uniquement l'événement métier d'un formulaire connecté | Le site reste disponible même si Cremona est indisponible. |
+| Contact commercial, demande, correspondance, tâche, rendez-vous, devis et document privé | **Cremona** | Site Core peut ouvrir l'espace de gestion, sans recopier le CRM | Une correspondance n'est transformée en demande que par une action explicite. |
+| Consentement marketing, audience, segments et campagnes | **Site Core + Brevo** | Cremona peut proposer une invitation à s'inscrire ; il ne peut jamais inscrire quelqu'un sans consentement | Un contact CRM et un abonné marketing sont deux choses distinctes. |
+| Catalogue éditorial autonome (ex. archets Arcus) | **Site Core** | Cremona conserve une référence stable et un snapshot commercial si un suivi le nécessite | Pas de deuxième catalogue éditable dans Cremona. |
+| Parc, stock, prestations et tarifs opérationnels (ex. Contempo) | **Pack métier Cremona** | Site Core affiche la sélection expressément publiée, avec ses médias et son SEO | La publication est une projection contrôlée, jamais une édition côté site. |
+| Facture légale, transmission réglementaire et paiement | **Super PDP / outil comptable** | Cremona prépare l'acte commercial et conserve numéro, statut, PDF/lien et solde utile | Une seule facture légale ; pas de comptabilité parallèle. |
+| Documents de travail et preuves privées | **Cremona / Scaleway privé** | Aucun accès public ; le site ne reçoit qu'un document public explicitement publié | Les fichiers sont hors des releases et téléchargés par lien authentifié. |
+
+### Règle catalogue à appliquer aux prochains sites
+
+Avant de construire un catalogue, répondre à quatre questions : quel objet est
+vendu ou présenté, qui modifie son prix et sa disponibilité, faut-il gérer un
+stock ou un cycle opérationnel, et où se fait sa publication publique ?
+
+- Si la réponse est éditoriale (fiche, récit, images, SEO, prix indicatif), le
+  catalogue vit dans **Site Core**.
+- Si la réponse engage une opération (unité physique, stock, location,
+  réservation, intervention, tarif applicable), il vit dans le **pack métier
+  Cremona**.
+- Un même objet ne peut avoir qu'un propriétaire. Une référence stable et un
+  snapshot sont préférés à une synchronisation bidirectionnelle.
+- Le noyau Cremona ne créera pas de `Product` universel : un instrument, une
+  pièce de stock, une prestation et une réalisation publiée n'ont pas le même
+  cycle de vie.
 
 ## Avancement
 
@@ -173,18 +206,25 @@ d'accord, de remise et de restitution sont également livrées.
 
 ### G. Correspondances et boîtes email
 
-- IMAP/SMTP permet de tester une boîte, relever ses messages et envoyer des
-  réponses depuis Cremona.
-- La relève actuelle est une capture d’historique en lecture seule : elle lit
-  les 50 messages récents d’INBOX et, si configuré, des Envoyés.
-- Elle ne suit ni la suppression, ni l’archivage, ni l’état lu d’un message
-  dans la boîte distante. Supprimer un email ne doit donc ni effacer ni clore
-  une demande ou une correspondance Cremona.
-- Un email direct importé crée une correspondance ; il ne crée pas encore une
-  demande liée dans la file de traitement commune.
+- IMAP/SMTP teste une boîte, relève ses messages et permet de répondre depuis
+  Cremona. La boîte Atelier Ivo est relevée automatiquement toutes les quinze
+  minutes, avec reprise incrémentale par UID IMAP.
+- Les formulaires des sites connectés créent une demande, une conversation et
+  un contact CRM. Les anciennes notifications email de formulaire sont aussi
+  reconnues et normalisées lorsqu'elles portent la signature connue du site.
+- Un email direct reste une **correspondance**. Il peut être rapproché d'un
+  contact existant ou devenir une demande par une action volontaire : cela
+  évite de fabriquer des prospects à partir du spam ou d'un simple échange.
+- La file **À traiter** rassemble les demandes, réponses attendues, tâches et
+  échéances proches. L'agenda affiche les éléments temporels sans les dupliquer.
+- Les réponses conservent un sujet utile, un historique lisible et un éditeur
+  riche limité à une mise en forme sûre. Les messages entrants sont rendus de
+  façon sûre : aucun CSS, script, pixel ou ressource distante ne s'exécute.
 
-État : **partiel**. La connexion technique ne suffit pas encore à offrir la
-file unique attendue pour la relation client.
+État : **opérationnel pour le pilote**. Le prochain lot ne consiste pas à
+interpréter le CSS d'un expéditeur : il conservera et rendra du HTML sémantique
+sanitisé avec les styles de Cremona, et gardera le texte compact actuel comme
+solution de repli pour les messages historiques ou malformés.
 
 ## Reste à faire prioritaire
 
@@ -196,11 +236,16 @@ file unique attendue pour la relation client.
 | P0 | Configuration des intégrations | Livré | Scaleway, Super PDP, Google Ads et Brevo sont présentés dans **Configuration de l’organisation**. Super PDP utilise le flux serveur automatique ; la sandbox Burger Queen de Contempo est validée `verified` en production. Les secrets restent côté serveur. |
 | P1 | Contrats de location | Livré | Contrat PDF versionné et figé, envoi d’un lien personnel, consultation des documents, acceptation nominative horodatée avec preuve, puis attestation de restitution sont opérationnels. Il s’agit d’une acceptation tracée, non d’une signature électronique qualifiée. |
 | P1 | Relation client unifiée | Livré | La file « À traiter » réunit les demandes du site, les messages nécessitant une réponse, les tâches ouvertes et les rendez-vous/appels planifiés en retard ou dans les sept jours. Un email importé ne devient une demande qu’à l’action explicite de l’équipe ; il conserve ainsi son historique sans créer de faux prospect. Les rendez-vous plus éloignés restent dans l’agenda. |
-| P1 | Messagerie client synchronisée | Partiel | La boîte réelle Atelier Ivo est relevée automatiquement toutes les 15 minutes. La relève est incrémentale par UID IMAP, reprend par lots et détecte une réinitialisation distante sans créer de doublons. Restent le rapprochement avec le client, la qualification explicite et la création proposée de tâches ou rendez-vous. L’e-mail alimentera la file et l’agenda ; il ne créera pas une seconde interface à surveiller. |
-| P1 | Bridge site ↔ Cremona | Partiel | Le contrat et l’outbox existent : soumission idempotente, authentifiée et rejouable. Valider deux organisations réelles, puis basculer Contempo sans supprimer son historique local. |
-| P0–P2 | Facturation électronique compatible | Partiel | Socle transverse et connecteur Super PDP présents ; Atelier Ivo Incidit est déjà raccordé selon confirmation d’Ivo. Restent la qualification fiscale, la fiabilité de l’émission, les corrections, la réception, l’e-reporting, la conservation et les preuves de compatibilité. Périmètre, dépendances et critères : [facturation et Super PDP](facturation-super-pdp.md#chantier-solution-compatible--périmètre-et-backlog). |
+| P1 | Catalogue : contrat de propriété et publication | À faire | Formaliser, dans Site Core et Cremona, le choix du propriétaire par catalogue, la référence stable, le snapshot, l'état de publication et la reprise. Commencer par un cas Site Core autonome (Arcus) et un cas métier (Contempo) ; aucun catalogue universel ni synchronisation bidirectionnelle. |
+| P1 | Messagerie : HTML sémantique sûr et pièces jointes | À faire | Conserver la source privée lorsque disponible, produire un HTML strictement sanitisé (paragraphes, listes, liens, tableaux simples) et le rendre avec le CSS de Cremona. Ajouter l'inventaire et le téléchargement authentifié des pièces jointes ; ne jamais charger de pixel, CSS ou script distant. |
+| P1 | Audience et consentement : parcours public + invitation CRM | À faire | Site Core possède l'inscription, la preuve de consentement, les segments et Brevo. Ajouter un parcours public de souscription/confirmation et, depuis Cremona, une action « inviter à s'inscrire » qui ne crée aucun abonné avant l'accord de la personne. |
+| P1 | Bridge site ↔ Cremona : recette multi-site | Partiel | L'outbox authentifiée, idempotente et rejouable est livrée. Valider deux sites et deux organisations réelles, y compris panne/reprise et visibilité des échecs ; basculer Contempo seulement après reprise contrôlée de son historique. |
+| P1 | Messagerie client synchronisée : qualification | Partiel | La relève automatique est active sur le pilote. Reste le rapprochement assisté d'un contact, puis la création proposée — jamais automatique — d'une tâche, d'un rendez-vous ou d'une demande à partir d'un email direct. |
+| P1 | Contrats de location : usage réel | Livré | Contrat PDF versionné, lien personnel, acceptation horodatée et attestation de restitution sont livrés. À confirmer sur des locations réelles ; la signature électronique qualifiée et les prélèvements sont hors périmètre. |
+| P1–P2 | Facturation électronique compatible | Partiel | Socle transverse et connecteur Super PDP présents ; la sandbox est validée. Restent les accès de l'entreprise réelle, qualification fiscale, émission fiable, annulation/correction, réception, e-reporting, conservation et preuves. Périmètre : [facturation et Super PDP](facturation-super-pdp.md#chantier-solution-compatible--périmètre-et-backlog). |
+| P2 | Présence en ligne et contenus | À faire | Dans Cremona, afficher les sites rattachés, leur état et des liens utiles, sans transformer Cremona en CMS. Les contenus et SEO restent édités dans Site Core. |
 | P2 | Administration commerciale | À faire | Écran par organisation : coordonnées émetteur, mentions, CGV, conditions, validité, aperçus, droits et réglages de numérotation. Les règles de devis actuelles sont opérationnelles. |
-| P2 | Agenda réel | Partiel | Les vues semaine et mois réunissent les sources internes déjà fiables : rendez-vous/appels, rappels, dossiers atelier planifiés et retours de location. Les essais métier, l’alimentation par la messagerie synchronisée et une éventuelle synchronisation Google/Outlook restent des lots distincts, après validation des règles de conflit. |
+| P2 | Agenda réel | Partiel | Les vues semaine et mois réunissent rendez-vous/appels, rappels, dossiers atelier planifiés et retours de location. Les essais métier, les propositions depuis email et une éventuelle synchronisation Google/Outlook restent des lots distincts avec règles de conflit explicites. |
 | P2 | Validation métier Contempo | À faire | Tester les parcours réels de réparation, location et vente avant toute automatisation, SEPA ou connecteur bancaire. |
 
 ## Dette de contrôle connue

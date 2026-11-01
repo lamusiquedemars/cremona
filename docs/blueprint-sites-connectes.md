@@ -2,7 +2,7 @@
 
 > Statut : décision d'architecture validée pour le prochain cycle de construction.
 >
-> Dernière mise à jour : 16 septembre 2026.
+> Dernière mise à jour : 1er novembre 2026.
 
 ## 1. But produit
 
@@ -101,6 +101,25 @@ Le propriétaire du catalogue dépend du cas :
   parc, du stock et des prestations ; le CMS reçoit la sélection publiable,
   son statut public et les médias autorisés.
 
+### Contrat de publication d'un catalogue métier
+
+Lorsqu'un pack Cremona est propriétaire, la publication vers Site Core est une
+projection à sens unique. Le contrat doit indiquer, pour chaque objet : son
+identifiant stable, son état public, le prix ou sa mention, les médias autorisés,
+la date de dernière projection et l'erreur éventuelle. Site Core compose la
+page, le référencement et les contenus éditoriaux ; il ne modifie ni la
+disponibilité, ni le stock, ni les prix opérationnels.
+
+Lorsqu'un catalogue Site Core est propriétaire, Cremona n'en reçoit pas une
+copie. Un parcours commercial peut enregistrer son identifiant stable et le
+snapshot nécessaire au devis, à l'essai ou au suivi. La fiche publique,
+sa disponibilité éditoriale et ses médias restent alors au site.
+
+Cette règle remplace toute idée de synchronisation universelle de « produits ».
+Avant un nouveau catalogue, il faut choisir son propriétaire et documenter le
+contrat ; si aucun cycle opérationnel ne le justifie, Site Core reste le choix
+par défaut.
+
 ## 6. Briques versionnées, sans copie de dossiers
 
 La cible est une installation guidée et mise à jour par version, non une copie
@@ -134,17 +153,18 @@ Livré :
 
 Reste à faire :
 
-1. terminer d’abord la file Relation client : visibilité de la relève IMAP,
-   règles de rapprochement et traitement explicite des emails directs ;
-2. vérifier le bridge avec deux organisations et une soumission réelle, sans
-   fuite ni doublon, puis finaliser la bascule Atelier Ivo sans supprimer Arcus
-   ni les historiques locaux ;
-3. valider les parcours réels réparation/reméchage, location et vente avec
+1. vérifier le bridge avec deux organisations et deux sites réels, y compris
+   les pannes, reprises, doublons et la visibilité d'un échec ;
+2. formaliser le contrat de publication des catalogues : un pilote Site Core
+   autonome (Arcus) et un pilote métier Cremona (Contempo) ;
+3. livrer l'inscription marketing publique et l'invitation depuis Cremona,
+   avec consentement démontrable et sans synchronisation globale des contacts ;
+4. faire évoluer la lecture d'email vers du HTML sémantique sanitisé et des
+   pièces jointes privées, sans exécuter de contenu d'expéditeur ;
+5. valider les parcours réels réparation/reméchage, location et vente avec
    Contempo avant toute automatisation supplémentaire ;
-4. raccorder le formulaire Contempo au bridge seulement après cette validation,
-   afin de supprimer la seconde file locale de demandes ;
-5. évaluer Pennylane séparément, seulement si l’intégration est autonome et
-   utile. Aucun import ni connecteur Dynamics n’est prévu.
+6. poursuivre Super PDP avec l'identité de l'entreprise réelle. Aucun import
+   Dynamics ni connecteur Pennylane obligatoire n'est prévu.
 
 Chaque étape a un plan de migration, un test de reprise et un retour arrière
 documenté. Aucun site existant n'est basculé ou nettoyé par une suppression
