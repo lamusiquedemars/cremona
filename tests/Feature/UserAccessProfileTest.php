@@ -11,11 +11,11 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Models\Organization;
 use App\Models\User;
+use App\Notifications\PasswordSetupLink;
 use App\Services\OrganizationModuleAccess;
 use App\Services\OrganizationModuleRegistry;
 use App\Services\UserPasswordSetupLink;
 use App\Tenancy\OrganizationContext;
-use Filament\Auth\Notifications\ResetPassword;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -220,11 +220,24 @@ class UserAccessProfileTest extends TestCase
         app(UserPasswordSetupLink::class)->send($member);
         app(UserPasswordSetupLink::class)->send($administrator);
 
-        Notification::assertSentTo($member, function (ResetPassword $notification): bool {
+        Notification::assertSentTo($member, function (PasswordSetupLink $notification): bool {
             return str_contains($notification->url, '/dashboard/password-reset/reset');
         });
-        Notification::assertSentTo($administrator, function (ResetPassword $notification): bool {
+        Notification::assertSentTo($administrator, function (PasswordSetupLink $notification): bool {
             return str_contains($notification->url, '/platform/password-reset/reset');
         });
+    }
+
+    public function test_password_setup_links_use_a_french_invitation_email(): void
+    {
+        $user = User::factory()->create();
+        $notification = app(PasswordSetupLink::class, ['token' => 'test-token']);
+        $notification->url = 'https://cremona.test/dashboard/password-reset/reset?token=test-token';
+
+        $mail = $notification->toMail($user);
+
+        $this->assertSame('Créez votre mot de passe Cremona', $mail->subject);
+        $this->assertSame('Bonjour,', $mail->greeting);
+        $this->assertSame('Créer mon mot de passe', $mail->actionText);
     }
 }

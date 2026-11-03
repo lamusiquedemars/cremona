@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
-use Filament\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+use App\Notifications\PasswordSetupLink;
 use Filament\Facades\Filament;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Support\Facades\Password;
@@ -22,7 +22,7 @@ final class UserPasswordSetupLink
         $status = Password::broker(Filament::getAuthPasswordBroker())->sendResetLink(
             ['email' => $user->email],
             function (CanResetPassword $notifiable, string $token) use ($panel): void {
-                $notification = app(ResetPasswordNotification::class, ['token' => $token]);
+                $notification = app(PasswordSetupLink::class, ['token' => $token]);
                 $notification->url = $panel->getResetPasswordUrl($token, $notifiable);
                 $notifiable->notify($notification);
             },
