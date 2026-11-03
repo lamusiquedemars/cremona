@@ -17,6 +17,7 @@ use App\Services\OrganizationModuleRegistry;
 use App\Services\UserPasswordSetupLink;
 use App\Tenancy\OrganizationContext;
 use Filament\Facades\Filament;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -239,5 +240,6 @@ class UserAccessProfileTest extends TestCase
         $this->assertSame('Créez votre mot de passe Cremona', $mail->subject);
         $this->assertSame('Bonjour,', $mail->greeting);
         $this->assertSame('Créer mon mot de passe', $mail->actionText);
+        $this->assertNotInstanceOf(ShouldQueue::class, $notification);
     }
 }

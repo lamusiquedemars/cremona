@@ -27,7 +27,7 @@ APP_LOCALE=fr
 APP_FALLBACK_LOCALE=fr
 DB_CONNECTION=mysql
 DB_PREFIX=cremona_
-QUEUE_CONNECTION=database
+QUEUE_CONNECTION=sync
 CACHE_STORE=database
 SESSION_DRIVER=database
 ```
@@ -113,8 +113,11 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-4. Configurer une tâche cron LWS qui appelle `php artisan schedule:run` chaque
-   minute, et un processus de file d'attente pour `php artisan queue:work`.
+4. Configurer une tâche cron LWS qui appelle `php artisan schedule:run` toutes
+   les cinq minutes. La configuration actuelle utilise une file synchrone : les
+   e-mails d’accès sont envoyés immédiatement et aucun worker permanent n’est
+   requis. Un worker dédié ne sera ajouté que lorsqu’un traitement métier lourd
+   le justifiera.
 
 ## Après la publication
 
