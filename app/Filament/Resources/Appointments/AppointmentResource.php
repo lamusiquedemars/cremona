@@ -14,6 +14,8 @@ use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
 use App\Filament\Resources\People\PersonResource;
 use App\Models\Appointment;
+use App\Models\Conversation;
+use App\Models\IncomingRequest;
 use App\Services\OrganizationPresentation;
 use App\Tenancy\OrganizationContext;
 use BackedEnum;
@@ -158,11 +160,13 @@ class AppointmentResource extends Resource
                         Select::make('incoming_request_id')
                             ->label(__('common.request_origin'))
                             ->relationship('incomingRequest', 'subject')
+                            ->getOptionLabelFromRecordUsing(static::incomingRequestOptionLabel(...))
                             ->searchable(['subject', 'name_snapshot'])
                             ->preload(),
                         Select::make('conversation_id')
                             ->label(__('common.conversation'))
                             ->relationship('conversation', 'subject')
+                            ->getOptionLabelFromRecordUsing(static::conversationOptionLabel(...))
                             ->searchable()
                             ->preload(),
                     ]),
@@ -203,6 +207,16 @@ class AppointmentResource extends Resource
                         ]),
                     ]),
             ]);
+    }
+
+    public static function incomingRequestOptionLabel(IncomingRequest $request): string
+    {
+        return $request->subject ?: $request->name_snapshot ?: 'Demande sans objet';
+    }
+
+    public static function conversationOptionLabel(Conversation $conversation): string
+    {
+        return $conversation->subject ?: 'Correspondance sans objet';
     }
 
     public static function infolist(Schema $schema): Schema

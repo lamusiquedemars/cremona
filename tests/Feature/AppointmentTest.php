@@ -9,6 +9,7 @@ use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\People\PersonResource;
 use App\Models\Appointment;
 use App\Models\Conversation;
+use App\Models\IncomingRequest;
 use App\Models\Organization;
 use App\Models\Person;
 use App\Models\User;
@@ -159,6 +160,30 @@ class AppointmentTest extends TestCase
             ->assertForbidden();
         $this->assertTrue(AppointmentResource::hasPage('create'));
         $this->assertTrue(AppointmentResource::hasPage('edit'));
+    }
+
+    public function test_the_appointment_form_handles_requests_and_conversations_without_a_subject(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            IncomingRequest::query()->create([
+                'source_channel' => 'email',
+                'name_snapshot' => 'Demande reçue sans objet',
+                'message' => 'Bonjour, je souhaite prendre rendez-vous.',
+                'payload_fingerprint' => hash('sha256', 'appointment-request-without-subject'),
+            ]);
+            Conversation::query()->create(['initial_channel' => 'email']);
+        });
+
+        [$request, $conversation] = app(OrganizationContext::class)->run($organization, fn (): array => [
+            IncomingRequest::query()->sole(),
+            Conversation::query()->sole(),
+        ]);
+
+        $this->assertSame('Demande reçue sans objet', AppointmentResource::incomingRequestOptionLabel($request));
+        $this->assertSame('Correspondance sans objet', AppointmentResource::conversationOptionLabel($conversation));
     }
 
     public function test_an_appointment_is_visible_from_its_contact_page(): void
