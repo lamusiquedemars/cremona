@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrganizationPermission;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\BrevoConnections\BrevoConnectionResource;
 use App\Models\Organization;
@@ -43,6 +44,7 @@ class BrevoConnectionTest extends TestCase
         $administrator = User::factory()->create();
         $administrator->organizations()->attach($organization, [
             'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageOrganizationSettings->value]],
         ]);
 
         $integration = app(OrganizationContext::class)->run($organization, function () use ($administrator): OrganizationIntegration {
@@ -85,6 +87,7 @@ class BrevoConnectionTest extends TestCase
         $collaborator = User::factory()->create();
         $administrator->organizations()->attach($organization, [
             'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageOrganizationSettings->value]],
         ]);
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,

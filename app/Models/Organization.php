@@ -115,6 +115,11 @@ class Organization extends Model
         return $this->hasMany(Appointment::class);
     }
 
+    public function appointmentTypes(): HasMany
+    {
+        return $this->hasMany(AppointmentType::class);
+    }
+
     public function conversations(): HasMany
     {
         return $this->hasMany(Conversation::class);

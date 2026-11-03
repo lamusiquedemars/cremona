@@ -245,6 +245,29 @@ Un archet, une intervention de lutherie, un dossier juridique ou un chantier ne 
 
 **À ne pas faire :** renommer seulement « Rendez-vous » en « Agenda ».
 
+#### C.1 Motifs de rendez-vous et réservation externe
+
+Un rendez-vous doit expliciter une intention métier, et non seulement occuper un
+créneau. Chaque organisation peut donc définir ses **motifs de rendez-vous** :
+intitulé, durée habituelle, précisions internes, offre commerciale facultative
+et, le cas échéant, intitulé correspondant dans Brevo Meetings. Le motif n’est
+pas une ligne de devis et ne crée jamais automatiquement un devis ; il rend le
+parcours compréhensible et prépare seulement la suite commerciale.
+
+Brevo Meetings est une source de réservation publique optionnelle. Cremona est
+le registre opérationnel : une connexion est isolée par organisation, reçoit
+les événements réservation, début et annulation, rapproche le contact par son
+email lorsque ce rapprochement est certain, et conserve les rendez-vous Brevo
+en lecture seule. La configuration doit être reproductible : connexion du
+compte Brevo, URL de réservation, génération d’un jeton propre à
+l’organisation, configuration des webhooks, réservation de contrôle et état
+de recette. Aucun secret Brevo ne figure dans le CMS ni dans les données d’une
+autre organisation.
+
+Le pilote **Demo Maracuja** démarre avec : projet web, diagnostic numérique,
+démonstration de l’administration, suivi client et assistance. Ces exemples
+ne sont jamais injectés dans les organisations clientes.
+
 ### D. Offre et premier module métier validé
 
 **But :** construire la première capacité de l'offre à partir d'un métier réel.

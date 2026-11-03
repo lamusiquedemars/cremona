@@ -102,6 +102,12 @@ class AppointmentResource extends Resource
                             ->label(__('common.subject'))
                             ->required()
                             ->maxLength(255),
+                        Select::make('appointment_type_id')
+                            ->label('Motif du rendez-vous')
+                            ->relationship('appointmentType', 'label', fn ($query) => $query->where('is_active', true))
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Choisissez un motif pour donner un contexte commercial au rendez-vous.'),
                         Grid::make(2)->schema([
                             DateTimePicker::make('starts_at')
                                 ->label(__('common.start'))
@@ -226,6 +232,7 @@ class AppointmentResource extends Resource
             ->components([
                 Section::make(fn (): string => app(OrganizationPresentation::class)->label('appointments', 'Rendez-vous'))->columnSpan(2)->schema([
                     TextEntry::make('title')->label(__('common.subject'))->weight('semibold')->size('lg'),
+                    TextEntry::make('appointmentType.label')->label('Motif du rendez-vous')->placeholder('—'),
                     TextEntry::make('description')->label(__('common.internal_information'))->placeholder('—'),
                     Grid::make(2)->schema([
                         TextEntry::make('starts_at')->label(__('common.start'))->dateTime('d/m/Y H:i'),
@@ -281,6 +288,7 @@ class AppointmentResource extends Resource
             ->columns([
                 TextColumn::make('starts_at')->label(__('common.date'))->dateTime('d/m/Y H:i')->sortable(),
                 TextColumn::make('title')->label(__('common.appointment'))->searchable()->weight('medium')->sortable(),
+                TextColumn::make('appointmentType.label')->label('Motif')->placeholder('—')->toggleable(),
                 TextColumn::make('person.display_name')->label(__('common.contact'))->placeholder('—')->searchable()->sortable(),
                 TextColumn::make('modality')->label(__('common.modality'))->badge()->sortable(),
                 TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
