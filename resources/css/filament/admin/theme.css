@@ -94,6 +94,26 @@ body.fi-body {
     min-width: 68rem;
 }
 
+/* Correspondence subjects can be unusually long (especially imported e-mails).
+   A fixed layout keeps the date visible and prevents sorting from resizing the
+   whole table around the longest subject. */
+.correspondence-table .fi-ta-table {
+    table-layout: fixed;
+}
+
+.correspondence-table .fi-ta-header-cell-subject,
+.correspondence-table .fi-ta-cell-subject {
+    width: 18rem;
+    max-width: 18rem;
+}
+
+.correspondence-table .fi-ta-cell-subject > .fi-ta-col {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Long business actions remain readable inside their compact action menu. */
 .fi-dropdown-list-item {
     align-items: flex-start;

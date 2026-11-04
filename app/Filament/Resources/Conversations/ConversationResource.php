@@ -102,6 +102,7 @@ class ConversationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->extraAttributes(['class' => 'correspondence-table'])
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('latestInboundMessage.participants'))
             ->defaultSort('last_message_at', 'desc')
             ->columns([
@@ -112,7 +113,7 @@ class ConversationResource extends Resource
                 ->weight('medium')
                 ->limit(96)
                 ->tooltip(fn (?string $state): ?string => filled($state) ? $state : null)
-                ->width('28rem')
+                ->width('18rem')
                 ->grow(false)
                 ->sortable(),
             TextColumn::make('sender')
@@ -131,7 +132,13 @@ class ConversationResource extends Resource
                 ->sortable(),
             TextColumn::make('status')->label(__('cremona.crm.status'))->badge()->toggleable()->sortable(),
             TextColumn::make('assignedUser.name')->label(__('cremona.crm.assignee'))->placeholder(__('cremona.crm.unassigned'))->toggleable(isToggledHiddenByDefault: true)->sortable(),
-            TextColumn::make('last_message_at')->label(__('cremona.crm.last_message'))->dateTime('d/m/Y H:i')->toggleable(isToggledHiddenByDefault: true)->sortable(),
+            TextColumn::make('last_message_at')
+                ->label(__('cremona.crm.last_message'))
+                ->dateTime('d/m/Y H:i')
+                ->width('10rem')
+                ->grow(false)
+                ->toggleable()
+                ->sortable(),
         ])->filters([
             SelectFilter::make('status')->label(__('cremona.crm.status'))->options(ConversationStatus::class),
             SelectFilter::make('initial_channel')
