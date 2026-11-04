@@ -113,7 +113,7 @@ class ConversationResource extends Resource
                 ->weight('medium')
                 ->limit(96)
                 ->tooltip(fn (?string $state): ?string => filled($state) ? $state : null)
-                ->width('18rem')
+                ->width('24rem')
                 ->grow(false)
                 ->sortable(),
             TextColumn::make('sender')
@@ -135,8 +135,6 @@ class ConversationResource extends Resource
             TextColumn::make('last_message_at')
                 ->label(__('cremona.crm.last_message'))
                 ->dateTime('d/m/Y H:i')
-                ->width('10rem')
-                ->grow(false)
                 ->toggleable()
                 ->sortable(),
         ])->filters([
