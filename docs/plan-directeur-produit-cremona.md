@@ -2,7 +2,7 @@
 
 > Statut : cap produit validé, plan de réalisation à lancer par étapes.
 >
-> Dernière mise à jour : 8 octobre 2026.
+> Dernière mise à jour : 4 novembre 2026.
 >
 > Ce document est la référence de reprise du chantier. Il décrit la cible ; il ne vaut pas autorisation de supprimer, migrer ou masquer une capacité sans audit, tests et validation explicite.
 >
@@ -324,11 +324,40 @@ exister sans preuve adaptée.
 
 **But :** rendre les résultats lisibles sans confondre les sources.
 
-#### F1. Campagnes
+#### F1. Audience marketing : pont CRM → Site Core
+
+Le CRM et l’audience marketing ont des propriétaires distincts : Cremona reste
+propriétaire du client, de ses coordonnées de travail et de sa relation
+commerciale ; Site Core reste propriétaire des destinataires, de leur preuve
+de consentement, de leurs segments, de leur désinscription et de l’envoi Brevo.
+Un contact CRM n’est jamais inscrit automatiquement à une campagne.
+
+Le pont à construire est volontairement limité : depuis la fiche d’un contact
+CRM, un utilisateur autorisé pourra **inviter à s’inscrire** aux communications
+d’un site rattaché. L’invitation identifie le site et le contact CRM de manière
+signée, isolée par organisation et limitée dans le temps. Elle ouvre un
+parcours public Site Core où la personne confirme librement son inscription.
+Seule cette confirmation crée ou met à jour le destinataire marketing et
+enregistre son consentement.
+
+Cremona pourra ensuite afficher, en lecture seule, un état minimal retourné
+par Site Core : aucune invitation, invitation en attente, inscription
+confirmée ou désinscription. Il ne modifie ni les segments, ni l’accord, ni la
+liste Brevo. Le site autonome conserve l’intégralité de ses parcours Audience
+sans dépendre de Cremona ; aucune importation massive des contacts CRM vers
+une campagne ou vers Brevo n’est admise.
+
+Critères de fin : action explicite et auditée, choix du site ciblé, lien à
+usage limité, preuve de consentement conservée côté Site Core, rapprochement
+par identifiant stable plutôt que par simple email, état projeté sans seconde
+fiche éditable, refus strict des organisations, sites ou jetons non autorisés,
+tests d’expiration, de doublon, de désinscription et de panne/reprise.
+
+#### F2. Campagnes
 
 Conserver le module existant : synchronisation, statuts expliqués, mots-clés, écarts de configuration et actions explicites. Ne pas réintroduire un aperçu de création dans le pilotage d'une campagne déjà diffusée.
 
-#### F2. Résultats : audit et frontière avec Campagnes
+#### F3. Résultats : audit et frontière avec Campagnes
 
 | Information | Campagnes | Résultats |
 | --- | --- | --- |
@@ -343,7 +372,7 @@ L'écran Résultats affiche toujours période, fuseau, source, dernière synchro
 
 La future connexion GA4 est centrale et en lecture de statistiques agrégées via l'API Google Analytics Data. Elle est distincte de Tag Manager et de la pose de balises sur les sites.
 
-#### F3. Référencement
+#### F4. Référencement
 
 Présenter recherches, pages trouvées, clics, impressions et tendances issus de Search Console. Employer un langage métier ; ne nommer Search Console que dans les connexions ou l'aide. Ne pas fabriquer de score SEO opaque.
 
