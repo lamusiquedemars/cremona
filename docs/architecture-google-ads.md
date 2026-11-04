@@ -1,7 +1,7 @@
 # Architecture Google Ads de Cremona
 
 > Cette architecture complète le runbook canonique
-> `maracuja-cms-starter/docs/google-acquisition-runbook.md`. Le Starter décrit
+> `maracuja-site/docs/acquisition-system-plan.md`. Maracuja Site décrit
 > GA4, GTM, Search Console et le site ; ce document décrit exclusivement le
 > rôle d’agence Cremona, ses secrets et ses publications Ads.
 
