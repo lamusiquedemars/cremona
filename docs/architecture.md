@@ -3,12 +3,12 @@
 ## Responsabilité du produit
 
 Cremona est la plateforme métier multi-organisation interne de Maracuja Digital.
-Elle ne remplace pas Maracuja CMS Starter, qui reste responsable des sites
+Elle ne remplace pas Maracuja Site, qui reste responsable des sites
 publics indépendants. Les clients n'ont pas à connaître le nom Cremona : ils
 utilisent, lorsque nécessaire, un espace de gestion à leur identité.
 
 ```text
-Sites publics Maracuja CMS
+Sites publics Maracuja Site
         ↓ API sécurisée
 Cremona
         ├── noyau commun
