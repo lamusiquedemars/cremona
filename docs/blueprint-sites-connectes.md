@@ -18,14 +18,14 @@ l'autre application, ni double édition d'une même donnée.
 
 ## 2. Deux profils d'offre
 
-| Profil | CMS Maracuja | Espace de gestion Cremona |
+| Profil | Maracuja Site | Espace de gestion Cremona |
 | --- | --- | --- |
 | **Site vitrine autonome** | Site, contenu, médias, SEO, formulaires, emails et éventuellement liste locale des demandes | absent |
 | **Site connecté à la gestion** | Site, contenu, médias publics, SEO, formulaire et communication marketing | demandes, contacts, emails directs, correspondances, tâches, rendez-vous, devis et modules métier |
 
-Le formulaire public reste toujours une capacité du CMS : affichage, validation,
+Le formulaire public reste toujours une capacité de Maracuja Site : affichage, validation,
 anti-spam, accusé de réception et disponibilité du site. Dans le profil
-connecté, le traitement métier est changé : le CMS transmet l'événement à
+connecté, le traitement métier est changé : Maracuja Site transmet l'événement à
 Cremona et son écran local `Inquiries` est désactivé ou masqué. Il ne doit pas
 rester deux files de demandes à traiter.
 
@@ -36,7 +36,7 @@ politique de reprise des demandes locales existantes.
 ## 3. Demandes et correspondances : parcours canonique connecté
 
 ```text
-Formulaire CMS ─┐
+Formulaire Site ─┐
 Email direct ───┼→ Cremona : contact, demande, conversation et suivi
 Téléphone ──────┤
 Rencontre ──────┘
@@ -46,16 +46,16 @@ Rencontre ──────┘
 
 - Le formulaire appelle une API Cremona versionnée par une outbox rejouable ;
   la clé d'idempotence empêche un doublon lors d'une nouvelle tentative.
-- Le formulaire CMS crée ou rapproche le contact, puis crée la demande et le
+- Le formulaire Site crée ou rapproche le contact, puis crée la demande et le
   message initial avec la source exacte (`site`, `email`, `telephone`,
   `rencontre`, etc.).
 - La relève IMAP actuelle importe les emails directs comme correspondances.
   La transformation ou le rattachement explicite en demande relève du chantier
   Relation client : la suppression d’un email dans la boîte distante ne doit
   jamais supprimer ni fermer une donnée Cremona.
-- Un lien « Gestion commerciale » dans l'admin CMS ouvre l'organisation
+- Un lien « Gestion commerciale » dans l'administration Site ouvre l'organisation
   Cremona concernée. Il n'encastre pas une seconde application dans Filament.
-- La connexion unique entre CMS et gestion est une évolution explicite ; elle
+- La connexion unique entre Site et gestion est une évolution explicite ; elle
   ne doit pas retarder le premier flux, qui peut ouvrir l'espace sécurisé par
   lien distinct.
 
@@ -63,15 +63,15 @@ Rencontre ──────┘
 
 | Donnée | Propriétaire | Projection autorisée |
 | --- | --- | --- |
-| Pages, actualités, SEO, thème, médias publics | CMS | état ou lien vers Cremona |
-| Formulaire public, validation, anti-spam | CMS | événement de demande vers Cremona |
-| Demande, contact CRM, conversation, email direct, tâche, rendez-vous, devis | Cremona | lien ou résumé non éditable dans le CMS |
-| Consentement newsletter, segments et campagnes Brevo | CMS + Brevo | signal ciblé depuis Cremona après consentement explicite |
+| Pages, actualités, SEO, thème, médias publics | Maracuja Site | état ou lien vers Cremona |
+| Formulaire public, validation, anti-spam | Maracuja Site | événement de demande vers Cremona |
+| Demande, contact CRM, conversation, email direct, tâche, rendez-vous, devis | Cremona | lien ou résumé non éditable dans le Site |
+| Consentement newsletter, segments et campagnes Brevo | Site + Brevo | signal ciblé depuis Cremona après consentement explicite |
 | Devis et son PDF | Cremona | identifiant, PDF/lien et statut vers un outil comptable, si une intégration est décidée |
 | Facture, paiement | outil comptable choisi, notamment Pennylane si retenu | identifiant, PDF/lien et statut dans Cremona |
 | Catalogue métier | **un seul propriétaire choisi par objet** | projection publique ou commerciale en lecture seule |
 
-Le CMS et Cremona ne synchronisent jamais l'ensemble de leurs contacts. Un
+Maracuja Site et Cremona ne synchronisent jamais l'ensemble de leurs contacts. Un
 événement transmet seulement ce qui est nécessaire à son but : une demande du
 site ouvre un contact CRM ; un consentement marketing explicite peut créer ou
 mettre à jour un abonné Brevo.
@@ -94,11 +94,11 @@ si l'utilisateur la qualifie et la transforme explicitement en ligne de devis :
 
 Le propriétaire du catalogue dépend du cas :
 
-- **Atelier Ivo, état actuel** : Arcus/CMS reste propriétaire des archets et de
+- **Atelier Ivo, état actuel** : Arcus/Site reste propriétaire des archets et de
   leur catalogue public ; Cremona référence et capture les informations utiles
   au suivi commercial sans maintenir un second catalogue éditable.
 - **Contempo, cible connectée** : le pack Luthier/Cremona est propriétaire du
-  parc, du stock et des prestations ; le CMS reçoit la sélection publiable,
+  parc, du stock et des prestations ; le Site reçoit la sélection publiable,
   son statut public et les médias autorisés.
 
 ### Contrat de publication d'un catalogue métier
@@ -125,7 +125,7 @@ par défaut.
 La cible est une installation guidée et mise à jour par version, non une copie
 de fichiers entre projets :
 
-1. le CMS conserve ses modules natifs versionnés, dont `ContactForm`, `Gallery`
+1. Maracuja Site conserve ses modules natifs versionnés, dont `ContactForm`, `Gallery`
    et `Audience` ;
 2. un module optionnel **Cremona Bridge** apporte la configuration du lien,
    l'outbox, la signature des appels, les reprises et le lien de gestion ;
@@ -145,7 +145,7 @@ départ : activation explicite, contrôle des prérequis, migrations et tests.
 
 Livré :
 
-1. le contrat du bridge CMS ↔ Cremona et le socle du bridge ;
+1. le contrat du bridge Site ↔ Cremona et le socle du bridge ;
 2. le socle commercial de Cremona : modèles de lignes, devis, PDF,
    coordonnées légales et numérotation ;
 3. le pack Luthier : parc, stock, prestations, dossier atelier, location et
