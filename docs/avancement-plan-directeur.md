@@ -1,8 +1,8 @@
 # Avancement du plan directeur Cremona
 
-> Dernière mise à jour : 28 octobre 2026.
+> Dernière mise à jour : 4 novembre 2026.
 >
-> Ce document suit les livraisons du [plan directeur produit](plan-directeur-produit-cremona.md). Il ne remplace pas les critères de fin du plan.
+> Ce document suit les livraisons du [plan directeur produit](plan-directeur-produit-cremona.md). Il ne remplace pas les critères de fin du plan. Le backlog priorisé et les décisions inter-produits sont désormais dans ce plan ; cette page reste le journal des lots effectivement livrés.
 
 ## Avancement
 
@@ -54,16 +54,16 @@ auditer.
 
 - Les trois parcours Atelier Ivo sont cadrés dans [Flux métier Atelier Ivo](flux-metier-atelier-ivo.md).
 - Le profil de site autonome et le profil de site connecté, ainsi que leur
-  frontière CMS/Cremona, sont validés dans le
+  frontière Site/Cremona, sont validés dans le
   [Blueprint — sites autonomes et gestion connectée](blueprint-sites-connectes.md).
-- Une demande site reste captée par le CMS mais est traitée dans Cremona pour
+- Une demande site reste captée par Maracuja Site mais est traitée dans Cremona pour
   un site connecté. Le rapprochement des emails directs, appels et rencontres
   dans une même file reste à terminer.
-- Atelier Ivo conserve Arcus/CMS comme propriétaire de son catalogue ; Contempo
+- Atelier Ivo conserve Arcus/Site comme propriétaire de son catalogue ; Contempo
   est le pilote du futur pack Luthier propriétaire de son parc et de son stock.
-- Le contrat du bridge CMS ↔ Cremona est écrit : outbox, idempotence,
+- Le contrat du bridge Site ↔ Cremona est écrit : outbox, idempotence,
   authentification, reprise et bascule sans suppression des historiques.
-- Le bridge est livré sur le CMS instance : le mode connecté ne crée pas de
+- Le bridge est livré sur Maracuja Site : le mode connecté ne crée pas de
   demande locale, tente la transmission immédiatement et conserve une outbox
   chiffrée relançable par planificateur. Le pilote Atelier Ivo applique le même
   principe en production.
@@ -106,7 +106,7 @@ créée pour ce test.
 - Les instruments, prestations atelier, articles de stock, dossiers atelier,
   locations et lignes de devis réutilisables sont disponibles dans Cremona.
 - Les instruments gérés dans Cremona peuvent être publiés à sens unique sur le
-  catalogue public Contempo ; le CMS conserve la mise en page et le SEO.
+  catalogue public Contempo ; le Site conserve la mise en page et le SEO.
 - Le pack ne contient ni connecteur Dynamics ni intégration Pennylane :
   Dynamics n’est pas une cible et Pennylane sera évalué séparément.
 
@@ -174,7 +174,7 @@ rencontres et demandes du site.
   copie automatique des historiques.
 - Le disque privé Scaleway est livré comme option explicite par environnement,
   réservée aux documents confidentiels de Cremona. Les médias éditoriaux et
-  galeries du CMS restent dans leur site propriétaire.
+  galeries du Site restent dans leur site propriétaire.
 - Cremona diffuse les documents via sa route authentifiée après contrôle des
   droits ; le bucket ne devient pas public.
 
@@ -199,7 +199,11 @@ et téléchargement de contrôle non confidentiel.
 des membres à un administrateur client n’est pas engagée : elle doit être
 conçue séparément avec son périmètre de sécurité.
 
-## Reste à faire prioritaire
+## Priorités du lot précédent — archive de suivi
+
+> La liste ci-dessous est conservée pour comprendre les lots livrés jusqu'au
+> 28 octobre. L'ordre actif, qui intègre le cadrage des sources de vérité et du
+> SSO, est celui du [plan directeur produit](plan-directeur-produit-cremona.md).
 
 1. Valider le produit Relation client avec la boîte Atelier Ivo : rendre l’état
    de relève compréhensible et définir, à partir de cas réels, le rapprochement
@@ -215,7 +219,7 @@ conçue séparément avec son périmètre de sécurité.
    accord, remise, encaissement manuel, restitution et arrêt/ajustement de
    l'encaissement. Corriger ensuite uniquement les règles révélées par ce test ;
    aucun connecteur Dynamics, bancaire ou SEPA n'est engagé.
-5. Vérifier le bridge CMS ↔ Cremona avec deux organisations et une soumission
+5. Vérifier le bridge Site ↔ Cremona avec deux organisations et une soumission
    réelle, sans fuite ni doublon sur reprise ; basculer ensuite Atelier Ivo,
    puis Contempo, sans supprimer les historiques locaux.
 6. Auditer les sources de rendez-vous et tâches avant de commencer l’Agenda.

@@ -7,7 +7,7 @@
 
 Ce contrat applique le [Blueprint des sites autonomes et connectés](blueprint-sites-connectes.md).
 Il transforme le formulaire d'un site connecté en événement fiable vers
-Cremona, sans transformer le CMS en second CRM.
+Cremona, sans transformer Maracuja Site en second CRM.
 
 ## 1. État constaté
 
@@ -15,7 +15,7 @@ Cremona, sans transformer le CMS en second CRM.
 | --- | --- | --- |
 | Atelier Ivo | Le formulaire crée une `ContactSubmission`, une livraison chiffrée puis tente immédiatement `POST /api/v1/incoming-requests` | les indisponibilités temporaires restent locales et sont relancées par `cremona:retry-deliveries` |
 | Maracuja Site | Le mode connecté crée une livraison chiffrée sans `Inquiry` locale et tente immédiatement l'API | les indisponibilités temporaires sont relancées par `acquisition:retry-deliveries` ; le lien d'accès à la gestion reste à ajouter |
-| Contempo | `ContactForm` enregistre encore une `Inquiry` locale | activer le bridge CMS après le cadrage du pack Luthier et la reprise contrôlée des historiques |
+| Contempo | `ContactForm` enregistre encore une `Inquiry` locale | activer le bridge Site après le cadrage du pack Luthier et la reprise contrôlée des historiques |
 | Cremona | L'API `POST /api/v1/incoming-requests` est authentifiée par intégration, isolée par organisation, idempotente et restreint les références de site autorisées | exposer l'identifiant distant et l'état de réception utile au bridge |
 
 Le premier flux est désormais réutilisable sur une instance Maracuja Site. Le contrat
@@ -26,7 +26,7 @@ vérification réelle entre deux organisations.
 
 Le bridge est un module Site optionnel, activé seulement pour le profil « site
 connecté à la gestion ». Il ne crée ni contact CRM, ni demande locale, ni écran
-de traitement dans le CMS. Il assure uniquement :
+de traitement dans Maracuja Site. Il assure uniquement :
 
 1. la construction de l'événement depuis le formulaire validé ;
 2. son écriture atomique dans une outbox Site ;
@@ -41,7 +41,7 @@ pas présenté comme une deuxième boîte de réception.
 
 ## 3. Outbox Site
 
-Après validation du formulaire, et dans la même transaction locale, le CMS crée
+Après validation du formulaire, et dans la même transaction locale, Maracuja Site crée
 une ligne `cremona_outbox_messages` :
 
 | Champ | Rôle |
@@ -113,7 +113,7 @@ ou de sécurité impose une version `v2`.
 | `429`, `5xx`, indisponibilité réseau | échec transitoire ; rejouer |
 
 Cremona crée ou rapproche le contact selon ses règles CRM, crée la demande et
-sa conversation initiale, puis expose son identifiant et son statut. Le CMS ne
+sa conversation initiale, puis expose son identifiant et son statut. Maracuja Site ne
 reçoit pas le contenu de la conversation en retour.
 
 ## 5. Sécurité et isolation
@@ -121,13 +121,13 @@ reçoit pas le contenu de la conversation en retour.
 - Un jeton est créé pour une seule organisation et le secret n'est affiché
   qu'une fois ; Cremona ne conserve que son empreinte.
 - Le bridge conserve le secret uniquement dans l'environnement du site, jamais
-  en base, Git, export ou écran CMS.
+  en base, Git, export ou écran Site.
 - L'intégration de type `maracuja_site` doit lister les `site_reference`
   autorisés. L'API refuse un événement dont la référence n'est pas rattachée à
   cette organisation et à ce jeton.
 - La révocation du jeton bloque immédiatement les appels et rend l'état visible
   dans l'outbox ; la rotation crée un nouveau jeton avant révocation de l'ancien.
-- Les entrées sont limitées en taille, validées côté CMS et côté Cremona. Les
+- Les entrées sont limitées en taille, validées côté Site et côté Cremona. Les
   pièces jointes ne sont pas incluses dans ce premier contrat.
 - Chaque événement conserve son site source, son identifiant, ses tentatives et
   son résultat afin d'auditer une erreur sans exposer les secrets.
@@ -138,7 +138,7 @@ Le bridge ne traite pas les emails directs. Dans le profil connecté, la boîte
 professionnelle est relevée par l'intégration IMAP de l'organisation dans
 Cremona, où les réponses sont rédigées et envoyées.
 
-Le CMS peut continuer à envoyer l'accusé de réception du formulaire au visiteur.
+Maracuja Site peut continuer à envoyer l'accusé de réception du formulaire au visiteur.
 Son email d'alerte interne est désactivé pour éviter une seconde boîte de
 réception ; Cremona porte la notification de la nouvelle demande.
 
