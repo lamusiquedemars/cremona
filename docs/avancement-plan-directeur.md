@@ -16,7 +16,7 @@
   `Nouveau devis`, `Modifier · D260001`, ou simplement la référence du dossier
   consulté. Les intitulés génériques de type « Afficher … » ne servent plus de
   titre métier.
-- Une demande provenant de `maracuja-cms` affiche désormais « Formulaire du
+- Une demande provenant de `maracuja-site` affiche désormais « Formulaire du
   site ». L’identifiant technique est conservé en base pour le bridge, sans
   être imposé à l’utilisateur.
 - L'entrée **Clients** est livrée : une seule liste recherche les personnes et

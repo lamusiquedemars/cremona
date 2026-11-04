@@ -97,6 +97,6 @@ class DefaultInterfaceLocaleTest extends TestCase
 
     public function test_a_technical_cms_origin_has_a_business_label(): void
     {
-        $this->assertSame('Formulaire du site', IncomingRequestResource::sourceLabel('maracuja-cms'));
+        $this->assertSame('Formulaire du site', IncomingRequestResource::sourceLabel('maracuja-site'));
     }
 }
