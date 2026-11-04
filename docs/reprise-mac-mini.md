@@ -1,5 +1,10 @@
 # Reprise Cremona sur le Mac mini — mise à jour du 13 octobre 2026
 
+> Archive de livraison. Les chemins et échanges SFTP décrits plus bas sont
+> historiques et ne constituent plus une procédure de publication. Pour toute
+> intervention actuelle sur Cremona ou Atelier Ivo, appliquer exclusivement
+> [`deploiement-lws.md`](deploiement-lws.md) et l'accès SSH `maracuja-prod`.
+
 ## Reprise immédiate — parcours Location
 
 Branche à utiliser : `feat/admin-interface-translations`.

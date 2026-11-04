@@ -42,7 +42,8 @@ sites clients. Elle est activée seulement lorsque Cremona doit déposer de
 nouveaux documents métier confidentiels dans son bucket privé : contrats,
 expertises et pièces de location.
 
-Ajouter au `.env` de Cremona, exclusivement par le canal SFTP sécurisé :
+Ajouter au `.env` de Cremona exclusivement depuis le compte SSH de production
+`maracuja-prod` ; ne jamais les transmettre par le chat ou les versionner :
 
 ```env
 PRIVATE_DOCUMENTS_DISK=scaleway_private
@@ -64,24 +65,31 @@ Le détail fonctionnel est dans `docs/stockage-documents-prives.md`.
 
 ### Répartition opérationnelle permanente
 
-- L’agent prépare et envoie les fichiers via le SFTP LWS déjà configuré dans
-  `/Users/ivocorreiademelo/Sites/.vscode/sftp.json`.
-- Ivo ne travaille pas sur une copie locale : il exécute uniquement les
-  commandes Laravel indiquées par l’agent dans le terminal SSH LWS, depuis
-  `~/htdocs/cremona.maracujadigital.fr`, et en renvoie le résultat.
+- L’accès de référence est l’alias SSH local `maracuja-prod`, déjà autorisé
+  sur le compte cPanel partagé. Ne pas repartir des anciens profils SFTP ni
+  demander un mot de passe à Ivo avant de contrôler cet accès.
+- Cremona est dans `/home/cp2802197p33/apps/cremona` et se publie uniquement
+  avec `bash scripts/deploy-lws-release.sh`. La procédure crée une release
+  atomique et préserve le stockage partagé.
+- Atelier Ivo est un second dossier du même compte,
+  `/home/cp2802197p33/apps/atelierivoincidit`. Il n'utilise pas le mécanisme
+  de releases Cremona : toute publication y est ciblée, fichier par fichier,
+  après contrôle explicite du chemin.
 - Avant tout envoi, l’agent contrôle le répertoire distant. Il préserve
   systématiquement `.env`, `vendor`, `storage` et la base de données, sauf
   demande explicite contraire.
 
-Cette répartition vaut pour toutes les publications Cremona à venir.
+Cette topologie partagée vaut pour toutes les publications Cremona et Atelier
+à venir. Un nom de domaine FTP n’est jamais une preuve du compte ou du chemin
+de production.
 
 ### Configuration des secrets et intégrations Google Ads
 
 Les secrets Google ne transitent ni par le chat, ni par Git, ni par les écrans
 des organisations. L’agent installe les variables exclusivement dans le `.env`
-de production via le canal SFTP LWS existant, puis Ivo exécute seulement la
-reconstruction de cache indiquée. Avant cela, l’agent vérifie la présence des
-clés sans en lire ou afficher la valeur.
+de production via le compte SSH `maracuja-prod`, puis reconstruit les caches
+nécessaires. Avant cela, il vérifie la présence des clés sans en lire ou
+afficher la valeur.
 
 Les valeurs nécessaires sont centralisées une fois pour toute l’agence :
 
