@@ -3,15 +3,18 @@
 namespace App\Filament\Resources\IncomingRequests;
 
 use App\Enums\IncomingRequestStatus;
+use App\Enums\IncomingRequestOutcome;
 use App\Enums\IncomingRequestUrgency;
 use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\IncomingRequests\Pages\ListIncomingRequests;
 use App\Filament\Resources\IncomingRequests\Pages\ViewIncomingRequest;
 use App\Models\IncomingRequest;
+use App\Services\IncomingRequestManager;
 use App\Services\OrganizationPresentation;
 use BackedEnum;
-use Filament\Actions\ViewAction;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -24,7 +27,9 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 use UnitEnum;
 
 class IncomingRequestResource extends Resource
@@ -279,33 +284,39 @@ class IncomingRequestResource extends Resource
         return $table
             ->defaultSort('received_at', 'desc')
             ->columns([
+                TextColumn::make('subject')
+                    ->label(__('cremona.crm.subject'))
+                    ->description(fn (IncomingRequest $record): string => str($record->message)->squish()->limit(70))
+                    ->placeholder(__('cremona.crm.untitled'))
+                    ->searchable(['subject', 'message'])
+                    ->wrap()
+                    ->limit(96)
+                    ->tooltip(fn (?string $state): ?string => filled($state) ? $state : null)
+                    ->width('28rem')
+                    ->grow(false)
+                    ->sortable(),
                 TextColumn::make('name_snapshot')
-                    ->label(fn (): string => app(OrganizationPresentation::class)->label('contacts', 'Contact'))
+                    ->label('Expéditeur')
                     ->description(fn (IncomingRequest $record): ?string => $record->email_snapshot ?? $record->phone_snapshot)
                     ->placeholder(__('cremona.dashboard.anonymous'))
                     ->searchable(['name_snapshot', 'email_snapshot', 'phone_snapshot'])
                     ->sortable()
                     ->weight('medium'),
-                TextColumn::make('subject')
-                    ->label(fn (): string => app(OrganizationPresentation::class)->label('requests', 'Demande'))
-                    ->description(fn (IncomingRequest $record): string => str($record->message)->squish()->limit(70))
-                    ->placeholder(__('cremona.crm.untitled'))
-                    ->searchable(['subject', 'message'])
-                    ->wrap()
-                    ->sortable(),
                 TextColumn::make('status')
                     ->label(__('cremona.crm.status'))
                     ->badge()
+                    ->toggleable()
                     ->sortable(),
                 TextColumn::make('urgency')
                     ->label(__('cremona.request.urgency'))
                     ->badge()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 TextColumn::make('assignedUser.name')
                     ->label(__('cremona.crm.assignee'))
                     ->placeholder(__('cremona.crm.unassigned'))
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('received_at')
                     ->label(__('cremona.request.received'))
                     ->dateTime('d/m/Y H:i')
@@ -326,8 +337,38 @@ class IncomingRequestResource extends Resource
                     ->query(fn (Builder $query): Builder => $query->whereNull('assigned_user_id')),
             ])
             ->recordClasses(fn (IncomingRequest $record): ?string => $record->read_at === null ? 'crm-record-unread' : null)
-            ->recordActions([
-                ViewAction::make(),
+            ->bulkActions([
+                BulkActionGroup::make([
+                    BulkAction::make('markRead')
+                        ->label(__('cremona.crm.mark_as_read'))
+                        ->icon(Heroicon::OutlinedEnvelopeOpen)
+                        ->action(function (Collection $records): void {
+                            $manager = app(IncomingRequestManager::class);
+
+                            $records->each(function (IncomingRequest $record) use ($manager): void {
+                                Gate::authorize('update', $record);
+                                $manager->markRead($record, auth()->user());
+                            });
+                        }),
+                    BulkAction::make('closeWithoutFollowUp')
+                        ->label('Clore sans suite')
+                        ->icon(Heroicon::OutlinedArchiveBox)
+                        ->color('gray')
+                        ->requiresConfirmation()
+                        ->modalHeading('Clore les demandes sélectionnées ?')
+                        ->modalDescription('Elles resteront conservées et accessibles dans les demandes clôturées.')
+                        ->action(function (Collection $records): void {
+                            $manager = app(IncomingRequestManager::class);
+
+                            $records->each(function (IncomingRequest $record) use ($manager): void {
+                                Gate::authorize('update', $record);
+
+                                if ($record->status !== IncomingRequestStatus::Closed) {
+                                    $manager->transition($record, IncomingRequestStatus::Closed, IncomingRequestOutcome::NoFollowUp, auth()->user());
+                                }
+                            });
+                        }),
+                ]),
             ])
             ->recordUrl(fn (IncomingRequest $record): string => self::getUrl('view', ['record' => $record]));
     }

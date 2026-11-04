@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ConversationStatus;
 use App\Enums\MessageChannel;
+use App\Enums\MessageDirection;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use App\Tenancy\Concerns\ValidatesOrganizationAssignee;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -92,6 +93,13 @@ class Conversation extends Model
     public function latestMessage(): HasOne
     {
         return $this->hasOne(ConversationMessage::class)->latestOfMany('authored_at');
+    }
+
+    public function latestInboundMessage(): HasOne
+    {
+        return $this->hasOne(ConversationMessage::class)
+            ->where('direction', MessageDirection::Inbound)
+            ->latestOfMany('authored_at');
     }
 
     public function userStates(): HasMany
