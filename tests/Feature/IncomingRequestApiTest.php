@@ -136,7 +136,7 @@ class IncomingRequestApiTest extends TestCase
         return [
             'source' => [
                 'channel' => 'website',
-                'name' => 'maracuja-cms',
+                'name' => 'maracuja-site',
                 'site_reference' => 'site-42',
                 'form_reference' => 'contact-v1',
             ],

@@ -1,4 +1,4 @@
-# Contrat du bridge CMS ↔ Cremona
+# Contrat du bridge Site ↔ Cremona
 
 > Statut : spécification du premier lot à implémenter. Aucune bascule de site
 > existant n'est autorisée par ce document seul.
@@ -14,22 +14,22 @@ Cremona, sans transformer le CMS en second CRM.
 | Application | État actuel | Écart à combler |
 | --- | --- | --- |
 | Atelier Ivo | Le formulaire crée une `ContactSubmission`, une livraison chiffrée puis tente immédiatement `POST /api/v1/incoming-requests` | les indisponibilités temporaires restent locales et sont relancées par `cremona:retry-deliveries` |
-| CMS instance (Starter) | Le mode connecté crée une livraison chiffrée sans `Inquiry` locale et tente immédiatement l'API | les indisponibilités temporaires sont relancées par `acquisition:retry-deliveries` ; le lien d'accès à la gestion reste à ajouter |
+| Maracuja Site | Le mode connecté crée une livraison chiffrée sans `Inquiry` locale et tente immédiatement l'API | les indisponibilités temporaires sont relancées par `acquisition:retry-deliveries` ; le lien d'accès à la gestion reste à ajouter |
 | Contempo | `ContactForm` enregistre encore une `Inquiry` locale | activer le bridge CMS après le cadrage du pack Luthier et la reprise contrôlée des historiques |
 | Cremona | L'API `POST /api/v1/incoming-requests` est authentifiée par intégration, isolée par organisation, idempotente et restreint les références de site autorisées | exposer l'identifiant distant et l'état de réception utile au bridge |
 
-Le premier flux est désormais réutilisable sur une instance CMS. Le contrat
+Le premier flux est désormais réutilisable sur une instance Maracuja Site. Le contrat
 reste à achever sur l'observabilité de l'outbox, le lien de gestion et la
 vérification réelle entre deux organisations.
 
 ## 2. Responsabilité du bridge
 
-Le bridge est un module CMS optionnel, activé seulement pour le profil « site
+Le bridge est un module Site optionnel, activé seulement pour le profil « site
 connecté à la gestion ». Il ne crée ni contact CRM, ni demande locale, ni écran
 de traitement dans le CMS. Il assure uniquement :
 
 1. la construction de l'événement depuis le formulaire validé ;
-2. son écriture atomique dans une outbox CMS ;
+2. son écriture atomique dans une outbox Site ;
 3. sa transmission rejouable à Cremona ;
 4. la conservation d'une trace technique limitée ;
 5. un lien d'accès à l'espace de gestion configuré.
@@ -39,7 +39,7 @@ l'anti-spam et de l'accusé de réception. `Inquiries` est incompatible avec le
 mode connecté : il est désactivé pour la soumission courante et son menu n'est
 pas présenté comme une deuxième boîte de réception.
 
-## 3. Outbox CMS
+## 3. Outbox Site
 
 Après validation du formulaire, et dans la même transaction locale, le CMS crée
 une ligne `cremona_outbox_messages` :
@@ -83,7 +83,7 @@ L'API reçoit au minimum :
 {
   "source": {
     "channel": "website",
-    "name": "maracuja-cms",
+    "name": "maracuja-site",
     "site_reference": "contempo-luthiers",
     "form_reference": "contact"
   },
@@ -122,7 +122,7 @@ reçoit pas le contenu de la conversation en retour.
   qu'une fois ; Cremona ne conserve que son empreinte.
 - Le bridge conserve le secret uniquement dans l'environnement du site, jamais
   en base, Git, export ou écran CMS.
-- L'intégration de type `maracuja_cms` doit lister les `site_reference`
+- L'intégration de type `maracuja_site` doit lister les `site_reference`
   autorisés. L'API refuse un événement dont la référence n'est pas rattachée à
   cette organisation et à ce jeton.
 - La révocation du jeton bloque immédiatement les appels et rend l'état visible
@@ -146,7 +146,7 @@ réception ; Cremona porte la notification de la nouvelle demande.
 
 1. Créer l'organisation, le site rattaché et le jeton d'intégration dans
    Cremona ; vérifier l'organisation, le `site_reference` et l'URL cible.
-2. Installer/activer le bridge dans le CMS, renseigner ses seules variables
+2. Installer/activer le bridge dans Maracuja Site, renseigner ses seules variables
    d'environnement, puis lancer le contrôle de prérequis.
 3. En local, tester deux organisations et deux sites simulés ; une soumission de
    démonstration doit créer une seule demande et conversation dans la bonne
@@ -174,7 +174,7 @@ supprimés ; ils restent tracés et doivent être traités sans doublon.
 - deux sites et deux organisations ne peuvent pas se transmettre de données ;
 - une référence de site non autorisée, un jeton révoqué et un payload invalide
   sont refusés et observables ;
-- le CMS connecté n'affiche plus de boîte de demandes ni de compteur concurrent ;
+- le site connecté n'affiche plus de boîte de demandes ni de compteur concurrent ;
 - un email direct relevé par Cremona et un formulaire du site sont visibles dans
   le même espace organisationnel ;
 - l'historique local n'est ni supprimé ni modifié par la bascule.

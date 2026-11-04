@@ -268,7 +268,7 @@ class IncomingRequestResource extends Resource
     public static function sourceLabel(?string $source): string
     {
         return match ($source) {
-            'maracuja-cms' => 'Formulaire du site',
+            'maracuja-site' => 'Formulaire du site',
             null, '' => '—',
             default => $source,
         };
