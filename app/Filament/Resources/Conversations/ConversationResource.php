@@ -113,7 +113,9 @@ class ConversationResource extends Resource
                 ->weight('medium')
                 ->limit(96)
                 ->tooltip(fn (?string $state): ?string => filled($state) ? $state : null)
-                ->width('24rem')
+                ->wrap()
+                ->lineClamp(2)
+                ->width('27rem')
                 ->grow(false)
                 ->sortable(),
             TextColumn::make('sender')

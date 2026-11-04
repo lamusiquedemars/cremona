@@ -99,15 +99,12 @@ body.fi-body {
    width instead of sharing the remaining table space. */
 .correspondence-table .fi-ta-header-cell-subject,
 .correspondence-table .fi-ta-cell-subject {
-    width: 24rem;
-    max-width: 24rem;
+    width: 27rem;
+    max-width: 27rem;
 }
 
 .correspondence-table .fi-ta-cell-subject > .fi-ta-col {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
 }
 
 /* Long business actions remain readable inside their compact action menu. */
