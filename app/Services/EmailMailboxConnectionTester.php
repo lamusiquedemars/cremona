@@ -19,6 +19,8 @@ class EmailMailboxConnectionTester
             }
         }
 
+        $client = null;
+
         try {
             $client = (new ClientManager)->make([
                 'host' => $credentials['imap_host'],
@@ -31,10 +33,22 @@ class EmailMailboxConnectionTester
                 'authentication' => 'plain',
             ]);
             $client->connect();
-            $client->disconnect();
+            foreach (array_filter([
+                'reçu' => $mailbox->inbox_folder,
+                'envoyés' => $mailbox->sent_folder,
+            ]) as $role => $remoteName) {
+                if ($client->getFolder($remoteName) === null) {
+                    throw new LogicException("Le dossier IMAP {$role} configuré est introuvable.");
+                }
+            }
+        } catch (LogicException $exception) {
+            $this->fail($mailbox, $exception->getMessage());
+            throw $exception;
         } catch (Throwable) {
             $this->fail($mailbox, 'Connexion IMAP refusée. Vérifie le serveur, le port et les identifiants.');
             throw new LogicException('Connexion IMAP refusée. Vérifie le serveur, le port et les identifiants.');
+        } finally {
+            $client?->disconnect();
         }
         $mailbox->update(['status' => 'active', 'last_error_at' => null, 'last_error' => null]);
     }

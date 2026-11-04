@@ -48,7 +48,7 @@ class EmailMailboxSynchronizer
             foreach ($this->configuredFolders($mailbox) as $role => $remoteName) {
                 $folder = $client->getFolder($remoteName);
                 if ($folder === null) {
-                    throw new LogicException("Le dossier IMAP « {$remoteName} » est introuvable.");
+                    throw new LogicException("Le dossier IMAP {$role} configuré est introuvable.");
                 }
 
                 $trackedFolder = EmailFolder::query()->firstOrCreate(
@@ -94,7 +94,7 @@ class EmailMailboxSynchronizer
 
             return compact('imported', 'skipped');
         } catch (Throwable $exception) {
-            $message = 'La relève IMAP a échoué. Vérifie la boîte ou réessaie plus tard.';
+            $message = $this->failureMessage($exception);
             $mailbox->update(['status' => 'degraded', 'last_error_at' => now(), 'last_error' => $message]);
             $run->update(['status' => 'failed', 'finished_at' => now(), 'error_message' => $message]);
             throw $exception;
@@ -126,6 +126,19 @@ class EmailMailboxSynchronizer
         $client->connect();
 
         return $client;
+    }
+
+    private function failureMessage(Throwable $exception): string
+    {
+        if ($exception instanceof LogicException && (
+            str_starts_with($exception->getMessage(), 'Le dossier IMAP ')
+            || $exception->getMessage() === 'La configuration IMAP de cette boîte est incomplète.'
+            || $exception->getMessage() === 'Une relève de cette boîte est déjà en cours.'
+        )) {
+            return $exception->getMessage();
+        }
+
+        return 'La relève IMAP a échoué. Vérifie la boîte ou réessaie plus tard.';
     }
 
     /** @return array<string, string> */
@@ -222,7 +235,10 @@ class EmailMailboxSynchronizer
         $conversation = $this->findConversation($inReplyTo, $references)
             ?? Conversation::query()->create([
                 'initial_channel' => $isWebsiteFormNotification ? MessageChannel::Website : MessageChannel::Email,
-                'person_id' => $contact['person']->getKey() ?? null,
+                // A regular email has no website-form contact resolution. Null
+                // coalescing must happen before the property access, otherwise
+                // PHP raises an ErrorException while importing every such email.
+                'person_id' => ($contact['person'] ?? null)?->getKey(),
                 'subject' => $websiteForm['subject'] ?? ($isWebsiteFormNotification ? 'Message du site' : $subject),
                 'status' => ConversationStatus::Open,
             ]);
