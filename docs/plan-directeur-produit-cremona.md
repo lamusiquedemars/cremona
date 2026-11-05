@@ -2,7 +2,7 @@
 
 > Statut : cap produit validé, plan de réalisation à lancer par étapes.
 >
-> Dernière mise à jour : 4 novembre 2026.
+> Dernière mise à jour : 5 novembre 2026.
 >
 > Ce document est la référence de reprise du chantier. Il décrit la cible ; il ne vaut pas autorisation de supprimer, migrer ou masquer une capacité sans audit, tests et validation explicite.
 >
@@ -175,6 +175,52 @@ Les administrateurs plateforme conservent l'accès complet afin d'assurer la
 mise en place et le support.
 
 ## 4. Architecture à viser
+
+### Parcours commun — Assistant du site vers une demande suivie
+
+Une conversation publique sur un site Maracuja sert à comprendre la première
+intention du visiteur. Elle ne devient pas automatiquement une demande dans
+Cremona. La création d'une demande exige une demande explicite d'aide humaine,
+des coordonnées minimales et le consentement du visiteur.
+
+```text
+Site / Assistant IA
+  dialogue et qualification minimale
+  → coordonnées + consentement
+  → demande locale, origine « assistant »
+  → notification du site
+  → bridge idempotent
+Cremona
+  demande entrante, contact lié et suivi client
+```
+
+La responsabilité est volontairement répartie ainsi :
+
+- **Maracuja Site Core** fournit le dialogue, le recueil de consentement et la
+  création de la demande dans le même circuit que le formulaire public. Une
+  demande provenant de l'assistant ne constitue pas une seconde boîte de
+  réception ; elle garde seulement une origine et une référence de conversation.
+- **Le site** possède son adresse de notification et peut rester autonome : la
+  demande est alors suivie dans **Demandes reçues** sans dépendre de Cremona.
+- **Le bridge Site–Cremona** transmet une demande déjà consentie avec une clé
+  d'idempotence. Il ne transmet ni une conversation brute, ni une demande sans
+  coordonnées.
+- **Cremona** reçoit une demande identifiable, l'associe au contact et prend le
+  relais pour le suivi client, les correspondances, rendez-vous et tâches.
+- **Maracuja Control** enregistre l'activation et l'état de la connexion ; il
+  ne lit ni le contenu des conversations ni les secrets du site.
+
+Le cas existant de Marcos Túlio constitue la référence fonctionnelle : dialogue
+→ coordonnées et consentement → demande liée à la conversation → notification.
+Son code local doit être capitalisé dans Site Core, puis le site Marcos migré
+vers cette implémentation commune. Les réglages historiques de « rappel » ou
+« e-mail Assistant » ne doivent pas être présentés comme une fonction active
+tant qu'ils ne déclenchent pas ce parcours vérifié.
+
+**Critères de validation communs :** une demande unique, traçable et
+idempotente ; une notification configurée et testée ; un site autonome viable ;
+une transmission vers Cremona sans doublon ; aucun retrait de données ou de
+réglage historique avant migration et recette.
 
 ### Registre canonique des capacités
 
