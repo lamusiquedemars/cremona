@@ -24,10 +24,10 @@ use App\Models\MessageReference;
 use App\Models\MessageThreadCandidate;
 use App\Models\Organization;
 use App\Models\OrganizationIntegration;
+use App\Models\OrganizationInvoiceSettings;
 use App\Models\OrganizationLegalProfile;
 use App\Models\OrganizationMembership;
 use App\Models\OrganizationModule;
-use App\Models\OrganizationInvoiceSettings;
 use App\Models\OrganizationQuoteSettings;
 use App\Models\Person;
 use App\Models\PrivateDocument;
@@ -44,6 +44,7 @@ use App\Services\SmtpCorrespondenceTransport;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
@@ -65,6 +66,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // OAuth signing keys are credentials. In production storage/app is the
+        // shared persistent volume, unlike the rest of release-local storage.
+        Passport::loadKeysFrom(storage_path('app/passport'));
+        Passport::tokensCan([
+            'site:access' => 'Accéder au portail de gestion du site connecté.',
+        ]);
+        Passport::tokensExpireIn(now()->addHour());
+        Passport::refreshTokensExpireIn(now()->addDays(14));
+        Passport::authorizationView('auth.oauth.authorize');
+
         Relation::enforceMorphMap([
             'appointment' => Appointment::class,
             'campaign' => Campaign::class,

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use Laravel\Passport\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'is_platform_admin', 'status', 'invited_at', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
@@ -26,7 +27,7 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
     public const SUPER_ADMIN_EMAILS = ['ivo@maracujadigital.fr'];
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Get the attributes that should be cast.

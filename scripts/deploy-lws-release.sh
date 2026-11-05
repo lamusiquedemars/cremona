@@ -59,10 +59,27 @@ test "$(readlink -f "$STAGE_PATH/storage/app")" = "$shared_storage"
 
 # Le code et les dépendances peuvent être propres à une release ; jamais les médias.
 cp "$previous_release/.env" "$STAGE_PATH/.env"
-cp -al "$previous_release/vendor" "$STAGE_PATH/vendor"
+
+# Reprendre les dépendances par liens physiques reste sûr uniquement lorsque
+# composer.lock est identique. Dès qu'un package est ajouté (Passport, par
+# exemple), installer un vendor neuf : modifier un vendor hard-linké altérerait
+# la release précédente et rendrait un rollback illusoire.
+if cmp -s "$previous_release/composer.lock" "$STAGE_PATH/composer.lock"; then
+    cp -al "$previous_release/vendor" "$STAGE_PATH/vendor"
+else
+    composer --working-dir="$STAGE_PATH" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+fi
 
 cd "$STAGE_PATH"
 php artisan migrate --force
+
+# Les clés Passport signent les jetons OAuth. Elles sont créées une seule fois
+# dans storage/app, volume partagé entre releases, jamais dans le code livré.
+if [[ ! -f storage/app/passport/oauth-private.key || ! -f storage/app/passport/oauth-public.key ]]; then
+    mkdir -p storage/app/passport
+    php artisan passport:keys --force
+fi
+
 php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache

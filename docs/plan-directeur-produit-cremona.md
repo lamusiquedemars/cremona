@@ -442,6 +442,18 @@ Présenter recherches, pages trouvées, clics, impressions et tendances issus de
 
 Les secrets ne sont jamais placés dans les écrans métier, migrations, Git, exports ou chat. Les actions externes restent explicites et auditables.
 
+#### G1. Pilote SSO Demo Maracuja
+
+Le pilote `site.maracujadigital.fr` ↔ `demo-maracuja` est le premier cas de
+backoffice unifié. Cremona reste le propriétaire de l'identité, de
+l'appartenance à l'organisation, des modules et des droits. Le site présente
+les raccourcis que Cremona a explicitement autorisés ; il ne duplique ni les
+droits ni les données métier.
+
+Le flux retenu est OAuth 2.0 Authorization Code avec PKCE, sans iframe ni
+partage de cookie. La réalisation, les limites du pilote et la recette requise
+sont consignées dans [SSO — pilote Site et Cremona](sso-site-pilote.md).
+
 ### H. Adaptation métier de niveau 2
 
 **But :** simplifier les formulaires selon l'organisation, sans moteur de formulaires généraliste prématuré.

@@ -18,6 +18,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Portail Site → Cremona
+    |--------------------------------------------------------------------------
+    |
+    | Les clients OAuth publics sont enregistrés par site. Le client id n'est
+    | pas un secret : PKCE protège l'échange du code. Cette table de
+    | correspondance lie un client à une seule organisation.
+    |
+    */
+    'site_portal' => [
+        'clients' => array_filter([
+            env('CREMONA_SSO_DEMO_SITE_CLIENT_ID') => [
+                'organization' => 'demo-maracuja',
+                'site_name' => 'Maracuja Digital',
+                'site_url' => 'https://site.maracujadigital.fr/admin',
+                'items' => ['clients', 'requests', 'appointments', 'quotes'],
+            ],
+        ], fn (string $clientId): bool => filled($clientId), ARRAY_FILTER_USE_KEY),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Identité PWA
     |--------------------------------------------------------------------------
     |
