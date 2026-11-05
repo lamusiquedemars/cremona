@@ -1,6 +1,6 @@
 # Pilote SSO — Maracuja Site et Cremona
 
-> État : code prêt à déployer ; activation production à effectuer d'abord pour
+> État : pilote publié le 5 novembre 2026 pour
 > `site.maracujadigital.fr` et l'organisation `demo-maracuja`.
 
 ## But du pilote
@@ -43,6 +43,15 @@ et rôle Cremona, ainsi que la migration explicite des comptes locaux existants.
 Le pilote ne met pas encore en œuvre la déconnexion fédérée ni une console
 générique de raccordement de sites. Il doit d'abord être validé en réel.
 
+## Condition d'accès
+
+La possession d'un compte Cremona ne suffit pas : la personne doit être un
+membre actif de **Demo Maracuja** et disposer des droits correspondant aux
+modules affichés. C'est cette appartenance, et non l'adresse e-mail seule,
+qui autorise le site à créer sa session locale. Un compte local du site qui
+porte la même adresse mais n'est pas encore relié est volontairement refusé :
+son rattachement doit être explicite, jamais implicite.
+
 ## Activation de production
 
 1. Déployer Cremona, appliquer les migrations OAuth et créer les clés dans le
@@ -60,3 +69,17 @@ générique de raccordement de sites. Il doit d'abord être validé en réel.
 
 La clé OAuth est privée et persistante ; elle ne doit jamais être affichée,
 committée ni recréée à chaque release.
+
+## Recette du pilote publié
+
+1. Ouvrir `https://site.maracujadigital.fr/admin` et choisir la connexion
+   Cremona.
+2. Se connecter avec un membre actif de Demo Maracuja.
+3. Vérifier l'arrivée dans l'administration du site, puis les raccourcis
+   **Clients**, **Demandes**, **Rendez-vous** et **Devis** visibles selon les
+   droits du membre.
+4. Ouvrir un raccourci : Cremona doit afficher directement Demo Maracuja,
+   sans seconde authentification.
+
+Le compte de démonstration créé uniquement au niveau « plateforme » doit être
+ajouté à l'organisation avant de pouvoir achever cette recette.
