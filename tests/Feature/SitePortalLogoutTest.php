@@ -12,7 +12,7 @@ class SitePortalLogoutTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_an_authorized_site_origin_closes_the_central_session_and_returns_to_the_fixed_site_url(): void
+    public function test_a_valid_site_proof_closes_the_central_session_and_returns_to_the_fixed_site_url(): void
     {
         $organization = Organization::factory()->create(['slug' => 'site.maracujadigital.fr']);
         $user = User::factory()->create();
@@ -21,10 +21,10 @@ class SitePortalLogoutTest extends TestCase
 
         $state = str_repeat('a', 96);
         $response = $this->actingAs($user)
-            ->withHeader('Origin', 'https://site.example.test')
             ->post(route('site-portal.logout'), [
                 'client_id' => 'site-demo-client',
                 'state' => $state,
+                'signature' => $this->signature($state),
             ]);
 
         $response->assertRedirect('https://site.example.test/admin/sso/logout/complete?state='.$state)
@@ -32,7 +32,7 @@ class SitePortalLogoutTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_an_unexpected_origin_cannot_trigger_a_central_logout(): void
+    public function test_an_invalid_site_proof_cannot_trigger_a_central_logout(): void
     {
         $organization = Organization::factory()->create(['slug' => 'site.maracujadigital.fr']);
         $user = User::factory()->create();
@@ -40,17 +40,17 @@ class SitePortalLogoutTest extends TestCase
         $this->portalClient($organization);
 
         $this->actingAs($user)
-            ->withHeader('Origin', 'https://attacker.example.test')
             ->post(route('site-portal.logout'), [
                 'client_id' => 'site-demo-client',
                 'state' => str_repeat('a', 96),
+                'signature' => 'invalid',
             ])
             ->assertForbidden();
 
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_safari_referer_fallback_is_limited_to_the_configured_site_origin(): void
+    public function test_a_valid_site_proof_does_not_depend_on_browser_origin_headers(): void
     {
         $organization = Organization::factory()->create(['slug' => 'site.maracujadigital.fr']);
         $user = User::factory()->create();
@@ -58,10 +58,10 @@ class SitePortalLogoutTest extends TestCase
         $this->portalClient($organization);
 
         $this->actingAs($user)
-            ->withHeader('Referer', 'https://site.example.test/admin/sso/logout')
             ->post(route('site-portal.logout'), [
                 'client_id' => 'site-demo-client',
                 'state' => str_repeat('a', 96),
+                'signature' => $this->signature(str_repeat('a', 96)),
             ])
             ->assertRedirect('https://site.example.test/admin/sso/logout/complete?state='.str_repeat('a', 96));
 
@@ -75,10 +75,10 @@ class SitePortalLogoutTest extends TestCase
         $this->portalClient($organization);
 
         $this->actingAs($user)
-            ->withHeader('Origin', 'https://site.example.test')
             ->post(route('site-portal.logout'), [
                 'client_id' => 'site-demo-client',
                 'state' => str_repeat('a', 96),
+                'signature' => $this->signature(str_repeat('a', 96)),
             ])
             ->assertRedirect('https://site.example.test/admin/sso/logout/complete?state='.str_repeat('a', 96));
 
@@ -91,6 +91,12 @@ class SitePortalLogoutTest extends TestCase
             'organization' => $organization->slug,
             'site_url' => 'https://site.example.test/admin',
             'logout_redirect_uri' => 'https://site.example.test/admin/sso/logout/complete',
+            'logout_secret' => 'test-shared-secret',
         ]);
+    }
+
+    private function signature(string $state): string
+    {
+        return hash_hmac('sha256', 'site-demo-client|'.$state, 'test-shared-secret');
     }
 }

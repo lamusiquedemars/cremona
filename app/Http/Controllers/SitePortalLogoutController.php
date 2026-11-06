@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * OAuth 2.0 does not define a universal logout endpoint. We therefore keep
  * the contract deliberately narrow: a configured public client, its exact
- * browser Origin, a short state issued by the site, and a fixed return URL.
+ * HMAC proof, a short state issued by the site, and a fixed return URL.
  */
 final class SitePortalLogoutController extends Controller
 {
@@ -29,7 +29,9 @@ final class SitePortalLogoutController extends Controller
             filled($clientId)
             && strlen($state) === 96
             && is_array($portal)
-            && $this->hasExpectedOrigin($request, $portal)
+            && is_string($portal['logout_secret'] ?? null)
+            && filled($portal['logout_secret'])
+            && hash_equals(hash_hmac('sha256', $clientId.'|'.$state, $portal['logout_secret']), $request->string('signature')->toString())
             && is_string($portal['logout_redirect_uri'] ?? null),
             Response::HTTP_FORBIDDEN,
         );
@@ -62,52 +64,6 @@ final class SitePortalLogoutController extends Controller
             ->header('Referrer-Policy', 'no-referrer');
     }
 
-    /** @param array<string, mixed> $portal */
-    private function hasExpectedOrigin(Request $request, array $portal): bool
-    {
-        $origin = $this->requestOrigin($request);
-        $siteUrl = $portal['site_url'] ?? null;
-
-        if ($origin === '' || ! is_string($siteUrl)) {
-            return false;
-        }
-
-        $parts = parse_url($siteUrl);
-        if (! is_array($parts) || ! isset($parts['scheme'], $parts['host'])) {
-            return false;
-        }
-
-        $expected = $parts['scheme'].'://'.$parts['host'];
-        if (isset($parts['port'])) {
-            $expected .= ':'.$parts['port'];
-        }
-
-        return hash_equals($expected, $origin);
-    }
-
-    private function requestOrigin(Request $request): string
-    {
-        $origin = rtrim((string) $request->headers->get('Origin'), '/');
-        if ($origin !== '') {
-            return $origin;
-        }
-
-        // Safari may omit Origin for a cross-site HTML form POST. Its Referer
-        // still carries the site origin under the browser's default strict
-        // cross-origin policy. Only reduce it to an origin; never trust a path.
-        $referer = $request->headers->get('Referer');
-        $parts = is_string($referer) ? parse_url($referer) : null;
-        if (! is_array($parts) || ! isset($parts['scheme'], $parts['host'])) {
-            return '';
-        }
-
-        $origin = $parts['scheme'].'://'.$parts['host'];
-        if (isset($parts['port'])) {
-            $origin .= ':'.$parts['port'];
-        }
-
-        return $origin;
-    }
 
     private function completionUrl(string $url, string $state): string
     {

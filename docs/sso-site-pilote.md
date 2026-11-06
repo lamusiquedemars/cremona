@@ -43,22 +43,23 @@ l'ouverture à un client, il faudra concevoir la correspondance entre rôle Site
 et rôle Cremona, ainsi que la migration explicite des comptes locaux existants.
 
 La déconnexion fédérée est livrée pour le pilote. Le site émet un état aléatoire
-de cinq minutes conservé dans sa session, puis le transmet en POST à Cremona.
-Cremona accepte uniquement l'origine exacte du site enregistré, vérifie le
-client, l'organisation et l'utilisateur connecté, ferme sa session puis revient
-vers l'URL de fin de session déclarée. Le site compare l'état reçu et ferme sa
-propre session. L'URL de retour n'est jamais fournie par le navigateur et aucun
-jeton OAuth n'est conservé pour cette fonction.
+de cinq minutes conservé dans sa session, puis le transmet en POST à Cremona
+avec une preuve HMAC liée au client OAuth public et à cet état. Cremona vérifie
+le client, l'organisation, cette preuve et l'utilisateur connecté, ferme sa
+session puis revient vers l'URL de fin de session déclarée. Le site compare
+l'état reçu et ferme sa propre session. L'URL de retour n'est jamais fournie
+par le navigateur et aucun jeton OAuth n'est conservé pour cette fonction.
 
 OAuth 2.0 ne normalise pas la déconnexion fédérée. Cette mise en œuvre est donc
 un contrat interne, volontairement restreint à chaque site configuré ; un futur
 passage à OpenID Connect pourra le remplacer par le standard RP-Initiated
 Logout, sans changer l'expérience utilisateur.
 
-Safari peut omettre `Origin` pour un POST de formulaire entre domaines. Dans ce
-seul cas, Cremona contrôle l’origine exacte extraite de `Referer`, limitée au
-schéma, hôte et port déclarés du site. Aucun chemin ni URL de retour transmis
-par le navigateur n’est accepté.
+Cette preuve évite de dépendre des en-têtes `Origin` ou `Referer`, variables
+selon les navigateurs. Le secret HMAC est distinct pour chaque raccordement et
+reste uniquement dans les environnements du site et de Cremona ; il n'est ni
+dans Git ni dans le navigateur. Aucun chemin ni URL de retour transmis par le
+navigateur n’est accepté.
 
 ## Contrat d’URL et responsabilités
 

@@ -70,8 +70,8 @@ rarement utilisés.
 - Le site reste une instance isolée ; il ne reçoit ni mot de passe, ni secret
   OAuth, ni capacité métier qu’il n’a pas reçue dans le profil central.
 - La déconnexion est fédérée : une seule action ferme la session du site et la
-  session centrale. Le retour est fixe, l’origine du site est contrôlée et un
-  état court lié à la session empêche tout retour arbitraire.
+  session centrale. Le retour est fixe, une preuve HMAC propre au raccordement
+  et un état court lié à la session empêchent tout appel ou retour arbitraire.
 
 État : **pilote livré**. Avant industrialisation multi-sites : administrer les
 raccordements et la correspondance des rôles dans une console dédiée ; évaluer
