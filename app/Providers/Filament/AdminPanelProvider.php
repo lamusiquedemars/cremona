@@ -11,13 +11,11 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -48,12 +46,6 @@ class AdminPanelProvider extends PanelProvider
             ->tenantMenu()
             ->tenantSwitcher()
             ->searchableTenantMenu()
-            ->tenantMenuItems([
-                MenuItem::make()
-                    ->label(__('cremona.platform.all_organizations'))
-                    ->icon(Heroicon::OutlinedBuildingOffice2)
-                    ->url('/platform/organizations'),
-            ])
             ->tenantMiddleware([
                 SetActiveOrganization::class,
             ], isPersistent: true)

@@ -15,6 +15,7 @@ use App\Services\UserPasswordSetupLink;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
@@ -50,12 +51,12 @@ class UserResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user() instanceof User && auth()->user()->is_platform_admin;
+        return self::isPlatformContext() && auth()->user() instanceof User && auth()->user()->is_platform_admin;
     }
 
     public static function canAccess(): bool
     {
-        return auth()->user() instanceof User && auth()->user()->is_platform_admin;
+        return self::isPlatformContext() && auth()->user() instanceof User && auth()->user()->is_platform_admin;
     }
 
     public static function form(Schema $schema): Schema
@@ -195,5 +196,10 @@ class UserResource extends Resource
             OrganizationRole::Collaborator->value => 'Collaborateur : travaille dans les modules autorisés, sans gérer l’organisation.',
             default => 'Lecteur : consulte les modules autorisés sans modifier les données.',
         };
+    }
+
+    private static function isPlatformContext(): bool
+    {
+        return Filament::getCurrentPanel()?->getId() === 'platform';
     }
 }
