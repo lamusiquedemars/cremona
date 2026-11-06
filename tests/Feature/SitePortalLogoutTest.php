@@ -68,7 +68,7 @@ class SitePortalLogoutTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_a_central_user_without_access_to_the_site_organization_is_not_logged_out(): void
+    public function test_a_central_user_without_access_to_the_site_organization_is_not_logged_out_but_the_site_can_finish_its_logout(): void
     {
         $organization = Organization::factory()->create(['slug' => 'site.maracujadigital.fr']);
         $user = User::factory()->create();
@@ -80,7 +80,7 @@ class SitePortalLogoutTest extends TestCase
                 'client_id' => 'site-demo-client',
                 'state' => str_repeat('a', 96),
             ])
-            ->assertForbidden();
+            ->assertRedirect('https://site.example.test/admin/sso/logout/complete?state='.str_repeat('a', 96));
 
         $this->assertAuthenticatedAs($user);
     }

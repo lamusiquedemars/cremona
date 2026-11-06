@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -42,12 +43,18 @@ final class SitePortalLogoutController extends Controller
                 ->firstOrFail();
 
             // Never let a site sign out a different central account on a
-            // shared browser: the active central user must own this portal.
-            abort_unless($user->canAccessTenant($organization), Response::HTTP_FORBIDDEN);
-
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            // shared browser. The site can still close its own session; the
+            // central session remains intact when it is not the same space.
+            if ($user->canAccessTenant($organization)) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            } else {
+                Log::notice('Déconnexion fédérée limitée à la session du site.', [
+                    'reason' => 'central_user_has_no_portal_access',
+                    'client_id' => $clientId,
+                ]);
+            }
         }
 
         return redirect()
