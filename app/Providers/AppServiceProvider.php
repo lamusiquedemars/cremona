@@ -38,6 +38,7 @@ use App\Models\Rental;
 use App\Models\RentalAcceptanceRequest;
 use App\Models\RentalDocument;
 use App\Models\RentalReturn;
+use App\Models\SitePortalOAuthClient;
 use App\Models\User;
 use App\Services\FakeCorrespondenceTransport;
 use App\Services\SmtpCorrespondenceTransport;
@@ -69,6 +70,7 @@ class AppServiceProvider extends ServiceProvider
         // OAuth signing keys are credentials. In production storage/app is the
         // shared persistent volume, unlike the rest of release-local storage.
         Passport::loadKeysFrom(storage_path('app/passport'));
+        Passport::useClientModel(SitePortalOAuthClient::class);
         Passport::tokensCan([
             'site:access' => 'Accéder au portail de gestion du site connecté.',
         ]);
