@@ -29,7 +29,7 @@ return [
     'site_portal' => [
         'clients' => array_filter([
             env('CREMONA_SSO_DEMO_SITE_CLIENT_ID') => [
-                'organization' => 'demo-maracuja',
+                'organization' => 'site.maracujadigital.fr',
                 'site_name' => 'Maracuja Digital',
                 'site_url' => 'https://site.maracujadigital.fr/admin',
                 'items' => ['clients', 'requests', 'appointments', 'quotes'],

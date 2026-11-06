@@ -1,7 +1,8 @@
 # Pilote SSO — Maracuja Site et Cremona
 
 > État : pilote publié le 5 novembre 2026 pour
-> `site.maracujadigital.fr` et l'organisation `demo-maracuja`.
+> `site.maracujadigital.fr` et l'organisation `site.maracujadigital.fr`
+> (nom affiché : Demo Maracuja).
 
 ## But du pilote
 
