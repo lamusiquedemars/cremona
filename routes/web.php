@@ -7,6 +7,7 @@ use App\Http\Controllers\PublicStorageController;
 use App\Http\Controllers\QuotePdfController;
 use App\Http\Controllers\RentalAcceptanceController;
 use App\Http\Controllers\SitePortalLogoutController;
+use App\Http\Controllers\SitePortalSessionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,8 @@ Route::get('/', function () {
 
 Route::post('/site-portal/logout', SitePortalLogoutController::class)
     ->name('site-portal.logout');
+Route::get('/site-portal/session', SitePortalSessionController::class)
+    ->name('site-portal.session');
 
 Route::get('/location/acceptation/{token}', [RentalAcceptanceController::class, 'show'])->name('rental-acceptance.show');
 Route::post('/location/acceptation/{token}', [RentalAcceptanceController::class, 'accept'])->name('rental-acceptance.accept');

@@ -12,7 +12,7 @@ final class SitePortalNavigation
     public function for(User $user, Organization $organization, array $requestedItems): array
     {
         $definitions = [
-            'clients' => ['label' => 'Clients', 'module' => 'crm', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'clients'],
+            'clients' => ['label' => 'Clients', 'module' => 'crm', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'client-directory'],
             'requests' => ['label' => 'Demandes', 'module' => 'crm', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'incoming-requests'],
             'appointments' => ['label' => 'Rendez-vous', 'module' => 'appointments', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'appointments'],
             'quotes' => ['label' => 'Devis', 'module' => 'quotes', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'quotes'],
