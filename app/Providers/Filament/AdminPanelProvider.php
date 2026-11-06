@@ -6,16 +6,19 @@ use App\Filament\Auth\CremonaLogin;
 use App\Filament\Pages\ClientAgenda;
 use App\Http\Middleware\SetActiveOrganization;
 use App\Models\Organization;
+use App\Services\ConnectedSiteAdministration;
 use App\Services\OrganizationPresentation;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -54,6 +57,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->navigationGroups([
+                NavigationGroup::make('Site web'),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('customer_follow_up', 'Suivi client')),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('commercial_activity', 'Activité commerciale')),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('workshop', 'Atelier')),
@@ -61,6 +65,13 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('marketing', 'Marketing')),
                 NavigationGroup::make('Référentiels métier'),
                 NavigationGroup::make('Configuration de l’organisation'),
+            ])
+            ->navigationItems([
+                NavigationItem::make('Administration du site')
+                    ->group('Site web')
+                    ->icon(Heroicon::OutlinedGlobeAlt)
+                    ->url(fn (): ?string => app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))
+                    ->visible(fn (): bool => filled(app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -88,5 +99,12 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    private function currentOrganization(): ?Organization
+    {
+        $tenant = filament()->getTenant();
+
+        return $tenant instanceof Organization ? $tenant : null;
     }
 }
