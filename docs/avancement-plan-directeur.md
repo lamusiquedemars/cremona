@@ -62,6 +62,22 @@ Le lot transversal des titres et fils d’Ariane est livré ; restent les libell
 spécifiques de certains réglages d’administration et le contrôle des écrans
 rarement utilisés.
 
+### A.1. Accès unifié Site + gestion
+
+- Le pilote `site.maracujadigital.fr` délègue sa connexion à Cremona par OAuth
+  Authorization Code + PKCE : un seul compte ouvre l’administration du site et
+  les raccourcis métier autorisés de son organisation.
+- Le site reste une instance isolée ; il ne reçoit ni mot de passe, ni secret
+  OAuth, ni capacité métier qu’il n’a pas reçue dans le profil central.
+- La déconnexion est fédérée : une seule action ferme la session du site et la
+  session centrale. Le retour est fixe, l’origine du site est contrôlée et un
+  état court lié à la session empêche tout retour arbitraire.
+
+État : **pilote livré**. Avant industrialisation multi-sites : administrer les
+raccordements et la correspondance des rôles dans une console dédiée ; évaluer
+OpenID Connect seulement si le nombre de sites ou les besoins de fédération le
+justifient.
+
 ### B. Accueil et priorités quotidiennes
 
 - Lot B1 livré en production par le commit `dfb2183` : synthèse des demandes, correspondances, tâches, rendez-vous, devis et campagnes.

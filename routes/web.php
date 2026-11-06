@@ -6,6 +6,7 @@ use App\Http\Controllers\PrivateDocumentDownloadController;
 use App\Http\Controllers\PublicStorageController;
 use App\Http\Controllers\QuotePdfController;
 use App\Http\Controllers\RentalAcceptanceController;
+use App\Http\Controllers\SitePortalLogoutController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,9 @@ Route::get('/manifest.webmanifest', function () {
 Route::get('/', function () {
     return redirect('/platform/organizations');
 });
+
+Route::post('/site-portal/logout', SitePortalLogoutController::class)
+    ->name('site-portal.logout');
 
 Route::get('/location/acceptation/{token}', [RentalAcceptanceController::class, 'show'])->name('rental-acceptance.show');
 Route::post('/location/acceptation/{token}', [RentalAcceptanceController::class, 'accept'])->name('rental-acceptance.accept');

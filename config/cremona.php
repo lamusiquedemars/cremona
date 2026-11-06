@@ -32,6 +32,7 @@ return [
                 'organization' => 'site.maracujadigital.fr',
                 'site_name' => 'Maracuja Digital',
                 'site_url' => 'https://site.maracujadigital.fr/admin',
+                'logout_redirect_uri' => 'https://site.maracujadigital.fr/admin/sso/logout/complete',
                 'items' => ['clients', 'requests', 'appointments', 'quotes'],
             ],
         ], fn (string $clientId): bool => filled($clientId), ARRAY_FILTER_USE_KEY),

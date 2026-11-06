@@ -30,8 +30,9 @@ indépendantes ; seule l'identité est déléguée par Cremona.
 - La liste reçue est filtrée par modules activés **et** par droits individuels
   du membre. Le site ne peut jamais accorder un accès supplémentaire.
 
-Le premier passage peut demander à l'utilisateur de confirmer l'ouverture du
-portail. Passport conserve ensuite l'autorisation tant que le jeton est actif.
+Pour un site expressément déclaré et le seul périmètre `site:access`, Passport
+ouvre directement le portail après contrôle de l'appartenance : l'utilisateur
+ne voit pas un écran de consentement technique.
 
 ## Périmètre du pilote
 
@@ -41,8 +42,18 @@ autorisés de Demo Maracuja. Le rôle local par défaut est explicitement fixé 
 l'ouverture à un client, il faudra concevoir la correspondance entre rôle Site
 et rôle Cremona, ainsi que la migration explicite des comptes locaux existants.
 
-Le pilote ne met pas encore en œuvre la déconnexion fédérée ni une console
-générique de raccordement de sites. Il doit d'abord être validé en réel.
+La déconnexion fédérée est livrée pour le pilote. Le site émet un état aléatoire
+de cinq minutes conservé dans sa session, puis le transmet en POST à Cremona.
+Cremona accepte uniquement l'origine exacte du site enregistré, vérifie le
+client, l'organisation et l'utilisateur connecté, ferme sa session puis revient
+vers l'URL de fin de session déclarée. Le site compare l'état reçu et ferme sa
+propre session. L'URL de retour n'est jamais fournie par le navigateur et aucun
+jeton OAuth n'est conservé pour cette fonction.
+
+OAuth 2.0 ne normalise pas la déconnexion fédérée. Cette mise en œuvre est donc
+un contrat interne, volontairement restreint à chaque site configuré ; un futur
+passage à OpenID Connect pourra le remplacer par le standard RP-Initiated
+Logout, sans changer l'expérience utilisateur.
 
 ## Condition d'accès
 
@@ -81,6 +92,10 @@ committée ni recréée à chaque release.
    droits du membre.
 4. Ouvrir un raccourci : Cremona doit afficher directement Demo Maracuja,
    sans seconde authentification.
+5. Dans le menu utilisateur du site, choisir **Se déconnecter de l’espace**.
+   Le retour doit être la page de connexion du site. Rechoisir la connexion
+   doit demander les identifiants de l'espace central : aucune action dans
+   Cremona ne doit être demandée à l'utilisateur.
 
 Le compte de démonstration créé uniquement au niveau « plateforme » doit être
 ajouté à l'organisation avant de pouvoir achever cette recette.
