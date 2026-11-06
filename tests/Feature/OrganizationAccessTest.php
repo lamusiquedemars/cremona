@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\OrganizationRole;
+use App\Filament\Resources\Users\UserResource;
 use App\Models\Organization;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -65,6 +66,33 @@ class OrganizationAccessTest extends TestCase
         $this->assertTrue($administrator->canAccessTenant($active));
         $this->assertFalse($administrator->canAccessTenant($suspended));
         $this->assertSame([$active->id], $administrator->getTenants($panel)->pluck('id')->all());
+    }
+
+    public function test_a_platform_administrator_keeps_global_platform_shortcuts_from_an_organization_dashboard(): void
+    {
+        $administrator = User::factory()->platformAdministrator()->create();
+        $organization = Organization::factory()->create(['slug' => 'atelier-ivo-incidit']);
+
+        $this->actingAs($administrator)
+            ->get('/dashboard/'.$organization->slug)
+            ->assertOk()
+            ->assertSee('Plateforme Maracuja')
+            ->assertSee('Organisations')
+            ->assertSee('Utilisateurs et accès')
+            ->assertSee('/platform/organizations', false)
+            ->assertSee('/platform/users', false);
+    }
+
+    public function test_a_member_profile_url_can_target_the_platform_from_an_organization_context(): void
+    {
+        $member = User::factory()->create();
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+        $this->assertStringEndsWith(
+            '/platform/users/'.$member->getKey().'/edit',
+            UserResource::getUrl('edit', ['record' => $member], panel: 'platform'),
+        );
     }
 
     public function test_a_user_without_an_organization_cannot_access_the_panel(): void

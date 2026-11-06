@@ -71,7 +71,7 @@ class MembersRelationManager extends RelationManager
                     ->mutateFormDataUsing(fn (array $data): array => self::normalizeAccessData($data)),
                 Action::make('open_user')
                     ->label('Ouvrir la fiche utilisateur')
-                    ->url(fn (User $record): string => UserResource::getUrl('edit', ['record' => $record])),
+                    ->url(fn (User $record): string => UserResource::getUrl('edit', ['record' => $record], panel: 'platform')),
                 DetachAction::make()->label('Retirer de l’organisation'),
             ]);
     }

@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Organizations\OrganizationResource;
+use App\Filament\Resources\Users\UserResource;
 use App\Models\Campaign;
 use App\Models\Organization;
 use App\Models\OrganizationSite;
@@ -32,7 +33,8 @@ class PlatformOverview extends StatsOverviewWidget
                 ->color('info'),
             Stat::make(__('cremona.platform.user_accounts'), User::query()->count())
                 ->icon(Heroicon::OutlinedUsers)
-                ->color('gray'),
+                ->color('gray')
+                ->url(UserResource::getUrl('index', panel: 'platform')),
             Stat::make(__('cremona.platform.active_campaigns'), Campaign::withoutGlobalScopes()->where('status', 'active')->count())
                 ->icon(Heroicon::OutlinedMegaphone)
                 ->color('success'),

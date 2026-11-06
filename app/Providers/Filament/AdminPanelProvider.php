@@ -4,6 +4,9 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\CremonaLogin;
 use App\Filament\Pages\ClientAgenda;
+use App\Filament\Resources\Organizations\OrganizationResource;
+use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
 use App\Http\Middleware\SetActiveOrganization;
 use App\Models\Organization;
 use App\Services\ConnectedSiteAdministration;
@@ -65,6 +68,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('marketing', 'Marketing')),
                 NavigationGroup::make('Référentiels métier'),
                 NavigationGroup::make('Configuration de l’organisation'),
+                NavigationGroup::make('Plateforme Maracuja'),
             ])
             ->navigationItems([
                 NavigationItem::make('Administration du site')
@@ -72,6 +76,16 @@ class AdminPanelProvider extends PanelProvider
                     ->icon(Heroicon::OutlinedGlobeAlt)
                     ->url(fn (): ?string => app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))
                     ->visible(fn (): bool => filled(app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))),
+                NavigationItem::make('Organisations')
+                    ->group('Plateforme Maracuja')
+                    ->icon(Heroicon::OutlinedBuildingOffice2)
+                    ->url(fn (): string => OrganizationResource::getUrl('index', panel: 'platform'))
+                    ->visible(fn (): bool => auth()->user() instanceof User && auth()->user()->is_platform_admin),
+                NavigationItem::make('Utilisateurs et accès')
+                    ->group('Plateforme Maracuja')
+                    ->icon(Heroicon::OutlinedUsers)
+                    ->url(fn (): string => UserResource::getUrl('index', panel: 'platform'))
+                    ->visible(fn (): bool => auth()->user() instanceof User && auth()->user()->is_platform_admin),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
