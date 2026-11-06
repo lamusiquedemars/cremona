@@ -55,6 +55,23 @@ un contrat interne, volontairement restreint à chaque site configuré ; un futu
 passage à OpenID Connect pourra le remplacer par le standard RP-Initiated
 Logout, sans changer l'expérience utilisateur.
 
+Safari peut omettre `Origin` pour un POST de formulaire entre domaines. Dans ce
+seul cas, Cremona contrôle l’origine exacte extraite de `Referer`, limitée au
+schéma, hôte et port déclarés du site. Aucun chemin ni URL de retour transmis
+par le navigateur n’est accepté.
+
+## Contrat d’URL et responsabilités
+
+| Rôle | URL à utiliser | Responsabilité |
+| --- | --- | --- |
+| Visiteur | Domaine public du client | Contenus et formulaires publics. |
+| Membre ou administrateur de l’organisation | `https://site-client/admin` | Administration éditoriale et raccourcis métier autorisés. |
+| Administrateur Maracuja | Espace plateforme Cremona | Raccordement du site, utilisateurs, droits et sécurité. |
+
+`/admin/sso/redirect`, `/admin/sso/callback`, `/admin/sso/logout` et
+`/site-portal/logout` portent des échanges techniques courts. Ils ne sont pas
+des pages utilisateur et une consultation directe est refusée par conception.
+
 ## Condition d'accès
 
 La possession d'un compte Cremona ne suffit pas : la personne doit être un

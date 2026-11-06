@@ -58,7 +58,7 @@ final class SitePortalLogoutController extends Controller
     /** @param array<string, mixed> $portal */
     private function hasExpectedOrigin(Request $request, array $portal): bool
     {
-        $origin = rtrim((string) $request->headers->get('Origin'), '/');
+        $origin = $this->requestOrigin($request);
         $siteUrl = $portal['site_url'] ?? null;
 
         if ($origin === '' || ! is_string($siteUrl)) {
@@ -76,6 +76,30 @@ final class SitePortalLogoutController extends Controller
         }
 
         return hash_equals($expected, $origin);
+    }
+
+    private function requestOrigin(Request $request): string
+    {
+        $origin = rtrim((string) $request->headers->get('Origin'), '/');
+        if ($origin !== '') {
+            return $origin;
+        }
+
+        // Safari may omit Origin for a cross-site HTML form POST. Its Referer
+        // still carries the site origin under the browser's default strict
+        // cross-origin policy. Only reduce it to an origin; never trust a path.
+        $referer = $request->headers->get('Referer');
+        $parts = is_string($referer) ? parse_url($referer) : null;
+        if (! is_array($parts) || ! isset($parts['scheme'], $parts['host'])) {
+            return '';
+        }
+
+        $origin = $parts['scheme'].'://'.$parts['host'];
+        if (isset($parts['port'])) {
+            $origin .= ':'.$parts['port'];
+        }
+
+        return $origin;
     }
 
     private function completionUrl(string $url, string $state): string

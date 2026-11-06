@@ -50,6 +50,24 @@ class SitePortalLogoutTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_safari_referer_fallback_is_limited_to_the_configured_site_origin(): void
+    {
+        $organization = Organization::factory()->create(['slug' => 'site.maracujadigital.fr']);
+        $user = User::factory()->create();
+        $user->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
+        $this->portalClient($organization);
+
+        $this->actingAs($user)
+            ->withHeader('Referer', 'https://site.example.test/admin/sso/logout')
+            ->post(route('site-portal.logout'), [
+                'client_id' => 'site-demo-client',
+                'state' => str_repeat('a', 96),
+            ])
+            ->assertRedirect('https://site.example.test/admin/sso/logout/complete?state='.str_repeat('a', 96));
+
+        $this->assertGuest();
+    }
+
     public function test_a_central_user_without_access_to_the_site_organization_is_not_logged_out(): void
     {
         $organization = Organization::factory()->create(['slug' => 'site.maracujadigital.fr']);
