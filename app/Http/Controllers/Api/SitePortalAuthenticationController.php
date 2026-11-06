@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Services\SitePortalNavigation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
 
 final class SitePortalAuthenticationController extends Controller
@@ -18,7 +17,7 @@ final class SitePortalAuthenticationController extends Controller
         $data = $request->validate([
             'client_id' => ['required', 'string'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
+            'subject' => ['required', 'string', 'max:255'],
             'timestamp' => ['required', 'integer'],
             'signature' => ['required', 'string', 'size:64'],
         ]);
@@ -31,7 +30,7 @@ final class SitePortalAuthenticationController extends Controller
             && is_string($client['logout_secret'] ?? null)
             && abs(time() - (int) $data['timestamp']) <= 60
             && hash_equals(
-                hash_hmac('sha256', $data['client_id'].'|'.$email.'|'.$data['timestamp'], $client['logout_secret']),
+                hash_hmac('sha256', $data['client_id'].'|'.$data['subject'].'|'.$email.'|'.$data['timestamp'], $client['logout_secret']),
                 $data['signature'],
             ),
             Response::HTTP_UNAUTHORIZED,
@@ -47,7 +46,6 @@ final class SitePortalAuthenticationController extends Controller
         abort_unless(
             $user instanceof User
             && $user->isActive()
-            && Hash::check($data['password'], $user->password)
             && $user->canAccessTenant($organization),
             Response::HTTP_UNAUTHORIZED,
         );

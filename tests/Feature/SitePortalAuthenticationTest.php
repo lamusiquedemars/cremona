@@ -27,9 +27,9 @@ class SitePortalAuthenticationTest extends TestCase
         $this->postJson(route('api.v1.site-portal.authenticate'), [
             'client_id' => 'site-demo-client',
             'email' => 'CONTACT@example.test',
-            'password' => 'correct-password',
+            'subject' => 'site-user-42',
             'timestamp' => $timestamp,
-            'signature' => hash_hmac('sha256', 'site-demo-client|contact@example.test|'.$timestamp, 'test-shared-secret'),
+            'signature' => hash_hmac('sha256', 'site-demo-client|site-user-42|contact@example.test|'.$timestamp, 'test-shared-secret'),
         ])->assertOk()->assertJsonPath('email', 'contact@example.test');
     }
 }
