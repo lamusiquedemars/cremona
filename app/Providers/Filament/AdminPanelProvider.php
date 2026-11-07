@@ -6,11 +6,12 @@ use App\Filament\Auth\CremonaLogin;
 use App\Filament\Pages\ClientAgenda;
 use App\Filament\Resources\Organizations\OrganizationResource;
 use App\Filament\Resources\Users\UserResource;
-use App\Models\User;
 use App\Http\Middleware\SetActiveOrganization;
 use App\Models\Organization;
+use App\Models\User;
 use App\Services\ConnectedSiteAdministration;
 use App\Services\OrganizationPresentation;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -60,7 +61,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->navigationGroups([
-                NavigationGroup::make('Site web'),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('customer_follow_up', 'Suivi client')),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('commercial_activity', 'Activité commerciale')),
                 NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('workshop', 'Atelier')),
@@ -71,11 +71,6 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Plateforme Maracuja'),
             ])
             ->navigationItems([
-                NavigationItem::make('Administration du site')
-                    ->group('Site web')
-                    ->icon(Heroicon::OutlinedGlobeAlt)
-                    ->url(fn (): ?string => app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))
-                    ->visible(fn (): bool => filled(app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))),
                 NavigationItem::make('Organisations')
                     ->group('Plateforme Maracuja')
                     ->icon(Heroicon::OutlinedBuildingOffice2)
@@ -86,6 +81,13 @@ class AdminPanelProvider extends PanelProvider
                     ->icon(Heroicon::OutlinedUsers)
                     ->url(fn (): string => UserResource::getUrl('index', panel: 'platform'))
                     ->visible(fn (): bool => auth()->user() instanceof User && auth()->user()->is_platform_admin),
+            ])
+            ->userMenuItems([
+                Action::make('site-administration')
+                    ->label('Administration du site')
+                    ->icon(Heroicon::OutlinedGlobeAlt)
+                    ->url(fn (): ?string => app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))
+                    ->visible(fn (): bool => filled(app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

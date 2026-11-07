@@ -47,6 +47,17 @@ class SitePortalNavigationTest extends TestCase
         $this->assertSame([], $items);
     }
 
+    public function test_a_connected_site_can_link_to_the_organization_workspace_without_replicating_its_navigation(): void
+    {
+        $organization = Organization::factory()->create(['slug' => 'contempo-luthiers']);
+        $user = User::factory()->create();
+        $user->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
+
+        $items = app(SitePortalNavigation::class)->for($user, $organization, ['workspace']);
+
+        $this->assertSame([['key' => 'workspace', 'label' => 'Pilotage de l’activité', 'url' => url('/dashboard/contempo-luthiers')]], $items);
+    }
+
     public function test_a_member_never_receives_a_module_excluded_from_its_access_profile(): void
     {
         $organization = Organization::factory()->create(['slug' => 'demo-maracuja']);

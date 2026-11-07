@@ -50,6 +50,7 @@ class SitesRelationManager extends RelationManager
             TextInput::make('site_portal_client_id')->label('Identifiant public du site')->helperText('À reporter dans la configuration du site.')->maxLength(255),
             TextInput::make('site_portal_secret')->label('Secret partagé')->password()->revealable()->dehydrated(fn ($state): bool => filled($state))->helperText('À reporter dans la configuration du site. Il est chiffré au repos dans Cremona.'),
             CheckboxList::make('site_portal_items')->label('Raccourcis autorisés')->options([
+                'workspace' => 'Pilotage de l’activité (tableau de bord Cremona)',
                 'clients' => 'Clients',
                 'requests' => 'Demandes',
                 'appointments' => 'Rendez-vous',

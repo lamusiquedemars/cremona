@@ -21,7 +21,7 @@ final class ConnectedSiteAdministration
             ->first();
 
         if ($site instanceof OrganizationSite && filled($site->base_url)) {
-            return $site->base_url;
+            return rtrim($site->base_url, '/').'/admin';
         }
 
         // Compatibility with the deployed Demo Maracuja pilot until its
