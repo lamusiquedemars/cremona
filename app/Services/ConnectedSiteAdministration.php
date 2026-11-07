@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Organization;
+use App\Models\OrganizationSite;
 
 final class ConnectedSiteAdministration
 {
@@ -12,6 +13,19 @@ final class ConnectedSiteAdministration
             return null;
         }
 
+        $site = $organization->sites()
+            ->where('site_portal_enabled', true)
+            ->where('status', 'active')
+            ->whereNotNull('base_url')
+            ->orderBy('id')
+            ->first();
+
+        if ($site instanceof OrganizationSite && filled($site->base_url)) {
+            return $site->base_url;
+        }
+
+        // Compatibility with the deployed Demo Maracuja pilot until its
+        // connection has been registered in the platform console.
         foreach (config('cremona.site_portal.clients', []) as $client) {
             if (is_array($client)
                 && ($client['organization'] ?? null) === $organization->slug

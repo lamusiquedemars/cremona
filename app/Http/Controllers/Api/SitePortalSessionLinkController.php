@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Organization;
 use App\Models\User;
+use App\Services\SitePortalClientRegistry;
 use App\Services\SitePortalNavigation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class SitePortalSessionLinkController extends Controller
 {
-    public function __invoke(Request $request, SitePortalNavigation $navigation): JsonResponse
+    public function __invoke(Request $request, SitePortalNavigation $navigation, SitePortalClientRegistry $clients): JsonResponse
     {
         $data = $request->validate([
             'client_id' => ['required', 'string'],
@@ -25,21 +25,20 @@ final class SitePortalSessionLinkController extends Controller
             'signature' => ['required', 'string', 'size:64'],
         ]);
 
-        $client = config('cremona.site_portal.clients.'.$data['client_id']);
+        $client = $clients->find($data['client_id']);
         $email = strtolower($data['email']);
 
         abort_unless(
             is_array($client)
-            && is_string($client['logout_secret'] ?? null)
             && abs(time() - (int) $data['timestamp']) <= 60
             && hash_equals(
-                hash_hmac('sha256', implode('|', [$data['client_id'], $data['subject'], $email, $data['item'], $data['timestamp']]), $client['logout_secret']),
+                hash_hmac('sha256', implode('|', [$data['client_id'], $data['subject'], $email, $data['item'], $data['timestamp']]), $client['secret']),
                 $data['signature'],
             ),
             Response::HTTP_UNAUTHORIZED,
         );
 
-        $organization = Organization::query()->where('slug', $client['organization'] ?? null)->where('status', 'active')->firstOrFail();
+        $organization = $client['organization'];
         $user = User::query()->whereRaw('lower(email) = ?', [$email])->first();
         abort_unless($user instanceof User && $user->isActive() && $user->canAccessTenant($organization), Response::HTTP_UNAUTHORIZED);
 

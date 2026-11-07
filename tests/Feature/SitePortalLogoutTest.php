@@ -85,6 +85,33 @@ class SitePortalLogoutTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_a_platform_registered_site_can_complete_a_federated_logout(): void
+    {
+        $organization = Organization::factory()->create(['slug' => 'contempo']);
+        $user = User::factory()->create();
+        $user->organizations()->attach($organization, ['role' => OrganizationRole::Owner->value]);
+        $organization->sites()->create([
+            'name' => 'Contempo',
+            'base_url' => 'https://contempo.example.test',
+            'status' => 'active',
+            'site_portal_enabled' => true,
+            'site_portal_client_id' => 'contempo',
+            'site_portal_secret' => 'contempo-shared-secret',
+            'site_portal_logout_redirect_uri' => 'https://contempo.example.test/admin/sso/logout/complete',
+        ]);
+
+        $state = str_repeat('b', 96);
+        $this->actingAs($user)
+            ->post(route('site-portal.logout'), [
+                'client_id' => 'contempo',
+                'state' => $state,
+                'signature' => hash_hmac('sha256', 'contempo|'.$state, 'contempo-shared-secret'),
+            ])
+            ->assertRedirect('https://contempo.example.test/admin/sso/logout/complete?state='.$state);
+
+        $this->assertGuest();
+    }
+
     private function portalClient(Organization $organization): void
     {
         config()->set('cremona.site_portal.clients.site-demo-client', [

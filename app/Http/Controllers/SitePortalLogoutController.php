@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Organization;
 use App\Models\User;
+use App\Services\SitePortalClientRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,19 +19,19 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class SitePortalLogoutController extends Controller
 {
-    public function __invoke(Request $request): RedirectResponse
+    public function __invoke(Request $request, SitePortalClientRegistry $clients): RedirectResponse
     {
         $clientId = $request->string('client_id')->toString();
         $state = $request->string('state')->toString();
-        $portal = config("cremona.site_portal.clients.{$clientId}");
+        $portal = $clients->find($clientId);
 
         abort_unless(
             filled($clientId)
             && strlen($state) === 96
             && is_array($portal)
-            && is_string($portal['logout_secret'] ?? null)
-            && filled($portal['logout_secret'])
-            && hash_equals(hash_hmac('sha256', $clientId.'|'.$state, $portal['logout_secret']), $request->string('signature')->toString())
+            && is_string($portal['secret'] ?? null)
+            && filled($portal['secret'])
+            && hash_equals(hash_hmac('sha256', $clientId.'|'.$state, $portal['secret']), $request->string('signature')->toString())
             && is_string($portal['logout_redirect_uri'] ?? null),
             Response::HTTP_FORBIDDEN,
         );
@@ -39,10 +39,7 @@ final class SitePortalLogoutController extends Controller
         $user = Auth::user();
 
         if ($user instanceof User) {
-            $organization = Organization::query()
-                ->where('slug', $portal['organization'] ?? null)
-                ->where('status', 'active')
-                ->firstOrFail();
+            $organization = $portal['organization'];
 
             // Never let a site sign out a different central account on a
             // shared browser. The site can still close its own session; the
@@ -63,7 +60,6 @@ final class SitePortalLogoutController extends Controller
             ->away($this->completionUrl($portal['logout_redirect_uri'], $state))
             ->header('Referrer-Policy', 'no-referrer');
     }
-
 
     private function completionUrl(string $url, string $state): string
     {

@@ -16,6 +16,12 @@ final class SitePortalNavigation
             'requests' => ['label' => 'Demandes', 'module' => 'crm', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'incoming-requests'],
             'appointments' => ['label' => 'Rendez-vous', 'module' => 'appointments', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'appointments'],
             'quotes' => ['label' => 'Devis', 'module' => 'quotes', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'quotes'],
+            // Les opérations du pack Luthier sont filtrées par les mêmes
+            // modules et profils que la navigation Cremona. Un site connecté
+            // ne peut donc jamais élargir les droits de son membre.
+            'instruments' => ['label' => 'Instruments', 'module' => 'luthier_catalog', 'permission' => null, 'path' => 'instrument-assets'],
+            'rentals' => ['label' => 'Locations', 'module' => 'rentals', 'permission' => null, 'path' => 'rentals'],
+            'workshop_orders' => ['label' => 'Dossiers atelier', 'module' => 'workshop', 'permission' => null, 'path' => 'workshop-orders'],
         ];
 
         $enabledModules = app(OrganizationModuleRegistry::class)->enabledFor($organization);
@@ -29,7 +35,7 @@ final class SitePortalNavigation
             ->filter()
             ->filter(fn (array $item): bool => in_array($item['module'], $enabledModules, true))
             ->filter(fn (array $item): bool => $user->canAccessOrganizationModule($item['module'], $organization))
-            ->filter(fn (array $item): bool => $user->hasOrganizationPermission($item['permission'], $organization))
+            ->filter(fn (array $item): bool => $item['permission'] === null || $user->hasOrganizationPermission($item['permission'], $organization))
             ->map(fn (array $item): array => [
                 'key' => $item['key'],
                 'label' => $item['label'],
