@@ -44,8 +44,11 @@ Rencontre ──────┘
               tâches, rendez-vous, devis, dossiers métier
 ```
 
-- Le formulaire appelle une API Cremona versionnée par une outbox rejouable ;
-  la clé d'idempotence empêche un doublon lors d'une nouvelle tentative.
+- Le formulaire appelle une API Cremona versionnée avec une clé d'idempotence.
+  Le pilote transmet synchroniquement : si Cremona refuse, le visiteur reçoit
+  une erreur explicite et aucune demande locale parallèle n'est créée. Une
+  outbox rejouable est une évolution ultérieure, à introduire seulement quand
+  le volume ou les exigences de reprise le justifient.
 - Le formulaire Site crée ou rapproche le contact, puis crée la demande et le
   message initial avec la source exacte (`site`, `email`, `telephone`,
   `rencontre`, etc.).
