@@ -54,6 +54,7 @@ class SitesRelationManager extends RelationManager
                 'requests' => 'Demandes',
                 'appointments' => 'Rendez-vous',
                 'quotes' => 'Devis',
+                'invoices' => 'Facturation',
                 'instruments' => 'Instruments',
                 'rentals' => 'Locations',
                 'workshop_orders' => 'Dossiers atelier',

@@ -16,6 +16,7 @@ final class SitePortalNavigation
             'requests' => ['label' => 'Demandes', 'module' => 'crm', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'incoming-requests'],
             'appointments' => ['label' => 'Rendez-vous', 'module' => 'appointments', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'appointments'],
             'quotes' => ['label' => 'Devis', 'module' => 'quotes', 'permission' => OrganizationPermission::ViewCrm, 'path' => 'quotes'],
+            'invoices' => ['label' => 'Facturation', 'module' => 'invoicing', 'permission' => null, 'path' => 'invoices'],
             // Les opérations du pack Luthier sont filtrées par les mêmes
             // modules et profils que la navigation Cremona. Un site connecté
             // ne peut donc jamais élargir les droits de son membre.
