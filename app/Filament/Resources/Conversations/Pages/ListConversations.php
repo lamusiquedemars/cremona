@@ -66,7 +66,9 @@ class ListConversations extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make(__('common.all')),
+            'all' => Tab::make(__('common.in_progress'))
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                    ->where('status', '!=', ConversationStatus::Closed)),
             'open' => Tab::make(__('common.to_process'))
                 ->badge(fn (): int => $this->count(ConversationStatus::Open))
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', ConversationStatus::Open)),

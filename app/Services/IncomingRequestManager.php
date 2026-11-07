@@ -176,6 +176,7 @@ class IncomingRequestManager
         $message = $conversation->messages()->where('direction', 'inbound')->oldest('authored_at')->with('participants')->first()
             ?? throw new LogicException('Une correspondance sans message entrant ne peut pas créer de demande.');
         $from = $message->participants->firstWhere('role', 'from');
+
         return DB::transaction(function () use ($conversation, $message, $from, $actor): IncomingRequest {
             $request = IncomingRequest::query()->create([
                 'idempotency_key' => "direct-email-conversation:{$conversation->public_id}",
@@ -190,6 +191,7 @@ class IncomingRequestManager
             ]);
             $conversation->update(['incoming_request_id' => $request->id]);
             $this->activity($request, 'received', actor: $actor);
+
             return $request;
         });
     }
@@ -278,6 +280,17 @@ class IncomingRequestManager
         DB::transaction(function () use ($request, $updates, $from, $status, $actor): void {
             $request->update($updates);
             $this->activity($request, 'status_changed', $actor, from: $from, to: $status);
+
+            // A website submission has one operational lifecycle. Closing the
+            // request must not leave its automatically-created conversation in
+            // a separate "to process" queue.
+            if ($status === IncomingRequestStatus::Closed) {
+                $conversation = $request->conversation()->first();
+
+                if ($conversation !== null) {
+                    app(CorrespondenceManager::class)->closeConversation($conversation, $actor);
+                }
+            }
         });
     }
 

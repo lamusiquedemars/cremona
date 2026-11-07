@@ -361,7 +361,7 @@ class CorrespondenceManager
         );
     }
 
-    public function closeConversation(Conversation $conversation, User $actor): void
+    public function closeConversation(Conversation $conversation, ?User $actor = null): void
     {
         $this->assertOwned($conversation->organization_id);
 

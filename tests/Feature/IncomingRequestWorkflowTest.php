@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\ContactMethodType;
+use App\Enums\ConversationStatus;
 use App\Enums\IncomingRequestOutcome;
 use App\Enums\IncomingRequestStatus;
 use App\Models\Company;
@@ -175,6 +176,8 @@ class IncomingRequestWorkflowTest extends TestCase
                 IncomingRequestStatus::Closed,
                 IncomingRequestOutcome::Answered,
             );
+
+            $this->assertSame(ConversationStatus::Closed, $request->conversation()->sole()->status);
 
             $this->expectException(LogicException::class);
             $manager->transition($request, IncomingRequestStatus::InProgress);

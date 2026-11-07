@@ -17,8 +17,10 @@ class ListIncomingRequests extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make(__('common.all'))
-                ->icon(Heroicon::OutlinedInboxStack),
+            'all' => Tab::make(__('common.in_progress'))
+                ->icon(Heroicon::OutlinedInboxStack)
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                    ->where('status', '!=', IncomingRequestStatus::Closed)),
             'new' => Tab::make(__('common.new_plural'))
                 ->icon(Heroicon::OutlinedSparkles)
                 ->badge(fn (): int => $this->countRequests(
