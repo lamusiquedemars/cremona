@@ -11,7 +11,6 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Services\ConnectedSiteAdministration;
 use App\Services\OrganizationPresentation;
-use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -71,6 +70,11 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Plateforme Maracuja'),
             ])
             ->navigationItems([
+                NavigationItem::make('Administration du site')
+                    ->icon(Heroicon::OutlinedGlobeAlt)
+                    ->sort(-1)
+                    ->url(fn (): ?string => app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))
+                    ->visible(fn (): bool => filled(app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))),
                 NavigationItem::make('Organisations')
                     ->group('Plateforme Maracuja')
                     ->icon(Heroicon::OutlinedBuildingOffice2)
@@ -81,13 +85,6 @@ class AdminPanelProvider extends PanelProvider
                     ->icon(Heroicon::OutlinedUsers)
                     ->url(fn (): string => UserResource::getUrl('index', panel: 'platform'))
                     ->visible(fn (): bool => auth()->user() instanceof User && auth()->user()->is_platform_admin),
-            ])
-            ->userMenuItems([
-                Action::make('site-administration')
-                    ->label('Administration du site')
-                    ->icon(Heroicon::OutlinedGlobeAlt)
-                    ->url(fn (): ?string => app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))
-                    ->visible(fn (): bool => filled(app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
