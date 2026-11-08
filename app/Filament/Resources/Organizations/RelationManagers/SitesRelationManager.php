@@ -34,7 +34,12 @@ class SitesRelationManager extends RelationManager
                 CreateAction::make()->label('Rattacher un site')->schema($this->formSchema()),
             ])
             ->recordActions([
-                EditAction::make()->label('Configurer'),
+                EditAction::make()
+                    ->label('Configurer')
+                    ->modalHeading('Configurer le site')
+                    ->modalSubmitActionLabel('Enregistrer')
+                    ->modalCancelActionLabel('Annuler')
+                    ->schema($this->formSchema()),
                 DeleteAction::make()->label('Retirer'),
             ]);
     }
