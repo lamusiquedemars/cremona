@@ -249,6 +249,61 @@ class CorrespondenceTest extends TestCase
             ->assertSee('Planifier un rendez-vous');
     }
 
+    public function test_the_correspondence_list_identifies_an_outbound_message_by_its_mailbox_and_recipient(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm']);
+        $viewer = User::factory()->create();
+        $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'imap_smtp',
+                'name' => 'Boîte Giovanni',
+                'credentials' => [],
+                'status' => 'active',
+            ]);
+            $mailbox = EmailMailbox::query()->create([
+                'organization_integration_id' => $integration->id,
+                'address' => 'giovanni@example.test',
+                'display_name' => 'Giovanni',
+                'status' => 'active',
+            ]);
+            $conversation = Conversation::query()->create([
+                'initial_channel' => 'email',
+                'subject' => 'Appels à manifestation d’intérêt',
+                'status' => ConversationStatus::WaitingCustomer,
+                'last_message_at' => now(),
+                'last_outbound_at' => now(),
+            ]);
+            $message = $conversation->messages()->create([
+                'email_mailbox_id' => $mailbox->id,
+                'direction' => MessageDirection::Outbound,
+                'channel' => 'email',
+                'subject' => 'RE: Appels à manifestation d’intérêt',
+                'body_text' => 'Bonjour, merci pour votre invitation.',
+                'transport_status' => MessageTransportStatus::Accepted,
+                'threading_status' => MessageThreadingStatus::Matched,
+                'payload_fingerprint' => hash('sha256', 'outbound-correspondence-list'),
+                'authored_at' => now(),
+                'accepted_at' => now(),
+            ]);
+            $message->participants()->create([
+                'role' => MessageParticipantRole::To,
+                'name' => 'Mairie du 9e',
+                'address' => 'culture@example.test',
+                'position' => 0,
+            ]);
+        });
+
+        $this->actingAs($viewer)
+            ->get(ConversationResource::getUrl('index', tenant: $organization))
+            ->assertOk()
+            ->assertSeeText('Giovanni')
+            ->assertSeeText('Envoyé à Mairie du 9e')
+            ->assertDontSeeText('Anonyme');
+    }
+
     public function test_every_correspondence_record_is_isolated_and_attachments_cannot_use_public_storage(): void
     {
         $first = Organization::factory()->create();

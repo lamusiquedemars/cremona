@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Conversations;
 
 use App\Enums\ConversationStatus;
 use App\Enums\MessageChannel;
+use App\Enums\MessageDirection;
 use App\Enums\MessageParticipantRole;
 use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Conversations\Pages\ListConversations;
@@ -103,7 +104,11 @@ class ConversationResource extends Resource
     {
         return $table
             ->extraAttributes(['class' => 'correspondence-table'])
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('latestInboundMessage.participants'))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with([
+                'latestMessage.participants',
+                'latestMessage.mailbox',
+                'latestMessage.author',
+            ]))
             ->defaultSort('last_message_at', 'desc')
             ->columns([
             TextColumn::make('subject')
@@ -121,8 +126,12 @@ class ConversationResource extends Resource
             TextColumn::make('sender')
                 ->label('Expéditeur')
                 ->state(fn (Conversation $record): ?string => self::senderName($record))
-                ->description(fn (Conversation $record): ?string => self::senderAddress($record))
-                ->placeholder(__('cremona.dashboard.anonymous'))
+                ->description(fn (Conversation $record): ?string => self::senderDescription($record))
+                ->icon(fn (Conversation $record): Heroicon => self::latestDirection($record) === MessageDirection::Outbound
+                    ? Heroicon::OutlinedPaperAirplane
+                    : Heroicon::OutlinedInboxArrowDown)
+                ->iconColor(fn (Conversation $record): string => self::latestDirection($record) === MessageDirection::Outbound ? 'primary' : 'gray')
+                ->placeholder('Expéditeur non identifié')
                 ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas('messages.participants', fn (Builder $query): Builder => $query->where('address', 'like', "%{$search}%")))
                 ->weight('medium'),
             TextColumn::make('initial_channel')
@@ -204,19 +213,48 @@ class ConversationResource extends Resource
 
     private static function senderName(Conversation $record): ?string
     {
-        $sender = $record->latestInboundMessage?->participants
-            ->first(fn ($participant): bool => $participant->role === MessageParticipantRole::From);
+        $message = $record->latestMessage;
+        if ($message === null) {
+            return null;
+        }
+
+        $sender = $message->participants->first(fn ($participant): bool => $participant->role === MessageParticipantRole::From);
+
+        if ($message->direction === MessageDirection::Outbound) {
+            return $message->mailbox?->display_name
+                ?: $message->author?->name
+                ?: $sender?->name
+                ?: $sender?->address
+                ?: 'Vous';
+        }
 
         return $sender?->name ?: $sender?->address;
     }
 
-    private static function senderAddress(Conversation $record): ?string
+    private static function senderDescription(Conversation $record): ?string
     {
-        $sender = $record->latestInboundMessage?->participants
+        $message = $record->latestMessage;
+        if ($message === null) {
+            return null;
+        }
+
+        if ($message->direction === MessageDirection::Outbound) {
+            $recipient = $message->participants
+                ->first(fn ($participant): bool => $participant->role === MessageParticipantRole::To);
+
+            return $recipient?->name
+                ? 'Envoyé à '.$recipient->name
+                : ($recipient?->address ? 'Envoyé à '.$recipient->address : 'Envoyé');
+        }
+
+        $sender = $message->participants
             ->first(fn ($participant): bool => $participant->role === MessageParticipantRole::From);
 
-        return $sender?->name && $sender->address && $sender->name !== $sender->address
-            ? $sender->address
-            : null;
+        return $sender?->address ? 'Reçu · '.$sender->address : 'Reçu';
+    }
+
+    private static function latestDirection(Conversation $record): MessageDirection
+    {
+        return $record->latestMessage?->direction ?? MessageDirection::Inbound;
     }
 }
