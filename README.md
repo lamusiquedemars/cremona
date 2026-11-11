@@ -4,6 +4,13 @@ Cremona is the modular, multi-organization management suite developed by Maracuj
 
 The public websites remain independent Maracuja Site deployments. Cremona provides the shared business layer: organizations, users, permissions, contacts, workflows, private documents, integrations, and vertical business packs.
 
+## Déploiement
+
+La procédure et le script LWS actuels sont en quarantaine : ne pas les exécuter
+ni reprendre leurs accès/destinations avant audit et validation. Voir le
+[registre central des documents et outils retirés/en quarantaine](../maracuja-control/docs/documents-a-retirer.md)
+et la [politique commune](../maracuja-control/docs/deploiement-multi-sites.md).
+
 ## Foundation scope
 
 The first milestone contains only the SaaS kernel:

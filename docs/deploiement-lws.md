@@ -1,5 +1,12 @@
 # Déploiement LWS — Cremona
 
+> **QUARANTAINE — ne pas exécuter ce guide.** Il contient des modèles de
+> publication contradictoires (transfert manuel et release par script) et
+> n'est pas une procédure validée selon le contrat commun. N'utilise ni ses
+> chemins, ni ses accès, ni ses commandes en production. Voir le
+> [registre des documents retirés/en quarantaine](../../maracuja-control/docs/documents-a-retirer.md)
+> et la [politique commune](../../maracuja-control/docs/deploiement-multi-sites.md).
+
 ## Cible
 
 Le CRM sera publié sur `https://cremona.maracujadigital.fr`. Il reste privé :

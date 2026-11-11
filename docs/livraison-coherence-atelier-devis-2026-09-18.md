@@ -1,5 +1,10 @@
 # Cohérence atelier / devis — 18 septembre 2026
 
+> **Compte rendu historique — ne pas rejouer les étapes de publication.**
+> Les commandes, chemins et opérations décrivent une livraison passée. Voir le
+> [registre central des documents retirés/en quarantaine](../../maracuja-control/docs/documents-a-retirer.md)
+> avant toute reprise.
+
 ## Décision et comportement
 
 Décision confirmée par Ivo : un numéro partagé pour le dossier atelier et son devis (`AT260001` / `D260001`). Le compteur est annuel et propre à chaque organisation. Les devis autonomes utilisent le même compteur ; le dossier réserve son numéro dès sa création et le devis le reprend. Le passage au nouvel an ne change pas le numéro d’un dossier existant.
