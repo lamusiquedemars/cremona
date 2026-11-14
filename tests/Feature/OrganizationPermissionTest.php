@@ -26,7 +26,7 @@ class OrganizationPermissionTest extends TestCase
             'role' => OrganizationRole::Viewer->value,
         ]);
 
-        $this->assertTrue($administrator->hasOrganizationPermission(
+        $this->assertFalse($administrator->hasOrganizationPermission(
             OrganizationPermission::ManageIntegrations,
             $organization,
         ));

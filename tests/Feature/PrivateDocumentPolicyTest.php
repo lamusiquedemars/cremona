@@ -20,7 +20,10 @@ class PrivateDocumentPolicyTest extends TestCase
         $organization = Organization::factory()->create();
         $administrator = User::factory()->create();
         $collaborator = User::factory()->create();
-        $administrator->organizations()->attach($organization, ['role' => OrganizationRole::Administrator->value]);
+        $administrator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['manage_integrations' => true],
+        ]);
         $collaborator->organizations()->attach($organization, ['role' => OrganizationRole::Collaborator->value]);
 
         $document = app(OrganizationContext::class)->run($organization, fn (): PrivateDocument => PrivateDocument::query()->create([
