@@ -18,6 +18,11 @@ class AppointmentsRelationManager extends RelationManager
 
     protected static ?string $title = 'Rendez-vous';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('common.appointment');
+    }
+
     protected static string|\BackedEnum|null $icon = Heroicon::OutlinedCalendarDays;
 
     public function table(Table $table): Table
@@ -25,11 +30,11 @@ class AppointmentsRelationManager extends RelationManager
         return $table
             ->defaultSort('starts_at', 'desc')
             ->columns([
-                TextColumn::make('starts_at')->label('Date')->dateTime('d/m/Y H:i')->sortable(),
-                TextColumn::make('title')->label('Rendez-vous')->weight('medium'),
-                TextColumn::make('modality')->label('Modalité')->badge(),
-                TextColumn::make('status')->label('Statut')->badge(),
-                TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('—'),
+                TextColumn::make('starts_at')->label(__('common.date'))->dateTime('d/m/Y H:i')->sortable(),
+                TextColumn::make('title')->label(__('common.appointment'))->weight('medium')->sortable(),
+                TextColumn::make('modality')->label(__('common.modality'))->badge()->sortable(),
+                TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
+                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder('—')->sortable(),
             ])
             ->recordActions([
                 ViewAction::make()

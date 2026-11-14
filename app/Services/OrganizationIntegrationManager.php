@@ -78,17 +78,62 @@ class OrganizationIntegrationManager
     }
 
     /**
+     * Replaces credentials even when the previous encrypted value was created
+     * with an application key that is no longer available.
+     *
+     * @param  array<string, mixed>  $credentials
+     */
+    public function replaceCredentials(
+        OrganizationIntegration $integration,
+        array $credentials,
+        ?User $actor = null,
+    ): OrganizationIntegration {
+        if ($integration->organization_id !== $this->context->require()->getKey()) {
+            throw new LogicException('The integration does not belong to the active organization.');
+        }
+
+        return DB::transaction(function () use ($integration, $credentials, $actor): OrganizationIntegration {
+            // Let Laravel's encrypted cast create the new ciphertext, but use
+            // the query builder to avoid reading/comparing an undecipherable
+            // previous ciphertext during Eloquent's dirty check.
+            $replacement = new OrganizationIntegration;
+            $replacement->credentials = $credentials;
+
+            DB::table('organization_integrations')
+                ->where('id', $integration->getKey())
+                ->update([
+                    'credentials' => $replacement->getAttributes()['credentials'],
+                    'status' => 'active',
+                    'revoked_at' => null,
+                    'updated_at' => now(),
+                ]);
+
+            $integration->refresh();
+
+            $this->auditLogger->record(
+                event: 'integration.updated',
+                subject: $integration,
+                actor: $actor,
+                metadata: ['provider' => $integration->provider, 'name' => $integration->name],
+            );
+
+            return $integration;
+        });
+    }
+
+    /**
      * @return array{integration: OrganizationIntegration, token: string}
      */
     public function createApiToken(
         string $provider,
         string $name,
         ?User $actor = null,
+        array $credentials = [],
     ): array {
-        return DB::transaction(function () use ($provider, $name, $actor): array {
+        return DB::transaction(function () use ($provider, $name, $actor, $credentials): array {
             $keyId = (string) Str::ulid();
             $secret = Str::random(64);
-            $integration = $this->create($provider, $name, [], $actor);
+            $integration = $this->create($provider, $name, $credentials, $actor);
             $integration->update([
                 'key_id' => $keyId,
                 'token_hash' => hash('sha256', $secret),
@@ -136,8 +181,20 @@ class OrganizationIntegrationManager
         }
 
         DB::transaction(function () use ($integration, $actor): void {
-            $integration->update([
-                'credentials' => [],
+            // Une intégration peut avoir été créée avec une ancienne APP_KEY.
+            // Ne jamais charger ses credentials pour pouvoir la révoquer : la
+            // révocation doit rester possible, précisément en cas d'incident.
+            DB::table($integration->getTable())
+                ->where('id', $integration->getKey())
+                ->where('organization_id', $integration->organization_id)
+                ->update([
+                    'credentials' => app('encrypter')->encrypt(json_encode([]), false),
+                    'token_hash' => null,
+                    'status' => 'revoked',
+                    'revoked_at' => now(),
+                ]);
+
+            $integration->forceFill([
                 'status' => 'revoked',
                 'revoked_at' => now(),
             ]);

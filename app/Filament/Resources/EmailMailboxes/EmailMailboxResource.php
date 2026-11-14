@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Filament\Resources\EmailMailboxes;
+
+use App\Enums\OrganizationPermission;
+use App\Filament\Concerns\UsesOrganizationConfiguration;
+use App\Filament\Resources\EmailMailboxes\Pages\CreateEmailMailbox;
+use App\Filament\Resources\EmailMailboxes\Pages\EditEmailMailbox;
+use App\Filament\Resources\EmailMailboxes\Pages\ListEmailMailboxes;
+use App\Models\EmailMailbox;
+use App\Services\EmailMailboxConnectionTester;
+use App\Services\EmailMailboxSynchronizer;
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class EmailMailboxResource extends Resource
+{
+    use UsesOrganizationConfiguration;
+
+    protected static ?string $model = EmailMailbox::class;
+
+    protected static ?string $modelLabel = 'boîte e-mail';
+
+    protected static ?string $pluralModelLabel = 'boîtes e-mail';
+
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
+
+    protected static ?string $navigationLabel = 'Boîtes email';
+
+    protected static ?int $navigationSort = 110;
+
+    protected static function configurationPermission(): OrganizationPermission
+    {
+        return OrganizationPermission::ManageEmailMailboxes;
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema->components([
+            TextInput::make('address')->label('Adresse email')->email()->required(),
+            TextInput::make('display_name')->label('Nom expéditeur')->maxLength(255),
+            TextInput::make('imap_host')->label('Serveur IMAP')->required()->maxLength(255),
+            TextInput::make('imap_port')->label('Port IMAP')->numeric()->default(993)->required(),
+            TextInput::make('imap_username')->label('Identifiant IMAP')->required(),
+            TextInput::make('imap_password')
+                ->label('Mot de passe IMAP')
+                ->password()
+                ->revealable()
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->dehydrated(fn ($state): bool => filled($state))
+                ->helperText('Laissez vide pour conserver le mot de passe déjà enregistré.'),
+            TextInput::make('smtp_host')->label('Serveur SMTP')->required()->maxLength(255),
+            TextInput::make('smtp_port')->label('Port SMTP')->numeric()->default(465)->required(),
+            TextInput::make('smtp_username')->label('Identifiant SMTP')->required(),
+            TextInput::make('smtp_password')
+                ->label('Mot de passe SMTP')
+                ->password()
+                ->revealable()
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->dehydrated(fn ($state): bool => filled($state))
+                ->helperText('Laissez vide pour conserver le mot de passe déjà enregistré.'),
+            TextInput::make('inbox_folder')->label('Dossier reçu')->default('INBOX')->required(),
+            TextInput::make('sent_folder')->label('Dossier envoyés')->maxLength(255),
+        ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table->modifyQueryUsing(fn ($query) => $query->with('latestSyncRun'))->columns([
+            TextColumn::make('address')->label('Boîte')->searchable()->sortable(),
+            TextColumn::make('status')->label(__('common.state'))->badge()->sortable(),
+            TextColumn::make('latestSyncRun.status')->label('Dernière relève')->badge()->placeholder(__('common.never')),
+            TextColumn::make('latestSyncRun.imported_count')->label('Bilan')->formatStateUsing(fn (?int $state): string => $state === null ? '—' : $state.' nouveau(x)')->description(fn (EmailMailbox $record): ?string => $record->latestSyncRun === null ? null : $record->latestSyncRun->skipped_count.' déjà connu(s)')->placeholder('—'),
+            TextColumn::make('last_synced_at')->label('Dernier succès')->dateTime('d/m/Y H:i')->placeholder(__('common.never'))->sortable(),
+            TextColumn::make('last_error')->label('Dernier incident')->limit(80)->placeholder('Aucun'),
+        ])->recordActions([
+            EditAction::make()->label('Modifier'),
+            Action::make('test_imap')
+                ->label('Tester IMAP')
+                ->action(function (EmailMailbox $record): void {
+                    app(EmailMailboxConnectionTester::class)->testImap($record);
+                    Notification::make()
+                        ->title('Connexion IMAP réussie')
+                        ->body('La boîte est accessible. Aucun message n’a été lu ni modifié.')
+                        ->success()
+                        ->send();
+                }),
+            Action::make('test_smtp')
+                ->label('Tester SMTP')
+                ->action(function (EmailMailbox $record): void {
+                    app(EmailMailboxConnectionTester::class)->testSmtp($record);
+                    Notification::make()
+                        ->title('Connexion SMTP réussie')
+                        ->body('L’envoi est authentifié. Aucun email n’a été envoyé.')
+                        ->success()
+                        ->send();
+                }),
+            Action::make('sync_now')
+                ->label('Relever maintenant')
+                ->icon(Heroicon::OutlinedArrowPath)
+                ->requiresConfirmation()
+                ->modalDescription('Relève au plus 50 nouveaux messages par dossier. Pour une nouvelle boîte, elle initialise l’historique avec les 50 messages les plus récents. Aucun message distant ne sera modifié.')
+                ->action(function (EmailMailbox $record): void {
+                    $result = app(EmailMailboxSynchronizer::class)->sync($record);
+                    Notification::make()
+                        ->title('Relève terminée')
+                        ->body("{$result['imported']} message(s) importé(s), {$result['skipped']} déjà connu(s).")
+                        ->success()
+                        ->send();
+                }),
+        ]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListEmailMailboxes::route('/'),
+            'create' => CreateEmailMailbox::route('/create'),
+            'edit' => EditEmailMailbox::route('/{record}/edit'),
+        ];
+    }
+}

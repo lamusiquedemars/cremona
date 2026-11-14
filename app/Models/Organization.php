@@ -2,17 +2,33 @@
 
 namespace App\Models;
 
+use App\Services\LuthierQuoteLineTemplateCatalog;
+use App\Services\LuthierServiceCatalog;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['name', 'slug', 'vertical_pack', 'status', 'settings'])]
 class Organization extends Model
 {
     use HasFactory;
+
+    /** @var array<int, string> */
+    private const INTERFACE_LOCALES = ['fr', 'pt_BR'];
+
+    protected static function booted(): void
+    {
+        static::saved(function (self $organization): void {
+            if ($organization->wasChanged('vertical_pack') && $organization->vertical_pack === 'luthier') {
+                app(LuthierQuoteLineTemplateCatalog::class)->seed($organization);
+                app(LuthierServiceCatalog::class)->seed($organization);
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -49,6 +65,31 @@ class Organization extends Model
         return $this->hasMany(OrganizationIntegration::class);
     }
 
+    public function sites(): HasMany
+    {
+        return $this->hasMany(OrganizationSite::class);
+    }
+
+    public function legalProfile(): HasOne
+    {
+        return $this->hasOne(OrganizationLegalProfile::class);
+    }
+
+    public function quoteSettings(): HasOne
+    {
+        return $this->hasOne(OrganizationQuoteSettings::class);
+    }
+
+    public function invoiceSettings(): HasOne
+    {
+        return $this->hasOne(OrganizationInvoiceSettings::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     public function people(): HasMany
     {
         return $this->hasMany(Person::class);
@@ -64,9 +105,19 @@ class Organization extends Model
         return $this->hasMany(IncomingRequest::class);
     }
 
+    public function campaigns(): HasMany
+    {
+        return $this->hasMany(Campaign::class);
+    }
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    public function appointmentTypes(): HasMany
+    {
+        return $this->hasMany(AppointmentType::class);
     }
 
     public function conversations(): HasMany
@@ -77,6 +128,24 @@ class Organization extends Model
     public function conversationMessages(): HasMany
     {
         return $this->hasMany(ConversationMessage::class);
+    }
+
+    public function timezone(): string
+    {
+        $timezone = $this->settings['timezone'] ?? config('app.timezone', 'UTC');
+
+        return is_string($timezone) && in_array($timezone, timezone_identifiers_list(), true)
+            ? $timezone
+            : config('app.timezone', 'UTC');
+    }
+
+    public function interfaceLocale(): string
+    {
+        $locale = $this->settings['interface_locale'] ?? config('app.locale', 'fr');
+
+        return is_string($locale) && in_array($locale, self::INTERFACE_LOCALES, true)
+            ? $locale
+            : config('app.locale', 'fr');
     }
 
     public function getRouteKeyName(): string

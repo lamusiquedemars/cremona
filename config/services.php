@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    'google_ads' => [
+        'developer_token' => env('GOOGLE_ADS_DEVELOPER_TOKEN'),
+        'oauth_client_id' => env('GOOGLE_ADS_OAUTH_CLIENT_ID'),
+        'oauth_client_secret' => env('GOOGLE_ADS_OAUTH_CLIENT_SECRET'),
+        'login_customer_id' => env('GOOGLE_ADS_LOGIN_CUSTOMER_ID'),
+        // Google Ads tokens issued for test accounts must never be used for
+        // client production data. Keep the API access state explicit instead
+        // of making an organization look ready too early.
+        'api_access_level' => env('GOOGLE_ADS_API_ACCESS_LEVEL', 'pending'),
+    ],
+
+    'super_pdp' => [
+        'sandbox_client_id' => env('SUPER_PDP_SANDBOX_CLIENT_ID'),
+        'sandbox_client_secret' => env('SUPER_PDP_SANDBOX_CLIENT_SECRET'),
+        'sandbox_company_label' => env('SUPER_PDP_SANDBOX_COMPANY_LABEL', 'Burger Queen'),
+        'api_url' => env('SUPER_PDP_API_URL', 'https://api.superpdp.tech'),
+    ],
+
 ];

@@ -15,6 +15,9 @@ enum OrganizationPermission: string
     case ManageCorrespondenceLinks = 'manage_correspondence_links';
     case EraseCorrespondence = 'erase_correspondence';
     case ManageEmailMailboxes = 'manage_email_mailboxes';
+    case ManageOrganizationSettings = 'manage_organization_settings';
+    case ManageCommercialReferences = 'manage_commercial_references';
+    case ManageRentalPricing = 'manage_rental_pricing';
 
     public function label(): string
     {
@@ -30,6 +33,43 @@ enum OrganizationPermission: string
             self::ManageCorrespondenceLinks => 'Rattacher les correspondances',
             self::EraseCorrespondence => 'Effacer les correspondances',
             self::ManageEmailMailboxes => 'Gérer les boîtes email',
+            self::ManageOrganizationSettings => 'Gérer la configuration de l’organisation',
+            self::ManageCommercialReferences => 'Gérer les modèles commerciaux',
+            self::ManageRentalPricing => 'Gérer les tarifs de location et d’assurance',
         };
+    }
+
+    public function requiresExplicitGrant(): bool
+    {
+        return $this->isOrganizationConfiguration() || $this->isReferenceData();
+    }
+
+    public function isOrganizationConfiguration(): bool
+    {
+        return in_array($this, [
+            self::ManageMembers,
+            self::ManageModules,
+            self::ManageIntegrations,
+            self::ViewAuditLog,
+            self::ManageEmailMailboxes,
+            self::ManageOrganizationSettings,
+        ], true);
+    }
+
+    public function isReferenceData(): bool
+    {
+        return in_array($this, [
+            self::ManageCommercialReferences,
+            self::ManageRentalPricing,
+        ], true);
+    }
+
+    /** @return array<string, string> */
+    public static function delegableOptions(): array
+    {
+        return collect(self::cases())
+            ->filter(fn (self $permission): bool => $permission->requiresExplicitGrant() && $permission !== self::ManageMembers && $permission !== self::ManageModules && $permission !== self::ViewAuditLog && $permission !== self::ManageIntegrations && $permission !== self::ManageEmailMailboxes)
+            ->mapWithKeys(fn (self $permission): array => [$permission->value => $permission->label()])
+            ->all();
     }
 }

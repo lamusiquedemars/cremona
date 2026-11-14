@@ -19,6 +19,10 @@ use LogicException;
     'display_name',
     'locale',
     'country_code',
+    'address_line_1',
+    'address_line_2',
+    'postal_code',
+    'city',
     'source',
     'status',
     'last_activity_at',
@@ -30,6 +34,10 @@ class Person extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (Person $person): void {
+            $person->source ??= 'manual';
+        });
+
         static::saving(function (Person $person): void {
             $person->first_name = self::clean($person->first_name);
             $person->last_name = self::clean($person->last_name);

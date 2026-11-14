@@ -3,20 +3,28 @@
 namespace Tests\Feature;
 
 use App\Enums\IncomingRequestStatus;
+use App\Enums\OrganizationPermission;
 use App\Enums\OrganizationRole;
+use App\Filament\Pages\ClientDirectory;
 use App\Filament\Resources\Companies\CompanyResource;
+use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\InboundChannels\InboundChannelResource;
+use App\Filament\Resources\InboundChannels\Pages\ListInboundChannels;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
+use App\Filament\Resources\People\Pages\CreatePerson;
+use App\Filament\Resources\People\Pages\EditPerson;
 use App\Filament\Resources\People\Pages\ViewPerson;
 use App\Filament\Resources\People\PersonResource;
 use App\Filament\Resources\People\RelationManagers\CompaniesRelationManager;
 use App\Models\Company;
+use App\Models\CrmTask;
 use App\Models\Organization;
 use App\Models\Person;
 use App\Models\User;
 use App\Services\CrmRecordManager;
 use App\Services\IncomingRequestManager;
 use App\Services\OrganizationIntegrationManager;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,9 +35,17 @@ class CrmFilamentTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_viewer_can_open_crm_lists_but_cannot_open_creation_pages(): void
+    private function organizationWithCrm(): Organization
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm']);
+
+        return $organization;
+    }
+
+    public function test_a_viewer_can_open_crm_lists_but_cannot_open_creation_pages(): void
+    {
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, [
             'role' => OrganizationRole::Viewer->value,
@@ -54,7 +70,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_a_collaborator_can_open_contact_and_company_creation_pages(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -62,15 +78,148 @@ class CrmFilamentTest extends TestCase
 
         $this->actingAs($collaborator)
             ->get(PersonResource::getUrl('create', tenant: $organization))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Nouveau client particulier');
         $this->actingAs($collaborator)
             ->get(CompanyResource::getUrl('create', tenant: $organization))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Nouvelle entreprise')
+            ->assertDontSee('Nouveau entreprise');
+    }
+
+    public function test_client_contact_details_are_saved_from_the_new_person_and_company_forms(): void
+    {
+        $organization = $this->organizationWithCrm();
+        $collaborator = User::factory()->create();
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+
+        $this->actingAs($collaborator);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            Livewire::test(CreatePerson::class)
+                ->fillForm([
+                    'first_name' => 'Camille',
+                    'last_name' => 'Martin',
+                    'primary_email' => 'camille@example.test',
+                    'primary_phone' => '06 12 34 56 78',
+                    'address_line_1' => '12 rue des Luthiers',
+                    'postal_code' => '69001',
+                    'city' => 'Lyon',
+                    'country_code' => 'FR',
+                ])
+                ->call('create')
+                ->assertHasNoFormErrors();
+
+            $person = Person::query()->sole();
+            $this->assertSame('12 rue des Luthiers', $person->address_line_1);
+            $this->assertSame('69001', $person->postal_code);
+            $this->assertSame('Lyon', $person->city);
+            $this->assertSame('camille@example.test', $person->contactMethods()->where('type', 'email')->sole()->value);
+            $this->assertSame('06 12 34 56 78', $person->contactMethods()->where('type', 'phone')->sole()->value);
+            $person->contactMethods()->create([
+                'type' => 'email',
+                'label' => 'Professionnel',
+                'value' => 'camille.pro@example.test',
+            ]);
+
+            Livewire::test(EditPerson::class, ['record' => $person->getRouteKey()])
+                ->fillForm([
+                    'primary_email' => 'camille.martin@example.test',
+                    'primary_phone' => '07 98 76 54 32',
+                ])
+                ->call('save')
+                ->assertHasNoFormErrors();
+
+            $emails = $person->refresh()->contactMethods()->where('type', 'email')->get();
+            $this->assertSame('camille.martin@example.test', $emails->firstWhere('is_primary', true)?->value);
+            $this->assertTrue($emails->contains('value', 'camille.pro@example.test'));
+            $this->assertSame('07 98 76 54 32', $person->contactMethods()->where('type', 'phone')->sole()->value);
+
+            Livewire::test(CreateCompany::class)
+                ->fillForm([
+                    'name' => 'Atelier Martin',
+                    'primary_email' => 'contact@atelier-martin.example.test',
+                    'primary_phone' => '04 72 00 00 00',
+                    'address_line_1' => '8 place de la Musique',
+                    'postal_code' => '69002',
+                    'city' => 'Lyon',
+                    'country_code' => 'FR',
+                ])
+                ->call('create')
+                ->assertHasNoFormErrors();
+
+            $company = Company::query()->sole();
+            $this->assertSame('contact@atelier-martin.example.test', $company->contactMethods()->where('type', 'email')->sole()->value);
+            $this->assertSame('04 72 00 00 00', $company->contactMethods()->where('type', 'phone')->sole()->value);
+        });
+    }
+
+    public function test_the_clients_directory_combines_people_and_companies_without_exposing_two_menu_entries(): void
+    {
+        $organization = $this->organizationWithCrm();
+        $viewer = User::factory()->create();
+        $viewer->organizations()->attach($organization, [
+            'role' => OrganizationRole::Viewer->value,
+        ]);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            Person::query()->create([
+                'first_name' => 'Camille',
+                'last_name' => 'Martin',
+                'display_name' => 'Camille Martin',
+                'city' => 'Lyon',
+            ]);
+            Company::query()->create([
+                'name' => 'Conservatoire de Lyon',
+                'city' => 'Lyon',
+            ]);
+        });
+
+        $this->actingAs($viewer)
+            ->get(ClientDirectory::getUrl(tenant: $organization))
+            ->assertOk()
+            ->assertSee('Camille Martin')
+            ->assertSee('Conservatoire de Lyon')
+            ->assertSee('Particulier')
+            ->assertSee('Entreprise')
+            ->assertDontSee('Client Directory')
+            ->assertDontSee('Répertoire clients')
+            ->assertDontSee('avec leurs fiches adaptées');
+
+        $this->actingAs($viewer)
+            ->get(Filament::getPanel('admin')->getUrl($organization))
+            ->assertOk()
+            ->assertSee('Suivi client')
+            ->assertSee('Clients')
+            ->assertDontSee('Contacts')
+            ->assertDontSee('Entreprises');
+    }
+
+    public function test_the_clients_directory_uses_the_same_configured_navigation_group_as_the_crm_resources(): void
+    {
+        $organization = Organization::factory()->create([
+            'settings' => [
+                'presentation' => [
+                    'labels' => [
+                        'customer_follow_up' => 'Clients',
+                    ],
+                ],
+            ],
+        ]);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $this->assertSame('Clients', ClientDirectory::getNavigationGroup());
+            $this->assertSame('Clients', IncomingRequestResource::getNavigationGroup());
+        });
     }
 
     public function test_a_request_detail_renders_its_snapshot_and_workflow_actions(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -97,7 +246,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_the_dashboard_and_work_queues_reflect_active_requests(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -122,10 +271,13 @@ class CrmFilamentTest extends TestCase
         $this->actingAs($collaborator)
             ->get(Filament::getPanel('admin')->getUrl($organization))
             ->assertOk()
-            ->assertSee('Relation client')
-            ->assertSee('Demandes à traiter')
+            ->assertSee('Suivi client')
+            ->assertSee('Demandes à suivre')
             ->assertSee('Demande non attribuée')
-            ->assertSee('Demande attribuée');
+            ->assertSee('Demande attribuée')
+            ->assertDontSee('Rendez-vous aujourd’hui')
+            ->assertDontSee('Devis à suivre')
+            ->assertDontSee('Campagnes à vérifier');
 
         $this->actingAs($collaborator)
             ->get(IncomingRequestResource::getUrl('index', ['tab' => 'unassigned'], tenant: $organization))
@@ -134,9 +286,9 @@ class CrmFilamentTest extends TestCase
             ->assertDontSee('Demande attribuée');
     }
 
-    public function test_the_contact_page_combines_identity_coordinates_companies_and_requests(): void
+    public function test_the_contact_page_focuses_on_identity_companies_and_requests(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, [
             'role' => OrganizationRole::Viewer->value,
@@ -149,6 +301,9 @@ class CrmFilamentTest extends TestCase
                 'display_name' => 'Camille Martin',
                 'locale' => 'fr',
                 'country_code' => 'FR',
+                'address_line_1' => '12 rue des Luthiers',
+                'postal_code' => '69001',
+                'city' => 'Lyon',
             ]);
             $person->contactMethods()->create([
                 'type' => 'email',
@@ -181,6 +336,9 @@ class CrmFilamentTest extends TestCase
             ->assertOk()
             ->assertSee('Camille Martin')
             ->assertSee('camille@example.test')
+            ->assertSee('12 rue des Luthiers')
+            ->assertSee('69001')
+            ->assertSee('France')
             ->assertSee('Projet sur mesure')
             ->assertDontSee('Modifier le contact');
 
@@ -196,9 +354,9 @@ class CrmFilamentTest extends TestCase
         $this->assertSame($person->id, $request->person_id);
     }
 
-    public function test_the_company_page_combines_identity_coordinates_contacts_and_requests(): void
+    public function test_the_company_page_focuses_on_identity_contacts_and_requests(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, [
             'role' => OrganizationRole::Viewer->value,
@@ -209,6 +367,10 @@ class CrmFilamentTest extends TestCase
                 'name' => 'Atelier Dupont',
                 'legal_name' => 'Atelier Dupont SARL',
                 'website' => 'https://atelier-dupont.example.test',
+                'address_line_1' => '8 place de la Musique',
+                'postal_code' => '69002',
+                'city' => 'Lyon',
+                'country_code' => 'FR',
             ]);
             $company->contactMethods()->create([
                 'type' => 'email',
@@ -240,6 +402,8 @@ class CrmFilamentTest extends TestCase
             ->assertOk()
             ->assertSee('Atelier Dupont SARL')
             ->assertSee('bonjour@atelier-dupont.example.test')
+            ->assertSee('8 place de la Musique')
+            ->assertSee('69002')
             ->assertSee('Jeanne Dupont')
             ->assertDontSee('Modifier l’entreprise');
 
@@ -257,8 +421,8 @@ class CrmFilamentTest extends TestCase
 
     public function test_global_search_finds_crm_records_and_keeps_tenants_isolated(): void
     {
-        $organization = Organization::factory()->create();
-        $otherOrganization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
+        $otherOrganization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, [
             'role' => OrganizationRole::Viewer->value,
@@ -313,7 +477,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_contact_notes_are_visible_to_viewers_but_only_managers_can_add_them(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, [
@@ -353,7 +517,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_contact_company_links_can_only_be_managed_by_collaborators(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, [
@@ -398,7 +562,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_a_collaborator_can_link_an_existing_company_to_a_contact(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $collaborator = User::factory()->create();
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -437,7 +601,7 @@ class CrmFilamentTest extends TestCase
 
     public function test_archived_crm_records_are_read_only_until_reactivated(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, [
@@ -482,11 +646,12 @@ class CrmFilamentTest extends TestCase
 
     public function test_only_integration_managers_can_see_inbound_channels(): void
     {
-        $organization = Organization::factory()->create();
+        $organization = $this->organizationWithCrm();
         $administrator = User::factory()->create();
         $collaborator = User::factory()->create();
         $administrator->organizations()->attach($organization, [
             'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageIntegrations->value]],
         ]);
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,
@@ -508,5 +673,73 @@ class CrmFilamentTest extends TestCase
         $this->actingAs($collaborator)
             ->get(InboundChannelResource::getUrl('index', tenant: $organization))
             ->assertForbidden();
+    }
+
+    public function test_an_integration_manager_can_create_an_inbound_channel(): void
+    {
+        $organization = $this->organizationWithCrm();
+        $administrator = User::factory()->create();
+        $administrator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageIntegrations->value]],
+        ]);
+
+        $this->actingAs($administrator);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        Livewire::test(ListInboundChannels::class)
+            ->callAction('createChannel', data: [
+                'name' => 'atelierivoincidit-contact',
+                'site_references' => ['atelierivoincidit.fr'],
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertDatabaseHas('organization_integrations', [
+            'organization_id' => $organization->getKey(),
+            'provider' => 'maracuja_cms',
+            'name' => 'atelierivoincidit-contact',
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_a_collaborator_can_prepare_call_follow_up_tasks_from_a_client_record(): void
+    {
+        $organization = $this->organizationWithCrm();
+        $collaborator = User::factory()->create();
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+        $person = app(OrganizationContext::class)->run(
+            $organization,
+            fn (): Person => Person::query()->create(['display_name' => 'Camille Martin']),
+        );
+
+        $this->actingAs($collaborator);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        app(OrganizationContext::class)->run($organization, function () use ($person): void {
+            Livewire::test(ViewPerson::class, ['record' => $person->getRouteKey()])
+                ->callAction('call_follow_up', data: [
+                    'request' => 'Changement de taille : rappeler le parent et préparer un alto de 40 cm.',
+                    'call_due_at' => now()->addHour(),
+                    'create_preparation' => true,
+                    'preparation_due_at' => now()->addDay(),
+                ])
+                ->assertHasNoActionErrors();
+
+            $this->assertSame(2, CrmTask::query()->where('person_id', $person->id)->count());
+            $this->assertDatabaseHas('crm_tasks', [
+                'organization_id' => $person->organization_id,
+                'person_id' => $person->id,
+                'title' => 'Rappeler Camille Martin',
+            ]);
+            $this->assertDatabaseHas('crm_tasks', [
+                'organization_id' => $person->organization_id,
+                'person_id' => $person->id,
+                'title' => 'Préparer un instrument pour Camille Martin',
+            ]);
+        });
     }
 }

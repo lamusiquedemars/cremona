@@ -8,9 +8,12 @@ use App\Enums\OrganizationRole;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\People\PersonResource;
 use App\Models\Appointment;
+use App\Models\Conversation;
+use App\Models\IncomingRequest;
 use App\Models\Organization;
 use App\Models\Person;
 use App\Models\User;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LogicException;
@@ -23,6 +26,7 @@ class AppointmentTest extends TestCase
     public function test_an_appointment_is_a_tenant_scoped_crm_projection(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['appointments']);
         $member = User::factory()->create();
         $member->organizations()->attach($organization);
 
@@ -86,9 +90,29 @@ class AppointmentTest extends TestCase
         });
     }
 
-    public function test_appointments_are_read_only_projections_for_crm_users(): void
+    public function test_an_appointment_cannot_be_linked_to_a_conversation_from_another_organization(): void
+    {
+        $firstOrganization = Organization::factory()->create();
+        $secondOrganization = Organization::factory()->create();
+        $conversation = app(OrganizationContext::class)->run(
+            $firstOrganization,
+            fn () => Conversation::query()->create(['initial_channel' => 'email']),
+        );
+
+        $this->expectException(LogicException::class);
+
+        app(OrganizationContext::class)->run($secondOrganization, fn () => Appointment::query()->create([
+            'conversation_id' => $conversation->id,
+            'title' => 'Rendez-vous hors organisation',
+            'starts_at' => '2026-09-03 14:00:00',
+            'ends_at' => '2026-09-03 15:00:00',
+        ]));
+    }
+
+    public function test_manual_appointments_can_be_managed_without_allowing_brevo_projections_to_be_edited(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
@@ -102,6 +126,16 @@ class AppointmentTest extends TestCase
                 'ends_at' => '2026-09-03 15:00:00',
             ]),
         );
+        $brevoAppointment = app(OrganizationContext::class)->run(
+            $organization,
+            fn () => Appointment::query()->create([
+                'title' => 'Rendez-vous Brevo',
+                'starts_at' => '2026-09-04 14:00:00',
+                'ends_at' => '2026-09-04 15:00:00',
+                'provider' => 'brevo',
+                'external_reference' => 'brevo-read-only',
+            ]),
+        );
 
         $this->actingAs($viewer)
             ->get(AppointmentResource::getUrl('index', tenant: $organization))
@@ -110,18 +144,52 @@ class AppointmentTest extends TestCase
         $this->actingAs($viewer)
             ->get(AppointmentResource::getUrl('view', ['record' => $appointment], tenant: $organization))
             ->assertOk()
-            ->assertDontSee('Modifier le rendez-vous');
+            ->assertDontSee('Modifier');
         $this->actingAs($collaborator)
             ->get(AppointmentResource::getUrl('view', ['record' => $appointment], tenant: $organization))
             ->assertOk()
-            ->assertDontSee('Modifier le rendez-vous');
-        $this->assertFalse(AppointmentResource::hasPage('create'));
-        $this->assertFalse(AppointmentResource::hasPage('edit'));
+            ->assertSee('Modifier');
+        $this->actingAs($collaborator)
+            ->get(AppointmentResource::getUrl('create', tenant: $organization))
+            ->assertOk();
+        $this->actingAs($collaborator)
+            ->get(AppointmentResource::getUrl('edit', ['record' => $appointment], tenant: $organization))
+            ->assertOk();
+        $this->actingAs($collaborator)
+            ->get(AppointmentResource::getUrl('edit', ['record' => $brevoAppointment], tenant: $organization))
+            ->assertForbidden();
+        $this->assertTrue(AppointmentResource::hasPage('create'));
+        $this->assertTrue(AppointmentResource::hasPage('edit'));
+    }
+
+    public function test_the_appointment_form_handles_requests_and_conversations_without_a_subject(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            IncomingRequest::query()->create([
+                'source_channel' => 'email',
+                'name_snapshot' => 'Demande reçue sans objet',
+                'message' => 'Bonjour, je souhaite prendre rendez-vous.',
+                'payload_fingerprint' => hash('sha256', 'appointment-request-without-subject'),
+            ]);
+            Conversation::query()->create(['initial_channel' => 'email']);
+        });
+
+        [$request, $conversation] = app(OrganizationContext::class)->run($organization, fn (): array => [
+            IncomingRequest::query()->sole(),
+            Conversation::query()->sole(),
+        ]);
+
+        $this->assertSame('Demande reçue sans objet', AppointmentResource::incomingRequestOptionLabel($request));
+        $this->assertSame('Correspondance sans objet', AppointmentResource::conversationOptionLabel($conversation));
     }
 
     public function test_an_appointment_is_visible_from_its_contact_page(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
         $viewer = User::factory()->create();
         $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
 

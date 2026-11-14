@@ -4,26 +4,48 @@ namespace App\Providers;
 
 use App\Contracts\CorrespondenceTransport;
 use App\Models\Appointment;
+use App\Models\Campaign;
 use App\Models\Company;
 use App\Models\ContactMethod;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\ConversationUserState;
+use App\Models\CrmTask;
 use App\Models\IncomingRequest;
+use App\Models\InstrumentAsset;
+use App\Models\InstrumentCategory;
+use App\Models\Invoice;
+use App\Models\InvoiceLine;
+use App\Models\InvoicePayment;
+use App\Models\InvoiceTransmission;
 use App\Models\MessageAttachment;
 use App\Models\MessageParticipant;
 use App\Models\MessageReference;
 use App\Models\MessageThreadCandidate;
 use App\Models\Organization;
 use App\Models\OrganizationIntegration;
+use App\Models\OrganizationInvoiceSettings;
+use App\Models\OrganizationLegalProfile;
 use App\Models\OrganizationMembership;
 use App\Models\OrganizationModule;
+use App\Models\OrganizationQuoteSettings;
 use App\Models\Person;
+use App\Models\PrivateDocument;
+use App\Models\PrivateDocumentLink;
+use App\Models\Quote;
+use App\Models\QuoteLine;
+use App\Models\Rental;
+use App\Models\RentalAcceptanceRequest;
+use App\Models\RentalDocument;
+use App\Models\RentalReturn;
+use App\Models\SitePortalOAuthClient;
 use App\Models\User;
 use App\Services\FakeCorrespondenceTransport;
+use App\Services\SmtpCorrespondenceTransport;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,7 +56,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(OrganizationContext::class, fn (): OrganizationContext => new OrganizationContext);
-        $this->app->bind(CorrespondenceTransport::class, FakeCorrespondenceTransport::class);
+        $this->app->bind(
+            CorrespondenceTransport::class,
+            $this->app->environment('production') ? SmtpCorrespondenceTransport::class : FakeCorrespondenceTransport::class,
+        );
     }
 
     /**
@@ -42,23 +67,53 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // OAuth signing keys are credentials. In production storage/app is the
+        // shared persistent volume, unlike the rest of release-local storage.
+        Passport::loadKeysFrom(storage_path('app/passport'));
+        Passport::useClientModel(SitePortalOAuthClient::class);
+        Passport::tokensCan([
+            'site:access' => 'Accéder au portail de gestion du site connecté.',
+        ]);
+        Passport::tokensExpireIn(now()->addHour());
+        Passport::refreshTokensExpireIn(now()->addDays(14));
+        Passport::authorizationView('auth.oauth.authorize');
+
         Relation::enforceMorphMap([
             'appointment' => Appointment::class,
+            'campaign' => Campaign::class,
             'person' => Person::class,
             'company' => Company::class,
             'conversation' => Conversation::class,
             'conversation_message' => ConversationMessage::class,
             'conversation_user_state' => ConversationUserState::class,
+            'crm_task' => CrmTask::class,
             'contact_method' => ContactMethod::class,
             'incoming_request' => IncomingRequest::class,
+            'instrument_asset' => InstrumentAsset::class,
+            'instrument_category' => InstrumentCategory::class,
             'organization' => Organization::class,
             'organization_integration' => OrganizationIntegration::class,
+            'organization_legal_profile' => OrganizationLegalProfile::class,
             'organization_membership' => OrganizationMembership::class,
             'organization_module' => OrganizationModule::class,
+            'organization_invoice_settings' => OrganizationInvoiceSettings::class,
+            'organization_quote_settings' => OrganizationQuoteSettings::class,
             'message_attachment' => MessageAttachment::class,
             'message_participant' => MessageParticipant::class,
             'message_reference' => MessageReference::class,
             'message_thread_candidate' => MessageThreadCandidate::class,
+            'private_document' => PrivateDocument::class,
+            'private_document_link' => PrivateDocumentLink::class,
+            'invoice' => Invoice::class,
+            'invoice_line' => InvoiceLine::class,
+            'invoice_payment' => InvoicePayment::class,
+            'invoice_transmission' => InvoiceTransmission::class,
+            'quote' => Quote::class,
+            'quote_line' => QuoteLine::class,
+            'rental' => Rental::class,
+            'rental_acceptance_request' => RentalAcceptanceRequest::class,
+            'rental_document' => RentalDocument::class,
+            'rental_return' => RentalReturn::class,
             'user' => User::class,
         ]);
 

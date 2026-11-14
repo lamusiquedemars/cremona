@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrganizationPermission;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\BrevoConnections\BrevoConnectionResource;
 use App\Models\Organization;
@@ -10,6 +11,7 @@ use App\Models\OrganizationIntegration;
 use App\Models\User;
 use App\Services\BrevoClient;
 use App\Services\OrganizationIntegrationManager;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +44,7 @@ class BrevoConnectionTest extends TestCase
         $administrator = User::factory()->create();
         $administrator->organizations()->attach($organization, [
             'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageOrganizationSettings->value]],
         ]);
 
         $integration = app(OrganizationContext::class)->run($organization, function () use ($administrator): OrganizationIntegration {
@@ -79,10 +82,12 @@ class BrevoConnectionTest extends TestCase
     public function test_only_integration_managers_can_open_brevo_configuration(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['communications']);
         $administrator = User::factory()->create();
         $collaborator = User::factory()->create();
         $administrator->organizations()->attach($organization, [
             'role' => OrganizationRole::Administrator->value,
+            'permissions' => ['capabilities' => [OrganizationPermission::ManageOrganizationSettings->value]],
         ]);
         $collaborator->organizations()->attach($organization, [
             'role' => OrganizationRole::Collaborator->value,

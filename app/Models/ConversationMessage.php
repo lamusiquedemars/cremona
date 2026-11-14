@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 use LogicException;
 
 #[Fillable([
-    'conversation_id', 'author_user_id', 'direction', 'channel', 'subject',
+    'conversation_id', 'email_mailbox_id', 'author_user_id', 'direction', 'channel', 'subject',
     'body_text', 'body_html_sanitized', 'message_id', 'canonical_message_id', 'message_id_hash',
     'in_reply_to', 'canonical_in_reply_to', 'in_reply_to_hash', 'transport_status', 'threading_status',
     'idempotency_key', 'payload_fingerprint', 'authored_at', 'queued_at',
@@ -42,6 +42,11 @@ class ConversationMessage extends Model
             if ($message->conversation_id !== null
                 && ! Conversation::query()->whereKey($message->conversation_id)->exists()) {
                 throw new LogicException('The conversation does not belong to the active organization.');
+            }
+
+            if ($message->email_mailbox_id !== null
+                && ! EmailMailbox::query()->whereKey($message->email_mailbox_id)->exists()) {
+                throw new LogicException('The email mailbox does not belong to the active organization.');
             }
 
             if ($message->author_user_id !== null) {
@@ -94,6 +99,11 @@ class ConversationMessage extends Model
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);
+    }
+
+    public function mailbox(): BelongsTo
+    {
+        return $this->belongsTo(EmailMailbox::class, 'email_mailbox_id');
     }
 
     public function author(): BelongsTo

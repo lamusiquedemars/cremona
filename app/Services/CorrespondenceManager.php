@@ -11,9 +11,11 @@ use App\Enums\MessageThreadingStatus;
 use App\Enums\MessageTransportStatus;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Models\EmailMailbox;
 use App\Models\IncomingRequest;
 use App\Models\MessageThreadCandidate;
 use App\Models\User;
+use App\Support\EmailReplyContent;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Support\Facades\DB;
 use LogicException;
@@ -150,18 +152,26 @@ class CorrespondenceManager
             throw new LogicException('A reply requires at least one recipient.');
         }
 
-        return DB::transaction(function () use ($conversation, $body, $participants, $author, $subject): ConversationMessage {
+        $mailbox = EmailMailbox::query()->where('status', 'active')->first()
+            ?? throw new LogicException('Aucune boîte email active n’est configurée pour cette organisation.');
+
+        return DB::transaction(function () use ($conversation, $body, $participants, $author, $subject, $mailbox): ConversationMessage {
+            $previous = $conversation->messages()->latest('authored_at')->first();
+            $content = EmailReplyContent::fromMarkdown($body);
             $message = $conversation->messages()->create([
+                'email_mailbox_id' => $mailbox->getKey(),
                 'author_user_id' => $author->getKey(),
                 'direction' => MessageDirection::Outbound,
                 'channel' => MessageChannel::Email,
-                'subject' => $subject ?? $conversation->subject,
-                'body_text' => $body,
+                'subject' => $this->replySubject($subject ?? $conversation->subject),
+                'body_text' => $content['text'],
+                'body_html_sanitized' => $content['html'],
+                'in_reply_to' => $previous?->message_id,
                 'transport_status' => MessageTransportStatus::Draft,
                 'threading_status' => MessageThreadingStatus::Matched,
                 'payload_fingerprint' => $this->fingerprint([
                     'conversation' => $conversation->getKey(),
-                    'body' => $body,
+                    'body' => $content['text'],
                     'participants' => $participants,
                 ]),
                 'authored_at' => now(),
@@ -176,6 +186,14 @@ class CorrespondenceManager
                 ]);
             }
 
+            if ($previous?->message_id !== null) {
+                $references = $previous->references()->orderBy('position')->pluck('reference')->all();
+                $references[] = $previous->message_id;
+                foreach (array_values(array_unique(array_filter($references))) as $position => $reference) {
+                    $message->references()->create(['reference' => $reference, 'position' => $position]);
+                }
+            }
+
             $this->auditLogger->record('correspondence.reply_drafted', $message, $author, [
                 'conversation_id' => $conversation->getKey(),
             ]);
@@ -184,7 +202,16 @@ class CorrespondenceManager
         });
     }
 
-    public function sendDraft(ConversationMessage $message, User $actor): void
+    private function replySubject(?string $subject): string
+    {
+        $subject = trim((string) $subject) ?: 'Votre message';
+
+        return preg_match('/^(?:re|r[eé]p)\s*:/ui', $subject) === 1
+            ? $subject
+            : 'Re: '.$subject;
+    }
+
+    public function sendDraft(ConversationMessage $message, User $actor): ConversationMessage
     {
         $this->assertOwned($message->organization_id);
 
@@ -212,6 +239,8 @@ class CorrespondenceManager
             $this->auditLogger->record('correspondence.reply_accepted', $message, $actor, [
                 'conversation_id' => $message->conversation_id,
             ]);
+
+            return $message->refresh();
         } catch (Throwable $exception) {
             $message->update([
                 'transport_status' => MessageTransportStatus::Failed,
@@ -224,6 +253,8 @@ class CorrespondenceManager
                 'conversation_id' => $message->conversation_id,
                 'failure_code' => class_basename($exception),
             ]);
+
+            return $message->refresh();
         }
     }
 
@@ -252,6 +283,47 @@ class CorrespondenceManager
             $this->auditLogger->record('correspondence.message_linked', $message, $actor, [
                 'from_conversation_id' => $previousConversationId,
                 'to_conversation_id' => $conversation->getKey(),
+            ]);
+        });
+    }
+
+    /**
+     * @param  array{person_id?: int|string|null, company_id?: int|string|null, incoming_request_id?: int|string|null}  $context
+     */
+    public function updateContext(Conversation $conversation, array $context, User $actor): void
+    {
+        $this->assertOwned($conversation->organization_id);
+
+        $requestId = $context['incoming_request_id'] ?? null;
+        if ($requestId !== null && Conversation::query()
+            ->where('incoming_request_id', $requestId)
+            ->whereKeyNot($conversation->getKey())
+            ->exists()) {
+            throw new LogicException('Cette demande est déjà liée à une autre correspondance.');
+        }
+
+        DB::transaction(function () use ($conversation, $context, $actor): void {
+            $attributes = [
+                'person_id' => $context['person_id'] ?? null,
+                'company_id' => $context['company_id'] ?? null,
+                'incoming_request_id' => $context['incoming_request_id'] ?? null,
+            ];
+            $before = [
+                'person_id' => $conversation->person_id,
+                'company_id' => $conversation->company_id,
+                'incoming_request_id' => $conversation->incoming_request_id,
+            ];
+
+            $conversation->fill($attributes);
+
+            if (! $conversation->isDirty()) {
+                return;
+            }
+
+            $conversation->save();
+            $this->auditLogger->record('correspondence.context_updated', $conversation, $actor, [
+                'before' => $before,
+                'after' => $attributes,
             ]);
         });
     }
@@ -289,7 +361,7 @@ class CorrespondenceManager
         );
     }
 
-    public function closeConversation(Conversation $conversation, User $actor): void
+    public function closeConversation(Conversation $conversation, ?User $actor = null): void
     {
         $this->assertOwned($conversation->organization_id);
 

@@ -9,11 +9,12 @@ class AppointmentPolicy extends CrmPolicy
 {
     public function create(User $user): bool
     {
-        return false;
+        return parent::create($user);
     }
 
     public function update(User $user, Model $record): bool
     {
-        return false;
+        return $record->getAttribute('provider') === 'manual'
+            && parent::update($user, $record);
     }
 }

@@ -1,0 +1,192 @@
+# Déploiement LWS — Cremona
+
+> **QUARANTAINE — ne pas exécuter ce guide.** Il contient des modèles de
+> publication contradictoires (transfert manuel et release par script) et
+> n'est pas une procédure validée selon le contrat commun. N'utilise ni ses
+> chemins, ni ses accès, ni ses commandes en production. Voir le
+> [registre des documents retirés/en quarantaine](../../maracuja-control/docs/documents-a-retirer.md)
+> et la [politique commune](../../maracuja-control/docs/deploiement-multi-sites.md).
+
+## Cible
+
+Le CRM sera publié sur `https://cremona.maracujadigital.fr`. Il reste privé :
+la page d'accueil redirige vers la connexion Cremona.
+
+## Base MySQL partagée
+
+LWS fournit une base commune aux sites Maracuja. Cremona doit utiliser cette
+base, mais avec un préfixe propre :
+
+```env
+DB_PREFIX=cremona_
+```
+
+Ne jamais utiliser `migrate:fresh`, `db:wipe`, ni une commande qui supprime
+globalement des tables sur cet hébergement.
+
+## Variables de production minimales
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://cremona.maracujadigital.fr
+APP_LOCALE=fr
+APP_FALLBACK_LOCALE=fr
+DB_CONNECTION=mysql
+DB_PREFIX=cremona_
+QUEUE_CONNECTION=sync
+CACHE_STORE=database
+SESSION_DRIVER=database
+```
+
+Les identifiants MySQL restent ceux de la base LWS existante. `APP_KEY` doit
+être générée pour Cremona uniquement, jamais copiée depuis un autre site.
+
+## Préparation et publication
+
+### Répartition opérationnelle permanente
+
+- L’agent prépare et envoie les fichiers via le SFTP LWS déjà configuré dans
+  `/Users/ivocorreiademelo/Sites/.vscode/sftp.json`.
+- Ivo ne travaille pas sur une copie locale : il exécute uniquement les
+  commandes Laravel indiquées par l’agent dans le terminal SSH LWS, depuis
+  `~/htdocs/cremona.maracujadigital.fr`, et en renvoie le résultat.
+- Avant tout envoi, l’agent contrôle le répertoire distant. Il préserve
+  systématiquement `.env`, `vendor`, `storage` et la base de données, sauf
+  demande explicite contraire.
+
+Cette répartition vaut pour toutes les publications Cremona à venir.
+
+### Configuration des secrets et intégrations Google Ads
+
+Les secrets Google ne transitent ni par le chat, ni par Git, ni par les écrans
+des organisations. L’agent installe les variables exclusivement dans le `.env`
+de production via le canal SFTP LWS existant, puis Ivo exécute seulement la
+reconstruction de cache indiquée. Avant cela, l’agent vérifie la présence des
+clés sans en lire ou afficher la valeur.
+
+Les valeurs nécessaires sont centralisées une fois pour toute l’agence :
+
+```env
+GOOGLE_ADS_DEVELOPER_TOKEN=…
+GOOGLE_ADS_OAUTH_CLIENT_ID=…
+GOOGLE_ADS_OAUTH_CLIENT_SECRET=…
+GOOGLE_ADS_LOGIN_CUSTOMER_ID=…
+GOOGLE_ADS_API_ACCESS_LEVEL=basic
+```
+
+`GOOGLE_ADS_API_ACCESS_LEVEL` ne peut être `basic` ou `standard` qu’après
+confirmation dans l’API Center Google Ads. Un accès `test` reste `pending` :
+il ne doit jamais accéder aux comptes clients réels.
+
+Pour chaque nouveau client, la procédure est ensuite toujours la même :
+
+1. créer ou enregistrer le compte Ads client dans son organisation Cremona ;
+2. Ivo (compte gestionnaire Maracuja) ouvre l’action **Autoriser Google Ads** ;
+3. il choisit son compte agence qui a déjà accès au compte Ads client ;
+4. Cremona conserve le jeton de rafraîchissement chiffré dans le coffre
+   plateforme Maracuja, une seule fois pour l’agence ;
+5. chaque organisation ne reçoit que l’identifiant de son compte Ads ;
+6. synchroniser en lecture seule et vérifier les résultats avant toute action
+   de création ou d’activation de campagne.
+
+Le client n’a donc jamais à communiquer son mot de passe Google à Maracuja et
+aucune campagne, paiement ou diffusion ne résulte de cette autorisation.
+
+La mise en place se fait d’abord dans `Plateforme > Infrastructure Google Ads`.
+Avant l’autorisation, ajouter l’URI suivante au client OAuth Google Cloud :
+
+```txt
+https://cremona.maracujadigital.fr/integrations/google-ads/agency/callback
+```
+
+L’activation est réversible depuis cette même page. Ne jamais recopier un token
+Google depuis le presse-papiers ou le chat dans une migration ou une commande :
+les valeurs restent dans `.env` et ne sont jamais affichées.
+
+1. Créer le sous-domaine `cremona.maracujadigital.fr` dans LWS.
+2. Envoyer le projet dans le répertoire racine imposé par LWS. Les fichiers
+   `.htaccess` et `index.php` à la racine assurent le routage Laravel sans
+   exposer `.env` ou `vendor`.
+3. Sur le serveur, exécuter :
+
+```bash
+composer install --no-dev --optimize-autoloader
+php artisan key:generate
+php artisan migrate --force
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+4. Configurer une tâche cron LWS qui appelle `php artisan schedule:run` toutes
+   les cinq minutes. La configuration actuelle utilise une file synchrone : les
+   e-mails d’accès sont envoyés immédiatement et aucun worker permanent n’est
+   requis. Un worker dédié ne sera ajouté que lorsqu’un traitement métier lourd
+   le justifiera.
+
+## Après la publication
+
+Une fois HTTPS actif, ajouter cette URL dans le client OAuth Google :
+
+```txt
+https://cremona.maracujadigital.fr/integrations/google-ads/callback
+```
+
+## Releases atomiques (serveur actuel)
+
+La seule commande de publication autorisée est :
+
+```bash
+bash scripts/deploy-lws-release.sh
+```
+
+Elle refuse une bascule si le stockage persistant n'est pas présent ou si la
+release de staging contient autre chose que les fichiers vides attendus dans
+`storage/app`. Ne pas effectuer de publication manuelle à partir d'une archive
+Git ou d'un copier-coller de commandes : cette protection est précisément là
+pour empêcher qu'une release écrase les médias.
+
+Le déploiement actuel utilise des répertoires `releases/` et un lien symbolique
+`current`. Le code seul ne contient pas les assets Vite, car `public/build` est
+généré et ignoré par Git. Avant de rendre une release active, il faut donc soit
+construire les assets avec la version Node prévue, soit recopier le répertoire
+`public/build` (avec son `manifest.json`) depuis la release active validée.
+
+La vérification obligatoire après bascule est :
+
+```bash
+test -f public/build/manifest.json
+curl -fsS -o /dev/null -w '%{http_code}\n' https://cremona.maracujadigital.fr/dashboard/login
+```
+
+L’absence de ce manifeste provoque un 500 Filament, même si les migrations et
+les caches ont réussi. Les variables privées (dont Scaleway) sont injectées
+seulement dans le `.env` de la release de staging avant les caches ; elles ne
+passent jamais par Git.
+
+`vendor` doit provenir d'une **release précise déjà validée** (par exemple avec
+`cp -al "$previous/vendor" "$stage/vendor"`). Il ne faut jamais créer un lien
+vers `current/vendor` : après la bascule de `current`, un tel lien se référerait
+à lui-même et provoquerait un 500.
+
+Les données téléversées ne font plus partie d'une release. Sur le serveur, elles
+sont conservées dans `$app/shared/storage/app`, hors de `releases/`; dans chaque
+release, `storage/app` est un lien vers ce répertoire partagé. Avant la bascule,
+créer ou conserver ce lien vers `../../../shared/storage/app` (depuis
+`$stage/storage/app`). Ne jamais recréer ce répertoire depuis une ancienne
+release et ne jamais l'écraser : c'est ce qui garantit qu'une photo ajoutée dans
+Cremona survit à tous les déploiements. Les caches et journaux restent dans le
+`storage/` propre à chaque release.
+
+Ce répertoire reste volontairement inscriptible par le processus web : c'est
+nécessaire aux téléversements. Sa protection ne repose donc pas sur un droit en
+lecture seule — qui empêcherait aussi l'ajout d'une photo — mais sur son
+isolement hors des releases et sur le contrôle bloquant du script de publication.
+
+Les téléversements publics (notamment les photos d'instruments) sont servis
+par la route Laravel `/media/{path}`. Sur cet hébergement, ne pas dépendre du
+lien symbolique `public/storage` : LWS ne le sert pas de façon fiable. Les
+fichiers restent dans `storage/app/public`, donc dans le stockage partagé hors
+des releases.

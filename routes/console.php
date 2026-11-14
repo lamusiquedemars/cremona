@@ -1,8 +1,52 @@
 <?php
 
+use App\Console\Commands\ApplyRentalGridRates;
+use App\Console\Commands\SyncEmailMailboxes;
+use App\Console\Commands\SyncGoogleAdsCampaignConfigurations;
+use App\Console\Commands\SyncGoogleAdsReporting;
+use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('cremona:create-admin {email} {name?}', function (string $email, ?string $name = null): int {
+    $password = $this->secret('Choisissez un mot de passe pour ce compte');
+
+    if (! is_string($password) || $password === '') {
+        $this->error('Aucun mot de passe n’a été défini.');
+
+        return self::FAILURE;
+    }
+
+    User::query()->updateOrCreate([
+        'email' => strtolower($email),
+    ], [
+        'name' => $name ?: $email,
+        'password' => $password,
+        'is_platform_admin' => true,
+    ]);
+
+    $this->info("Compte administrateur prêt pour {$email}.");
+
+    return self::SUCCESS;
+})->purpose('Crée ou met à jour un compte administrateur Cremona');
+
+Schedule::command(SyncGoogleAdsReporting::class)
+    ->hourly()
+    ->withoutOverlapping();
+
+Schedule::command(SyncGoogleAdsCampaignConfigurations::class)
+    ->hourlyAt(5)
+    ->withoutOverlapping();
+
+Schedule::command(SyncEmailMailboxes::class)
+    ->everyFifteenMinutes()
+    ->withoutOverlapping();
+
+Schedule::command(ApplyRentalGridRates::class)
+    ->dailyAt('00:05')
+    ->withoutOverlapping();

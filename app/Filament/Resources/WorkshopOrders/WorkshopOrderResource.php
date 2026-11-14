@@ -1,0 +1,146 @@
+<?php
+
+namespace App\Filament\Resources\WorkshopOrders;
+
+use App\Enums\WorkshopOrderStatus;
+use App\Filament\Concerns\UsesOrganizationPresentation;
+use App\Filament\Resources\WorkshopOrders\Pages\CreateWorkshopOrder;
+use App\Filament\Resources\WorkshopOrders\Pages\EditWorkshopOrder;
+use App\Filament\Resources\WorkshopOrders\Pages\ListWorkshopOrders;
+use App\Filament\Resources\WorkshopOrders\Pages\ViewWorkshopOrder;
+use App\Models\IncomingRequest;
+use App\Models\ServiceDefinition;
+use App\Models\StockItem;
+use App\Models\WorkshopOrder;
+use Filament\Actions\CreateAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Resources\Resource;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+
+class WorkshopOrderResource extends Resource
+{
+    use UsesOrganizationPresentation;
+
+    protected static ?string $model = WorkshopOrder::class;
+
+    protected static ?string $modelLabel = 'dossier atelier';
+
+    protected static ?string $pluralModelLabel = 'dossiers atelier';
+
+    protected static ?string $navigationLabel = 'Dossiers atelier';
+
+    protected static ?string $presentationGroupKey = 'workshop';
+
+    protected static ?string $presentationKey = 'interventions';
+
+    protected static string $organizationModule = 'workshop';
+
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Atelier';
+
+    protected static ?int $navigationSort = 55;
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema->columns(12)->components([
+            Section::make('Dossier atelier')->columns(12)->columnSpanFull()->schema([
+                TextInput::make('title')->label('Intitulé')->required()->columnSpan(6),
+                Placeholder::make('workflow_status')->label('Étape du dossier')->content(fn (?WorkshopOrder $record): string => $record?->status->getLabel() ?? WorkshopOrderStatus::Received->getLabel())->columnSpan(3),
+                TextInput::make('reference')->label(__('common.reference'))->disabled()->dehydrated(false)->placeholder('Attribuée automatiquement : AT'.now()->format('y').'0001')->columnSpan(3),
+                Select::make('person_id')->label('Client')->relationship('person', 'display_name')->searchable()->preload()->columnSpan(6),
+                Select::make('incoming_request_id')->label(__('common.request_origin'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->columnSpan(6),
+                Textarea::make('instrument_description')->label('Instrument confié')->rows(3)->columnSpan(6),
+                Textarea::make('customer_instructions')->label('Demande du client')->rows(3)->columnSpan(6),
+                Textarea::make('diagnosis')->label('Diagnostic atelier')->rows(4)->columnSpanFull(),
+                Repeater::make('services')->label('Prestations prévues')->relationship()->schema([
+                    Select::make('service_definition_id')->label('Prestation')->relationship('definition', 'name', fn ($query) => $query->where('is_active', true))->preload()->searchable()->live()->afterStateUpdated(function (?string $state, Set $set): void {
+                        $service = filled($state) ? ServiceDefinition::query()->find($state) : null;
+                        if ($service === null) {
+                            return;
+                        }
+                        $set('label_snapshot', $service->name);
+                        $set('description_snapshot', $service->description);
+                        $set('unit_amount', $service->suggested_unit_amount);
+                    }),
+                    TextInput::make('label_snapshot')->label('Intitulé')->required(),
+                    Textarea::make('description_snapshot')->label(__('common.description'))->rows(2),
+                    TextInput::make('quantity')->label(__('common.quantity'))->numeric()->default(1),
+                    TextInput::make('unit_amount')->label('Prix HT')->numeric()->prefix('€')->default(0),
+                    Checkbox::make('include_in_quote')->label('À ajouter au devis'),
+                ])->columns(3)->columnSpanFull(),
+                Repeater::make('stockItems')->label('Articles à consommer')->relationship()->schema([
+                    Select::make('stock_item_id')->label('Article de stock')->relationship('stockItem', 'name', fn ($query) => $query->where('is_active', true))->preload()->searchable()->live()->afterStateUpdated(function (?string $state, Set $set): void {
+                        $item = filled($state) ? StockItem::query()->find($state) : null;
+                        if ($item !== null) {
+                            $set('label_snapshot', $item->name);
+                            $set('unit_amount', $item->suggested_unit_amount);
+                        }
+                    }),
+                    TextInput::make('label_snapshot')->label('Intitulé')->required(),
+                    TextInput::make('quantity')->label('Quantité utilisée')->numeric()->minValue(0.01)->default(1)->required(),
+                    TextInput::make('unit_amount')->label('Prix HT')->numeric()->prefix('€')->default(0),
+                    Checkbox::make('include_in_quote')->label('À ajouter au devis'),
+                ])->columns(3)->columnSpanFull()->helperText('Prépare les consommables nécessaires. Cochez « À ajouter au devis » lorsqu’ils doivent être facturés. Ils ne sont retirés du stock qu’avec l’action « Déduire le stock consommé », une fois l’intervention commencée.'),
+                DateTimePicker::make('received_at')->label('Reçu le')->seconds(false)->disabled()->columnSpan(3),
+                DateTimePicker::make('due_at')->label('Intervention prévue le')->seconds(false)->disabled()->columnSpan(3),
+                DateTimePicker::make('ready_at')->label('Prêt le')->seconds(false)->disabled()->columnSpan(3),
+                DateTimePicker::make('returned_at')->label('Restitué le')->seconds(false)->disabled()->columnSpan(3),
+                Textarea::make('notes')->label(__('common.internal_notes'))->rows(3)->columnSpanFull(),
+            ]),
+        ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table->defaultSort('updated_at', 'desc')->columns([
+            TextColumn::make('reference')->label(__('common.reference'))->searchable(['reference', 'previous_reference'])->description(fn (WorkshopOrder $record): ?string => $record->previous_reference ? 'Ancien : '.$record->previous_reference : null)->sortable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap()->sortable(), TextColumn::make('person.display_name')->label('Client')->placeholder('—')->sortable(), TextColumn::make('status')->label(__('common.status'))->badge()->sortable(), TextColumn::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y')->placeholder('—')->sortable(),
+        ])->filters([SelectFilter::make('status')->options(WorkshopOrderStatus::class)])->recordActions([\Filament\Actions\ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (WorkshopOrder $record): string => self::getUrl('view', ['record' => $record]))->headerActions([CreateAction::make()->label('Nouveau dossier atelier')]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->columns(2)->components([
+            Section::make('Dossier atelier')->columns(2)->schema([
+                TextEntry::make('reference')->label(__('common.reference')),
+                TextEntry::make('status')->label(__('common.status'))->badge(),
+                TextEntry::make('person.display_name')->label('Client')->placeholder('—'),
+                TextEntry::make('instrument_description')->label('Instrument confié')->placeholder('—'),
+                TextEntry::make('customer_instructions')->label('Demande du client')->placeholder('—')->columnSpanFull(),
+                TextEntry::make('diagnosis')->label('Diagnostic atelier')->placeholder('—')->columnSpanFull(),
+                TextEntry::make('due_at')->label('Intervention prévue le')->dateTime('d/m/Y H:i')->placeholder('—'),
+                TextEntry::make('ready_at')->label('Prêt le')->dateTime('d/m/Y H:i')->placeholder('—'),
+                TextEntry::make('returned_at')->label('Restitué le')->dateTime('d/m/Y H:i')->placeholder('—'),
+                TextEntry::make('notes')->label(__('common.internal_notes'))->placeholder('—')->columnSpanFull(),
+            ]),
+            Section::make('Prestations prévues')->schema([
+                RepeatableEntry::make('services')->hiddenLabel()->schema([
+                    TextEntry::make('label_snapshot')->label('Intitulé'),
+                    TextEntry::make('quantity')->label(__('common.quantity')),
+                    TextEntry::make('unit_amount')->label('Prix HT')->money('EUR'),
+                    TextEntry::make('include_in_quote')->label('À ajouter au devis')->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
+                ])->columns(4),
+            ])->columnSpanFull(),
+        ]);
+    }
+
+    public static function getPages(): array
+    {
+        return ['index' => ListWorkshopOrders::route('/'), 'create' => CreateWorkshopOrder::route('/create'), 'view' => ViewWorkshopOrder::route('/{record}'), 'edit' => EditWorkshopOrder::route('/{record}/edit')];
+    }
+}

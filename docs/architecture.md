@@ -2,10 +2,13 @@
 
 ## Responsabilité du produit
 
-Cremona est le SaaS métier central de Maracuja Digital. Il ne remplace pas Maracuja CMS Starter, qui reste responsable des sites publics indépendants.
+Cremona est la plateforme métier multi-organisation interne de Maracuja Digital.
+Elle ne remplace pas Maracuja Site, qui reste responsable des sites
+publics indépendants. Les clients n'ont pas à connaître le nom Cremona : ils
+utilisent, lorsque nécessaire, un espace de gestion à leur identité.
 
 ```text
-Sites publics Maracuja CMS
+Sites publics Maracuja Site
         ↓ API sécurisée
 Cremona
         ├── noyau commun
@@ -34,6 +37,25 @@ Les permissions fines viendront compléter le rôle lorsque les premiers modules
 
 `organization_modules` active une capacité pour une organisation et conserve sa configuration non sensible. Les secrets d’intégration auront un stockage chiffré dédié.
 
+Les **rubriques du menu** regroupent visuellement des modules ; elles ne sont pas elles-mêmes des capacités activables. Les connexions techniques — boîtes email, Brevo, Google Ads, canaux entrants et connecteurs de publication — ne sont pas des modules métier : elles sont regroupées dans **Configuration de l’organisation**. Cette zone est réservée aux administrateurs de plateforme par défaut ; elle ne peut être déléguée à un membre d’organisation que par l’autorisation particulière explicite `manage_organization_settings`.
+
+Les référentiels métier (modèles commerciaux, tarifs de location et formules d’assurance) suivent le même principe : ils constituent une zone secondaire, distincte de la configuration technique et du travail quotidien. Les permissions `manage_commercial_references` et `manage_rental_pricing` peuvent être déléguées séparément, sans ouvrir l’ensemble des réglages.
+
+### Traçabilité des médias d’instruments
+
+Chaque ajout, retrait ou modification d’une photo d’instrument est inscrit dans
+le journal d’audit de l’organisation. L’événement conserve l’instrument, le
+chemin du fichier, l’auteur, la date, ainsi que l’ancienne et la nouvelle
+légende ou visibilité lorsque ces propriétés changent. Il ne duplique jamais
+le fichier image. Cet historique est visible uniquement aux administrateurs de
+plateforme dans la fiche de l’instrument ; les utilisateurs métier ne voient
+pas la zone technique.
+
+Cette traçabilité complète la règle de déploiement : les médias vivent dans
+`shared/storage/app`, hors des releases. Une publication ne doit jamais
+remplacer ce répertoire ; le script `scripts/deploy-lws-release.sh` bloque une
+release qui ne respecte pas ce lien de stockage persistant.
+
 Les premiers packs prévus sont :
 
 - Luthier : musiciens, instruments, interventions, documents ;
@@ -41,6 +63,25 @@ Les premiers packs prévus sont :
 - Artisan : clients, chantiers, interventions, devis et médias.
 
 Le noyau commun ne doit pas adopter le vocabulaire d’un métier particulier.
+
+### Adaptation de présentation par pack
+
+Chaque capacité commune conserve un modèle et des règles métier stables, mais sa
+présentation est résolue par le pack actif de l'organisation : intitulés, groupes
+de navigation, écrans visibles, raccourcis et champs propres au métier.
+
+Par exemple, un pack Luthier peut présenter la relation client comme « Clients
+et atelier » et une tâche comme « À faire à l'atelier » ou « Relance client ».
+Un pack Avocat peut présenter les mêmes capacités sous « Dossiers et échéances ».
+Ces exemples illustrent le mécanisme : ils ne constituent ni des noms réservés,
+ni des valeurs à coder dans le noyau.
+
+Les objets propres à une profession sont définis dans son module métier, avec
+son vocabulaire réel. Le noyau ne crée pas de table catalogue universelle pour
+les absorber. Chaque objet possède un propriétaire unique : un objet géré dans
+Cremona peut avoir une projection contrôlée vers Maracuja CMS ; un catalogue CMS
+autonome existant peut rester propriétaire et être seulement référencé dans
+Cremona.
 
 ## Règles avant import des modules du CMS
 

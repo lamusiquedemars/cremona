@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\Enums\ConversationStatus;
 use App\Enums\MessageChannel;
+use App\Enums\MessageDirection;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use App\Tenancy\Concerns\ValidatesOrganizationAssignee;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -88,9 +90,31 @@ class Conversation extends Model
         return $this->hasMany(ConversationMessage::class);
     }
 
+    public function latestMessage(): HasOne
+    {
+        return $this->hasOne(ConversationMessage::class)->latestOfMany('authored_at');
+    }
+
+    public function latestInboundMessage(): HasOne
+    {
+        return $this->hasOne(ConversationMessage::class)
+            ->where('direction', MessageDirection::Inbound)
+            ->latestOfMany('authored_at');
+    }
+
     public function userStates(): HasMany
     {
         return $this->hasMany(ConversationUserState::class);
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(CrmTask::class);
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
     }
 
     public function getRouteKeyName(): string

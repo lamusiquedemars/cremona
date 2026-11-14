@@ -1,0 +1,174 @@
+# Blueprint — sites autonomes et gestion connectée
+
+> Statut : décision d'architecture validée pour le prochain cycle de construction.
+>
+> Dernière mise à jour : 1er novembre 2026.
+
+## 1. But produit
+
+Maracuja Digital propose des sites qui restent simples à exploiter lorsqu'ils
+n'ont besoin que de présenter une activité, et qui peuvent devenir connectés à
+un espace de gestion lorsqu'une entreprise en a réellement besoin. Le client ne
+se voit pas vendre le nom interne **Cremona** : il utilise, si nécessaire, son
+espace de gestion à ses couleurs.
+
+Les applications restent séparées, avec leurs propres bases de données et leurs
+propres déploiements. Une intégration n'autorise ni accès direct à la base de
+l'autre application, ni double édition d'une même donnée.
+
+## 2. Deux profils d'offre
+
+| Profil | Maracuja Site | Espace de gestion Cremona |
+| --- | --- | --- |
+| **Site vitrine autonome** | Site, contenu, médias, SEO, formulaires, emails et éventuellement liste locale des demandes | absent |
+| **Site connecté à la gestion** | Site, contenu, médias publics, SEO, formulaire et communication marketing | demandes, contacts, emails directs, correspondances, tâches, rendez-vous, devis et modules métier |
+
+Le formulaire public reste toujours une capacité de Maracuja Site : affichage, validation,
+anti-spam, accusé de réception et disponibilité du site. Dans le profil
+connecté, le traitement métier est changé : Maracuja Site transmet l'événement à
+Cremona et son écran local `Inquiries` est désactivé ou masqué. Il ne doit pas
+rester deux files de demandes à traiter.
+
+Un client peut passer du premier profil au second sans refaire son site : on
+active le connecteur, on rattache le site à une organisation et on choisit la
+politique de reprise des demandes locales existantes.
+
+## 3. Demandes et correspondances : parcours canonique connecté
+
+```text
+Formulaire Site ─┐
+Email direct ───┼→ Cremona : contact, demande, conversation et suivi
+Téléphone ──────┤
+Rencontre ──────┘
+                    ↓
+              tâches, rendez-vous, devis, dossiers métier
+```
+
+- Le formulaire appelle une API Cremona versionnée avec une clé d'idempotence.
+  Le pilote transmet synchroniquement : si Cremona refuse, le visiteur reçoit
+  une erreur explicite et aucune demande locale parallèle n'est créée. Une
+  outbox rejouable est une évolution ultérieure, à introduire seulement quand
+  le volume ou les exigences de reprise le justifient.
+- Le formulaire Site crée ou rapproche le contact, puis crée la demande et le
+  message initial avec la source exacte (`site`, `email`, `telephone`,
+  `rencontre`, etc.).
+- La relève IMAP actuelle importe les emails directs comme correspondances.
+  La transformation ou le rattachement explicite en demande relève du chantier
+  Relation client : la suppression d’un email dans la boîte distante ne doit
+  jamais supprimer ni fermer une donnée Cremona.
+- Un lien « Gestion commerciale » dans l'administration Site ouvre l'organisation
+  Cremona concernée. Il n'encastre pas une seconde application dans Filament.
+- La connexion unique entre Site et gestion est une évolution explicite ; elle
+  ne doit pas retarder le premier flux, qui peut ouvrir l'espace sécurisé par
+  lien distinct.
+
+## 4. Propriété des données
+
+| Donnée | Propriétaire | Projection autorisée |
+| --- | --- | --- |
+| Pages, actualités, SEO, thème, médias publics | Maracuja Site | état ou lien vers Cremona |
+| Formulaire public, validation, anti-spam | Maracuja Site | événement de demande vers Cremona |
+| Demande, contact CRM, conversation, email direct, tâche, rendez-vous, devis | Cremona | lien ou résumé non éditable dans le Site |
+| Consentement newsletter, segments et campagnes Brevo | Site + Brevo | signal ciblé depuis Cremona après consentement explicite |
+| Devis et son PDF | Cremona | identifiant, PDF/lien et statut vers un outil comptable, si une intégration est décidée |
+| Facture, paiement | outil comptable choisi, notamment Pennylane si retenu | identifiant, PDF/lien et statut dans Cremona |
+| Catalogue métier | **un seul propriétaire choisi par objet** | projection publique ou commerciale en lecture seule |
+
+Maracuja Site et Cremona ne synchronisent jamais l'ensemble de leurs contacts. Un
+événement transmet seulement ce qui est nécessaire à son but : une demande du
+site ouvre un contact CRM ; un consentement marketing explicite peut créer ou
+mettre à jour un abonné Brevo.
+
+## 5. Offre, stock et métier
+
+Le noyau Cremona contient les capacités réutilisables : organisations, CRM,
+correspondances, tâches, rendez-vous, devis et modèles de lignes de devis. Il
+ne contient pas une table universelle `Products`.
+
+Un pack métier ajoute les objets dont le comportement est réellement propre au
+métier. Le premier est le pack **Luthier** : instruments physiques, articles de
+stock, prestations, dossiers atelier, locations, essais et leurs statuts.
+
+Pour Contempo, les instruments à vendre ou louer sont des unités physiques
+individuelles ; les cordes et accessoires sont des articles de stock ; un
+reméchage ou un ajustement est une prestation. Une tâche n'est facturable que
+si l'utilisateur la qualifie et la transforme explicitement en ligne de devis :
+« appeler un fournisseur » ne peut pas le devenir par accident.
+
+Le propriétaire du catalogue dépend du cas :
+
+- **Atelier Ivo, état actuel** : Arcus/Site reste propriétaire des archets et de
+  leur catalogue public ; Cremona référence et capture les informations utiles
+  au suivi commercial sans maintenir un second catalogue éditable.
+- **Contempo, cible connectée** : le pack Luthier/Cremona est propriétaire du
+  parc, du stock et des prestations ; le Site reçoit la sélection publiable,
+  son statut public et les médias autorisés.
+
+### Contrat de publication d'un catalogue métier
+
+Lorsqu'un pack Cremona est propriétaire, la publication vers Site Core est une
+projection à sens unique. Le contrat doit indiquer, pour chaque objet : son
+identifiant stable, son état public, le prix ou sa mention, les médias autorisés,
+la date de dernière projection et l'erreur éventuelle. Site Core compose la
+page, le référencement et les contenus éditoriaux ; il ne modifie ni la
+disponibilité, ni le stock, ni les prix opérationnels.
+
+Lorsqu'un catalogue Site Core est propriétaire, Cremona n'en reçoit pas une
+copie. Un parcours commercial peut enregistrer son identifiant stable et le
+snapshot nécessaire au devis, à l'essai ou au suivi. La fiche publique,
+sa disponibilité éditoriale et ses médias restent alors au site.
+
+Cette règle remplace toute idée de synchronisation universelle de « produits ».
+Avant un nouveau catalogue, il faut choisir son propriétaire et documenter le
+contrat ; si aucun cycle opérationnel ne le justifie, Site Core reste le choix
+par défaut.
+
+## 6. Briques versionnées, sans copie de dossiers
+
+La cible est une installation guidée et mise à jour par version, non une copie
+de fichiers entre projets :
+
+1. Maracuja Site conserve ses modules natifs versionnés, dont `ContactForm`, `Gallery`
+   et `Audience` ;
+2. un module optionnel **Cremona Bridge** apporte la configuration du lien,
+   l'outbox, la signature des appels, les reprises et le lien de gestion ;
+3. Cremona active ses capacités par organisation et conserve les secrets de
+   connexion chiffrés ;
+4. le pack Luthier possède ses migrations, politiques, tests et version propre ;
+5. chaque installation passe par une commande contrôlée, avec sauvegarde et
+   migration additive, jamais par copier-coller ou écrasement de données.
+
+Dans l'immédiat, ces briques restent des modules Laravel versionnés dans les
+applications où elles vivent. Elles ne seront extraites en packages Composer
+privés qu'après une seconde installation réelle, lorsque leur contrat sera
+stabilisé. L'expérience d'installation doit néanmoins être la même dès le
+départ : activation explicite, contrôle des prérequis, migrations et tests.
+
+## 7. Ordre de réalisation
+
+Livré :
+
+1. le contrat du bridge Site ↔ Cremona et le socle du bridge ;
+2. le socle commercial de Cremona : modèles de lignes, devis, PDF,
+   coordonnées légales et numérotation ;
+3. le pack Luthier : parc, stock, prestations, dossier atelier, location et
+   projection publique des instruments vers Contempo.
+
+Reste à faire :
+
+1. vérifier le bridge avec deux organisations et deux sites réels, y compris
+   les pannes, reprises, doublons et la visibilité d'un échec ;
+2. formaliser le contrat de publication des catalogues : un pilote Site Core
+   autonome (Arcus) et un pilote métier Cremona (Contempo) ;
+3. livrer l'inscription marketing publique et l'invitation depuis Cremona,
+   avec consentement démontrable et sans synchronisation globale des contacts ;
+4. faire évoluer la lecture d'email vers du HTML sémantique sanitisé et des
+   pièces jointes privées, sans exécuter de contenu d'expéditeur ;
+5. valider les parcours réels réparation/reméchage, location et vente avec
+   Contempo avant toute automatisation supplémentaire ;
+6. poursuivre Super PDP avec l'identité de l'entreprise réelle. Aucun import
+   Dynamics ni connecteur Pennylane obligatoire n'est prévu.
+
+Chaque étape a un plan de migration, un test de reprise et un retour arrière
+documenté. Aucun site existant n'est basculé ou nettoyé par une suppression
+automatique.

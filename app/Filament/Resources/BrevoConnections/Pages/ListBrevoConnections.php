@@ -6,6 +6,7 @@ use App\Filament\Resources\BrevoConnections\BrevoConnectionResource;
 use App\Models\OrganizationIntegration;
 use App\Services\BrevoClient;
 use App\Services\OrganizationIntegrationManager;
+use App\Tenancy\OrganizationContext;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -34,6 +35,7 @@ class ListBrevoConnections extends ListRecords
                         'booking_url' => $credentials['booking_url'] ?? null,
                         'timezone' => $credentials['timezone'] ?? 'Europe/Paris',
                         'mode' => $credentials['mode'] ?? 'after_review',
+                        'default_assigned_user_id' => $credentials['default_assigned_user_id'] ?? null,
                     ];
                 })
                 ->schema([
@@ -59,6 +61,12 @@ class ListBrevoConnections extends ListRecords
                         ->label('Fuseau professionnel')
                         ->required()
                         ->maxLength(64),
+                    Select::make('default_assigned_user_id')
+                        ->label('Responsable Cremona par défaut')
+                        ->options(fn (): array => app(OrganizationContext::class)->require()->users()->orderBy('name')->pluck('name', 'users.id')->all())
+                        ->searchable()
+                        ->preload()
+                        ->helperText('Utilisé si le compte Brevo qui reçoit la réservation n’est pas un membre de cette organisation.'),
                 ])
                 ->modalHeading('Connexion à Brevo Meetings')
                 ->modalSubmitActionLabel('Tester et enregistrer')
@@ -77,23 +85,24 @@ class ListBrevoConnections extends ListRecords
                             'booking_url' => $data['booking_url'],
                             'timezone' => $data['timezone'],
                             'mode' => $data['mode'],
+                            'default_assigned_user_id' => $data['default_assigned_user_id'] ?: null,
                         ],
                         actor: auth()->user(),
                     );
 
                     Notification::make()
-                        ->title('Brevo Meetings est connecté')
-                        ->body('La clé a été vérifiée puis enregistrée de manière chiffrée.')
+                        ->title('Étape 1 terminée : Brevo Meetings est connecté')
+                        ->body('La clé a été vérifiée et enregistrée de manière chiffrée. Préparez ensuite les webhooks pour recevoir les réservations dans Cremona.')
                         ->success()
                         ->send();
                 }),
             Action::make('webhook')
                 ->label(fn (): string => $this->integration()?->key_id
-                    ? 'Régénérer le webhook'
-                    : 'Configurer le webhook')
+                    ? 'Régénérer les webhooks'
+                    : 'Étape 2 : configurer les webhooks')
                 ->icon(Heroicon::OutlinedArrowPathRoundedSquare)
                 ->requiresConfirmation()
-                ->modalDescription('Le précédent jeton cessera immédiatement de fonctionner. La nouvelle configuration ne sera affichée qu’une fois.')
+                ->modalDescription('Cremona génère les trois adresses de réception (réservé, commencé, annulé) et un jeton propre à cette organisation. Le précédent jeton cesse immédiatement de fonctionner. La configuration ne sera affichée qu’une fois.')
                 ->visible(fn (): bool => $this->integration()?->status === 'active')
                 ->action(function (): void {
                     $integration = $this->integration();
@@ -113,8 +122,8 @@ class ListBrevoConnections extends ListRecords
                     $this->js('navigator.clipboard.writeText('.Js::from($json).')');
 
                     Notification::make()
-                        ->title('Configuration webhook copiée')
-                        ->body("Conservez-la maintenant, elle ne sera plus affichée :\n{$json}")
+                        ->title('Étape 2 : configuration Brevo copiée')
+                        ->body("Dans Brevo, créez les webhooks Meetings correspondants, collez chaque adresse et le jeton Bearer ci-dessous. Conservez-le maintenant :\n{$json}")
                         ->success()
                         ->persistent()
                         ->send();

@@ -6,29 +6,29 @@ use App\Filament\Resources\Companies\CompanyResource;
 use App\Services\CrmRecordManager;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Pages\BusinessViewRecord;
 use Filament\Support\Icons\Heroicon;
 
-class ViewCompany extends ViewRecord
+class ViewCompany extends BusinessViewRecord
 {
     protected static string $resource = CompanyResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make()->label('Modifier l’entreprise'),
+            EditAction::make()->label(__('common.edit_company')),
             Action::make('archive')
-                ->label('Archiver')
+                ->label(__('common.archive'))
                 ->icon(Heroicon::OutlinedArchiveBox)
                 ->color('gray')
                 ->authorize('update')
                 ->visible(fn (): bool => $this->record->status === 'active')
                 ->requiresConfirmation()
-                ->modalHeading('Archiver cette entreprise ?')
-                ->modalDescription('Ses demandes, notes et relations resteront conservées.')
+                ->modalHeading(__('common.archive_company_heading'))
+                ->modalDescription(__('common.archive_company_description'))
                 ->action(fn () => app(CrmRecordManager::class)->archive($this->record)),
             Action::make('reactivate')
-                ->label('Réactiver')
+                ->label(__('common.reactivate'))
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->color('success')
                 ->authorize('reactivate')

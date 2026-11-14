@@ -1,0 +1,100 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Enums\InstrumentAssetStatus;
+use App\Enums\RentalAcceptanceStatus;
+use App\Enums\RentalStatus;
+use App\Models\InstrumentAsset;
+use App\Models\Organization;
+use App\Models\Rental;
+use App\Models\RentalAcceptanceRequest;
+use App\Services\RentalManager;
+use App\Tenancy\OrganizationContext;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use LogicException;
+use Tests\TestCase;
+
+class RentalManagerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_a_rental_changes_the_instrument_availability_and_can_be_returned(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $instrument = InstrumentAsset::query()->create(['name' => 'Violon d’étude 4/4', 'available_for_rental' => true]);
+            $rental = Rental::query()->create(['instrument_asset_id' => $instrument->id, 'status' => RentalStatus::Accepted]);
+            RentalAcceptanceRequest::query()->create([
+                'rental_id' => $rental->id, 'recipient_name' => 'Camille Durand', 'recipient_email' => 'camille@example.test',
+                'token_hash' => hash('sha256', 'accepted-token'), 'status' => RentalAcceptanceStatus::Accepted,
+                'consent_text' => 'Texte de test', 'expires_at' => now()->addDays(14), 'accepted_at' => now(), 'accepted_name' => 'Camille Durand',
+            ]);
+
+            app(RentalManager::class)->activate($rental);
+            $this->assertSame(RentalStatus::HandedOver, $rental->fresh()->status);
+            $this->assertSame(InstrumentAssetStatus::Rented, $instrument->fresh()->status);
+
+            app(RentalManager::class)->return($rental, today(), 'Instrument contrôlé au retour.', details: [
+                'accessories_state' => 'Étui et archet remis.',
+                'condition_notes' => 'Instrument contrôlé au retour.',
+                'charge_amount' => 12.5,
+                'charge_note' => 'Jeu de cordes.',
+            ]);
+            $this->assertSame(RentalStatus::Returned, $rental->fresh()->status);
+            $this->assertSame(InstrumentAssetStatus::Available, $instrument->fresh()->status);
+            $this->assertSame('Instrument contrôlé au retour.', $rental->fresh()->return_notes);
+            $this->assertDatabaseHas('rental_returns', [
+                'rental_id' => $rental->id,
+                'accessories_state' => 'Étui et archet remis.',
+                'charge_amount' => 12.5,
+            ]);
+        });
+    }
+
+    public function test_an_unavailable_instrument_cannot_start_a_rental(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $instrument = InstrumentAsset::query()->create(['name' => 'Violon confié', 'available_for_rental' => false]);
+            $rental = Rental::query()->create(['instrument_asset_id' => $instrument->id]);
+
+            $this->expectException(LogicException::class);
+            app(RentalManager::class)->activate($rental);
+        });
+    }
+
+    public function test_a_client_acceptance_is_required_before_the_instrument_can_be_handed_over(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $instrument = InstrumentAsset::query()->create(['name' => 'Violon d’étude 4/4', 'available_for_rental' => true]);
+            $rental = Rental::query()->create(['instrument_asset_id' => $instrument->id]);
+            $request = RentalAcceptanceRequest::query()->create([
+                'rental_id' => $rental->id,
+                'recipient_name' => 'Camille Durand',
+                'recipient_email' => 'camille@example.test',
+                'token_hash' => hash('sha256', 'test-token'),
+                'status' => RentalAcceptanceStatus::Sent,
+                'consent_text' => 'Texte de test',
+                'expires_at' => now()->addDays(14),
+                'sent_at' => now(),
+            ]);
+
+            try {
+                app(RentalManager::class)->activate($rental);
+                $this->fail('La remise doit demander une confirmation lorsque l’acceptation est en attente.');
+            } catch (LogicException $exception) {
+                $this->assertStringContainsString('doit être accepté', $exception->getMessage());
+            }
+
+            $rental->update(['status' => RentalStatus::Accepted]);
+            $request->update(['status' => RentalAcceptanceStatus::Accepted, 'accepted_at' => now(), 'accepted_name' => 'Camille Durand']);
+            app(RentalManager::class)->activate($rental);
+            $this->assertSame(RentalStatus::HandedOver, $rental->fresh()->status);
+        });
+    }
+}

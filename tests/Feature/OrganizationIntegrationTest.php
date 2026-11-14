@@ -73,6 +73,30 @@ class OrganizationIntegrationTest extends TestCase
         );
     }
 
+    public function test_an_integration_with_unreadable_legacy_credentials_can_still_be_revoked(): void
+    {
+        $organization = Organization::factory()->create();
+        $context = app(OrganizationContext::class);
+        $manager = app(OrganizationIntegrationManager::class);
+
+        $integration = $context->run(
+            $organization,
+            fn () => $manager->createApiToken('maracuja_cms', 'legacy-channel', credentials: ['site_references' => ['legacy.test']]),
+        )['integration'];
+
+        DB::table('organization_integrations')
+            ->where('id', $integration->getKey())
+            ->update(['credentials' => 'encrypted-with-an-obsolete-key']);
+
+        $context->run($organization, fn () => $manager->revoke($integration));
+
+        $stored = DB::table('organization_integrations')->find($integration->getKey());
+        $this->assertSame('revoked', $stored->status);
+        $this->assertNull($stored->token_hash);
+        $this->assertNotNull($stored->revoked_at);
+        $this->assertSame([], $integration->fresh()->credentials);
+    }
+
     public function test_sensitive_audit_metadata_is_redacted_recursively(): void
     {
         $organization = Organization::factory()->create();

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
 >
     <testsuites>
@@ -19,6 +19,8 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="APP_LOCALE" value="fr"/>
+        <env name="APP_FALLBACK_LOCALE" value="fr"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
@@ -32,5 +34,10 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="GOOGLE_ADS_DEVELOPER_TOKEN" value="testing-developer-token" force="true"/>
+        <env name="GOOGLE_ADS_OAUTH_CLIENT_ID" value="testing-client-id.apps.googleusercontent.com" force="true"/>
+        <env name="GOOGLE_ADS_OAUTH_CLIENT_SECRET" value="testing-client-secret" force="true"/>
+        <env name="GOOGLE_ADS_LOGIN_CUSTOMER_ID" value="5950759380" force="true"/>
+        <env name="GOOGLE_ADS_API_ACCESS_LEVEL" value="basic" force="true"/>
     </php>
 </phpunit>

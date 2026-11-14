@@ -18,6 +18,11 @@ class IncomingRequestsRelationManager extends RelationManager
 
     protected static ?string $title = 'Demandes';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('common.requests');
+    }
+
     protected static string|\BackedEnum|null $icon = Heroicon::OutlinedInboxStack;
 
     public function table(Table $table): Table
@@ -26,14 +31,15 @@ class IncomingRequestsRelationManager extends RelationManager
             ->defaultSort('received_at', 'desc')
             ->columns([
                 TextColumn::make('subject')
-                    ->label('Demande')
+                    ->label(__('common.request'))
                     ->description(fn (IncomingRequest $record): string => str($record->message)->squish()->limit(70))
-                    ->placeholder('Sans objet')
-                    ->wrap(),
-                TextColumn::make('status')->label('Statut')->badge(),
-                TextColumn::make('urgency')->label('Urgence')->badge(),
-                TextColumn::make('assignedUser.name')->label('Responsable')->placeholder('Non attribuée'),
-                TextColumn::make('received_at')->label('Reçue')->dateTime('d/m/Y H:i')->sortable(),
+                    ->placeholder(__('common.untitled'))
+                    ->wrap()
+                    ->sortable(),
+                TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
+                TextColumn::make('urgency')->label(__('common.urgency'))->badge()->sortable(),
+                TextColumn::make('assignedUser.name')->label(__('common.assignee'))->placeholder(__('common.unassigned'))->sortable(),
+                TextColumn::make('received_at')->label(__('common.received'))->dateTime('d/m/Y H:i')->sortable(),
             ])
             ->recordActions([
                 ViewAction::make()

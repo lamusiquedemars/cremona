@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\AppointmentModality;
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
+use App\Models\AppointmentType;
 use App\Models\OrganizationIntegration;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -39,8 +40,18 @@ class BrevoMeetingSynchronizer
             ->whereRaw('LOWER(email) = ?', [mb_strtolower(trim($payload['account_email']))])
             ->whereHas('organizations', fn ($query) => $query->whereKey($integration->organization_id))
             ->first();
+        $assignedUser ??= filled($integration->credentials['default_assigned_user_id'] ?? null)
+            ? User::query()->whereKey($integration->credentials['default_assigned_user_id'])->whereHas('organizations', fn ($query) => $query->whereKey($integration->organization_id))->first()
+            : null;
         $address = trim((string) ($payload['meeting_address'] ?? '')) ?: null;
         $location = trim((string) ($payload['meeting_location'] ?? '')) ?: null;
+        $meetingName = trim($payload['meeting_name']);
+        $appointmentType = AppointmentType::query()
+            ->where('is_active', true)
+            ->where(fn ($query) => $query
+                ->where('brevo_meeting_name', $meetingName)
+                ->orWhere(fn ($query) => $query->whereNull('brevo_meeting_name')->where('label', $meetingName)))
+            ->first();
 
         $appointment = Appointment::query()->firstOrNew([
             'provider' => 'brevo',
@@ -53,7 +64,8 @@ class BrevoMeetingSynchronizer
         $appointment->fill([
             'assigned_user_id' => $assignedUser?->id,
             'person_id' => $person?->id,
-            'title' => trim($payload['meeting_name']),
+            'appointment_type_id' => $appointmentType?->id,
+            'title' => $meetingName,
             'status' => $status,
             'starts_at' => CarbonImmutable::parse($payload['meeting_start_timestamp'])->utc(),
             'ends_at' => CarbonImmutable::parse($payload['meeting_end_timestamp'])->utc(),

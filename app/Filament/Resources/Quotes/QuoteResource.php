@@ -1,0 +1,109 @@
+<?php
+
+namespace App\Filament\Resources\Quotes;
+
+use App\Enums\QuoteStatus;
+use App\Filament\Concerns\UsesOrganizationPresentation;
+use App\Filament\Resources\Quotes\Pages\CreateQuote;
+use App\Filament\Resources\Quotes\Pages\EditQuote;
+use App\Filament\Resources\Quotes\Pages\ListQuotes;
+use App\Filament\Resources\Quotes\Pages\ViewQuote;
+use App\Models\IncomingRequest;
+use App\Models\Quote;
+use App\Models\QuoteLine;
+use App\Services\OrganizationPresentation;
+use Filament\Actions\CreateAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+
+class QuoteResource extends Resource
+{
+    use UsesOrganizationPresentation;
+
+    protected static ?string $model = Quote::class;
+
+    protected static ?string $navigationLabel = 'Devis';
+
+    protected static ?string $presentationKey = 'quotes';
+
+    protected static string $organizationModule = 'quotes';
+
+    protected static ?string $presentationGroupKey = 'commercial_activity';
+
+    protected static ?string $modelLabel = 'devis';
+
+    protected static ?string $pluralModelLabel = 'devis';
+
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCurrencyEuro;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Activité commerciale';
+
+    protected static ?int $navigationSort = 60;
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema->columns(12)->components([
+            Section::make(fn (): string => app(OrganizationPresentation::class)->label('quotes', 'Devis'))
+                ->description('Renseignez le client, le document et ses conditions avant de le transmettre.')
+                ->columns(12)->columnSpanFull()->schema([
+                TextInput::make('reference')->label(__('common.reference'))->disabled()->dehydrated(false)->placeholder('Attribuée à l’enregistrement')->helperText('Le numéro est attribué automatiquement.')->columnSpan(3),
+                TextInput::make('title')->label(__('common.subject'))->required()->maxLength(255)->columnSpan(6),
+                Select::make('status')->label(__('common.status'))->options(QuoteStatus::class)->default(QuoteStatus::Draft)->disabled()->dehydrated()->required()->columnSpan(3),
+                Select::make('person_id')->label(__('common.contact'))->relationship('person', 'display_name')->searchable()->preload()->columnSpan(4),
+                Select::make('company_id')->label(__('common.company'))->relationship('company', 'name')->searchable()->preload()->columnSpan(4),
+                Select::make('incoming_request_id')->label(__('common.request'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->preload()->columnSpan(4),
+                DatePicker::make('issued_on')->label('Date du devis')->columnSpan(3), DatePicker::make('valid_until')->label('Valable jusqu’au')->columnSpan(3),
+                TextInput::make('currency')->label(__('common.currency'))->default('EUR')->required()->length(3)->columnSpan(3),
+                TextInput::make('discount_amount')->label('Remise globale')->numeric()->prefix('€')->default(0)->columnSpan(3),
+                Textarea::make('introduction')->label('Introduction')->rows(3)->columnSpanFull(),
+                Repeater::make('lines')->label('Lignes')->relationship()->orderColumn('position')->schema([
+                    Select::make('kind')->label(__('common.type'))->options([
+                        'service' => 'Prestation',
+                        'product' => 'Produit',
+                        'rental' => 'Location',
+                        'fee' => 'Frais',
+                    ]),
+                    Textarea::make('description')->label(__('common.description'))->required()->rows(2)->columnSpan(2),
+                    TextInput::make('quantity')->label(__('common.quantity'))->numeric()->default(1)->minValue(0.01),
+                    TextInput::make('unit_amount')->label('Prix unitaire')->numeric()->prefix('€')->default(0),
+                ])->columns(4)->addActionLabel('Ajouter une ligne')->columnSpanFull(),
+                Textarea::make('tax_note')->label('Note fiscale')->rows(2)->columnSpan(4),
+                Textarea::make('payment_terms')->label('Conditions de règlement')->rows(2)->columnSpan(4),
+                Textarea::make('notes')->label(__('common.internal_notes'))->rows(2)->helperText('Cette note reste visible uniquement dans Cremona.')->columnSpan(4),
+            ]),
+        ]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->columns(3)->components([
+            Section::make('Devis')->columnSpan(2)->schema([TextEntry::make('reference')->label(__('common.reference'))->weight('semibold'), TextEntry::make('title')->label(__('common.subject'))->size('lg'), TextEntry::make('introduction')->label('Introduction')->columnSpanFull(), RepeatableEntry::make('lines')->label(__('common.details'))->schema([TextEntry::make('kind')->label(__('common.type')), TextEntry::make('description')->label(__('common.description')), TextEntry::make('quantity')->label('Qté'), TextEntry::make('unit_amount')->label('Prix')->money(fn (QuoteLine $record) => $record->quote->currency), TextEntry::make('total_amount')->label('Total')->money(fn (QuoteLine $record) => $record->quote->currency)])->columns(5)->columnSpanFull()]),
+            Section::make('Total')->columnSpan(1)->schema([TextEntry::make('status')->label(__('common.status'))->badge(), TextEntry::make('subtotal_amount')->label('Sous-total')->money(fn (Quote $record) => $record->currency), TextEntry::make('discount_amount')->label('Remise')->money(fn (Quote $record) => $record->currency), TextEntry::make('total_amount')->label('Total final')->money(fn (Quote $record) => $record->currency)->weight('bold')]),
+            Section::make('Conditions')->columnSpanFull()->columns(3)->schema([TextEntry::make('tax_note')->label('Note fiscale')->placeholder('—'), TextEntry::make('payment_terms')->label('Règlement')->placeholder('—'), TextEntry::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')]),
+        ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table->defaultSort('created_at', 'desc')->columns([TextColumn::make('reference')->label(__('common.reference'))->searchable(['reference', 'previous_reference'])->description(fn (Quote $record): ?string => $record->previous_reference ? 'Ancien : '.$record->previous_reference : null)->sortable(), TextColumn::make('title')->label(__('common.subject'))->searchable()->wrap()->sortable(), TextColumn::make('status')->label(__('common.status'))->badge()->sortable(), TextColumn::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)->sortable(), TextColumn::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')->sortable()])->filters([SelectFilter::make('status')->options(QuoteStatus::class)])->recordActions([ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (Quote $record): string => self::getUrl('view', ['record' => $record]))->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('quotes', 'Devis'))]);
+    }
+
+    public static function getPages(): array
+    {
+        return ['index' => ListQuotes::route('/'), 'create' => CreateQuote::route('/create'), 'view' => ViewQuote::route('/{record}'), 'edit' => EditQuote::route('/{record}/edit')];
+    }
+}

@@ -3,23 +3,30 @@
 namespace Tests\Feature;
 
 use App\Enums\ConversationStatus;
+use App\Enums\IncomingRequestStatus;
 use App\Enums\MessageDirection;
 use App\Enums\MessageParticipantRole;
 use App\Enums\MessageThreadingStatus;
 use App\Enums\MessageTransportStatus;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Conversations\ConversationResource;
+use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\ConversationUserState;
+use App\Models\EmailMailbox;
+use App\Models\IncomingRequest;
 use App\Models\MessageAttachment;
 use App\Models\MessageParticipant;
 use App\Models\MessageReference;
 use App\Models\MessageThreadCandidate;
 use App\Models\Organization;
+use App\Models\OrganizationIntegration;
+use App\Models\Person;
 use App\Models\User;
 use App\Services\CorrespondenceManager;
 use App\Services\IncomingRequestManager;
+use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LogicException;
@@ -32,6 +39,7 @@ class CorrespondenceTest extends TestCase
     public function test_receiving_a_request_creates_an_idempotent_conversation_and_initial_message(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['communications']);
 
         app(OrganizationContext::class)->run($organization, function (): void {
             $request = app(IncomingRequestManager::class)->receive([
@@ -66,13 +74,94 @@ class CorrespondenceTest extends TestCase
         });
     }
 
+    public function test_a_direct_email_conversation_can_be_converted_into_a_follow_up_request(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['communications', 'crm']);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $conversation = Conversation::query()->create([
+                'initial_channel' => 'email',
+                'subject' => 'Réparation d’un alto',
+            ]);
+            app(CorrespondenceManager::class)->recordInbound($conversation, [
+                'body_text' => 'Bonjour, pourriez-vous établir un devis ?',
+                'participants' => [[
+                    'role' => MessageParticipantRole::From,
+                    'name' => 'Camille Martin',
+                    'address' => 'camille@example.test',
+                ]],
+            ]);
+
+            $request = app(IncomingRequestManager::class)->createFromConversation($conversation);
+
+            $this->assertSame('direct_email', $request->source);
+            $this->assertSame('camille@example.test', $request->email_snapshot);
+            $this->assertNotEmpty($request->payload_fingerprint);
+            $this->assertSame(64, strlen($request->payload_fingerprint));
+            $this->assertSame($request->id, $conversation->fresh()->incoming_request_id);
+            $this->assertSame($request->id, app(IncomingRequestManager::class)->createFromConversation($conversation->fresh())->id);
+        });
+    }
+
+    public function test_a_correspondence_can_be_explicitly_linked_to_its_client_context_and_is_audited(): void
+    {
+        $organization = Organization::factory()->create();
+        $actor = User::factory()->create();
+        $actor->organizations()->attach($organization);
+
+        app(OrganizationContext::class)->run($organization, function () use ($actor, $organization): void {
+            $person = Person::query()->create(['display_name' => 'Camille Martin']);
+            $company = Company::query()->create(['name' => 'Atelier Martin']);
+            $request = IncomingRequest::query()->create([
+                'subject' => 'Une demande existante',
+                'message' => 'Une demande existante.',
+                'status' => IncomingRequestStatus::New,
+                'received_at' => now(),
+                'payload_fingerprint' => hash('sha256', 'context-link-request'),
+            ]);
+            $conversation = Conversation::query()->create([
+                'initial_channel' => 'email',
+                'subject' => 'Relier cet échange',
+            ]);
+
+            app(CorrespondenceManager::class)->updateContext($conversation, [
+                'person_id' => $person->id,
+                'company_id' => $company->id,
+                'incoming_request_id' => $request->id,
+            ], $actor);
+
+            $conversation->refresh();
+            $this->assertSame($person->id, $conversation->person_id);
+            $this->assertSame($company->id, $conversation->company_id);
+            $this->assertSame($request->id, $conversation->incoming_request_id);
+            $this->assertDatabaseHas('organization_audit_logs', [
+                'organization_id' => $organization->id,
+                'event' => 'correspondence.context_updated',
+                'subject_id' => $conversation->id,
+            ]);
+        });
+    }
+
     public function test_a_fake_transport_accepts_a_reply_without_claiming_delivery(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['communications']);
         $author = User::factory()->create();
         $author->organizations()->attach($organization);
 
         app(OrganizationContext::class)->run($organization, function () use ($author): void {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'imap_smtp',
+                'name' => 'Boîte de test',
+                'credentials' => [],
+                'status' => 'active',
+            ]);
+            EmailMailbox::query()->create([
+                'organization_integration_id' => $integration->id,
+                'address' => 'atelier@example.test',
+                'status' => 'active',
+            ]);
             $conversation = Conversation::query()->create(['initial_channel' => 'website']);
             $manager = app(CorrespondenceManager::class);
             $draft = $manager->createDraftReply($conversation, 'Bonjour Ada.', [[
@@ -81,6 +170,7 @@ class CorrespondenceTest extends TestCase
             ]], $author, 'Votre demande');
 
             $this->assertSame(MessageTransportStatus::Draft, $draft->transport_status);
+            $this->assertSame('Re: Votre demande', $draft->subject);
 
             $manager->sendDraft($draft, $author);
 
@@ -132,6 +222,7 @@ class CorrespondenceTest extends TestCase
     public function test_the_correspondence_interface_obeys_the_validated_permissions(): void
     {
         $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm', 'appointments']);
         $viewer = User::factory()->create();
         $collaborator = User::factory()->create();
         $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
@@ -152,7 +243,65 @@ class CorrespondenceTest extends TestCase
         $this->actingAs($collaborator)
             ->get(ConversationResource::getUrl('view', ['record' => $conversation], tenant: $organization))
             ->assertOk()
-            ->assertSee('Répondre');
+            ->assertSee('Répondre')
+            ->assertSee('Rattacher un client ou une demande')
+            ->assertSee('Créer une tâche de suivi')
+            ->assertSee('Planifier un rendez-vous');
+    }
+
+    public function test_the_correspondence_list_identifies_an_outbound_message_by_its_mailbox_and_recipient(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['crm']);
+        $viewer = User::factory()->create();
+        $viewer->organizations()->attach($organization, ['role' => OrganizationRole::Viewer->value]);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $integration = OrganizationIntegration::query()->create([
+                'provider' => 'imap_smtp',
+                'name' => 'Boîte Giovanni',
+                'credentials' => [],
+                'status' => 'active',
+            ]);
+            $mailbox = EmailMailbox::query()->create([
+                'organization_integration_id' => $integration->id,
+                'address' => 'giovanni@example.test',
+                'display_name' => 'Giovanni',
+                'status' => 'active',
+            ]);
+            $conversation = Conversation::query()->create([
+                'initial_channel' => 'email',
+                'subject' => 'Appels à manifestation d’intérêt',
+                'status' => ConversationStatus::WaitingCustomer,
+                'last_message_at' => now(),
+                'last_outbound_at' => now(),
+            ]);
+            $message = $conversation->messages()->create([
+                'email_mailbox_id' => $mailbox->id,
+                'direction' => MessageDirection::Outbound,
+                'channel' => 'email',
+                'subject' => 'RE: Appels à manifestation d’intérêt',
+                'body_text' => 'Bonjour, merci pour votre invitation.',
+                'transport_status' => MessageTransportStatus::Accepted,
+                'threading_status' => MessageThreadingStatus::Matched,
+                'payload_fingerprint' => hash('sha256', 'outbound-correspondence-list'),
+                'authored_at' => now(),
+                'accepted_at' => now(),
+            ]);
+            $message->participants()->create([
+                'role' => MessageParticipantRole::To,
+                'name' => 'Mairie du 9e',
+                'address' => 'culture@example.test',
+                'position' => 0,
+            ]);
+        });
+
+        $this->actingAs($viewer)
+            ->get(ConversationResource::getUrl('index', tenant: $organization))
+            ->assertOk()
+            ->assertSeeText('Giovanni')
+            ->assertSeeText('Envoyé à Mairie du 9e')
+            ->assertDontSeeText('Anonyme');
     }
 
     public function test_every_correspondence_record_is_isolated_and_attachments_cannot_use_public_storage(): void

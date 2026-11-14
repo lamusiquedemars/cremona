@@ -18,13 +18,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use Laravel\Passport\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'is_platform_admin'])]
+#[Fillable(['name', 'email', 'password', 'is_platform_admin', 'status', 'invited_at', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants
 {
+    public const SUPER_ADMIN_EMAILS = ['ivo@maracujadigital.fr'];
+
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -37,7 +40,14 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_platform_admin' => 'boolean',
+            'invited_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
+    }
+
+    public function getIsPlatformAdminAttribute(mixed $value): bool
+    {
+        return (bool) $value || in_array(strtolower($this->email), self::SUPER_ADMIN_EMAILS, true);
     }
 
     public function organizations(): BelongsToMany
@@ -72,6 +82,10 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         OrganizationPermission $permission,
         Organization $organization,
     ): bool {
+        if (! $this->isActive()) {
+            return false;
+        }
+
         if ($this->is_platform_admin) {
             return true;
         }
@@ -83,13 +97,64 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         return $membership?->grants($permission) ?? false;
     }
 
+    public function canAccessOrganizationModule(string $module, Organization $organization): bool
+    {
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        if ($this->is_platform_admin) {
+            return true;
+        }
+
+        $membership = $this->memberships()
+            ->where('organization_id', $organization->getKey())
+            ->first();
+
+        return $membership?->canAccessModule($module) ?? false;
+    }
+
+    public function canManageOrganizationModule(string $module, Organization $organization): bool
+    {
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        if ($this->is_platform_admin) {
+            return true;
+        }
+
+        $membership = $this->memberships()
+            ->where('organization_id', $organization->getKey())
+            ->first();
+
+        return $membership?->canManageModule($module) ?? false;
+    }
+
+    public function isActive(): bool
+    {
+        return ($this->attributes['status'] ?? 'active') === 'active';
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        if ($panel->getId() === 'platform') {
+            return $this->is_platform_admin;
+        }
+
         return $this->is_platform_admin || $this->organizations()->where('status', 'active')->exists();
     }
 
     public function getTenants(Panel $panel): array|Collection
     {
+        if (! $this->isActive()) {
+            return collect();
+        }
+
         if ($this->is_platform_admin) {
             return Organization::query()->where('status', 'active')->orderBy('name')->get();
         }
@@ -99,7 +164,7 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function canAccessTenant(Model $tenant): bool
     {
-        if (! $tenant instanceof Organization || ! $tenant->is_active) {
+        if (! $this->isActive() || ! $tenant instanceof Organization || ! $tenant->is_active) {
             return false;
         }
 
@@ -108,6 +173,10 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function getDefaultTenant(Panel $panel): ?Model
     {
+        if ($this->is_platform_admin) {
+            return null;
+        }
+
         return $this->getTenants($panel)->first();
     }
 }

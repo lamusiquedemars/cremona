@@ -2,16 +2,27 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\CremonaLogin;
+use App\Filament\Pages\ClientAgenda;
+use App\Filament\Resources\Organizations\OrganizationResource;
+use App\Filament\Resources\Users\UserResource;
 use App\Http\Middleware\SetActiveOrganization;
 use App\Models\Organization;
+use App\Models\User;
+use App\Services\ConnectedSiteAdministration;
+use App\Services\OrganizationPresentation;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -27,12 +38,20 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('app')
-            ->login()
-            ->brandName('Cremona')
+            ->path('dashboard')
+            ->login(CremonaLogin::class)
+            ->passwordReset()
+            ->brandName(fn (): string => (string) config('cremona.pwa.name', 'Cremona'))
+            ->favicon(fn (): string => asset((string) config('cremona.pwa.icon_192', 'favicon.ico')))
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('pwa.head')->render())
+            ->renderHook(PanelsRenderHook::BODY_END, fn (): string => view('pwa.service-worker')->render())
+            ->renderHook(PanelsRenderHook::BODY_END, fn (): string => view('filament.hooks.rental-table-wheel-scroll')->render())
             ->globalSearchResourceOptIn()
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->tenant(Organization::class, slugAttribute: 'slug')
+            ->tenantMenu()
+            ->tenantSwitcher()
+            ->searchableTenantMenu()
             ->tenantMiddleware([
                 SetActiveOrganization::class,
             ], isPersistent: true)
@@ -40,10 +59,40 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->navigationGroups([
+                NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('customer_follow_up', 'Suivi client')),
+                NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('commercial_activity', 'Activité commerciale')),
+                NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('workshop', 'Atelier')),
+                NavigationGroup::make('Catalogue et stock'),
+                NavigationGroup::make(fn (): string => app(OrganizationPresentation::class)->navigationGroupLabel('marketing', 'Marketing')),
+                NavigationGroup::make('Référentiels métier'),
+                NavigationGroup::make('Configuration de l’organisation'),
+                NavigationGroup::make('Plateforme Maracuja'),
+            ])
+            ->navigationItems([
+                NavigationItem::make('Administration du site')
+                    ->icon(Heroicon::OutlinedGlobeAlt)
+                    ->sort(-1)
+                    ->url(fn (): ?string => app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))
+                    ->visible(fn (): bool => filled(app(ConnectedSiteAdministration::class)->urlFor($this->currentOrganization()))),
+                NavigationItem::make('Organisations')
+                    ->group('Plateforme Maracuja')
+                    ->icon(Heroicon::OutlinedBuildingOffice2)
+                    ->url(fn (): string => OrganizationResource::getUrl('index', panel: 'platform'))
+                    ->visible(fn (): bool => auth()->user() instanceof User && auth()->user()->is_platform_admin),
+                NavigationItem::make('Utilisateurs et accès')
+                    ->group('Plateforme Maracuja')
+                    ->icon(Heroicon::OutlinedUsers)
+                    ->url(fn (): string => UserResource::getUrl('index', panel: 'platform'))
+                    ->visible(fn (): bool => auth()->user() instanceof User && auth()->user()->is_platform_admin),
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
+                // Keep this operational page registered even when Filament's
+                // component discovery cache was built before a release.
+                ClientAgenda::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
@@ -63,5 +112,12 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    private function currentOrganization(): ?Organization
+    {
+        $tenant = filament()->getTenant();
+
+        return $tenant instanceof Organization ? $tenant : null;
     }
 }

@@ -38,6 +38,88 @@ body.fi-body {
     border-radius: 1rem;
 }
 
+/*
+ * The table class is on the outer .fi-ta element. Keep the scrollport inside
+ * it explicit: the native horizontal bar must always remain available with a
+ * mouse, trackpad or keyboard, even when macOS normally hides overlay bars.
+ */
+.rental-table,
+.rental-table .fi-ta-ctn,
+.rental-table .fi-ta-content,
+.rental-table .fi-ta-content-ctn {
+    max-width: 100%;
+    min-width: 0;
+}
+
+.rental-table .fi-ta-content-ctn {
+    overflow-x: scroll !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-color: rgb(120 113 108) rgb(231 229 228);
+    scrollbar-gutter: stable both-edges;
+    scrollbar-width: auto;
+}
+
+.rental-table .fi-ta-content-ctn::-webkit-scrollbar {
+    -webkit-appearance: none;
+    height: 14px;
+}
+
+.rental-table .fi-ta-content-ctn::-webkit-scrollbar-track {
+    background: rgb(231 229 228);
+    border-radius: 9999px;
+}
+
+.rental-table .fi-ta-content-ctn::-webkit-scrollbar-thumb {
+    min-width: 3rem;
+    border: 3px solid rgb(231 229 228);
+    border-radius: 9999px;
+    background: rgb(120 113 108);
+}
+
+.dark .rental-table .fi-ta-content-ctn {
+    scrollbar-color: rgb(168 162 158) rgb(41 37 36);
+}
+
+.dark .rental-table .fi-ta-content-ctn::-webkit-scrollbar-track {
+    background: rgb(41 37 36);
+}
+
+.dark .rental-table .fi-ta-content-ctn::-webkit-scrollbar-thumb {
+    border-color: rgb(41 37 36);
+    background: rgb(168 162 158);
+}
+
+.rental-table .fi-ta-table {
+    min-width: 68rem;
+}
+
+/* Correspondence subjects can be unusually long (especially imported e-mails).
+   Constrain only this column: status and origin must keep their natural compact
+   width instead of sharing the remaining table space. */
+.correspondence-table .fi-ta-header-cell-subject,
+.correspondence-table .fi-ta-cell-subject {
+    width: 27rem;
+    max-width: 27rem;
+}
+
+.correspondence-table .fi-ta-cell-subject > .fi-ta-col {
+    overflow-wrap: anywhere;
+}
+
+/* Long business actions remain readable inside their compact action menu. */
+.fi-dropdown-list-item {
+    align-items: flex-start;
+    white-space: normal;
+}
+
+.fi-dropdown-list-item-label {
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
 .fi-ta-row.crm-record-unread {
     background: rgb(245 158 11 / 0.055);
     box-shadow: inset 3px 0 rgb(245 158 11 / 0.8);
@@ -47,8 +129,163 @@ body.fi-body {
     font-weight: 600;
 }
 
+/* Correspondence is read before it is managed: keep the message central and
+   make its operational context present but visually secondary. */
+.cremona-conversation-thread {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.cremona-conversation-message {
+    padding: 0.25rem 0 0.5rem;
+}
+
+.cremona-conversation-message-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.cremona-conversation-message-author {
+    font-weight: 650;
+}
+
+.cremona-conversation-message-recipient,
+.cremona-conversation-message-email,
+.cremona-conversation-message-date,
+.cremona-conversation-quoted,
+.cremona-conversation-history-item > :last-child {
+    color: rgb(100 95 88);
+    font-size: 0.875rem;
+}
+
+.cremona-conversation-message-recipient {
+    margin-top: 0.15rem;
+}
+
+.cremona-conversation-message-email {
+    margin-top: 0.1rem;
+}
+
+.cremona-conversation-message-date {
+    white-space: nowrap;
+}
+
+.cremona-conversation-message-body {
+    max-width: 78ch;
+    white-space: pre-wrap;
+    line-height: 1.7;
+}
+
+.cremona-conversation-quoted {
+    margin-top: 1rem;
+}
+
+.cremona-conversation-quoted summary,
+.cremona-conversation-history summary {
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.cremona-conversation-quoted pre {
+    margin: 0.75rem 0 0;
+    border-left: 2px solid rgb(var(--cremona-line));
+    padding-left: 1rem;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    font: inherit;
+    line-height: 1.55;
+}
+
+.cremona-conversation-history summary {
+    font-weight: 600;
+}
+
+.cremona-conversation-history > div {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.cremona-conversation-history-item {
+    border-left: 2px solid rgb(var(--cremona-line));
+    padding-left: 1rem;
+}
+
+.cremona-conversation-history-item > :first-child {
+    font-weight: 600;
+}
+
+@media (max-width: 40rem) {
+    .cremona-conversation-message-header {
+        display: grid;
+        gap: 0.35rem;
+    }
+}
+
 .fi-header-heading {
     letter-spacing: -0.025em;
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
+
+/*
+ * The agenda header and its day cells must use the same explicit grid. This
+ * avoids a visual drift when a cached Tailwind bundle does not retain a grid
+ * utility from a Blade view.
+ */
+.cremona-agenda-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(8.75rem, 1fr));
+    min-width: 61.25rem;
+}
+
+@media (min-width: 40rem) {
+    .fi-header-heading {
+        font-size: 1.875rem;
+    }
+}
+
+/* A record title stays legible when a page exposes business operations. */
+.fi-header-actions-ctn {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/*
+ * Rental is the densest operational record. Its action bar deliberately sits
+ * below the heading: buttons take rows as needed instead of stealing space
+ * from the record title. This is the first page using the pattern.
+ */
+body.cremona-record-view .fi-header {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+body.cremona-record-view .fi-header-actions-ctn {
+    width: 100%;
+    margin-top: 0 !important;
+    padding: 0.75rem;
+    border: 1px solid rgb(var(--cremona-line));
+    border-radius: 0.875rem;
+    justify-content: flex-start;
+    background: rgb(255 254 251 / 0.78);
+}
+
+body.cremona-record-view .fi-header-actions-ctn > .fi-ac {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+body.cremona-record-view .fi-header-actions-ctn .fi-btn {
+    flex: 0 1 auto;
+}
+
+.dark body.cremona-record-view .fi-header-actions-ctn {
+    border-color: rgb(255 255 255 / 0.08);
+    background: rgb(23 22 19 / 0.72);
 }
 
 .dark body.fi-body {

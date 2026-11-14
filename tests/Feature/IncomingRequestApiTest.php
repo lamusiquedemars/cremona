@@ -35,16 +35,26 @@ class IncomingRequestApiTest extends TestCase
 
         $this->assertSame($first->json('data.id'), $second->json('data.id'));
         $this->assertSame(1, $this->within($organization, fn (): int => IncomingRequest::query()->count()));
-        $this->assertSame(0, $this->within($organization, fn (): int => Person::query()->count()));
+        $this->assertSame(1, $this->within($organization, fn (): int => Person::query()->count()));
 
         $request = $this->within(
             $organization,
-            fn (): IncomingRequest => IncomingRequest::query()->with(['answers', 'consents'])->sole(),
+            fn (): IncomingRequest => IncomingRequest::query()->with(['answers', 'consents', 'person.contactMethods'])->sole(),
         );
         $this->assertSame('Camille Martin', $request->name_snapshot);
         $this->assertSame('site-42', $request->source_site_reference);
+        $this->assertSame('google', $request->attribution_source);
+        $this->assertSame('search', $request->attribution_medium);
+        $this->assertSame('criminal-cuiaba', $request->attribution_campaign);
+        $this->assertSame('first-click', $request->attribution_first_touch['gclid']);
+        $this->assertSame('/contact?utm_source=google', $request->attribution_last_touch['landing_page']);
+        $this->assertSame('first_party', $request->attribution_method);
+        $this->assertSame('1.00', $request->attribution_confidence);
         $this->assertCount(1, $request->answers);
         $this->assertCount(1, $request->consents);
+        $this->assertNotNull($request->person);
+        $this->assertSame('Camille Martin', $request->person->display_name);
+        $this->assertSame('camille@example.test', $request->person->contactMethods->sole()->value);
     }
 
     public function test_invalid_or_revoked_credentials_are_rejected(): void
@@ -66,6 +76,21 @@ class IncomingRequestApiTest extends TestCase
             ->withHeader('Idempotency-Key', 'revoked-1')
             ->postJson('/api/v1/incoming-requests', $this->payload())
             ->assertUnauthorized();
+    }
+
+    public function test_a_site_reference_can_be_restricted_to_an_integration(): void
+    {
+        $organization = Organization::factory()->create();
+        $issued = app(OrganizationContext::class)->run($organization, fn (): array => app(OrganizationIntegrationManager::class)->createApiToken(
+            'maracuja_cms',
+            'site',
+            credentials: ['site_references' => ['site-42']],
+        ));
+
+        $this->withToken($issued['token'])->withHeader('Idempotency-Key', 'site-42:one')->postJson('/api/v1/incoming-requests', $this->payload())->assertCreated();
+        $payload = $this->payload();
+        $payload['source']['site_reference'] = 'other-site';
+        $this->withToken($issued['token'])->withHeader('Idempotency-Key', 'other:one')->postJson('/api/v1/incoming-requests', $payload)->assertForbidden();
     }
 
     public function test_the_contract_validates_required_fields_and_idempotency_conflicts(): void
@@ -117,13 +142,35 @@ class IncomingRequestApiTest extends TestCase
         return [
             'source' => [
                 'channel' => 'website',
-                'name' => 'maracuja-cms',
+                'name' => 'maracuja-site',
                 'site_reference' => 'site-42',
                 'form_reference' => 'contact-v1',
             ],
             'contact' => [
                 'name' => 'Camille Martin',
                 'email' => 'camille@example.test',
+            ],
+            'attribution' => [
+                'method' => 'first_party',
+                'confidence' => 1,
+                'first_touch' => [
+                    'utm_source' => 'google',
+                    'utm_medium' => 'search',
+                    'utm_campaign' => 'criminal-cuiaba',
+                    'gclid' => 'first-click',
+                    'landing_page' => '/criminal',
+                    'captured_at' => '2026-08-22T10:00:00-04:00',
+                ],
+                'last_touch' => [
+                    'utm_source' => 'google',
+                    'utm_medium' => 'search',
+                    'utm_campaign' => 'criminal-cuiaba',
+                    'utm_term' => 'advogado criminalista cuiaba',
+                    'gclid' => 'last-click',
+                    'landing_page' => '/contact?utm_source=google',
+                    'referrer' => 'https://www.google.com/',
+                    'captured_at' => '2026-08-22T10:15:00-04:00',
+                ],
             ],
             'request' => [
                 'subject' => 'Projet sur mesure',

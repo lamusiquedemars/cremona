@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
+use App\Models\AppointmentType;
 use App\Models\Organization;
 use App\Models\Person;
 use App\Models\User;
@@ -23,13 +24,18 @@ class BrevoMeetingWebhookTest extends TestCase
         $host = User::factory()->create(['email' => 'host@example.test']);
         $host->organizations()->attach($organization);
 
-        [$token, $person] = app(OrganizationContext::class)->run(
+        [$token, $person, $type] = app(OrganizationContext::class)->run(
             $organization,
             function () use ($host): array {
                 $person = Person::query()->create(['display_name' => 'Camille Participant']);
                 $person->contactMethods()->create([
                     'type' => 'email',
                     'value' => 'camille@example.test',
+                ]);
+                $type = AppointmentType::query()->create([
+                    'label' => 'Diagnostic',
+                    'brevo_meeting_name' => 'Diagnostic de l’instrument',
+                    'is_active' => true,
                 ]);
                 $manager = app(OrganizationIntegrationManager::class);
                 $integration = $manager->configure('brevo', 'meetings', [
@@ -39,7 +45,7 @@ class BrevoMeetingWebhookTest extends TestCase
                     'mode' => 'after_review',
                 ], $host);
 
-                return [$manager->rotateApiToken($integration, $host), $person];
+                return [$manager->rotateApiToken($integration, $host), $person, $type];
             },
         );
         $payload = $this->payload();
@@ -54,6 +60,7 @@ class BrevoMeetingWebhookTest extends TestCase
         $appointment = Appointment::withoutGlobalScopes()->sole();
         $this->assertSame($organization->id, $appointment->organization_id);
         $this->assertSame($person->id, $appointment->person_id);
+        $this->assertSame($type->id, $appointment->appointment_type_id);
         $this->assertSame($host->id, $appointment->assigned_user_id);
         $this->assertSame('brevo', $appointment->provider);
         $this->assertSame('Europe/Paris', $appointment->timezone);

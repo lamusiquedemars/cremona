@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\InboundChannels;
 
+use App\Enums\OrganizationPermission;
+use App\Filament\Concerns\UsesOrganizationConfiguration;
 use App\Filament\Resources\InboundChannels\Pages\ListInboundChannels;
 use App\Models\OrganizationIntegration;
 use App\Services\OrganizationIntegrationManager;
@@ -11,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -18,11 +21,13 @@ use UnitEnum;
 
 class InboundChannelResource extends Resource
 {
+    use UsesOrganizationConfiguration;
+
     protected static ?string $model = OrganizationIntegration::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Configuration';
+    protected static string|UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?string $navigationLabel = 'Canaux entrants';
 
@@ -33,6 +38,11 @@ class InboundChannelResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?int $navigationSort = 80;
+
+    protected static function configurationPermission(): OrganizationPermission
+    {
+        return OrganizationPermission::ManageIntegrations;
+    }
 
     public static function getEloquentQuery(): Builder
     {
@@ -54,31 +64,44 @@ class InboundChannelResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('name')
-                    ->label('Canal')
-                    ->description('Maracuja CMS')
+                    ->label(__('common.channel'))
+                    ->description('Site web connecté')
                     ->searchable()
+                    ->sortable()
                     ->weight('medium'),
                 TextColumn::make('status')
-                    ->label('Statut')
+                    ->label(__('common.status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Actif' : 'Révoqué')
-                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'danger'),
+                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'danger')
+                    ->sortable(),
                 TextColumn::make('key_id')
                     ->label('Identifiant')
                     ->copyable()
-                    ->fontFamily('mono'),
+                    ->fontFamily('mono')
+                    ->sortable(),
                 TextColumn::make('created_at')
-                    ->label('Créé le')
+                    ->label(__('common.created_at'))
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
                 TextColumn::make('revoked_at')
                     ->label('Révoqué le')
                     ->dateTime('d/m/Y H:i')
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->label('État du canal')
+                    ->options([
+                        'active' => 'Actifs',
+                        'revoked' => 'Révoqués',
+                    ])
+                    ->default('active'),
             ])
             ->recordActions([
                 Action::make('revoke')
-                    ->label('Révoquer')
+                    ->label(__('common.revoke'))
                     ->icon(Heroicon::OutlinedNoSymbol)
                     ->color('danger')
                     ->requiresConfirmation()

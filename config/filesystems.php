@@ -49,13 +49,51 @@ return [
 
         's3' => [
             'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
+            'key' => env('SCW_OBJECT_STORAGE_ACCESS_KEY', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('SCW_OBJECT_STORAGE_SECRET_KEY', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('SCW_OBJECT_STORAGE_REGION', env('AWS_DEFAULT_REGION')),
+            'bucket' => env('SCW_PRIVATE_DOCUMENTS_BUCKET', env('AWS_BUCKET')),
             'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'endpoint' => env('SCW_OBJECT_STORAGE_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => filter_var(
+                env('SCW_OBJECT_STORAGE_PATH_STYLE', env('AWS_USE_PATH_STYLE_ENDPOINT', false)),
+                FILTER_VALIDATE_BOOLEAN,
+            ),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Stockage applicatif des documents privés Cremona. Ce disque ne
+        // possède volontairement aucune URL publique : tout téléchargement
+        // passe par un contrôleur autorisé de Cremona.
+        'scaleway-private' => [
+            'driver' => 's3',
+            'key' => env('SCW_OBJECT_STORAGE_ACCESS_KEY'),
+            'secret' => env('SCW_OBJECT_STORAGE_SECRET_KEY'),
+            'region' => env('SCW_OBJECT_STORAGE_REGION', 'fr-par'),
+            'bucket' => env('SCW_PRIVATE_DOCUMENTS_BUCKET'),
+            'endpoint' => env('SCW_OBJECT_STORAGE_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => filter_var(
+                env('SCW_OBJECT_STORAGE_PATH_STYLE', env('AWS_USE_PATH_STYLE_ENDPOINT', false)),
+                FILTER_VALIDATE_BOOLEAN,
+            ),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Compatibilité de lecture pour les installations ayant reçu le nom
+        // transitoire avec un souligné. Aucun nouveau document ne l’utilise.
+        'scaleway_private' => [
+            'driver' => 's3',
+            'key' => env('SCW_OBJECT_STORAGE_ACCESS_KEY'),
+            'secret' => env('SCW_OBJECT_STORAGE_SECRET_KEY'),
+            'region' => env('SCW_OBJECT_STORAGE_REGION', 'fr-par'),
+            'bucket' => env('SCW_PRIVATE_DOCUMENTS_BUCKET'),
+            'endpoint' => env('SCW_OBJECT_STORAGE_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => filter_var(env('SCW_OBJECT_STORAGE_PATH_STYLE', false), FILTER_VALIDATE_BOOLEAN),
+            'visibility' => 'private',
             'throw' => false,
             'report' => false,
         ],

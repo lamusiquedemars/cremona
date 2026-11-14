@@ -8,7 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('organization_audit_logs', function (Blueprint $table): void {
+        // The migration can safely resume if a deployment was interrupted after
+        // creating one of its tables but before Laravel recorded the migration.
+        if (! Schema::hasTable('organization_audit_logs')) {
+            Schema::create('organization_audit_logs', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->foreignId('actor_user_id')->nullable()->constrained('users')->nullOnDelete();
@@ -22,9 +25,11 @@ return new class extends Migration
 
             $table->index(['subject_type', 'subject_id']);
             $table->index(['organization_id', 'created_at']);
-        });
+            });
+        }
 
-        Schema::create('organization_integrations', function (Blueprint $table): void {
+        if (! Schema::hasTable('organization_integrations')) {
+            Schema::create('organization_integrations', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->string('provider');
@@ -35,7 +40,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['organization_id', 'provider', 'name']);
-        });
+            });
+        }
     }
 
     public function down(): void

@@ -13,8 +13,16 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        __DIR__.'/../app/Console/Commands',
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->redirectGuestsTo(fn () => route('filament.admin.auth.login'));
+        // This POST originates from a separate, configured site. Its exact
+        // Origin and a short state bound to that site session are validated by
+        // SitePortalLogoutController; Laravel's same-site CSRF token cannot
+        // cross application domains.
+        $middleware->validateCsrfTokens(except: ['site-portal/logout']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (IdempotencyConflictException $exception, Request $request) {

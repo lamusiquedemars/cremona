@@ -1,0 +1,335 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Campaign;
+use App\Models\OrganizationIntegration;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Str;
+use LogicException;
+use Throwable;
+
+class GoogleAdsReportingClient
+{
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly GoogleAdsCredentials $credentials,
+        private readonly GoogleAdsCampaignConfigurationReader $configurationReader,
+    ) {}
+
+    public function sync(OrganizationIntegration $integration): int
+    {
+        $organizationCredentials = $integration->credentials;
+        $resolvedCredentials = $this->credentials->resolve($organizationCredentials);
+
+        try {
+            if (! $this->credentials->isReady($organizationCredentials)) {
+                throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
+            }
+
+            $updated = $this->syncFromGoogle($integration, $resolvedCredentials);
+        } catch (RequestException $exception) {
+            $message = $this->googleErrorMessage($exception);
+
+            $exception = new LogicException("Google Ads a refusé la synchronisation : {$message}", previous: $exception);
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
+        } catch (Throwable $exception) {
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
+        }
+
+        $integration->update([
+            'credentials' => [
+                ...$organizationCredentials,
+                'last_synced_at' => now()->toIso8601String(),
+                'last_sync_failed_at' => null,
+                'last_sync_error' => null,
+            ],
+        ]);
+        $this->auditLogger->record(
+            event: 'google_ads.reporting_synchronized',
+            subject: $integration,
+            metadata: ['updated_daily_metrics' => $updated],
+        );
+
+        return $updated;
+    }
+
+    /** Synchronise une campagne ouverte, sans parcourir tout le compte publicitaire. */
+    public function syncCampaign(Campaign $campaign, OrganizationIntegration $integration): int
+    {
+        if ($campaign->channel !== 'google_ads' || ! ctype_digit((string) $campaign->external_reference)) {
+            throw new LogicException('Cette campagne n’est pas encore liée à une campagne Google Ads identifiable.');
+        }
+
+        $organizationCredentials = $integration->credentials;
+        $resolvedCredentials = $this->credentials->resolve($organizationCredentials);
+
+        try {
+            if (! $this->credentials->isReady($organizationCredentials)) {
+                throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
+            }
+
+            $updated = $this->syncOneCampaignFromGoogle($campaign, $resolvedCredentials);
+            $campaign->update([
+                'google_ads_configuration' => $this->configurationReader->read($campaign, $resolvedCredentials),
+                'google_ads_configuration_synced_at' => now(),
+            ]);
+        } catch (RequestException $exception) {
+            $exception = new LogicException('Google Ads a refusé la synchronisation : '.$this->googleErrorMessage($exception), previous: $exception);
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
+        } catch (Throwable $exception) {
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
+        }
+
+        $integration->update([
+            'credentials' => [
+                ...$organizationCredentials,
+                'last_synced_at' => now()->toIso8601String(),
+                'last_sync_failed_at' => null,
+                'last_sync_error' => null,
+            ],
+        ]);
+        $this->auditLogger->record(
+            event: 'google_ads.campaign_synchronized',
+            subject: $campaign,
+            metadata: ['updated_daily_metrics' => $updated],
+        );
+
+        return $updated;
+    }
+
+    /** Relève la configuration d’une campagne sans recalculer ses résultats. */
+    public function syncCampaignConfiguration(Campaign $campaign, OrganizationIntegration $integration): void
+    {
+        if ($campaign->channel !== 'google_ads' || ! ctype_digit((string) $campaign->external_reference)) {
+            throw new LogicException('Cette campagne n’est pas encore liée à une campagne Google Ads identifiable.');
+        }
+        if ($integration->provider !== 'google_ads' || $integration->name !== 'reporting') {
+            throw new LogicException('La connexion Google Ads de l’organisation est introuvable.');
+        }
+
+        $organizationCredentials = $integration->credentials;
+        $resolvedCredentials = $this->credentials->resolve($organizationCredentials);
+
+        try {
+            if (! $this->credentials->isReady($organizationCredentials)) {
+                throw new LogicException('Google Ads n’est pas encore entièrement configuré.');
+            }
+
+            $campaign->update([
+                'google_ads_configuration' => $this->configurationReader->read($campaign, $resolvedCredentials),
+                'google_ads_configuration_synced_at' => now(),
+            ]);
+        } catch (RequestException $exception) {
+            $exception = new LogicException('Google Ads a refusé la synchronisation : '.$this->googleErrorMessage($exception), previous: $exception);
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
+        } catch (Throwable $exception) {
+            $this->markFailure($integration, $exception);
+
+            throw $exception;
+        }
+
+        $this->auditLogger->record(
+            event: 'google_ads.campaign_configuration_synchronized',
+            subject: $campaign,
+        );
+    }
+
+    /** @param array<string, mixed> $organizationCredentials */
+    private function syncFromGoogle(OrganizationIntegration $integration, array $organizationCredentials): int
+    {
+        $client = new GoogleAdsApiClient($organizationCredentials);
+        $campaignStatusResponse = $client->searchStream(<<<'GAQL'
+                    SELECT campaign.id, campaign.status, campaign.primary_status,
+                        campaign.primary_status_reasons, campaign.serving_status,
+                        campaign.bidding_strategy_system_status
+                    FROM campaign
+                    GAQL,
+        );
+
+        foreach ($this->rows($campaignStatusResponse) as $row) {
+            if (! isset($row['campaign']['id'])) {
+                continue;
+            }
+
+            $campaign = Campaign::query()
+                ->where('channel', 'google_ads')
+                ->where('external_reference', (string) $row['campaign']['id'])
+                ->first();
+
+            if ($campaign !== null) {
+                $this->applyObservation($campaign, $row['campaign']);
+            }
+        }
+
+        $response = $client->searchStream(<<<'GAQL'
+                    SELECT campaign.id, campaign.name, campaign.status, campaign.primary_status,
+                        campaign.primary_status_reasons, campaign.serving_status,
+                        campaign.bidding_strategy_system_status, segments.date,
+                        metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions
+                    FROM campaign
+                    WHERE segments.date DURING LAST_30_DAYS
+                    GAQL,
+        );
+        $updated = 0;
+
+        foreach ($this->rows($response) as $row) {
+            if (! is_array($row) || ! isset($row['campaign']['id'], $row['segments']['date'])) {
+                continue;
+            }
+
+            $campaign = Campaign::query()
+                ->where('channel', 'google_ads')
+                ->where('external_reference', (string) $row['campaign']['id'])
+                ->first();
+
+            if ($campaign === null) {
+                continue;
+            }
+
+            $metrics = $row['metrics'] ?? [];
+            $campaign->dailyMetrics()->updateOrCreate(
+                ['metric_date' => $row['segments']['date'], 'source' => 'google_ads'],
+                [
+                    'spend' => ((float) ($metrics['costMicros'] ?? 0)) / 1_000_000,
+                    'impressions' => (int) ($metrics['impressions'] ?? 0),
+                    'clicks' => (int) ($metrics['clicks'] ?? 0),
+                    'platform_conversions' => (float) ($metrics['conversions'] ?? 0),
+                    'currency' => $campaign->currency,
+                    'metadata' => ['google_ads_campaign_status' => $row['campaign']['status'] ?? null],
+                ],
+            );
+            $this->applyObservation($campaign, $row['campaign']);
+            $updated++;
+        }
+
+        return $updated;
+    }
+
+    /** @param array<string, mixed> $organizationCredentials */
+    private function syncOneCampaignFromGoogle(Campaign $campaign, array $organizationCredentials): int
+    {
+        $client = new GoogleAdsApiClient($organizationCredentials);
+        $campaignId = (int) $campaign->external_reference;
+        $statusResponse = $client->searchStream(<<<GAQL
+                    SELECT campaign.id, campaign.status, campaign.primary_status,
+                        campaign.primary_status_reasons, campaign.serving_status,
+                        campaign.bidding_strategy_system_status
+                    FROM campaign
+                    WHERE campaign.id = {$campaignId}
+                    GAQL,
+        );
+        $status = $this->rows($statusResponse)->first()['campaign'] ?? null;
+
+        if (! is_array($status)) {
+            throw new LogicException('Google Ads ne retrouve pas cette campagne dans le compte connecté.');
+        }
+
+        $this->applyObservation($campaign, $status);
+        $response = $client->searchStream(<<<GAQL
+                    SELECT campaign.id, campaign.status, campaign.primary_status,
+                        campaign.primary_status_reasons, campaign.serving_status,
+                        campaign.bidding_strategy_system_status, segments.date,
+                        metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions
+                    FROM campaign
+                    WHERE campaign.id = {$campaignId}
+                        AND segments.date DURING LAST_30_DAYS
+                    GAQL,
+        );
+        $updated = 0;
+
+        foreach ($this->rows($response) as $row) {
+            if (! isset($row['segments']['date'])) {
+                continue;
+            }
+
+            $metrics = $row['metrics'] ?? [];
+            $campaign->dailyMetrics()->updateOrCreate(
+                ['metric_date' => $row['segments']['date'], 'source' => 'google_ads'],
+                [
+                    'spend' => ((float) ($metrics['costMicros'] ?? 0)) / 1_000_000,
+                    'impressions' => (int) ($metrics['impressions'] ?? 0),
+                    'clicks' => (int) ($metrics['clicks'] ?? 0),
+                    'platform_conversions' => (float) ($metrics['conversions'] ?? 0),
+                    'currency' => $campaign->currency,
+                    'metadata' => ['google_ads_campaign_status' => $row['campaign']['status'] ?? null],
+                ],
+            );
+            $updated++;
+        }
+
+        return $updated;
+    }
+
+    /** @return iterable<int, array<string, mixed>> */
+    private function rows(array $response): iterable
+    {
+        return collect($response)->pluck('results')->flatten(1)->filter(fn (mixed $row): bool => is_array($row));
+    }
+
+    /** @param array<string, mixed> $observation */
+    private function applyObservation(Campaign $campaign, array $observation): void
+    {
+        $campaign->update([
+            'google_ads_status' => $observation['status'] ?? null,
+            'google_ads_primary_status' => $observation['primaryStatus'] ?? null,
+            'google_ads_primary_status_reasons' => $observation['primaryStatusReasons'] ?? null,
+            'google_ads_serving_status' => $observation['servingStatus'] ?? null,
+            'google_ads_bidding_status' => $observation['biddingStrategySystemStatus'] ?? null,
+            'google_ads_synced_at' => now(),
+        ]);
+    }
+
+    private function markFailure(OrganizationIntegration $integration, Throwable $exception): void
+    {
+        $message = Str::limit($exception->getMessage(), 500, '…');
+        $credentials = $integration->credentials;
+
+        $integration->update([
+            'credentials' => [
+                ...$credentials,
+                'last_sync_failed_at' => now()->toIso8601String(),
+                'last_sync_error' => $message,
+            ],
+        ]);
+        $this->auditLogger->record(
+            event: 'google_ads.reporting_failed',
+            subject: $integration,
+            metadata: ['reason' => $message],
+        );
+    }
+
+    private function googleErrorMessage(RequestException $exception): string
+    {
+        $payload = $exception->response->json();
+        $error = data_get($payload, '0.error') ?? data_get($payload, 'error');
+        $firstDetail = data_get($error, 'details.0.errors.0');
+        $code = data_get($firstDetail, 'errorCode');
+
+        if (is_array($code) && count($code) === 1) {
+            $type = array_key_first($code);
+            $value = $code[$type];
+            $detail = data_get($firstDetail, 'message');
+
+            if (is_string($type) && is_string($value) && is_string($detail) && $detail !== '') {
+                return "{$value} : {$detail}";
+            }
+        }
+
+        $message = data_get($error, 'message');
+
+        return is_string($message) && $message !== ''
+            ? $message
+            : 'la requête a été refusée.';
+    }
+}

@@ -1,7 +1,72 @@
 <?php
 
+use App\Http\Controllers\GoogleAdsAgencyOAuthController;
+use App\Http\Controllers\GoogleAdsOAuthController;
+use App\Http\Controllers\PrivateDocumentDownloadController;
+use App\Http\Controllers\PublicStorageController;
+use App\Http\Controllers\QuotePdfController;
+use App\Http\Controllers\RentalAcceptanceController;
+use App\Http\Controllers\SitePortalLogoutController;
+use App\Http\Controllers\SitePortalSessionController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/manifest.webmanifest', function () {
+    return response()
+        ->view('pwa.manifest')
+        ->header('Content-Type', 'application/manifest+json')
+        ->header('Cache-Control', 'public, max-age=3600');
+})->name('pwa.manifest');
+
 Route::get('/', function () {
-    return redirect('/app');
+    return redirect('/platform/organizations');
+});
+
+Route::post('/site-portal/logout', SitePortalLogoutController::class)
+    ->name('site-portal.logout');
+Route::get('/site-portal/session', SitePortalSessionController::class)
+    ->name('site-portal.session');
+
+Route::get('/location/acceptation/{token}', [RentalAcceptanceController::class, 'show'])->name('rental-acceptance.show');
+Route::post('/location/acceptation/{token}', [RentalAcceptanceController::class, 'accept'])->name('rental-acceptance.accept');
+Route::get('/location/acceptation/{token}/documents/{document}', [RentalAcceptanceController::class, 'document'])->whereNumber('document')->name('rental-acceptance.document');
+
+// Public media is routed through Laravel because this LWS host does not allow
+// the usual public/storage symbolic link.
+Route::get('/media/{path}', PublicStorageController::class)
+    ->where('path', '.*')
+    ->name('public-storage');
+
+Route::middleware('auth')->get('/dashboard', function (Request $request) {
+    $user = $request->user();
+
+    if ($user->is_platform_admin) {
+        return redirect('/platform/organizations');
+    }
+
+    $organization = $user->organizations()
+        ->where('status', 'active')
+        ->orderBy('name')
+        ->firstOrFail();
+
+    return redirect('/dashboard/'.$organization->slug);
+});
+
+Route::middleware('auth')->group(function (): void {
+    Route::get('/quotes/{publicId}/pdf', QuotePdfController::class)->whereUlid('publicId')->name('quotes.pdf');
+    Route::get('/documents/{publicId}/download', PrivateDocumentDownloadController::class)
+        ->whereUlid('publicId')
+        ->name('private-documents.download');
+    Route::get('/integrations/google-ads/agency/authorize', [GoogleAdsAgencyOAuthController::class, 'authorize'])
+        ->name('google-ads.agency.authorize');
+    Route::get('/integrations/google-ads/agency/callback', [GoogleAdsAgencyOAuthController::class, 'callback'])
+        ->name('google-ads.agency.callback');
+    Route::post('/integrations/google-ads/agency/enable', [GoogleAdsAgencyOAuthController::class, 'enable'])
+        ->name('google-ads.agency.enable');
+    Route::post('/integrations/google-ads/agency/disable', [GoogleAdsAgencyOAuthController::class, 'disable'])
+        ->name('google-ads.agency.disable');
+    Route::get('/integrations/google-ads/{integration}/authorize', [GoogleAdsOAuthController::class, 'authorize'])
+        ->name('google-ads.oauth.authorize');
+    Route::get('/integrations/google-ads/callback', [GoogleAdsOAuthController::class, 'callback'])
+        ->name('google-ads.oauth.callback');
 });

@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Filament\Auth;
+
+use Filament\Auth\Pages\Login;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
+use Filament\Forms\Components\Checkbox;
+use Filament\Schemas\Components\Component;
+use App\Models\User;
+
+class CremonaLogin extends Login
+{
+    public function authenticate(): ?LoginResponse
+    {
+        $response = parent::authenticate();
+
+        if ($response !== null && auth()->user() instanceof User) {
+            auth()->user()->forceFill(['last_login_at' => now()])->saveQuietly();
+        }
+
+        return $response;
+    }
+
+    /**
+     * Cremona est un outil privé utilisé au quotidien. L'utilisateur peut
+     * décocher l'option sur un appareil partagé, mais un appareil personnel
+     * reste connecté au-delà de l'expiration de sa session de travail.
+     */
+    protected function getRememberFormComponent(): Component
+    {
+        return Checkbox::make('remember')
+            ->label(__('filament-panels::auth/pages/login.form.remember.label'))
+            ->helperText('À laisser activé uniquement sur un appareil personnel.')
+            ->default(true);
+    }
+}

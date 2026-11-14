@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BrevoConnections;
 
+use App\Filament\Concerns\UsesOrganizationConfiguration;
 use App\Filament\Resources\BrevoConnections\Pages\ListBrevoConnections;
 use App\Models\OrganizationIntegration;
 use App\Services\OrganizationIntegrationManager;
@@ -18,17 +19,19 @@ use UnitEnum;
 
 class BrevoConnectionResource extends Resource
 {
+    use UsesOrganizationConfiguration;
+
     protected static ?string $model = OrganizationIntegration::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Configuration';
+    protected static string|UnitEnum|null $navigationGroup = 'Configuration de l’organisation';
 
     protected static ?string $navigationLabel = 'Brevo Meetings';
 
     protected static ?string $modelLabel = 'connexion Brevo';
 
-    protected static ?string $pluralModelLabel = 'connexion Brevo';
+    protected static ?string $pluralModelLabel = 'connexions Brevo';
 
     protected static ?int $navigationSort = 90;
 
@@ -48,7 +51,8 @@ class BrevoConnectionResource extends Resource
                 TextColumn::make('name')
                     ->label('Service')
                     ->formatStateUsing(fn (): string => 'Brevo Meetings')
-                    ->weight('medium'),
+                    ->weight('medium')
+                    ->sortable(),
                 TextColumn::make('booking_url')
                     ->label('Page de réservation')
                     ->state(fn (OrganizationIntegration $record): ?string => $record->credentials['booking_url'] ?? null)
@@ -62,15 +66,16 @@ class BrevoConnectionResource extends Resource
                         default => 'Après validation',
                     }),
                 TextColumn::make('status')
-                    ->label('Statut')
+                    ->label(__('common.status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'active' ? 'Connecté' : 'Révoqué')
-                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'danger'),
-                TextColumn::make('updated_at')->label('Mis à jour')->since(),
+                    ->color(fn (string $state): string => $state === 'active' ? 'success' : 'danger')
+                    ->sortable(),
+                TextColumn::make('updated_at')->label(__('common.updated_at'))->since()->sortable(),
             ])
             ->recordActions([
                 Action::make('revoke')
-                    ->label('Révoquer')
+                    ->label(__('common.revoke'))
                     ->icon(Heroicon::OutlinedNoSymbol)
                     ->color('danger')
                     ->requiresConfirmation()

@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Filament\Resources\Rentals\Pages;
+
+use App\Enums\RentalAcceptanceStatus;
+use App\Enums\RentalStatus;
+use App\Filament\Resources\Rentals\RentalResource;
+use App\Models\Rental;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Tabs\Tab;
+use Illuminate\Database\Eloquent\Builder;
+
+class ListRentals extends ListRecords
+{
+    protected static string $resource = RentalResource::class;
+
+    public function getTabs(): array
+    {
+        $returnHorizon = today()->addDays(14)->toDateString();
+
+        return [
+            'all' => Tab::make('Toutes'),
+            'attention' => Tab::make('À traiter')
+                ->badge(fn (): int => $this->attentionQuery($returnHorizon)->count())
+                ->badgeColor('warning')
+                ->modifyQueryUsing(fn (Builder $query): Builder => $this->applyAttentionQuery($query, $returnHorizon)),
+            'sent' => Tab::make('Envoyés')
+                ->badge(fn (): int => Rental::query()->where('status', RentalStatus::Sent)->count())
+                ->badgeColor('warning')
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Sent)),
+            'accepted' => Tab::make('À remettre')
+                ->badge(fn (): int => Rental::query()->where('status', RentalStatus::Accepted)->count())
+                ->badgeColor('success')
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Accepted)),
+            'collection_to_set_up' => Tab::make('Encaissement à mettre en place')
+                ->badge(fn (): int => Rental::query()->where('collection_status', 'to_set_up')->count())
+                ->badgeColor('warning')
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('collection_status', 'to_set_up')),
+            'collection_to_stop' => Tab::make('Encaissement à arrêter')
+                ->badge(fn (): int => Rental::query()->where('collection_status', 'to_stop')->count())
+                ->badgeColor('danger')
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('collection_status', 'to_stop')),
+            'active' => Tab::make('En cours')->badge(fn (): int => Rental::query()->where('status', RentalStatus::HandedOver)->count())->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::HandedOver)),
+            'returned' => Tab::make('Restitués')->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', RentalStatus::Returned)),
+        ];
+    }
+
+    private function attentionQuery(string $returnHorizon): Builder
+    {
+        return $this->applyAttentionQuery(Rental::query(), $returnHorizon);
+    }
+
+    private function applyAttentionQuery(Builder $query, string $returnHorizon): Builder
+    {
+        return $query->where(function (Builder $query) use ($returnHorizon): void {
+            $query->whereIn('status', [RentalStatus::Preparing, RentalStatus::Sent, RentalStatus::Accepted])
+                ->orWhere(fn (Builder $query): Builder => $query->where('status', RentalStatus::HandedOver)->whereDate('expected_return_on', '<=', $returnHorizon))
+                ->orWhereIn('collection_status', ['to_set_up', 'to_stop']);
+        });
+    }
+}

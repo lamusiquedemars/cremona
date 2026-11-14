@@ -15,7 +15,14 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
     'assigned_user_id',
     'name',
     'legal_name',
+    'registration_number',
+    'vat_number',
     'website',
+    'address_line_1',
+    'address_line_2',
+    'postal_code',
+    'city',
+    'country_code',
     'industry',
     'source',
     'status',
@@ -25,6 +32,18 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Company extends Model
 {
     use BelongsToOrganization, ValidatesOrganizationAssignee;
+
+    protected static function booted(): void
+    {
+        static::creating(function (Company $company): void {
+            $company->source ??= 'manual';
+        });
+
+        static::saving(function (Company $company): void {
+            $countryCode = trim((string) $company->country_code);
+            $company->country_code = $countryCode !== '' ? mb_strtoupper($countryCode) : null;
+        });
+    }
 
     protected function casts(): array
     {

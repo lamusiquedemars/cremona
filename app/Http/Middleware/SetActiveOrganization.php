@@ -19,11 +19,14 @@ class SetActiveOrganization
         abort_unless($tenant instanceof Organization, 404);
 
         $this->context->set($tenant);
+        $previousLocale = app()->getLocale();
+        app()->setLocale($tenant->interfaceLocale());
 
         try {
             return $next($request);
         } finally {
             $this->context->forget();
+            app()->setLocale($previousLocale);
         }
     }
 }

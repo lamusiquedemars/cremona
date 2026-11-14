@@ -24,6 +24,11 @@ class PeopleRelationManager extends RelationManager
 
     protected static ?string $title = 'Contacts';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('common.contacts');
+    }
+
     protected static string|BackedEnum|null $icon = Heroicon::OutlinedUsers;
 
     public function isReadOnly(): bool
@@ -37,30 +42,31 @@ class PeopleRelationManager extends RelationManager
             ->defaultSort('display_name')
             ->columns([
                 TextColumn::make('display_name')
-                    ->label('Contact')
+                    ->label(__('common.contact'))
                     ->weight('medium')
-                    ->searchable(),
-                TextColumn::make('pivot.job_title')->label('Fonction')->placeholder('—'),
-                IconColumn::make('pivot.is_primary')->label('Principal')->boolean(),
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('pivot.job_title')->label(__('common.function'))->placeholder('—')->sortable(),
+                IconColumn::make('pivot.is_primary')->label(__('common.primary'))->boolean()->sortable(),
                 TextColumn::make('contactMethods.value')
-                    ->label('Coordonnées')
+                    ->label(__('common.contact_details'))
                     ->listWithLineBreaks()
                     ->limitList(2),
             ])
             ->headerActions([
                 AttachAction::make()
-                    ->label('Rattacher un contact')
-                    ->modalHeading('Rattacher un contact existant')
-                    ->modalSubmitActionLabel('Rattacher')
+                    ->label(__('common.attach_contact'))
+                    ->modalHeading(__('common.attach_existing_contact'))
+                    ->modalSubmitActionLabel(__('common.attach'))
                     ->attachAnother(false)
                     ->recordSelectSearchColumns(['display_name', 'first_name', 'last_name'])
                     ->schema(fn (AttachAction $action): array => [
-                        $action->getRecordSelect()->label('Contact'),
+                        $action->getRecordSelect()->label(__('common.contact')),
                         TextInput::make('job_title')
-                            ->label('Fonction')
+                            ->label(__('common.function'))
                             ->maxLength(255),
                         Toggle::make('is_primary')
-                            ->label('Contact principal'),
+                            ->label(__('common.primary_contact')),
                     ])
                     ->mutateDataUsing(fn (array $data): array => [
                         ...$data,

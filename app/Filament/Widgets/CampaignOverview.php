@@ -1,0 +1,95 @@
+<?php
+
+namespace App\Filament\Widgets;
+
+use App\Enums\CampaignStatus;
+use App\Enums\IncomingRequestOutcome;
+use App\Enums\OrganizationPermission;
+use App\Filament\Resources\Campaigns\CampaignResource;
+use App\Models\Campaign;
+use App\Models\CampaignDailyMetric;
+use App\Models\IncomingRequest;
+use App\Services\OrganizationModuleAccess;
+use App\Tenancy\OrganizationContext;
+use Filament\Support\Icons\Heroicon;
+use Filament\Widgets\StatsOverviewWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Number;
+
+class CampaignOverview extends StatsOverviewWidget
+{
+    protected static bool $isLazy = false;
+
+    protected ?string $pollingInterval = null;
+
+    protected static ?int $sort = 30;
+
+    public static function canView(): bool
+    {
+        $organization = app(OrganizationContext::class)->current();
+        $user = auth()->user();
+
+        return $organization !== null
+            && $user !== null
+            && app(OrganizationModuleAccess::class)->enabled('marketing', $organization)
+            && $user->hasOrganizationPermission(OrganizationPermission::ViewCrm, $organization);
+    }
+
+    protected function getStats(): array
+    {
+        $organization = app(OrganizationContext::class)->require();
+        $since = now()->setTimezone($organization->timezone())->subDays(30)->toDateString();
+        $active = Campaign::query()->where('status', CampaignStatus::Active)->count();
+        $spendByCurrency = CampaignDailyMetric::query()
+            ->where('metric_date', '>=', $since)
+            ->selectRaw('currency, SUM(spend) as total')
+            ->groupBy('currency')
+            ->pluck('total', 'currency');
+        $spend = $spendByCurrency
+            ->map(fn (mixed $total, string $currency): string => Number::currency((float) $total, $currency, app()->getLocale()))
+            ->implode(' · ');
+        $windowStart = now()->setTimezone($organization->timezone())->subDays(30);
+        $leads = IncomingRequest::query()
+            ->where('received_at', '>=', $windowStart)
+            ->whereNotNull('attribution_campaign')
+            ->count();
+        $converted = IncomingRequest::query()
+            ->where('received_at', '>=', $windowStart)
+            ->whereNotNull('attribution_campaign')
+            ->where('outcome', IncomingRequestOutcome::Converted)
+            ->count();
+
+        return [
+            Stat::make(__('cremona.dashboard.active_campaigns'), $active)
+                ->description(__('cremona.dashboard.active_campaigns_description'))
+                ->icon(Heroicon::OutlinedMegaphone)
+                ->color($active > 0 ? 'success' : 'gray')
+                ->url(CampaignResource::getUrl('index')),
+            Stat::make(__('cremona.dashboard.recorded_spend'), $spend !== '' ? $spend : '—')
+                ->description($spendByCurrency->count() > 1
+                    ? __('cremona.dashboard.multiple_currencies')
+                    : __('cremona.dashboard.daily_costs_total'))
+                ->icon(Heroicon::OutlinedBanknotes)
+                ->color($spend !== '' ? 'warning' : 'gray')
+                ->url(CampaignResource::getUrl('index')),
+            Stat::make(__('cremona.dashboard.attributed_requests'), $leads)
+                ->description(__('cremona.dashboard.attributed_requests_description'))
+                ->icon(Heroicon::OutlinedArrowTrendingUp)
+                ->color($leads > 0 ? 'info' : 'gray'),
+            Stat::make(__('cremona.dashboard.converted_requests'), $converted)
+                ->description(__('cremona.dashboard.converted_requests_description'))
+                ->icon(Heroicon::OutlinedCheckCircle)
+                ->color($converted > 0 ? 'success' : 'gray'),
+        ];
+    }
+
+    protected function getHeading(): ?string
+    {
+        return __('cremona.dashboard.campaigns_heading');
+    }
+
+    protected function getDescription(): ?string
+    {
+        return __('cremona.dashboard.campaigns_description');
+    }
+}
