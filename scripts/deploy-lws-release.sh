@@ -27,7 +27,7 @@ fi
 git -C "$repository_root" archive --format=tar HEAD \
     | ssh "$deploy_host" "mkdir -p '$stage_path' && tar -xf - -C '$stage_path'"
 
-tar -C "$repository_root/public/build" -cf - . \
+tar --no-xattrs -C "$repository_root/public/build" -cf - . \
     | ssh "$deploy_host" "mkdir -p '$stage_path/public/build' && tar -xf - -C '$stage_path/public/build'"
 
 ssh "$deploy_host" "APP_PATH='$application_path' STAGE_PATH='$stage_path' bash -s" <<'REMOTE'
