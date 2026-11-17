@@ -16,6 +16,8 @@ final class EmailBodyText
             $body = mb_convert_encoding($body, 'UTF-8', 'Windows-1252');
         }
 
+        $body = self::correctMojibake($body);
+
         $body = self::withoutCssBlocks($body);
 
         // Some senders put HTML in the text MIME part, sometimes escaped as
@@ -73,5 +75,14 @@ final class EmailBodyText
         }
 
         return implode("\n", $lines);
+    }
+
+    private static function correctMojibake(string $body): string
+    {
+        return preg_replace_callback(
+            '/(?:Ã[\x{0080}-\x{00BF}]|Â[\x{0080}-\x{00BF}]|â€.)/u',
+            static fn (array $matches): string => mb_convert_encoding($matches[0], 'Windows-1252', 'UTF-8'),
+            $body,
+        ) ?? $body;
     }
 }
