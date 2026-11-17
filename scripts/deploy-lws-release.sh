@@ -39,7 +39,7 @@ previous_release="$(readlink -f "$APP_PATH/current")"
 test -d "$shared_storage"
 test -d "$shared_storage/public"
 test -L "$previous_release/storage/app"
-test "$(readlink "$previous_release/storage/app")" = '../../../shared/storage/app'
+test "$(readlink "$previous_release/storage/app")" = '../../shared/storage/app'
 
 # Une archive Git ne peut apporter ici que les .gitignore vides. Tout autre
 # contenu ferait suspecter une écriture accidentelle dans les données et bloque
@@ -53,8 +53,8 @@ fi
 find "$STAGE_PATH/storage/app" -type f -name '.gitignore' -delete
 find "$STAGE_PATH/storage/app" -depth -type d -empty -delete
 test ! -e "$STAGE_PATH/storage/app"
-ln -s ../../../shared/storage/app "$STAGE_PATH/storage/app"
-test "$(readlink "$STAGE_PATH/storage/app")" = '../../../shared/storage/app'
+ln -s ../../shared/storage/app "$STAGE_PATH/storage/app"
+test "$(readlink "$STAGE_PATH/storage/app")" = '../../shared/storage/app'
 test "$(readlink -f "$STAGE_PATH/storage/app")" = "$shared_storage"
 
 # Le code et les dépendances peuvent être propres à une release ; jamais les médias.
@@ -88,7 +88,7 @@ php artisan filament:cache-components
 
 test -f public/build/manifest.json
 test -L storage/app
-test "$(readlink storage/app)" = '../../../shared/storage/app'
+test "$(readlink storage/app)" = '../../shared/storage/app'
 
 touch DEPLOYED_OK
 ln -sfn "$STAGE_PATH" "$APP_PATH/current"
