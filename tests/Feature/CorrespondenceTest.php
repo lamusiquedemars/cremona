@@ -10,6 +10,7 @@ use App\Enums\MessageThreadingStatus;
 use App\Enums\MessageTransportStatus;
 use App\Enums\OrganizationRole;
 use App\Filament\Resources\Conversations\ConversationResource;
+use App\Filament\Resources\Conversations\Pages\ViewConversation;
 use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
@@ -28,7 +29,9 @@ use App\Services\CorrespondenceManager;
 use App\Services\IncomingRequestManager;
 use App\Services\OrganizationModuleRegistry;
 use App\Tenancy\OrganizationContext;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use LogicException;
 use Tests\TestCase;
 
@@ -140,6 +143,48 @@ class CorrespondenceTest extends TestCase
                 'event' => 'correspondence.context_updated',
                 'subject_id' => $conversation->id,
             ]);
+        });
+    }
+
+    public function test_a_collaborator_can_link_a_correspondence_from_its_view_and_the_links_persist(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationModuleRegistry::class)->sync($organization, ['communications', 'crm']);
+        $actor = User::factory()->create();
+        $actor->organizations()->attach($organization, ['role' => OrganizationRole::Collaborator->value]);
+
+        [$person, $company, $request, $conversation] = app(OrganizationContext::class)->run($organization, function (): array {
+            return [
+                Person::query()->create(['display_name' => 'Camille Martin']),
+                Company::query()->create(['name' => 'Atelier Martin']),
+                IncomingRequest::query()->create([
+                    'subject' => 'Réparation d’un alto',
+                    'message' => 'Je souhaite un devis.',
+                    'status' => IncomingRequestStatus::New,
+                    'received_at' => now(),
+                    'payload_fingerprint' => hash('sha256', 'link-conversation-from-view'),
+                ]),
+                Conversation::query()->create(['initial_channel' => 'email', 'subject' => 'Demande de devis']),
+            ];
+        });
+
+        $this->actingAs($actor);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        app(OrganizationContext::class)->run($organization, function () use ($person, $company, $request, $conversation): void {
+            Livewire::test(ViewConversation::class, ['record' => $conversation->getRouteKey()])
+                ->callAction('updateContext', data: [
+                    'person_id' => $person->id,
+                    'company_id' => $company->id,
+                    'incoming_request_id' => $request->id,
+                ])
+                ->assertHasNoActionErrors();
+
+            $conversation->refresh();
+            $this->assertSame($person->id, $conversation->person_id);
+            $this->assertSame($company->id, $conversation->company_id);
+            $this->assertSame($request->id, $conversation->incoming_request_id);
         });
     }
 

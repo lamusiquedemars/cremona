@@ -2,9 +2,9 @@
 
 # Publication atomique Cremona sur LWS.
 #
-# Invariant non négociable : les fichiers utilisateurs vivent dans
-# $app/shared/storage/app, hors des releases. Cette commande refuse d'activer
-# une release si storage/app n'est pas le lien prévu vers ce répertoire.
+# Invariant non négociable : le stockage Laravel vit dans $app/shared/storage,
+# hors des releases. Cette commande refuse d'activer une release si storage
+# n'est pas le lien prévu vers ce répertoire.
 
 set -euo pipefail
 
@@ -27,7 +27,7 @@ fi
 git -C "$repository_root" archive --format=tar HEAD \
     | ssh "$deploy_host" "mkdir -p '$stage_path' && tar -xf - -C '$stage_path'"
 
-tar -C "$repository_root/public/build" -cf - . \
+tar --no-xattrs -C "$repository_root/public/build" -cf - . \
     | ssh "$deploy_host" "mkdir -p '$stage_path/public/build' && tar -xf - -C '$stage_path/public/build'"
 
 ssh "$deploy_host" "APP_PATH='$application_path' STAGE_PATH='$stage_path' bash -s" <<'REMOTE'
@@ -38,8 +38,8 @@ previous_release="$(readlink -f "$APP_PATH/current")"
 
 test -d "$shared_storage"
 test -d "$shared_storage/public"
-test -L "$previous_release/storage/app"
-test "$(readlink "$previous_release/storage/app")" = '../../../shared/storage/app'
+test -L "$previous_release/storage"
+test "$(readlink "$previous_release/storage")" = '../../shared/storage'
 
 # Une archive Git ne peut apporter ici que les .gitignore vides. Tout autre
 # contenu ferait suspecter une écriture accidentelle dans les données et bloque
@@ -50,11 +50,11 @@ if [[ -n "$unexpected_file" ]]; then
     exit 1
 fi
 
-find "$STAGE_PATH/storage/app" -type f -name '.gitignore' -delete
-find "$STAGE_PATH/storage/app" -depth -type d -empty -delete
-test ! -e "$STAGE_PATH/storage/app"
-ln -s ../../../shared/storage/app "$STAGE_PATH/storage/app"
-test "$(readlink "$STAGE_PATH/storage/app")" = '../../../shared/storage/app'
+find "$STAGE_PATH/storage" -type f -name '.gitignore' -delete
+find "$STAGE_PATH/storage" -depth -type d -empty -delete
+test ! -e "$STAGE_PATH/storage"
+ln -s ../../shared/storage "$STAGE_PATH/storage"
+test "$(readlink "$STAGE_PATH/storage")" = '../../shared/storage'
 test "$(readlink -f "$STAGE_PATH/storage/app")" = "$shared_storage"
 
 # Le code et les dépendances peuvent être propres à une release ; jamais les médias.
@@ -87,8 +87,8 @@ php artisan view:cache
 php artisan filament:cache-components
 
 test -f public/build/manifest.json
-test -L storage/app
-test "$(readlink storage/app)" = '../../../shared/storage/app'
+test -L storage
+test "$(readlink storage)" = '../../shared/storage'
 
 touch DEPLOYED_OK
 ln -sfn "$STAGE_PATH" "$APP_PATH/current"
