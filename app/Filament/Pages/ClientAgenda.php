@@ -152,18 +152,34 @@ class ClientAgenda extends Page
             ]));
 
         if ($this->moduleEnabled('workshop', $organization)) {
-            $events = $events->concat(WorkshopOrder::query()
+            $workshopOrders = WorkshopOrder::query()
                 ->with('person')
                 ->whereNotIn('status', [WorkshopOrderStatus::Returned, WorkshopOrderStatus::Cancelled])
-                ->whereNotNull('scheduled_at')
-                ->whereBetween('scheduled_at', [$start->utc(), $end->utc()])
-                ->get()
+                ->where(function ($query) use ($start, $end): void {
+                    $query->whereBetween('scheduled_at', [$start->utc(), $end->utc()])
+                        ->orWhereBetween('work_due_on', [$start->toDateString(), $end->subDay()->toDateString()]);
+                })
+                ->get();
+
+            $events = $events->concat($workshopOrders
+                ->filter(fn (WorkshopOrder $order): bool => $order->scheduled_at !== null)
                 ->map(fn (WorkshopOrder $order): array => [
                     'type' => 'workshop',
                     'label' => 'Atelier',
                     'title' => $order->title,
                     'contact' => $order->person?->display_name ?? 'Client à préciser',
                     'starts_at' => CarbonImmutable::instance($order->scheduled_at)->setTimezone($organization->timezone()),
+                    'url' => WorkshopOrderResource::getUrl('view', ['record' => $order]),
+                ]));
+
+            $events = $events->concat($workshopOrders
+                ->filter(fn (WorkshopOrder $order): bool => $order->work_due_on !== null)
+                ->map(fn (WorkshopOrder $order): array => [
+                    'type' => 'workshop_deadline',
+                    'label' => 'Échéance atelier',
+                    'title' => $order->title,
+                    'contact' => $order->person?->display_name ?? 'Client à préciser',
+                    'starts_at' => CarbonImmutable::instance($order->work_due_on)->setTimezone($organization->timezone())->startOfDay(),
                     'url' => WorkshopOrderResource::getUrl('view', ['record' => $order]),
                 ]));
         }

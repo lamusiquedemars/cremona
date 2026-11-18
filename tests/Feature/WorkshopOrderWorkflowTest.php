@@ -22,6 +22,7 @@ use App\Services\WorkshopOrderQuoteManager;
 use App\Services\WorkshopOrderWorkflowManager;
 use App\Tenancy\OrganizationContext;
 use Filament\Facades\Filament;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
@@ -58,15 +59,18 @@ class WorkshopOrderWorkflowTest extends TestCase
 
             Livewire::test(WorkshopAttention::class)
                 ->assertCanSeeTableRecords([$order])
-                ->assertSee('Examiner l’instrument')
+                ->assertSee('Préparer le devis')
                 ->callTableAction('examination_on', $order, data: ['date' => '2026-11-18'])
                 ->assertHasNoErrors()
                 ->assertSee('Aujourd’hui');
 
             Livewire::test(ListWorkshopOrders::class)
-                ->callTableAction('prepareWorkshopQuote', $order, data: ['diagnosis' => 'Crin à remplacer'])
-                ->assertHasNoErrors();
+                ->assertTableActionHasIcon('prepareWorkshopQuote', Heroicon::OutlinedDocumentCurrencyEuro)
+                ->callTableAction('prepareWorkshopQuote', $order)
+                ->assertHasNoErrors()
+                ->assertRedirect();
             $this->assertSame(WorkshopOrderStatus::Diagnosed, $order->fresh()->status);
+            $this->assertNull($order->fresh()->diagnosis);
             $quote = $order->quote()->firstOrFail();
             $this->assertSame(60.0, (float) $quote->total_amount);
             $quote->update(['discount_amount' => 5.01]);

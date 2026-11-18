@@ -21,7 +21,11 @@ class WorkshopOrderWorkflowManager
                 if (filled($diagnosis)) {
                     $order->update(['diagnosis' => trim($diagnosis)]);
                 }
-                $order = $this->confirmDiagnosis($order);
+                $order->update([
+                    'status' => WorkshopOrderStatus::Diagnosed,
+                    'diagnosed_at' => now(),
+                ]);
+                $order->refresh();
             }
 
             if ($order->status !== WorkshopOrderStatus::Diagnosed) {

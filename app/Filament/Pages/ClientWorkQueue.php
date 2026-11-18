@@ -7,16 +7,19 @@ use App\Enums\ConversationStatus;
 use App\Enums\CrmTaskStatus;
 use App\Enums\IncomingRequestStatus;
 use App\Enums\OrganizationPermission;
+use App\Enums\QuoteStatus;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Filament\Resources\CrmTasks\CrmTaskResource;
 use App\Filament\Resources\IncomingRequests\IncomingRequestResource;
+use App\Filament\Resources\Quotes\QuoteResource;
 use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\CrmTask;
 use App\Models\IncomingRequest;
 use App\Models\Person;
+use App\Models\Quote;
 use App\Models\User;
 use App\Services\OrganizationModuleAccess;
 use App\Services\OrganizationPresentation;
@@ -72,8 +75,9 @@ class ClientWorkQueue extends Page
 
     public function selectType(string $type): void
     {
-        abort_unless(in_array($type, ['all', 'request', 'conversation', 'appointment', 'task'], true), 404);
+        abort_unless(in_array($type, ['all', 'request', 'conversation', 'appointment', 'task', 'quote'], true), 404);
         abort_unless($type !== 'appointment' || $this->includesAppointments(), 404);
+        abort_unless($type !== 'quote' || $this->includesQuotes(), 404);
 
         $this->type = $type;
         $this->resetPage('clientWorkPage');
@@ -87,6 +91,7 @@ class ClientWorkQueue extends Page
             'conversation' => $this->conversationsQuery(),
             'appointment' => $this->appointmentsQuery(),
             'task' => $this->tasksQuery(),
+            'quote' => $this->quotesQuery(),
             default => $this->allItemsQuery(),
         };
 
@@ -102,6 +107,7 @@ class ClientWorkQueue extends Page
             'conversation' => ConversationResource::getUrl('view', ['record' => $item->record_key]),
             'appointment' => AppointmentResource::getUrl('view', ['record' => $item->record_key]),
             'task' => CrmTaskResource::getUrl('view', ['record' => $item->record_key]),
+            'quote' => QuoteResource::getUrl('edit', ['record' => $item->record_key]),
             default => IncomingRequestResource::getUrl('view', ['record' => $item->record_key]),
         };
     }
@@ -112,6 +118,7 @@ class ClientWorkQueue extends Page
             'conversation' => 'Message à répondre',
             'appointment' => 'Rendez-vous à préparer',
             'task' => 'Tâche',
+            'quote' => 'Devis à envoyer',
             default => 'Demande',
         };
     }
@@ -127,6 +134,7 @@ class ClientWorkQueue extends Page
             'task' => 'À faire le',
             'conversation' => 'Reçu le',
             'appointment' => 'Prévu le',
+            'quote' => 'Préparé le',
             default => 'Reçue le',
         };
     }
@@ -139,11 +147,23 @@ class ClientWorkQueue extends Page
             && app(OrganizationModuleAccess::class)->enabled('appointments', $organization);
     }
 
+    public function includesQuotes(): bool
+    {
+        $organization = app(OrganizationContext::class)->current();
+
+        return $organization !== null
+            && app(OrganizationModuleAccess::class)->enabled('quotes', $organization);
+    }
+
     private function allItemsQuery(): Builder
     {
         $query = $this->requestsQuery()
             ->unionAll($this->conversationsQuery())
             ->unionAll($this->tasksQuery());
+
+        if ($this->includesQuotes()) {
+            $query->unionAll($this->quotesQuery());
+        }
 
         return $this->includesAppointments()
             ? $query->unionAll($this->appointmentsQuery())
@@ -243,6 +263,29 @@ class ClientWorkQueue extends Page
             ->selectRaw("{$rawTable}.starts_at as sort_at")
             ->where("{$table}.status", AppointmentStatus::Scheduled)
             ->where("{$table}.starts_at", '<=', now()->addDays(7));
+    }
+
+    private function quotesQuery(): Builder
+    {
+        $table = (new Quote)->getTable();
+        $people = (new Person)->getTable();
+        $companies = (new Company)->getTable();
+        $rawTable = $this->prefixedTable(new Quote);
+        $rawPeople = $this->prefixedTable(new Person);
+        $rawCompanies = $this->prefixedTable(new Company);
+
+        return Quote::query()
+            ->leftJoin($people, "{$people}.id", '=', "{$table}.person_id")
+            ->leftJoin($companies, "{$companies}.id", '=', "{$table}.company_id")
+            ->select("{$table}.id")
+            ->select("{$table}.public_id as record_key")
+            ->selectRaw("'quote' as item_type")
+            ->selectRaw("{$rawTable}.title as title")
+            ->selectRaw("COALESCE({$rawPeople}.display_name, {$rawCompanies}.name, 'Client à préciser') as contact")
+            ->selectRaw("{$rawTable}.status as state")
+            ->selectRaw("'Envoyer le devis au client' as summary")
+            ->selectRaw("{$rawTable}.created_at as sort_at")
+            ->where("{$table}.status", QuoteStatus::Draft);
     }
 
     private function prefixedTable(Model $model): string

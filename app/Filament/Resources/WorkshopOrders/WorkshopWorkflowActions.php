@@ -16,8 +16,10 @@ use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Support\Icons\Heroicon;
 use LogicException;
 
 class WorkshopWorkflowActions
@@ -28,21 +30,21 @@ class WorkshopWorkflowActions
         return [
             self::run(
                 Action::make('prepareWorkshopQuote')
-                    ->label(fn (WorkshopOrder $record): string => $record->status === WorkshopOrderStatus::Received
-                        ? 'Valider le diagnostic et préparer le devis'
-                        : 'Préparer le devis')
+                    ->label('Préparer le devis')
+                    ->icon(Heroicon::OutlinedDocumentCurrencyEuro)
                     ->visible(fn (WorkshopOrder $record): bool => ($record->status === WorkshopOrderStatus::Received
                             && ($record->quote === null || $record->quote->status === QuoteStatus::Draft))
-                        || ($record->status === WorkshopOrderStatus::Diagnosed && $record->quote === null))
-                    ->schema(fn (WorkshopOrder $record): array => $record->status === WorkshopOrderStatus::Received && blank($record->diagnosis)
-                        ? [Textarea::make('diagnosis')->label('Diagnostic atelier')->required()]
-                        : []),
-                fn (WorkshopOrder $record, array $data) => app(WorkshopOrderWorkflowManager::class)->prepareQuote($record, $data['diagnosis'] ?? null),
+                        || ($record->status === WorkshopOrderStatus::Diagnosed && $record->quote === null)),
+                function (WorkshopOrder $record) {
+                    $quote = app(WorkshopOrderWorkflowManager::class)->prepareQuote($record);
+
+                    return redirect()->to(QuoteResource::getUrl('edit', ['record' => $quote]));
+                },
                 fn (WorkshopOrder $record): bool => $record->quote === null ? QuoteResource::canCreate() : self::canEditQuote($record),
             ),
             self::run(
                 Action::make('sendWorkshopQuote')
-                    ->label('Confirmer la transmission du devis')
+                    ->label('Envoyer le devis')
                     ->visible(fn (WorkshopOrder $record): bool => $record->status === WorkshopOrderStatus::Diagnosed && $record->quote?->status === QuoteStatus::Draft)
                     ->modalDescription(fn (WorkshopOrder $record): string => self::contactDescription($record))
                     ->schema([
@@ -50,9 +52,18 @@ class WorkshopWorkflowActions
                             'email' => 'E-mail',
                             'in_person' => 'Remis au client',
                             'other' => 'Autre canal',
-                        ])->required(),
+                        ])->default('email')->live()->required(),
+                        TextInput::make('recipient_email')
+                            ->label('Adresse e-mail du client')
+                            ->email()
+                            ->default(fn (WorkshopOrder $record): ?string => self::recipientEmail($record))
+                            ->visible(fn (Get $get): bool => $get('sent_via') === 'email')
+                            ->required(fn (Get $get): bool => $get('sent_via') === 'email')
+                            ->helperText('Adresse préremplie lorsqu’elle existe dans la fiche client. Vous pouvez la modifier pour cet envoi ; le PDF du devis sera joint au message.'),
                     ]),
-                fn (WorkshopOrder $record, array $data) => app(QuoteWorkflowManager::class)->markSent($record->quote, $data['sent_via']),
+                fn (WorkshopOrder $record, array $data) => $data['sent_via'] === 'email'
+                    ? app(QuoteWorkflowManager::class)->sendByEmail($record->quote, $data['recipient_email'])
+                    : app(QuoteWorkflowManager::class)->markSent($record->quote, $data['sent_via']),
                 self::canEditQuote(...),
             ),
             self::run(
@@ -100,7 +111,7 @@ class WorkshopWorkflowActions
     public static function secondary(): array
     {
         return [
-            self::dateAction('examination_on', 'Prévoir l’examen', 'Date de rappel', fn (WorkshopOrder $record): bool => $record->status === WorkshopOrderStatus::Received),
+            self::dateAction('examination_on', 'Ajouter un rappel', 'Date du rappel', fn (WorkshopOrder $record): bool => $record->status === WorkshopOrderStatus::Received),
             self::dateAction('quote_follow_up_on', 'Prévoir le contact client', 'Date de rappel', fn (WorkshopOrder $record): bool => $record->status === WorkshopOrderStatus::Diagnosed && $record->quote?->status === QuoteStatus::Draft, self::canEditQuote(...)),
             self::dateAction('work_due_on', 'Fixer l’échéance des travaux', 'À terminer pour le', self::workCanBeCompleted(...)),
             Action::make('viewWorkshopQuote')
@@ -136,6 +147,7 @@ class WorkshopWorkflowActions
         return self::run(
             Action::make($field)
                 ->label($label)
+                ->icon(Heroicon::OutlinedCalendarDays)
                 ->visible($visible)
                 ->fillForm(fn (WorkshopOrder $record): array => ['date' => $record->{$field}?->toDateString()])
                 ->schema([DatePicker::make('date')->label($dateLabel)]),
@@ -199,5 +211,12 @@ class WorkshopWorkflowActions
         $recipient = $contact === null ? 'Client à renseigner' : implode(' · ', [$contact->display_name ?? $contact->name, ...$details]);
 
         return $recipient.' — Confirmez après avoir transmis le devis.';
+    }
+
+    private static function recipientEmail(WorkshopOrder $record): ?string
+    {
+        return $record->quote?->person?->contactMethods->firstWhere('type', 'email')?->value
+            ?? $record->quote?->company?->contactMethods->firstWhere('type', 'email')?->value
+            ?? $record->person?->contactMethods->firstWhere('type', 'email')?->value;
     }
 }

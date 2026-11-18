@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\WorkshopOrders;
 
-use App\Enums\WorkshopOrderStatus;
 use App\Enums\QuoteStatus;
+use App\Enums\WorkshopOrderStatus;
 use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\Resources\Quotes\QuoteResource;
 use App\Filament\Resources\WorkshopOrders\Pages\CreateWorkshopOrder;
@@ -26,9 +26,9 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Resource;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -106,6 +106,7 @@ class WorkshopOrderResource extends Resource
                 ])->columns(3)->columnSpanFull()->helperText('Prépare les consommables nécessaires. Cochez « À ajouter au devis » lorsqu’ils doivent être facturés. Ils ne sont retirés du stock qu’avec l’action « Déduire le stock consommé », une fois l’intervention commencée.'),
                 DateTimePicker::make('received_at')->label('Reçu le')->seconds(false)->disabled()->columnSpan(3),
                 DateTimePicker::make('due_at')->label('Intervention prévue le')->seconds(false)->disabled()->columnSpan(3),
+                DatePicker::make('work_due_on')->label('Échéance des travaux')->disabled()->columnSpan(3),
                 DateTimePicker::make('ready_at')->label('Prêt le')->seconds(false)->disabled()->columnSpan(3),
                 DateTimePicker::make('returned_at')->label('Restitué le')->seconds(false)->disabled()->columnSpan(3),
                 Textarea::make('notes')->label(__('common.internal_notes'))->rows(3)->columnSpanFull(),
@@ -153,6 +154,7 @@ class WorkshopOrderResource extends Resource
                 TextEntry::make('customer_instructions')->label('Demande du client')->placeholder('—')->columnSpanFull(),
                 TextEntry::make('diagnosis')->label('Diagnostic atelier')->placeholder('—')->columnSpanFull(),
                 TextEntry::make('due_at')->label('Intervention prévue le')->dateTime('d/m/Y H:i')->placeholder('—'),
+                TextEntry::make('work_due_on')->label('Échéance des travaux')->date('d/m/Y')->placeholder('—'),
                 TextEntry::make('ready_at')->label('Prêt le')->dateTime('d/m/Y H:i')->placeholder('—'),
                 TextEntry::make('returned_at')->label('Restitué le')->dateTime('d/m/Y H:i')->placeholder('—'),
                 TextEntry::make('notes')->label(__('common.internal_notes'))->placeholder('—')->columnSpanFull(),

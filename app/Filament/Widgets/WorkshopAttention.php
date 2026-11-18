@@ -50,7 +50,7 @@ class WorkshopAttention extends TableWidget
                 TextColumn::make('reference')->label('Dossier')->description(fn (WorkshopOrder $record): string => $record->title),
                 TextColumn::make('person.display_name')->label('Client')->placeholder('—'),
                 TextColumn::make('next_step')->label('À faire')->state(fn (WorkshopOrder $record): string => match ($record->status) {
-                    WorkshopOrderStatus::Received => 'Examiner l’instrument',
+                    WorkshopOrderStatus::Received => 'Préparer le devis',
                     WorkshopOrderStatus::Diagnosed => $record->quote === null ? 'Préparer le devis' : 'Contacter le client au sujet du devis',
                     WorkshopOrderStatus::Ready, WorkshopOrderStatus::Returned => $this->billingStep($record, $billingVisible),
                     default => 'Réaliser les travaux',

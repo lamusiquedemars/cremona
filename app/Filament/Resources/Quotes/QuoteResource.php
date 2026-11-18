@@ -12,6 +12,8 @@ use App\Models\IncomingRequest;
 use App\Models\Quote;
 use App\Models\QuoteLine;
 use App\Services\OrganizationPresentation;
+use App\Services\QuoteWorkflowManager;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -22,13 +24,16 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use LogicException;
 
 class QuoteResource extends Resource
 {
@@ -60,31 +65,31 @@ class QuoteResource extends Resource
             Section::make(fn (): string => app(OrganizationPresentation::class)->label('quotes', 'Devis'))
                 ->description('Renseignez le client, le document et ses conditions avant de le transmettre.')
                 ->columns(12)->columnSpanFull()->schema([
-                TextInput::make('reference')->label(__('common.reference'))->disabled()->dehydrated(false)->placeholder('Attribuée à l’enregistrement')->helperText('Le numéro est attribué automatiquement.')->columnSpan(3),
-                TextInput::make('title')->label(__('common.subject'))->required()->maxLength(255)->columnSpan(6),
-                Select::make('status')->label(__('common.status'))->options(QuoteStatus::class)->default(QuoteStatus::Draft)->disabled()->dehydrated()->required()->columnSpan(3),
-                Select::make('person_id')->label(__('common.contact'))->relationship('person', 'display_name')->searchable()->preload()->columnSpan(4),
-                Select::make('company_id')->label(__('common.company'))->relationship('company', 'name')->searchable()->preload()->columnSpan(4),
-                Select::make('incoming_request_id')->label(__('common.request'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->preload()->columnSpan(4),
-                DatePicker::make('issued_on')->label('Date du devis')->columnSpan(3), DatePicker::make('valid_until')->label('Valable jusqu’au')->columnSpan(3),
-                TextInput::make('currency')->label(__('common.currency'))->default('EUR')->required()->length(3)->columnSpan(3),
-                TextInput::make('discount_amount')->label('Remise globale')->numeric()->prefix('€')->default(0)->columnSpan(3),
-                Textarea::make('introduction')->label('Introduction')->rows(3)->columnSpanFull(),
-                Repeater::make('lines')->label('Lignes')->relationship()->orderColumn('position')->schema([
-                    Select::make('kind')->label(__('common.type'))->options([
-                        'service' => 'Prestation',
-                        'product' => 'Produit',
-                        'rental' => 'Location',
-                        'fee' => 'Frais',
-                    ]),
-                    Textarea::make('description')->label(__('common.description'))->required()->rows(2)->columnSpan(2),
-                    TextInput::make('quantity')->label(__('common.quantity'))->numeric()->default(1)->minValue(0.01),
-                    TextInput::make('unit_amount')->label('Prix unitaire')->numeric()->prefix('€')->default(0),
-                ])->columns(4)->addActionLabel('Ajouter une ligne')->columnSpanFull(),
-                Textarea::make('tax_note')->label('Note fiscale')->rows(2)->columnSpan(4),
-                Textarea::make('payment_terms')->label('Conditions de règlement')->rows(2)->columnSpan(4),
-                Textarea::make('notes')->label(__('common.internal_notes'))->rows(2)->helperText('Cette note reste visible uniquement dans Cremona.')->columnSpan(4),
-            ]),
+                    TextInput::make('reference')->label(__('common.reference'))->disabled()->dehydrated(false)->placeholder('Attribuée à l’enregistrement')->helperText('Le numéro est attribué automatiquement.')->columnSpan(3),
+                    TextInput::make('title')->label(__('common.subject'))->required()->maxLength(255)->columnSpan(6),
+                    Select::make('status')->label(__('common.status'))->options(QuoteStatus::class)->default(QuoteStatus::Draft)->disabled()->dehydrated()->required()->columnSpan(3),
+                    Select::make('person_id')->label(__('common.contact'))->relationship('person', 'display_name')->searchable()->preload()->columnSpan(4),
+                    Select::make('company_id')->label(__('common.company'))->relationship('company', 'name')->searchable()->preload()->columnSpan(4),
+                    Select::make('incoming_request_id')->label(__('common.request'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->preload()->columnSpan(4),
+                    DatePicker::make('issued_on')->label('Date du devis')->columnSpan(3), DatePicker::make('valid_until')->label('Valable jusqu’au')->columnSpan(3),
+                    TextInput::make('currency')->label(__('common.currency'))->default('EUR')->required()->length(3)->columnSpan(3),
+                    TextInput::make('discount_amount')->label('Remise globale')->numeric()->prefix('€')->default(0)->columnSpan(3),
+                    Textarea::make('introduction')->label('Introduction')->rows(3)->columnSpanFull(),
+                    Repeater::make('lines')->label('Lignes')->relationship()->orderColumn('position')->schema([
+                        Select::make('kind')->label(__('common.type'))->options([
+                            'service' => 'Prestation',
+                            'product' => 'Produit',
+                            'rental' => 'Location',
+                            'fee' => 'Frais',
+                        ]),
+                        Textarea::make('description')->label(__('common.description'))->required()->rows(2)->columnSpan(2),
+                        TextInput::make('quantity')->label(__('common.quantity'))->numeric()->default(1)->minValue(0.01),
+                        TextInput::make('unit_amount')->label('Prix unitaire')->numeric()->prefix('€')->default(0),
+                    ])->columns(4)->addActionLabel('Ajouter une ligne')->columnSpanFull(),
+                    Textarea::make('tax_note')->label('Note fiscale')->rows(2)->columnSpan(4),
+                    Textarea::make('payment_terms')->label('Conditions de règlement')->rows(2)->columnSpan(4),
+                    Textarea::make('notes')->label(__('common.internal_notes'))->rows(2)->helperText('Cette note reste visible uniquement dans Cremona.')->columnSpan(4),
+                ]),
         ]);
     }
 
@@ -99,7 +104,55 @@ class QuoteResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->defaultSort('created_at', 'desc')->columns([TextColumn::make('reference')->label(__('common.reference'))->searchable(['reference', 'previous_reference'])->description(fn (Quote $record): ?string => $record->previous_reference ? 'Ancien : '.$record->previous_reference : null)->sortable(), TextColumn::make('title')->label(__('common.subject'))->searchable()->wrap()->sortable(), TextColumn::make('status')->label(__('common.status'))->badge()->sortable(), TextColumn::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)->sortable(), TextColumn::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')->sortable()])->filters([SelectFilter::make('status')->options(QuoteStatus::class)])->recordActions([ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (Quote $record): string => self::getUrl('view', ['record' => $record]))->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('quotes', 'Devis'))]);
+        return $table->defaultSort('created_at', 'desc')->columns([TextColumn::make('reference')->label(__('common.reference'))->searchable(['reference', 'previous_reference'])->description(fn (Quote $record): ?string => $record->previous_reference ? 'Ancien : '.$record->previous_reference : null)->sortable(), TextColumn::make('title')->label(__('common.subject'))->searchable()->wrap()->sortable(), TextColumn::make('status')->label(__('common.status'))->badge()->sortable(), TextColumn::make('total_amount')->label('Total')->money(fn (Quote $record) => $record->currency)->sortable(), TextColumn::make('valid_until')->label('Valable jusqu’au')->date('d/m/Y')->placeholder('—')->sortable()])->filters([SelectFilter::make('status')->options(QuoteStatus::class)])->recordActions([
+            self::sendAction(),
+            ViewAction::make(),
+            EditAction::make()->label('Modifier'),
+        ])->recordUrl(fn (Quote $record): string => self::getUrl('view', ['record' => $record]))->headerActions([CreateAction::make()->label(fn (): string => app(OrganizationPresentation::class)->createActionLabel('quotes', 'Devis'))]);
+    }
+
+    private static function sendAction(): Action
+    {
+        return Action::make('sendQuote')
+            ->label('Envoyer')
+            ->icon(Heroicon::OutlinedPaperAirplane)
+            ->color('primary')
+            ->visible(fn (Quote $record): bool => $record->status === QuoteStatus::Draft)
+            ->schema([
+                Select::make('sent_via')->label('Mode d’envoi')->options([
+                    'email' => 'E-mail',
+                    'in_person' => 'Remis au client',
+                    'other' => 'Autre canal',
+                ])->default('email')->live()->required(),
+                TextInput::make('recipient_email')
+                    ->label('Adresse e-mail du client')
+                    ->email()
+                    ->default(fn (Quote $record): ?string => self::recipientEmail($record))
+                    ->visible(fn (Get $get): bool => $get('sent_via') === 'email')
+                    ->required(fn (Get $get): bool => $get('sent_via') === 'email')
+                    ->helperText('Adresse préremplie lorsqu’elle existe dans la fiche client. Vous pouvez la modifier pour cet envoi ; le PDF du devis sera joint au message.'),
+            ])
+            ->action(function (Quote $record, array $data, QuoteWorkflowManager $manager): void {
+                try {
+                    if ($data['sent_via'] === 'email') {
+                        $manager->sendByEmail($record, $data['recipient_email']);
+                    } else {
+                        $manager->markSent($record, $data['sent_via']);
+                    }
+                } catch (LogicException $exception) {
+                    Notification::make()->title('Devis non envoyé')->body($exception->getMessage())->danger()->send();
+
+                    return;
+                }
+
+                Notification::make()->title($data['sent_via'] === 'email' ? 'Devis envoyé par e-mail' : 'Transmission du devis enregistrée')->success()->send();
+            });
+    }
+
+    private static function recipientEmail(Quote $quote): ?string
+    {
+        return $quote->person?->contactMethods->firstWhere('type', 'email')?->value
+            ?? $quote->company?->contactMethods->firstWhere('type', 'email')?->value;
     }
 
     public static function getPages(): array

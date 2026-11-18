@@ -2,23 +2,28 @@
 
 namespace App\Filament\Resources\Quotes\Pages;
 
-use App\Enums\QuoteStatus;
 use App\Enums\InvoiceStatus;
+use App\Enums\QuoteStatus;
 use App\Enums\WorkshopOrderStatus;
-use App\Filament\Resources\Quotes\QuoteResource;
 use App\Filament\Resources\Invoices\InvoiceResource;
+use App\Filament\Resources\Quotes\QuoteResource;
 use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
 use App\Models\Quote;
-use App\Services\QuoteDocumentProfileManager;
 use App\Services\InvoiceFromQuoteManager;
-use Filament\Notifications\Notification;
-use LogicException;
+use App\Services\QuoteDocumentProfileManager;
+use App\Services\QuoteWorkflowManager;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
+use LogicException;
 
 class ViewQuote extends ViewRecord
 {
@@ -45,41 +50,76 @@ class ViewQuote extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-                Action::make('createInvoice')
-                    ->label('Créer la facture')
-                    ->icon(\Filament\Support\Icons\Heroicon::OutlinedDocumentCurrencyEuro)
-                    ->visible(fn (): bool => $this->record->status === QuoteStatus::Accepted
-                        && InvoiceResource::canCreate()
-                        && ($this->record->workshop_order_id === null
-                            || in_array($this->record->workshopOrder?->status, [WorkshopOrderStatus::Ready, WorkshopOrderStatus::Returned], true)
-                            || $this->record->invoice !== null))
-                    ->action(function (InvoiceFromQuoteManager $manager): void {
-                        abort_unless(InvoiceResource::canCreate(), 403);
-
-                        try {
-                            $invoice = $manager->createDraft($this->record);
-                        } catch (LogicException $exception) {
-                            Notification::make()->title('Facture non créée')->body($exception->getMessage())->danger()->send();
-
-                            return;
+            Action::make('sendQuote')
+                ->label('Envoyer le devis')
+                ->icon(Heroicon::OutlinedPaperAirplane)
+                ->color('primary')
+                ->visible(fn (): bool => $this->record->status === QuoteStatus::Draft)
+                ->schema([
+                    Select::make('sent_via')->label('Mode d’envoi')->options([
+                        'email' => 'E-mail',
+                        'in_person' => 'Remis au client',
+                        'other' => 'Autre canal',
+                    ])->default('email')->live()->required(),
+                    TextInput::make('recipient_email')
+                        ->label('Adresse e-mail du client')
+                        ->email()
+                        ->default(fn (): ?string => $this->recipientEmail())
+                        ->visible(fn (Get $get): bool => $get('sent_via') === 'email')
+                        ->required(fn (Get $get): bool => $get('sent_via') === 'email')
+                        ->helperText('Adresse préremplie lorsqu’elle existe dans la fiche client. Vous pouvez la modifier pour cet envoi.'),
+                ])
+                ->action(function (array $data, QuoteWorkflowManager $manager): void {
+                    try {
+                        if ($data['sent_via'] === 'email') {
+                            $manager->sendByEmail($this->record, $data['recipient_email']);
+                        } else {
+                            $manager->markSent($this->record, $data['sent_via']);
                         }
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Devis non envoyé')->body($exception->getMessage())->danger()->send();
 
-                        $this->redirect(InvoiceResource::getUrl($invoice->status === InvoiceStatus::Draft ? 'edit' : 'view', ['record' => $invoice]));
-                    }),
-                Action::make('openWorkshopOrder')
+                        return;
+                    }
+
+                    $this->record->refresh();
+                    Notification::make()->title($data['sent_via'] === 'email' ? 'Devis envoyé par e-mail' : 'Transmission du devis enregistrée')->success()->send();
+                }),
+            Action::make('createInvoice')
+                ->label('Créer la facture')
+                ->icon(Heroicon::OutlinedDocumentCurrencyEuro)
+                ->visible(fn (): bool => $this->record->status === QuoteStatus::Accepted
+                    && InvoiceResource::canCreate()
+                    && ($this->record->workshop_order_id === null
+                        || in_array($this->record->workshopOrder?->status, [WorkshopOrderStatus::Ready, WorkshopOrderStatus::Returned], true)
+                        || $this->record->invoice !== null))
+                ->action(function (InvoiceFromQuoteManager $manager): void {
+                    abort_unless(InvoiceResource::canCreate(), 403);
+
+                    try {
+                        $invoice = $manager->createDraft($this->record);
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Facture non créée')->body($exception->getMessage())->danger()->send();
+
+                        return;
+                    }
+
+                    $this->redirect(InvoiceResource::getUrl($invoice->status === InvoiceStatus::Draft ? 'edit' : 'view', ['record' => $invoice]));
+                }),
+            Action::make('openWorkshopOrder')
                 ->label(fn (): string => 'Ouvrir le dossier atelier '.$this->record->workshopOrder?->reference)
-                ->icon(\Filament\Support\Icons\Heroicon::OutlinedEye)
+                ->icon(Heroicon::OutlinedEye)
                 ->visible(fn (): bool => $this->record->workshopOrder !== null && WorkshopOrderResource::canAccess())
                 ->url(fn (): ?string => $this->record->workshopOrder ? WorkshopOrderResource::getUrl('view', ['record' => $this->record->workshopOrder]) : null),
-                Action::make('downloadPdf')
+            Action::make('downloadPdf')
                 ->label('Télécharger le PDF')
                 ->url(fn (): string => route('quotes.pdf', ['publicId' => $this->record->public_id]))
                 ->disabled(fn (): bool => count(app(QuoteDocumentProfileManager::class)->missingIssuerFields($this->record->organization)) > 0)
                 ->tooltip(fn (): ?string => ($missing = app(QuoteDocumentProfileManager::class)->missingIssuerFields($this->record->organization)) === [] ? null : 'Complétez « Coordonnées et mentions légales » : '.implode(', ', $missing).'.')
                 ->openUrlInNewTab(),
-                EditAction::make()->label('Modifier le devis')
+            EditAction::make()->label('Modifier le devis')
                 ->visible(fn (): bool => $this->record->status === QuoteStatus::Draft),
-                DeleteAction::make()->label('Supprimer le brouillon')
+            DeleteAction::make()->label('Supprimer le brouillon')
                 ->visible(fn (): bool => $this->record->status === QuoteStatus::Draft),
         ];
     }
@@ -95,5 +135,11 @@ class ViewQuote extends ViewRecord
                 'lines',
             ]),
         ];
+    }
+
+    private function recipientEmail(): ?string
+    {
+        return $this->record->person?->contactMethods->firstWhere('type', 'email')?->value
+            ?? $this->record->company?->contactMethods->firstWhere('type', 'email')?->value;
     }
 }
