@@ -6,6 +6,7 @@ use App\Filament\Concerns\UsesOrganizationPresentation;
 use App\Filament\RelationManagers\AppointmentsRelationManager;
 use App\Filament\RelationManagers\ConversationsRelationManager;
 use App\Filament\RelationManagers\NotesRelationManager;
+use App\Filament\RelationManagers\ClientSearchesRelationManager;
 use App\Filament\Resources\People\Pages\CreatePerson;
 use App\Filament\Resources\People\Pages\EditPerson;
 use App\Filament\Resources\People\Pages\ListPeople;
@@ -117,6 +118,13 @@ class PersonResource extends Resource
                                 ->helperText('Utilisé dans les listes et les documents. Laissez vide pour reprendre le prénom et le nom.')
                                 ->maxLength(255)
                                 ->columnSpanFull(),
+                            Select::make('played_instrument')
+                                ->label('Instrument joué')
+                                ->options(\App\Support\ClientSearchCatalog::objectTypes())
+                                ->searchable()
+                                ->columnSpan(4),
+                            TextInput::make('school_name')->label('École ou conservatoire')->maxLength(255)->columnSpan(4),
+                            TextInput::make('musical_level')->label('Niveau')->maxLength(80)->columnSpan(4),
                         ]),
                     ]),
                 Section::make('Coordonnées')
@@ -226,6 +234,9 @@ class PersonResource extends Resource
                                 ->formatStateUsing(fn (?string $state): string => ClientProfileOptions::countryLabel($state))
                                 ->placeholder('—')
                                 ->columnSpan(4),
+                            TextEntry::make('played_instrument')->label('Instrument joué')->formatStateUsing(fn (?string $state): ?string => \App\Support\ClientSearchCatalog::label($state))->placeholder('—')->columnSpan(4),
+                            TextEntry::make('school_name')->label('École ou conservatoire')->placeholder('—')->columnSpan(4),
+                            TextEntry::make('musical_level')->label('Niveau')->placeholder('—')->columnSpan(4),
                         ]),
                     ]),
                 Section::make('Activité')
@@ -324,6 +335,7 @@ class PersonResource extends Resource
             'appointments' => AppointmentsRelationManager::class,
             'conversations' => ConversationsRelationManager::class,
             'notes' => NotesRelationManager::class,
+            'searches' => ClientSearchesRelationManager::class,
         ];
     }
 
