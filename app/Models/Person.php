@@ -17,6 +17,9 @@ use LogicException;
     'first_name',
     'last_name',
     'display_name',
+    'played_instrument',
+    'school_name',
+    'musical_level',
     'locale',
     'country_code',
     'address_line_1',
@@ -98,6 +101,11 @@ class Person extends Model
     public function notes(): MorphMany
     {
         return $this->morphMany(CrmNote::class, 'notable');
+    }
+
+    public function searches(): HasMany
+    {
+        return $this->hasMany(ClientSearch::class);
     }
 
     private static function clean(?string $value): ?string
