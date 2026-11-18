@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Availability;
 use App\Models\ClientSearch;
+use App\Models\ClientSearchMatch;
 use App\Models\Organization;
 use App\Models\Person;
 use App\Tenancy\OrganizationContext;
@@ -60,6 +61,23 @@ class ClientSearchMatchingTest extends TestCase
             $search->update(['status' => 'closed']);
 
             $this->assertCount(0, $search->fresh()->matches);
+        });
+    }
+
+    public function test_a_prepared_message_is_kept_with_its_match_until_the_contact_is_recorded(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $person = Person::query()->create(['display_name' => 'Lou Bernard']);
+            $search = ClientSearch::query()->create(['person_id' => $person->id, 'object_type' => 'colophane']);
+            $availability = Availability::query()->create(['title' => 'Colophane neuve', 'object_type' => 'colophane']);
+            $match = ClientSearchMatch::query()->where('client_search_id', $search->id)->where('availability_id', $availability->id)->sole();
+
+            $match->update(['status' => 'prepared', 'draft_message' => 'Bonjour Lou, une colophane est disponible.']);
+
+            $this->assertSame('prepared', $match->fresh()->status);
+            $this->assertSame('Bonjour Lou, une colophane est disponible.', $match->fresh()->draft_message);
         });
     }
 }
