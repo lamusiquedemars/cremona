@@ -4,12 +4,10 @@ namespace App\Filament\Resources\WorkshopOrders\Pages;
 
 use App\Enums\WorkshopOrderStatus;
 use App\Filament\Pages\BusinessEditRecord;
-use App\Filament\Resources\Quotes\QuoteResource;
-use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
+use App\Filament\Resources\WorkshopOrders\WorkshopWorkflowActions;
 use App\Services\StockManager;
 use App\Services\WorkshopOrderQuoteManager;
-use App\Services\InvoiceFromQuoteManager;
 use App\Services\WorkshopOrderWorkflowManager;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -36,27 +34,9 @@ class EditWorkshopOrder extends BusinessEditRecord
     protected function getHeaderActions(): array
     {
         return [
+            ...WorkshopWorkflowActions::primary(),
             ActionGroup::make([
-                Action::make('createInvoice')
-                ->label('Créer la facture')
-                ->icon(Heroicon::OutlinedDocumentCurrencyEuro)
-                ->visible(fn (): bool => $this->record->quote?->status === \App\Enums\QuoteStatus::Accepted && InvoiceResource::canAccess())
-                ->action(function (InvoiceFromQuoteManager $manager): void {
-                    try {
-                        $invoice = $manager->createDraft($this->record->quote);
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Facture non créée')->body($exception->getMessage())->danger()->send();
-
-                        return;
-                    }
-
-                    $this->redirect(InvoiceResource::getUrl($invoice->status === \App\Enums\InvoiceStatus::Draft ? 'edit' : 'view', ['record' => $invoice]));
-                }),
-                Action::make('openQuote')
-                ->label(fn (): string => 'Ouvrir le devis '.$this->record->quote?->reference)
-                ->icon(Heroicon::OutlinedEye)
-                ->visible(fn (): bool => $this->record->quote !== null && QuoteResource::canAccess())
-                ->url(fn (): ?string => $this->record->quote ? QuoteResource::getUrl('view', ['record' => $this->record->quote]) : null),
+                ...WorkshopWorkflowActions::secondary(),
                 Action::make('confirmDiagnosis')
                 ->label('Valider le diagnostic')
                 ->icon(Heroicon::OutlinedClipboardDocumentCheck)
@@ -136,32 +116,6 @@ class EditWorkshopOrder extends BusinessEditRecord
                         return;
                     }
                     Notification::make()->title($count === 0 ? 'Aucun article à déduire' : 'Stock mis à jour')->body($count === 0 ? 'Tous les articles de ce dossier ont déjà été déduits.' : "{$count} article(s) consommé(s) ont été enregistrés.")->success()->send();
-                }),
-                Action::make('markReady')
-                ->label('Déclarer l’instrument prêt')
-                ->icon(Heroicon::OutlinedCheckCircle)
-                ->color('success')
-                ->visible(fn (): bool => $this->record->status === WorkshopOrderStatus::InProgress)
-                ->requiresConfirmation()
-                ->modalDescription('L’heure « Prêt le » sera enregistrée. Aucun message client ne sera envoyé automatiquement.')
-                ->action(function (WorkshopOrderWorkflowManager $manager): void {
-                    try {
-                        $manager->markReady($this->record);
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Instrument non déclaré prêt')->body($exception->getMessage())->danger()->send();
-                    }
-                }),
-                Action::make('markReturned')
-                ->label('Enregistrer la restitution')
-                ->icon(Heroicon::OutlinedArrowUturnLeft)
-                ->visible(fn (): bool => $this->record->status === WorkshopOrderStatus::Ready)
-                ->requiresConfirmation()
-                ->action(function (WorkshopOrderWorkflowManager $manager): void {
-                    try {
-                        $manager->markReturned($this->record);
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Restitution non enregistrée')->body($exception->getMessage())->danger()->send();
-                    }
                 }),
             ])->label('Actions du dossier')->icon(Heroicon::OutlinedEllipsisHorizontal)->button()->color('gray')->dropdownWidth(Width::Large)->dropdownMaxHeight('70vh'),
         ];

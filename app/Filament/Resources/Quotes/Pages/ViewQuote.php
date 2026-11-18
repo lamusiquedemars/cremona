@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Quotes\Pages;
 
 use App\Enums\QuoteStatus;
 use App\Enums\InvoiceStatus;
+use App\Enums\WorkshopOrderStatus;
 use App\Filament\Resources\Quotes\QuoteResource;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\WorkshopOrders\WorkshopOrderResource;
@@ -47,8 +48,14 @@ class ViewQuote extends ViewRecord
                 Action::make('createInvoice')
                     ->label('Créer la facture')
                     ->icon(\Filament\Support\Icons\Heroicon::OutlinedDocumentCurrencyEuro)
-                    ->visible(fn (): bool => $this->record->status === QuoteStatus::Accepted && InvoiceResource::canAccess())
+                    ->visible(fn (): bool => $this->record->status === QuoteStatus::Accepted
+                        && InvoiceResource::canCreate()
+                        && ($this->record->workshop_order_id === null
+                            || in_array($this->record->workshopOrder?->status, [WorkshopOrderStatus::Ready, WorkshopOrderStatus::Returned], true)
+                            || $this->record->invoice !== null))
                     ->action(function (InvoiceFromQuoteManager $manager): void {
+                        abort_unless(InvoiceResource::canCreate(), 403);
+
                         try {
                             $invoice = $manager->createDraft($this->record);
                         } catch (LogicException $exception) {
