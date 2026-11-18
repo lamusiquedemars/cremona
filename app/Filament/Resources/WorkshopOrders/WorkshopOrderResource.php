@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\WorkshopOrders;
 
 use App\Enums\WorkshopOrderStatus;
+use App\Enums\QuoteStatus;
 use App\Filament\Concerns\UsesOrganizationPresentation;
+use App\Filament\Resources\Quotes\QuoteResource;
 use App\Filament\Resources\WorkshopOrders\Pages\CreateWorkshopOrder;
 use App\Filament\Resources\WorkshopOrders\Pages\EditWorkshopOrder;
 use App\Filament\Resources\WorkshopOrders\Pages\ListWorkshopOrders;
@@ -12,9 +14,12 @@ use App\Models\IncomingRequest;
 use App\Models\ServiceDefinition;
 use App\Models\StockItem;
 use App\Models\WorkshopOrder;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
@@ -31,6 +36,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class WorkshopOrderResource extends Resource
 {
@@ -67,6 +73,7 @@ class WorkshopOrderResource extends Resource
                 Select::make('incoming_request_id')->label(__('common.request_origin'))->relationship('incomingRequest', 'subject')->getOptionLabelFromRecordUsing(fn (IncomingRequest $request): string => $request->subject ?: 'Demande sans objet')->searchable()->columnSpan(6),
                 Textarea::make('instrument_description')->label('Instrument confié')->rows(3)->columnSpan(6),
                 Textarea::make('customer_instructions')->label('Demande du client')->rows(3)->columnSpan(6),
+                DatePicker::make('examination_on')->label('Rappel pour examiner l’instrument')->visibleOn('create')->columnSpan(4),
                 Textarea::make('diagnosis')->label('Diagnostic atelier')->rows(4)->columnSpanFull(),
                 Repeater::make('services')->label('Prestations prévues')->relationship()->schema([
                     Select::make('service_definition_id')->label('Prestation')->relationship('definition', 'name', fn ($query) => $query->where('is_active', true))->preload()->searchable()->live()->afterStateUpdated(function (?string $state, Set $set): void {
@@ -108,9 +115,31 @@ class WorkshopOrderResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->defaultSort('updated_at', 'desc')->columns([
-            TextColumn::make('reference')->label(__('common.reference'))->searchable(['reference', 'previous_reference'])->description(fn (WorkshopOrder $record): ?string => $record->previous_reference ? 'Ancien : '.$record->previous_reference : null)->sortable(), TextColumn::make('title')->label('Dossier')->searchable()->wrap()->sortable(), TextColumn::make('person.display_name')->label('Client')->placeholder('—')->sortable(), TextColumn::make('status')->label(__('common.status'))->badge()->sortable(), TextColumn::make('due_at')->label(__('common.due_date'))->dateTime('d/m/Y')->placeholder('—')->sortable(),
-        ])->filters([SelectFilter::make('status')->options(WorkshopOrderStatus::class)])->recordActions([\Filament\Actions\ViewAction::make(), EditAction::make()->label('Modifier')])->recordUrl(fn (WorkshopOrder $record): string => self::getUrl('view', ['record' => $record]))->headerActions([CreateAction::make()->label('Nouveau dossier atelier')]);
+        return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('quote.invoice'))
+            ->defaultSort('updated_at', 'desc')
+            ->columns([
+                TextColumn::make('reference')->label(__('common.reference'))->searchable(['reference', 'previous_reference'])->description(fn (WorkshopOrder $record): ?string => $record->previous_reference ? 'Ancien : '.$record->previous_reference : null)->sortable(),
+                TextColumn::make('title')->label('Dossier')->searchable()->wrap()->sortable(),
+                TextColumn::make('person.display_name')->label('Client')->placeholder('—')->sortable(),
+                TextColumn::make('status')->label(__('common.status'))->badge()->sortable(),
+                TextColumn::make('quote_status')->label('Devis')->state(fn (WorkshopOrder $record): ?QuoteStatus => $record->quote?->status)->badge()
+                    ->visible(fn (): bool => QuoteResource::canAccess())
+                    ->placeholder('—'),
+                TextColumn::make('follow_up_date')->label('Échéance')->state(fn (WorkshopOrder $record): ?string => $record->followUpDate()?->format('d/m/Y'))->placeholder('—'),
+                TextColumn::make('due_at')->label('Intervention prévue le')->dateTime('d/m/Y')->placeholder('—')->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([SelectFilter::make('status')->options(WorkshopOrderStatus::class)])
+            ->recordActions([
+                ...WorkshopWorkflowActions::primary(),
+                ActionGroup::make([
+                    ...WorkshopWorkflowActions::secondary(),
+                    ViewAction::make(),
+                    EditAction::make()->label('Modifier'),
+                ])->label('Autres actions'),
+            ])
+            ->recordUrl(fn (WorkshopOrder $record): string => self::getUrl('view', ['record' => $record]))
+            ->headerActions([CreateAction::make()->label('Nouveau dossier atelier')]);
     }
 
     public static function infolist(Schema $schema): Schema

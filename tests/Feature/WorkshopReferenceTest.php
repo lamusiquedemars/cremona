@@ -100,9 +100,11 @@ class WorkshopReferenceTest extends TestCase
             return [$order, app(WorkshopOrderQuoteManager::class)->sync($order)];
         });
         $orderUrl = WorkshopOrderResource::getUrl('edit', ['record' => $order], tenant: $organization);
+        $orderViewUrl = WorkshopOrderResource::getUrl('view', ['record' => $order], tenant: $organization);
         $quoteUrl = QuoteResource::getUrl('view', ['record' => $quote], tenant: $organization);
-        $this->actingAs($user)->get($orderUrl)->assertOk()->assertSee('Devis '.$quote->reference)->assertSee($quoteUrl, false);
-        $this->get($quoteUrl)->assertOk()->assertSee('Dossier atelier '.$order->reference)->assertSee($orderUrl, false);
+        $this->actingAs($user)->get($orderUrl)->assertOk()->assertSee('Ouvrir le devis '.$quote->reference)->assertSee($quoteUrl, false);
+        $this->get($orderViewUrl)->assertOk()->assertSee('Ouvrir le devis '.$quote->reference)->assertSee($quoteUrl, false);
+        $this->get($quoteUrl)->assertOk()->assertSee('Ouvrir le dossier atelier '.$order->reference)->assertSee($orderViewUrl, false);
     }
 
     public function test_a_second_generated_quote_cannot_reuse_a_workshop_number(): void
