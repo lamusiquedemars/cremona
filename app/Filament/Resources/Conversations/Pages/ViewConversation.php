@@ -26,7 +26,6 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;
@@ -64,7 +63,10 @@ class ViewConversation extends BusinessViewRecord
                         ->options(fn (): array => IncomingRequest::query()
                             ->where(fn ($query) => $query
                                 ->whereDoesntHave('conversation')
-                                ->orWhereKey($this->record->incoming_request_id))
+                                ->orWhere(
+                                    $query->getModel()->qualifyColumn($query->getModel()->getKeyName()),
+                                    $this->record->incoming_request_id,
+                                ))
                             ->orderByDesc('received_at')
                             ->limit(100)
                             ->get()

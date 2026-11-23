@@ -25,6 +25,14 @@ class EmailBodyTextTest extends TestCase
     }
 
     #[Test]
+    public function it_corrects_utf8_text_that_was_decoded_twice(): void
+    {
+        $body = EmailBodyText::forDisplay('Bonjour, jâ€™espère que François pourra venir à l’atelier.');
+
+        $this->assertSame('Bonjour, j’espère que François pourra venir à l’atelier.', $body);
+    }
+
+    #[Test]
     public function it_removes_css_leaked_into_a_plain_text_part(): void
     {
         $body = EmailBodyText::forDisplay(<<<'TEXT'
