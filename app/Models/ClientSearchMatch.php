@@ -5,12 +5,26 @@ namespace App\Models;
 use App\Tenancy\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use LogicException;
 
 class ClientSearchMatch extends Model
 {
     use BelongsToOrganization;
 
     protected $guarded = [];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $match): void {
+            if (! ClientSearch::query()->whereKey($match->client_search_id)->exists()) {
+                throw new LogicException('La recherche client ne relève pas de l’organisation active.');
+            }
+
+            if (! Availability::query()->whereKey($match->availability_id)->exists()) {
+                throw new LogicException('La disponibilité ne relève pas de l’organisation active.');
+            }
+        });
+    }
 
     protected function casts(): array
     {

@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Person;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use LogicException;
 use Tests\TestCase;
 
 class ClientSearchMatchingTest extends TestCase
@@ -102,5 +103,52 @@ class ClientSearchMatchingTest extends TestCase
             $this->assertTrue($manualMatch->fresh()->exists);
             $this->assertSame('manual', $manualMatch->fresh()->match_kind);
         });
+    }
+
+    public function test_closing_an_availability_removes_pending_manual_alerts(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $person = Person::query()->create(['display_name' => 'Noa Lefèvre']);
+            $search = ClientSearch::query()->create(['person_id' => $person->id, 'object_type' => 'violon']);
+            $availability = Availability::query()->create(['title' => 'Archet ancien', 'object_type' => 'archet']);
+
+            ClientSearchMatch::query()->create([
+                'client_search_id' => $search->id,
+                'availability_id' => $availability->id,
+                'match_kind' => 'manual',
+                'status' => 'suggested',
+            ]);
+
+            $availability->update(['status' => 'closed']);
+
+            $this->assertCount(0, $availability->fresh()->matches);
+        });
+    }
+
+    public function test_a_match_cannot_link_records_from_another_organization(): void
+    {
+        $first = Organization::factory()->create();
+        $second = Organization::factory()->create();
+        $context = app(OrganizationContext::class);
+        $search = $context->run($first, function (): ClientSearch {
+            $person = Person::query()->create(['display_name' => 'Camille Martin']);
+
+            return ClientSearch::query()->create(['person_id' => $person->id, 'object_type' => 'violon']);
+        });
+        $availability = $context->run($second, fn (): Availability => Availability::query()->create([
+            'title' => 'Violon d’essai',
+            'object_type' => 'violon',
+        ]));
+
+        $this->expectException(LogicException::class);
+
+        $context->run($first, fn () => ClientSearchMatch::query()->create([
+            'client_search_id' => $search->id,
+            'availability_id' => $availability->id,
+            'match_kind' => 'manual',
+            'status' => 'suggested',
+        ]));
     }
 }
