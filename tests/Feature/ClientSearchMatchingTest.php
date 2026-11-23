@@ -80,4 +80,27 @@ class ClientSearchMatchingTest extends TestCase
             $this->assertSame('Bonjour Lou, une colophane est disponible.', $match->fresh()->draft_message);
         });
     }
+
+    public function test_a_manually_added_client_is_not_removed_by_automatic_matching(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $person = Person::query()->create(['display_name' => 'Noa Lefèvre']);
+            $search = ClientSearch::query()->create(['person_id' => $person->id, 'object_type' => 'violon']);
+            $availability = Availability::query()->create(['title' => 'Archet ancien', 'object_type' => 'archet']);
+
+            $manualMatch = ClientSearchMatch::query()->create([
+                'client_search_id' => $search->id,
+                'availability_id' => $availability->id,
+                'match_kind' => 'manual',
+                'status' => 'suggested',
+            ]);
+
+            $availability->update(['notes' => 'À essayer avec le client.']);
+
+            $this->assertTrue($manualMatch->fresh()->exists);
+            $this->assertSame('manual', $manualMatch->fresh()->match_kind);
+        });
+    }
 }

@@ -16,7 +16,7 @@ class ClientSearchMatcher
         }
 
         $searches = ClientSearch::query()->where('status', 'open')->where('object_type', $availability->object_type);
-        $availability->matches()->where('status', 'suggested')->whereNotIn('client_search_id', (clone $searches)->select('id'))->delete();
+        $availability->matches()->where('status', 'suggested')->where('match_kind', '!=', 'manual')->whereNotIn('client_search_id', (clone $searches)->select('id'))->delete();
         $searches->each(fn (ClientSearch $search) => $this->syncPair($search, $availability));
     }
 
@@ -28,7 +28,7 @@ class ClientSearchMatcher
         }
 
         $availabilities = Availability::query()->where('status', 'available')->where('object_type', $search->object_type);
-        $search->matches()->where('status', 'suggested')->whereNotIn('availability_id', (clone $availabilities)->select('id'))->delete();
+        $search->matches()->where('status', 'suggested')->where('match_kind', '!=', 'manual')->whereNotIn('availability_id', (clone $availabilities)->select('id'))->delete();
         $availabilities->each(fn (Availability $availability) => $this->syncPair($search, $availability));
     }
 
@@ -37,6 +37,10 @@ class ClientSearchMatcher
         $kind = $this->kind($search, $availability);
         $existing = ClientSearchMatch::query()
             ->where('client_search_id', $search->id)->where('availability_id', $availability->id)->first();
+
+        if ($existing?->match_kind === 'manual') {
+            return;
+        }
 
         if ($kind === null) {
             if ($existing?->status === 'suggested') { $existing->delete(); }
