@@ -285,3 +285,17 @@ L'activation sur Contempo reste une opération de configuration séparée : choi
 du site Audience, création des deux jetons, test hors production puis
 validation explicite. Aucune configuration ou transmission réelle n'est créée
 par cette spécification.
+
+### Prérequis constaté pour Contempo — 23 novembre 2026
+
+Le site Contempo actuellement présent dans l'espace de travail possède encore
+son module historique `App\Modules\Audience` et ne dépend pas du package
+`site-core-audience`. Il ne peut donc pas recevoir cette extension Site Core
+sans un chantier de migration dédié.
+
+Ce chantier doit comparer les tables, segments, campagnes et désinscriptions
+existants, prévoir une reprise idempotente et réversible, puis basculer le site
+vers Audience de Site Core. Il ne fait pas partie du ticket de suivi des
+recherches client et ne doit pas être mélangé à sa livraison. Tant que cette
+migration n'est pas validée, Cremona conserve le message individuel et ne
+transmet aucune donnée vers l'ancien module Audience.
