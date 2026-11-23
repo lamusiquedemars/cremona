@@ -178,3 +178,110 @@ supprimés ; ils restent tracés et doivent être traités sans doublon.
 - un email direct relevé par Cremona et un formulaire du site sont visibles dans
   le même espace organisationnel ;
 - l'historique local n'est ni supprimé ni modifié par la bascule.
+
+## 9. Extension optionnelle — préparation d'une campagne Audience depuis Cremona
+
+> Statut : contrat à implémenter après validation du parcours Contempo. Cette
+> extension ne rend pas Audience dépendant de Cremona et n'autorise aucune
+> synchronisation continue de contacts, de consentements ou de désinscriptions.
+
+### Responsabilités
+
+| Application | Reste propriétaire de |
+| --- | --- |
+| Cremona | recherches client, disponibilités, rapprochements et sélection ponctuelle des personnes à prévenir |
+| Site / Audience | contacts abonnés, consentements, désinscriptions, segments, campagnes et envoi |
+
+Cremona peut demander la préparation d'une campagne à partir d'une
+disponibilité. Audience ne crée jamais de contact à cette occasion et ne
+modifie jamais son consentement. Un client sans contact Audience existant ou
+non éligible est exclu du brouillon ; il reste traitable par message individuel
+dans Cremona.
+
+### Flux v1 proposé
+
+1. L'utilisateur sélectionne, dans une disponibilité Cremona, les personnes
+   qu'il souhaite proposer à Audience et renseigne le nom, l'objet et le corps
+   du brouillon.
+2. Cremona écrit une demande sortante idempotente et la transmet au site
+   Audience configuré pour son organisation.
+3. Audience rapproche les destinataires exclusivement avec ses contacts
+   existants, contrôle l'éligibilité marketing et crée un segment ponctuel puis
+   une campagne au statut brouillon.
+4. Audience renvoie l'identifiant du brouillon, le nombre de destinataires
+   inclus et les exclusions par motif. Aucun envoi, aucune planification et
+   aucun appel à Brevo ne sont déclenchés par la réception de la demande.
+5. Cremona conserve seulement la référence du brouillon et le résultat de la
+   demande. Le contenu canonique de la campagne reste dans Audience.
+
+### Contrat HTTP proposé
+
+Le site expose une route versionnée, protégée par un jeton d'intégration dédié
+à l'organisation et à la référence du site. Le sens inverse impose un secret
+différent du jeton Site vers Cremona : une révocation ne doit pas donner accès
+aux deux directions.
+
+```text
+POST /api/v1/audience/campaign-drafts
+Authorization: Bearer <key_id>.<secret>
+Idempotency-Key: cremona:availability:<id>:<version>
+Accept: application/json
+```
+
+Le payload ne transporte que le nécessaire pour préparer le brouillon :
+
+```json
+{
+  "source": {
+    "application": "cremona",
+    "organization_reference": "contempo",
+    "availability_reference": "42"
+  },
+  "campaign": {
+    "name": "Disponibilité — violon 3/4",
+    "subject": "Un violon pourrait vous intéresser",
+    "body": "…"
+  },
+  "recipients": [
+    { "person_reference": "123", "email": "camille@example.test" }
+  ]
+}
+```
+
+L'adresse est une clé de rapprochement ponctuelle, transmise sur une connexion
+authentifiée. Elle ne constitue ni une instruction de créer un abonné, ni une
+preuve de consentement. Audience peut préférer un identifiant externe stable
+lorsqu'il existe ; en v1, une comparaison normalisée avec ses contacts existants
+est suffisante.
+
+La réponse contient la référence du brouillon et des comptes, jamais les
+consentements ni les données d'autres contacts :
+
+```json
+{
+  "data": {
+    "campaign_draft_reference": "audience-campaign-84",
+    "included_count": 3,
+    "excluded": [
+      { "person_reference": "456", "reason": "no_eligible_audience_contact" }
+    ]
+  }
+}
+```
+
+### Erreurs et preuves attendues
+
+- `200` ou `201` : même demande rejouée ou brouillon créé ; conserver la
+  référence Audience.
+- `401`, `403` ou `422` : arrêter la demande et afficher une erreur à corriger ;
+  ne pas déduire d'éligibilité.
+- `429`, `5xx` ou indisponibilité réseau : conserver la demande dans l'outbox
+  et la rejouer sans créer de doublon.
+- Un test doit couvrir : contact Audience éligible, contact absent, contact
+  désinscrit, doublon d'adresse, reprise après échec réseau et seconde
+  transmission de la même clé.
+
+L'activation sur Contempo reste une opération de configuration séparée : choix
+du site Audience, création des deux jetons, test hors production puis
+validation explicite. Aucune configuration ou transmission réelle n'est créée
+par cette spécification.
