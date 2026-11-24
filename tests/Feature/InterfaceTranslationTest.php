@@ -18,6 +18,7 @@ class InterfaceTranslationTest extends TestCase
             app()->setLocale('fr');
 
             $this->assertSame('Contacts', __('cremona.navigation.items.contacts'));
+            $this->assertSame('Disponibilités', __('cremona.navigation.items.availabilities'));
             $this->assertSame('Facturation', __('cremona.navigation.items.invoicing'));
             $this->assertSame('Rechercher une organisation', __('filament-panels::layout.tenant_menu.search_field.placeholder'));
             $this->assertSame('À faire aujourd’hui', __('cremona.dashboard.priorities'));
@@ -25,6 +26,7 @@ class InterfaceTranslationTest extends TestCase
             app()->setLocale('pt_BR');
 
             $this->assertSame('Contatos', __('cremona.navigation.items.contacts'));
+            $this->assertSame('Disponibilidades', __('cremona.navigation.items.availabilities'));
             $this->assertSame('Faturação', __('cremona.navigation.items.invoicing'));
             $this->assertSame('Clientes', ClientDirectory::getNavigationLabel());
             $this->assertSame('Prioridades de hoje', __('cremona.dashboard.priorities'));
@@ -67,6 +69,7 @@ class InterfaceTranslationTest extends TestCase
 
             $this->assertSame('Relacionamento com clientes', $presentation->navigationGroupLabel('customer_follow_up', 'Suivi client'));
             $this->assertSame('Contatos', $presentation->navigationLabel('contacts', 'Contacts'));
+            $this->assertSame('Disponibilidades', $presentation->navigationLabel('availabilities', 'Disponibilités'));
         } finally {
             app()->setLocale('fr');
         }

@@ -39,6 +39,7 @@ class AvailabilityResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBellAlert;
     protected static string|UnitEnum|null $navigationGroup = 'Suivi client';
     protected static ?string $navigationLabel = 'Disponibilités';
+    protected static ?string $presentationKey = 'availabilities';
     protected static ?string $modelLabel = 'disponibilité';
     protected static ?string $pluralModelLabel = 'disponibilités';
     protected static string $organizationModule = 'crm';

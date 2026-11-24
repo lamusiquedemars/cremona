@@ -52,6 +52,7 @@ class OrganizationPresentation
         'conversations' => true,
         'tasks' => true,
         'appointments' => true,
+        'availabilities' => true,
         'invoicing' => true,
         'quotes' => true,
         'documents' => true,

@@ -10,6 +10,7 @@ return [
         ],
         'items' => [
             'appointments' => 'Rendez-vous',
+            'availabilities' => 'Disponibilités',
             'campaigns' => 'Campagnes',
             'clients' => 'Clients',
             'companies' => 'Entreprises',
