@@ -2,8 +2,8 @@
 
 namespace App\Filament\RelationManagers;
 
-use App\Models\ClientSearch;
 use App\Models\ClientSearchMatch;
+use App\Models\Person;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Select;
@@ -22,7 +22,7 @@ class AvailabilityMatchesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table->defaultSort('created_at', 'desc')->columns([
-            TextColumn::make('search.person.display_name')->label('Client')->searchable(),
+            TextColumn::make('client')->label('Client')->state(fn (ClientSearchMatch $record): ?string => $record->person?->display_name ?? $record->search?->person?->display_name),
             TextColumn::make('search.object_type')->label('Recherche')->formatStateUsing(fn ($state): string => \App\Support\ClientSearchCatalog::label($state) ?? '—'),
             TextColumn::make('match_kind')->label('Rapprochement')->badge()->formatStateUsing(fn (string $state): string => match ($state) {'match' => 'Correspond', 'review' => 'À vérifier', 'manual' => 'Ajout manuel', default => $state})->color(fn (string $state): string => match ($state) {'match' => 'success', 'manual' => 'info', default => 'warning'}),
             TextColumn::make('status')->label('Suivi')->badge()->formatStateUsing(fn (string $state): string => match ($state) {'suggested' => 'À contacter', 'prepared' => 'Message préparé', 'contacted' => 'Contacté', 'dismissed' => 'Écarté', default => $state}),
@@ -33,14 +33,12 @@ class AvailabilityMatchesRelationManager extends RelationManager
                 ->modalHeading('Ajouter un client à prévenir')
                 ->modalDescription('Cet ajout manuel est conservé, même si les critères automatiques ne correspondent pas.')
                 ->form([
-                    Select::make('client_search_id')->label('Recherche client ouverte')->options(fn (): array => ClientSearch::query()->where('status', 'open')->with('person')->get()
-                        ->mapWithKeys(fn (ClientSearch $search): array => [$search->id => "{$search->person->display_name} — ".(\App\Support\ClientSearchCatalog::label($search->object_type) ?? $search->object_type)])->all())
-                        ->searchable()->required(),
+                    Select::make('person_id')->label('Client')->searchable()->getSearchResultsUsing(fn (string $search): array => Person::query()->where(fn ($query) => $query->where('display_name', 'like', "%{$search}%")->orWhere('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%"))->orderBy('display_name')->limit(50)->pluck('display_name', 'id')->all())->getOptionLabelUsing(fn ($value): ?string => Person::query()->find($value)?->display_name)->required(),
                 ])
                 ->action(function (array $data): void {
                     $match = ClientSearchMatch::query()->firstOrNew([
-                        'client_search_id' => $data['client_search_id'],
                         'availability_id' => $this->getOwnerRecord()->id,
+                        'person_id' => $data['person_id'],
                     ]);
                     $match->organization_id = $this->getOwnerRecord()->organization_id;
                     $match->match_kind = 'manual';

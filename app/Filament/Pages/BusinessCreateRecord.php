@@ -20,7 +20,7 @@ abstract class BusinessCreateRecord extends CreateRecord
     private function createTitle(string $label): string
     {
         return match ($label) {
-            'entreprise', 'location', 'facture', 'tâche', 'campagne', 'organisation', 'prestation', 'formule', 'gamme', 'catégorie', 'ligne de devis enregistrée' => 'Nouvelle '.$label,
+            'entreprise', 'location', 'facture', 'tâche', 'campagne', 'organisation', 'prestation', 'formule', 'gamme', 'catégorie', 'ligne de devis enregistrée', 'disponibilité' => 'Nouvelle '.$label,
             default => 'Nouveau '.$label,
         };
     }

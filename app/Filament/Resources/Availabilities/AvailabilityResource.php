@@ -10,6 +10,7 @@ use App\Filament\Resources\Availabilities\Pages\ListAvailabilities;
 use App\Filament\Resources\Availabilities\Pages\ViewAvailability;
 use App\Models\Availability;
 use App\Models\InstrumentAsset;
+use App\Models\Person;
 use App\Support\ClientSearchCatalog;
 use BackedEnum;
 use Filament\Actions\CreateAction;
@@ -75,6 +76,9 @@ class AvailabilityResource extends Resource
             Section::make('État')->columnSpan(4)->schema([
                 Select::make('status')->label('État')->options(['available' => 'Disponible', 'closed' => 'Terminée'])->default('available')->required(),
                 TextEntry::make('match_count')->label('Clients à prévenir')->state(fn (?Availability $record): int => $record?->matches()->where('status', 'suggested')->count() ?? 0)->badge()->color('warning')->visible(fn (?Availability $record): bool => $record !== null),
+            ]),
+            Section::make('Clients à prévenir')->description('Facultatif : ajoutez directement des clients, en plus des rapprochements automatiques issus de leurs recherches ouvertes.')->visible(fn ($livewire): bool => $livewire instanceof CreateAvailability)->columnSpanFull()->schema([
+                Select::make('manual_person_ids')->label('Ajouter des clients')->multiple()->searchable()->getSearchResultsUsing(fn (string $search): array => Person::query()->where(fn ($query) => $query->where('display_name', 'like', "%{$search}%")->orWhere('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%"))->orderBy('display_name')->limit(50)->pluck('display_name', 'id')->all())->getOptionLabelsUsing(fn (array $values): array => Person::query()->whereKey($values)->pluck('display_name', 'id')->all())->helperText('Ces ajouts manuels ne remplacent pas les rapprochements automatiques.'),
             ]),
         ]);
     }

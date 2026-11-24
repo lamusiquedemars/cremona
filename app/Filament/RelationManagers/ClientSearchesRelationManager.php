@@ -18,7 +18,7 @@ use Filament\Tables\Table;
 class ClientSearchesRelationManager extends RelationManager
 {
     protected static string $relationship = 'searches';
-    protected static ?string $title = 'Recherches';
+    protected static ?string $title = 'Recherches d’objets';
     protected static bool $isLazy = false;
 
     public function isReadOnly(): bool { return false; }
@@ -34,7 +34,7 @@ class ClientSearchesRelationManager extends RelationManager
         ])->filters([
             SelectFilter::make('status')->label('État')->options(['open' => 'Ouvertes', 'closed' => 'Clôturées']),
         ])->headerActions([
-            CreateAction::make()->label('Nouvelle recherche')->schema($this->formFields())->mutateDataUsing(fn (array $data): array => [...$data, 'status' => 'open']),
+            CreateAction::make()->label('Nouvelle recherche')->modalDescription('Indiquez ici l’objet que ce client recherche. Les disponibilités correspondantes seront proposées automatiquement.')->schema($this->formFields())->mutateDataUsing(fn (array $data): array => [...$data, 'status' => 'open']),
         ])->recordActions([
             EditAction::make()->label('Modifier')->schema($this->formFields()),
             Action::make('close')->label('Clôturer')->color('gray')->requiresConfirmation()

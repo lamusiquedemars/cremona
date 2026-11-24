@@ -105,6 +105,27 @@ class ClientSearchMatchingTest extends TestCase
         });
     }
 
+    public function test_a_client_can_be_added_directly_without_creating_a_search(): void
+    {
+        $organization = Organization::factory()->create();
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $person = Person::query()->create(['display_name' => 'Camille Martin']);
+            $availability = Availability::query()->create(['title' => 'Violon ancien', 'object_type' => 'violon']);
+
+            $match = ClientSearchMatch::query()->create([
+                'person_id' => $person->id,
+                'availability_id' => $availability->id,
+                'match_kind' => 'manual',
+                'status' => 'suggested',
+            ]);
+
+            $this->assertSame($person->id, $match->person_id);
+            $this->assertNull($match->client_search_id);
+            $this->assertSame('manual', $match->match_kind);
+        });
+    }
+
     public function test_closing_an_availability_removes_pending_manual_alerts(): void
     {
         $organization = Organization::factory()->create();
