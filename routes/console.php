@@ -4,6 +4,7 @@ use App\Console\Commands\ApplyRentalGridRates;
 use App\Console\Commands\SyncEmailMailboxes;
 use App\Console\Commands\SyncGoogleAdsCampaignConfigurations;
 use App\Console\Commands\SyncGoogleAdsReporting;
+use App\Console\Commands\SynchronizeElectronicInvoiceStatuses;
 use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -44,6 +45,10 @@ Schedule::command(SyncGoogleAdsCampaignConfigurations::class)
     ->withoutOverlapping();
 
 Schedule::command(SyncEmailMailboxes::class)
+    ->everyFifteenMinutes()
+    ->withoutOverlapping();
+
+Schedule::command(SynchronizeElectronicInvoiceStatuses::class)
     ->everyFifteenMinutes()
     ->withoutOverlapping();
 

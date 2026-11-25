@@ -6,9 +6,11 @@ use App\Models\Invoice;
 use App\Models\Organization;
 use App\Models\OrganizationIntegration;
 use App\Models\PrivateDocument;
+use App\Services\ElectronicInvoiceFinalizationManager;
 use App\Services\En16931InvoiceFactory;
 use App\Services\InvoiceElectronicDocumentManager;
 use App\Services\SuperPdpClient;
+use App\Services\SuperPdpConnectionResolver;
 use App\Services\SuperPdpTransmissionManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -96,6 +98,62 @@ class SuperPdpTransmissionSafetyTest extends TestCase
             $this->assertSame('submitted', $transmission->fresh()->status);
             Storage::disk('local')->assertExists($first->path);
             Storage::disk('local')->assertExists($second->path);
+        });
+    }
+
+    public function test_finalization_performs_validation_and_submission_in_one_business_action(): void
+    {
+        Storage::fake('local');
+        config(['private-documents.disk' => 'local']);
+        $organization = Organization::factory()->create();
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $invoice = $this->invoiceWithIntegration();
+            $invoice->forceFill(['status' => 'issued'])->saveQuietly();
+            $this->mock(En16931InvoiceFactory::class)->shouldReceive('make')->once()->andReturn([]);
+            $client = $this->mock(SuperPdpClient::class);
+            $client->shouldReceive('convertEn16931ToCii')->once()->andReturn('<invoice/>');
+            $client->shouldReceive('validateCii')->once()->andReturn(['data' => [['is_valid' => true]]]);
+            $client->shouldReceive('submitCii')->once()->andReturn(['id' => 123]);
+
+            $result = app(ElectronicInvoiceFinalizationManager::class)->finalizeAndTransmit($invoice);
+
+            $this->assertTrue($result['transmitted']);
+            $this->assertSame('submitted', $result['transmission']->status);
+        });
+    }
+
+    public function test_sandbox_connection_is_used_only_in_the_test_environment(): void
+    {
+        $organization = Organization::factory()->create();
+        config(['services.super_pdp.sandbox_client_id' => 'sandbox-id', 'services.super_pdp.sandbox_client_secret' => 'sandbox-secret']);
+        app(OrganizationContext::class)->run($organization, function (): void {
+            OrganizationIntegration::query()->create([
+                'provider' => 'super_pdp', 'name' => 'sandbox', 'status' => 'active', 'credentials' => [],
+            ]);
+            $invoice = Invoice::query()->create(['title' => 'Facture sandbox']);
+
+            $this->assertSame([
+                'client_id' => 'sandbox-id',
+                'client_secret' => 'sandbox-secret',
+            ], app(SuperPdpConnectionResolver::class)->credentials($invoice));
+        });
+    }
+
+    public function test_scheduled_synchronization_updates_submitted_invoices(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $invoice = $this->invoiceWithIntegration();
+            $invoice->transmissions()->firstOrFail()->update([
+                'direction' => 'outbound', 'status' => 'submitted', 'metadata' => ['super_pdp_invoice_id' => 123],
+            ]);
+            $this->mock(SuperPdpClient::class)->shouldReceive('invoiceEvents')->once()->andReturn([
+                'data' => [['id' => 1, 'status_code' => 'api:sent']], 'has_after' => false,
+            ]);
+
+            $this->artisan('cremona:sync-electronic-invoice-statuses')->assertExitCode(0);
+
+            $this->assertSame('sent', $invoice->transmissions()->firstOrFail()->fresh()->status);
         });
     }
 

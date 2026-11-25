@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Invoice;
-use App\Models\OrganizationIntegration;
 use App\Models\PrivateDocument;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -19,15 +18,9 @@ class InvoiceElectronicDocumentManager
         $invoice->loadMissing('transmissions');
         $transmission = $invoice->transmissions()->where('provider', 'super_pdp')->latest()->firstOrFail();
         $this->ensureValidationAllowed($transmission->status);
-        $integration = OrganizationIntegration::withoutGlobalScopes()
-            ->where('organization_id', $invoice->organization_id)
-            ->where('provider', 'super_pdp')->where('name', 'production')->where('status', 'active')->first();
-        $credentials = $integration?->credentials ?? [];
-        $clientId = $credentials['client_id'] ?? null;
-        $clientSecret = $credentials['client_secret'] ?? null;
-        if (! is_string($clientId) || ! is_string($clientSecret)) {
-            throw new LogicException('Connectez Super PDP en production avant de générer le document électronique.');
-        }
+        $credentials = app(SuperPdpConnectionResolver::class)->credentials($invoice);
+        $clientId = $credentials['client_id'];
+        $clientSecret = $credentials['client_secret'];
 
         $payload = app(En16931InvoiceFactory::class)->make($invoice);
         $content = app(SuperPdpClient::class)->convertEn16931ToCii($clientId, $clientSecret, $payload);

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\InvoiceTransmission;
-use App\Models\OrganizationIntegration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use LogicException;
@@ -153,14 +152,7 @@ class SuperPdpTransmissionManager
     /** @return array{client_id: string, client_secret: string} */
     private function credentials(Invoice $invoice): array
     {
-        $integration = OrganizationIntegration::withoutGlobalScopes()->where('organization_id', $invoice->organization_id)
-            ->where('provider', 'super_pdp')->where('name', 'production')->where('status', 'active')->first();
-        $credentials = $integration?->credentials ?? [];
-        if (! is_string($credentials['client_id'] ?? null) || ! is_string($credentials['client_secret'] ?? null)) {
-            throw new LogicException('Connectez Super PDP en production avant toute transmission.');
-        }
-
-        return $credentials;
+        return app(SuperPdpConnectionResolver::class)->credentials($invoice);
     }
 
     private function processingRule(Invoice $invoice): string

@@ -148,22 +148,19 @@ Le connecteur **Super PDP production** est configuré par organisation avec des
 identifiants serveur chiffrés. Une facture émise est immuable, reçoit son
 numéro définitif, son PDF privé et une ligne de transmission réglementaire.
 
-Le parcours disponible est volontairement contrôlé :
+Le parcours utilisateur est unique : **Finaliser et transmettre**. Avant de
+donner un numéro définitif à un brouillon, Cremona vérifie que la connexion est
+disponible et, pour un client professionnel, que son SIREN ou SIRET est connu.
+L’action finalise alors la facture, génère et contrôle le document EN 16931/CII,
+puis le remet au circuit de facturation électronique. Les contrôles techniques
+ne sont plus des étapes à effectuer séparément par l’utilisateur.
 
-1. émettre une **vraie** facture (ne jamais créer de facture de test, son
-   numéro est définitif) ;
-2. utiliser **Valider le document électronique** : Cremona produit les données
-   EN 16931, demande à Super PDP un CII, puis enregistre le CII et le rapport
-   de validation en documents privés ; cette étape n'envoie rien ;
-3. relire la facture, le client et le journal ;
-4. seulement si la validation est positive, confirmer **Transmettre à Super
-   PDP** ;
-5. utiliser **Actualiser les statuts Super PDP** pour relever les événements
-   de traitement.
-
-L'envoi reste toujours manuel et confirmé. L'identifiant externe est stable
-pour éviter les doublons lors d'une nouvelle tentative. Les statuts affichés
-incluent notamment : document validé, remise à Super PDP, envoyée et rejetée.
+Une remise réussie reçoit un identifiant externe stable, afin d’éviter les
+doublons. Les événements de traitement sont relevés automatiquement toutes les
+quinze minutes ; **Actualiser les statuts Super PDP** reste disponible comme
+contrôle manuel. Les statuts de transmission sont distincts du règlement :
+**en transmission**, **transmise** ou **à corriger**, puis le règlement fait
+évoluer la facture vers **partiellement réglée** ou **réglée**.
 
 ### Préparation par Ivo avant la première facture réelle
 
@@ -178,12 +175,10 @@ incluent notamment : document validé, remise à Super PDP, envoyée et rejetée
 
 ### Prochains développements, hors pilote immédiat
 
-1. Planifier la synchronisation automatique des événements Super PDP, tout en
-   conservant l'action manuelle de contrôle.
-2. Ajouter l'e-reporting des transactions et paiements selon le régime de TVA.
-3. Générer un Factur-X lisible en complément du CII si le besoin de diffusion
+1. Ajouter l'e-reporting des transactions et paiements selon le régime de TVA.
+2. Générer un Factur-X lisible en complément du CII si le besoin de diffusion
    PDF hybride est confirmé.
-4. Compléter le cycle des avoirs et factures rectificatives avec leur
+3. Compléter le cycle des avoirs et factures rectificatives avec leur
    transmission réglementaire et leurs références de facture d'origine.
 
 ### Recette sandbox à conserver avant toute revendication de compatibilité
@@ -292,7 +287,6 @@ et le client sont alors repris une seule fois dans un brouillon. La facturation
 d’échéance de location reste volontairement manuelle ou désactivée selon
 l’organisation ; elle ne doit pas être automatisée avant validation métier.
 
-L’envoi effectif et le suivi des retours Super PDP restent le prochain lot : il
-nécessite les accès de la véritable entreprise émettrice. La sandbox Burger
-Queen sert à valider la connexion technique, jamais à produire une facture
-légale de Contempo.
+La production exige toujours les accès de la véritable entreprise émettrice.
+La sandbox sert à exercer exactement le même parcours contre un environnement
+de test ; elle ne produit jamais une facture légale de Contempo.
