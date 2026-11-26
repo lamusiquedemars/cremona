@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\OrganizationRole;
+use App\Mail\QuoteSent;
 use App\Models\Organization;
 use App\Models\OrganizationLegalProfile;
 use App\Models\OrganizationQuoteSettings;
@@ -13,6 +14,7 @@ use App\Services\QuotePdfRenderer;
 use App\Services\QuoteWorkflowManager;
 use App\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use LogicException;
 use Tests\TestCase;
@@ -20,6 +22,29 @@ use Tests\TestCase;
 class QuoteDocumentTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_a_quote_can_be_sent_by_email_to_a_manual_recipient_address(): void
+    {
+        Mail::fake();
+
+        $organization = Organization::factory()->create(['name' => 'Atelier Exemple']);
+
+        app(OrganizationContext::class)->run($organization, function (): void {
+            OrganizationLegalProfile::query()->create([
+                'display_name' => 'Atelier Exemple', 'legal_name' => 'Atelier Exemple', 'email' => 'bonjour@example.test',
+                'address_line_1' => '1 rue des Cordes', 'postal_code' => '69000', 'city' => 'Lyon', 'country_code' => 'FR', 'registration_number' => '12345678900012',
+            ]);
+            $person = Person::query()->create(['display_name' => 'Camille Martin', 'address_line_1' => '2 rue du Client', 'postal_code' => '75001', 'city' => 'Paris', 'country_code' => 'FR']);
+            $quote = Quote::query()->create(['title' => 'Reméchage', 'person_id' => $person->id]);
+            $quote->lines()->create(['kind' => 'service', 'description' => 'Reméchage complet', 'quantity' => 1, 'unit_amount' => 70]);
+
+            $sent = app(QuoteWorkflowManager::class)->sendByEmail($quote, 'devis@client.example');
+
+            $this->assertSame('email', $sent->sent_via);
+            $this->assertNotNull($sent->sent_at);
+            Mail::assertSent(QuoteSent::class, fn (QuoteSent $mail): bool => $mail->hasTo('devis@client.example') && $mail->quote->is($quote));
+        });
+    }
 
     public function test_an_issuer_profile_is_required_and_snapshotted_when_a_quote_is_sent(): void
     {

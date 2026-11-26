@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Invoices\Pages;
 
 use App\Filament\Pages\BusinessEditRecord;
 use App\Filament\Resources\Invoices\InvoiceResource;
+use Filament\Actions\Action;
 use Illuminate\Contracts\Support\Htmlable;
 
 class EditInvoice extends BusinessEditRecord
@@ -17,5 +18,16 @@ class EditInvoice extends BusinessEditRecord
             : 'Brouillon de facture';
 
         return filled($this->record->title) ? $heading.' — '.$this->record->title : $heading;
+    }
+
+    protected function getSaveFormAction(): Action
+    {
+        return parent::getSaveFormAction()
+            ->label('Enregistrer et vérifier la facture');
+    }
+
+    protected function getRedirectUrl(): ?string
+    {
+        return InvoiceResource::getUrl('view', ['record' => $this->record]);
     }
 }

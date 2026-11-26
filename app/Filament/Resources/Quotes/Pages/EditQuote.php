@@ -13,6 +13,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use LogicException;
@@ -35,7 +36,7 @@ class EditQuote extends BusinessEditRecord
                 ->visible(fn (): bool => $this->record->workshopOrder !== null && WorkshopOrderResource::canAccess())
                 ->url(fn (): ?string => $this->record->workshopOrder ? WorkshopOrderResource::getUrl('view', ['record' => $this->record->workshopOrder]) : null),
             Action::make('markSent')
-                ->label('Marquer comme envoyé')
+                ->label('Envoyer le devis')
                 ->icon(Heroicon::OutlinedPaperAirplane)
                 ->color('primary')
                 ->visible(fn (): bool => $this->record->status === QuoteStatus::Draft)
@@ -44,17 +45,29 @@ class EditQuote extends BusinessEditRecord
                         'email' => 'Email',
                         'in_person' => 'Remis au client',
                         'other' => 'Autre canal',
-                    ])->required(),
+                    ])->default('email')->live()->required(),
+                    TextInput::make('recipient_email')
+                        ->label('Adresse e-mail du client')
+                        ->email()
+                        ->default(fn (): ?string => $this->recipientEmail())
+                        ->visible(fn (Get $get): bool => $get('sent_via') === 'email')
+                        ->required(fn (Get $get): bool => $get('sent_via') === 'email')
+                        ->helperText('Adresse préremplie lorsqu’elle existe dans la fiche client. Vous pouvez la modifier pour cet envoi ; le PDF du devis sera joint au message.'),
                 ])
                 ->action(function (array $data, QuoteWorkflowManager $manager): void {
                     try {
-                        $manager->markSent($this->record, $data['sent_via']);
+                        if ($data['sent_via'] === 'email') {
+                            $manager->sendByEmail($this->record, $data['recipient_email']);
+                        } else {
+                            $manager->markSent($this->record, $data['sent_via']);
+                        }
                     } catch (LogicException $exception) {
                         Notification::make()->title('Devis non envoyé')->body($exception->getMessage())->danger()->send();
 
                         return;
                     }
-                    Notification::make()->title('Devis marqué comme envoyé')->body('Le dossier atelier lié attend maintenant l’accord du client.')->success()->send();
+                    $this->record->refresh();
+                    Notification::make()->title($data['sent_via'] === 'email' ? 'Devis envoyé par e-mail' : 'Transmission du devis enregistrée')->body('Le dossier atelier lié attend maintenant l’accord du client.')->success()->send();
                 }),
             Action::make('markAccepted')
                 ->label('Enregistrer l’accord client')
@@ -106,5 +119,11 @@ class EditQuote extends BusinessEditRecord
                     $this->record->refresh();
                 }),
         ];
+    }
+
+    private function recipientEmail(): ?string
+    {
+        return $this->record->person?->contactMethods->firstWhere('type', 'email')?->value
+            ?? $this->record->company?->contactMethods->firstWhere('type', 'email')?->value;
     }
 }

@@ -73,11 +73,14 @@
                                 'border-blue-200 bg-blue-50 text-blue-950 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100' => $event['type'] === 'appointment',
                                 'border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100' => $event['type'] === 'task',
                                 'border-violet-200 bg-violet-50 text-violet-950 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-100' => $event['type'] === 'workshop',
+                                'border-rose-200 bg-rose-50 text-rose-950 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-100' => $event['type'] === 'workshop_deadline',
                                 'border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100' => $event['type'] === 'rental',
                             ])>
                                 <div class="flex items-center justify-between gap-2 text-xs font-medium">
                                     <span>{{ $event['label'] }}</span>
-                                    <span>{{ $event['starts_at']->format('H:i') }}</span>
+                                    @if ($event['type'] !== 'workshop_deadline')
+                                        <span>{{ $event['starts_at']->format('H:i') }}</span>
+                                    @endif
                                 </div>
                                 <p @class(['mt-1 break-words font-semibold', 'text-sm' => $agendaView === 'week', 'text-xs' => $agendaView === 'month'])>{{ $event['title'] }}</p>
                                 @if ($agendaView === 'week')
@@ -101,6 +104,7 @@
         <span><i class="mr-1 inline-block size-2 rounded-full bg-blue-500"></i>Rendez-vous et appels</span>
         <span><i class="mr-1 inline-block size-2 rounded-full bg-amber-500"></i>Rappels</span>
         <span><i class="mr-1 inline-block size-2 rounded-full bg-violet-500"></i>Atelier</span>
+        <span><i class="mr-1 inline-block size-2 rounded-full bg-rose-500"></i>Échéances atelier</span>
         <span><i class="mr-1 inline-block size-2 rounded-full bg-emerald-500"></i>Locations</span>
     </div>
 </x-filament-panels::page>

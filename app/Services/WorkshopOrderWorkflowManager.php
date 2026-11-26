@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\QuoteStatus;
 use App\Enums\WorkshopOrderStatus;
+use App\Models\Quote;
 use App\Models\WorkshopOrder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +12,35 @@ use LogicException;
 
 class WorkshopOrderWorkflowManager
 {
+    public function prepareQuote(WorkshopOrder $order, ?string $diagnosis = null): Quote
+    {
+        return DB::transaction(function () use ($order, $diagnosis): Quote {
+            $order = WorkshopOrder::query()->lockForUpdate()->findOrFail($order->id);
+
+            if ($order->status === WorkshopOrderStatus::Received) {
+                if (filled($diagnosis)) {
+                    $order->update(['diagnosis' => trim($diagnosis)]);
+                }
+                $order->update([
+                    'status' => WorkshopOrderStatus::Diagnosed,
+                    'diagnosed_at' => now(),
+                ]);
+                $order->refresh();
+            }
+
+            if ($order->status !== WorkshopOrderStatus::Diagnosed) {
+                throw new LogicException('Le dossier doit être au diagnostic avant de préparer le devis.');
+            }
+
+            $quote = $order->quote()->first();
+            if ($quote !== null && $quote->status !== QuoteStatus::Draft) {
+                throw new LogicException('Le devis de ce dossier a déjà été traité.');
+            }
+
+            return $quote ?? app(WorkshopOrderQuoteManager::class)->sync($order);
+        }, 3);
+    }
+
     public function confirmDiagnosis(WorkshopOrder $order): WorkshopOrder
     {
         return DB::transaction(function () use ($order): WorkshopOrder {
@@ -64,7 +94,39 @@ class WorkshopOrderWorkflowManager
 
     public function markReady(WorkshopOrder $order): WorkshopOrder
     {
-        return $this->transition($order, WorkshopOrderStatus::InProgress, WorkshopOrderStatus::Ready, ['ready_at' => now()]);
+        return DB::transaction(function () use ($order): WorkshopOrder {
+            $order = WorkshopOrder::query()->lockForUpdate()->findOrFail($order->id);
+
+            if (! in_array($order->status, [WorkshopOrderStatus::Approved, WorkshopOrderStatus::Scheduled, WorkshopOrderStatus::InProgress], true)) {
+                throw new LogicException('L’intervention doit être autorisée avant de déclarer l’instrument prêt.');
+            }
+
+            $order->update(['status' => WorkshopOrderStatus::Ready, 'ready_at' => now()]);
+
+            return $order->fresh();
+        });
+    }
+
+    public function setFollowUpDate(WorkshopOrder $order, string $field, ?string $date): void
+    {
+        $eligibleStatuses = match ($field) {
+            'examination_on' => [WorkshopOrderStatus::Received],
+            'quote_follow_up_on' => [WorkshopOrderStatus::Diagnosed],
+            'work_due_on' => [WorkshopOrderStatus::Approved, WorkshopOrderStatus::Scheduled, WorkshopOrderStatus::InProgress],
+        };
+
+        DB::transaction(function () use ($order, $field, $date, $eligibleStatuses): void {
+            $order = WorkshopOrder::query()->lockForUpdate()->findOrFail($order->id);
+
+            if (! in_array($order->status, $eligibleStatuses, true)) {
+                throw new LogicException('Ce rappel ne correspond plus à l’étape du dossier.');
+            }
+            if ($field === 'quote_follow_up_on' && $order->quote()->first()?->status !== QuoteStatus::Draft) {
+                throw new LogicException('Ce dossier n’a pas de devis à transmettre.');
+            }
+
+            $order->update([$field => $date]);
+        });
     }
 
     public function markReturned(WorkshopOrder $order): WorkshopOrder

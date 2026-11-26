@@ -247,6 +247,7 @@ class OrganizationDetails extends Page
             ->where('provider', 'super_pdp')->where('name', 'sandbox')->first();
         $productionCredentials = $superPdpProduction?->credentials ?? [];
         $sandboxCredentials = $superPdpSandbox?->credentials ?? [];
+        $sandboxVerified = in_array($sandboxCredentials['verification_status'] ?? null, ['verified', 'active'], true);
         $storageReady = config('private-documents.disk') === 'scaleway-private'
             && filled(config('filesystems.disks.scaleway-private.bucket'))
             && filled(config('filesystems.disks.scaleway-private.key'))
@@ -261,6 +262,7 @@ class OrganizationDetails extends Page
                 : ($superPdpSandbox !== null ? (string) config('services.super_pdp.sandbox_company_label', 'Burger Queen').' (test)' : '—'),
             'super_pdp_status' => $productionCredentials['verification_status'] ?? $sandboxCredentials['verification_status'] ?? null,
             'super_pdp_ready' => in_array($productionCredentials['verification_status'] ?? null, ['verified', 'active'], true),
+            'super_pdp_sandbox_verified' => $sandboxVerified,
             'super_pdp_checked_at' => $productionCredentials['checked_at'] ?? $sandboxCredentials['checked_at'] ?? null,
             'super_pdp_sandbox_available' => app(SuperPdpSandboxClient::class)->isConfigured(),
             'google_ads_count' => OrganizationIntegration::query()->where('provider', 'google_ads')->where('name', 'reporting')->count(),

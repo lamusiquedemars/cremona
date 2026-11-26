@@ -5,8 +5,9 @@ namespace App\Filament\Resources\Invoices\Pages;
 use App\Enums\InvoiceStatus;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Models\InvoicePayment;
-use App\Services\InvoiceElectronicDocumentManager;
-use App\Services\InvoiceWorkflowManager;
+use App\Services\ElectronicInvoiceFinalizationManager;
+use App\Services\ElectronicInvoiceFlow;
+use App\Services\InvoiceCustomerCopyManager;
 use App\Services\SuperPdpTransmissionManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -43,59 +44,38 @@ class ViewInvoice extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('issue')
-                ->label('Émettre la facture')->icon(Heroicon::OutlinedPaperAirplane)->color('primary')
+            Action::make('finalizeAndTransmit')
+                ->label(fn (ElectronicInvoiceFlow $flow): string => $flow->actionLabel($this->record))->icon(Heroicon::OutlinedPaperAirplane)->color('primary')
                 ->visible(fn (): bool => $this->record->status === InvoiceStatus::Draft)
-                ->requiresConfirmation()->modalDescription('La facture recevra son numéro définitif et ses données ne pourront plus être modifiées.')
-                ->action(function (InvoiceWorkflowManager $manager): void {
-                    try {
-                        $manager->issue($this->record);
-                        $this->record->refresh();
-                        Notification::make()->title('Facture émise')->body('Le numéro définitif a été attribué. Validez ensuite le document électronique avant toute transmission.')->success()->send();
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Facture non émise')->body($exception->getMessage())->danger()->send();
-                    }
-                }),
-            Action::make('generateElectronicDocument')
-                ->label('Valider le document électronique')->icon(Heroicon::OutlinedShieldCheck)->color('warning')
+                ->requiresConfirmation()
+                ->modalDescription(fn (ElectronicInvoiceFlow $flow): string => $flow->confirmationDescription($this->record))
+                ->action(fn (ElectronicInvoiceFinalizationManager $manager) => $this->processElectronicInvoice($manager, false)),
+            Action::make('retryElectronicProcessing')
+                ->label('Réessayer maintenant')->icon(Heroicon::OutlinedArrowPath)->color('warning')
                 ->visible(fn (): bool => $this->record->status !== InvoiceStatus::Draft && $this->record->transmissions()->where('provider', 'super_pdp')->whereIn('status', ['awaiting_configuration', 'ready_to_transmit', 'validated', 'validation_failed'])->exists())
                 ->requiresConfirmation()
-                ->modalHeading('Générer et valider le document CII')
-                ->modalDescription('Super PDP convertira et validera le document électronique. Cette action ne transmet pas la facture au client ni à l’administration.')
-                ->action(function (InvoiceElectronicDocumentManager $manager): void {
-                    try {
-                        $result = $manager->generateAndValidate($this->record);
-                        $this->record->refresh();
-                        Notification::make()
-                            ->title($result['valid'] ? 'Document électronique validé' : 'Document électronique à corriger')
-                            ->body($result['valid'] ? 'Le CII est conservé dans Cremona. Aucune facture n’a été transmise.' : 'Le rapport Super PDP est enregistré dans le journal de transmission. Aucune facture n’a été transmise.')
-                            ->{$result['valid'] ? 'success' : 'warning'}()->send();
-                    } catch (LogicException $exception) {
-                        Notification::make()->title('Validation impossible')->body($exception->getMessage())->danger()->send();
-                    } catch (Throwable) {
-                        Notification::make()->title('Validation impossible')->body('Super PDP a renvoyé une erreur technique. La facture n’a pas été transmise.')->danger()->send();
-                    }
-                }),
+                ->modalDescription('La facture est déjà créée. Cremona va seulement réessayer le traitement administratif qui n’a pas été confirmé ; son numéro et son contenu ne changeront pas.')
+                ->action(fn (ElectronicInvoiceFinalizationManager $manager) => $this->processElectronicInvoice($manager, true)),
             Action::make('downloadPdf')
                 ->label('Télécharger le PDF')->icon(Heroicon::OutlinedArrowDownTray)
                 ->visible(fn (): bool => $this->record->pdfPrivateDocument !== null)
                 ->url(fn (): string => route('private-documents.download', $this->record->pdfPrivateDocument?->public_id))
                 ->openUrlInNewTab(),
-            Action::make('submitToSuperPdp')
-                ->label('Transmettre à Super PDP')->icon(Heroicon::OutlinedPaperAirplane)->color('danger')
-                ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->where('status', 'validated')->exists())
-                ->requiresConfirmation()
-                ->modalHeading('Transmettre la facture à Super PDP')
-                ->modalDescription('Cette action transmet réellement la facture électronique au réseau Super PDP. Elle est irréversible ; vérifiez la facture et son destinataire.')
-                ->action(function (SuperPdpTransmissionManager $manager): void {
+            Action::make('sendCustomerCopy')
+                ->label('Envoyer une copie au client')->icon(Heroicon::OutlinedEnvelope)->color('gray')
+                ->visible(fn (ElectronicInvoiceFlow $flow): bool => $this->record->issued_at !== null && $this->record->pdfPrivateDocument !== null && $flow->isB2c($this->record))
+                ->schema([
+                    TextInput::make('recipient_email')
+                        ->label('Adresse e-mail du client')->email()
+                        ->default(fn (): ?string => data_get($this->record->recipient_snapshot, 'email'))
+                        ->required(),
+                ])
+                ->action(function (array $data, InvoiceCustomerCopyManager $manager): void {
                     try {
-                        $manager->submit($this->record);
-                        $this->record->refresh();
-                        Notification::make()->title('Facture remise à Super PDP')->body('La remise est enregistrée. Actualisez ensuite les statuts de traitement.')->success()->send();
+                        $delivery = $manager->sendByEmail($this->record, $data['recipient_email'], auth()->user());
+                        Notification::make()->title('Copie de facture envoyée')->body('Envoyée à '.$delivery->recipient_email.'.')->success()->send();
                     } catch (LogicException $exception) {
-                        Notification::make()->title('Transmission impossible')->body($exception->getMessage())->danger()->send();
-                    } catch (Throwable) {
-                        Notification::make()->title('Transmission à vérifier')->body('Le résultat peut être inconnu. Vérifiez Super PDP avant toute nouvelle tentative.')->danger()->send();
+                        Notification::make()->title('Envoi impossible')->body($exception->getMessage())->danger()->send();
                     }
                 }),
             Action::make('synchronizeSuperPdp')
@@ -113,10 +93,10 @@ class ViewInvoice extends ViewRecord
                     }
                 }),
             Action::make('reconcileUnknownSuperPdpSubmission')
-                ->label('Rechercher la transmission dans Super PDP')->icon(Heroicon::OutlinedMagnifyingGlass)->color('warning')
+                ->label('Vérifier la transmission')->icon(Heroicon::OutlinedMagnifyingGlass)->color('warning')
                 ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->where('status', 'submission_unknown')->exists())
                 ->requiresConfirmation()
-                ->modalDescription('Cette recherche ne transmet aucun document. Elle tente seulement de retrouver une facture déjà reçue par Super PDP.')
+                ->modalDescription('Cette recherche ne transmet aucun document. Elle vérifie seulement si la plateforme a déjà reçu la facture.')
                 ->action(function (SuperPdpTransmissionManager $manager): void {
                     try {
                         $manager->reconcileUnknownSubmission($this->record);
@@ -143,5 +123,24 @@ class ViewInvoice extends ViewRecord
                     Notification::make()->title('Règlement enregistré')->success()->send();
                 }),
         ];
+    }
+
+    private function processElectronicInvoice(ElectronicInvoiceFinalizationManager $manager, bool $retry): void
+    {
+        try {
+            $result = $manager->finalizeAndTransmit($this->record);
+            $this->record->refresh();
+            Notification::make()
+                ->title($result['submitted'] ? ($retry ? 'Traitement confirmé' : ($result['b2c'] ? 'Facture finalisée' : 'Facture finalisée et transmise')) : 'Facture finalisée, document à corriger')
+                ->body($result['submitted'] ? ($result['b2c'] ? 'Les données B2C sont prises en charge pour l’e-reporting. Remettez le PDF au client par le canal approprié.' : 'La remise est enregistrée. Les accusés de traitement seront synchronisés automatiquement.') : 'La facture n’a pas été remise à la plateforme. Consultez le journal de transmission pour corriger le document.')
+                ->{$result['submitted'] ? 'success' : 'warning'}()->send();
+        } catch (LogicException $exception) {
+            Notification::make()->title($retry ? 'Nouvel essai impossible' : 'Finalisation impossible')->body($exception->getMessage())->danger()->send();
+        } catch (Throwable $exception) {
+            $this->record->refresh();
+            report($exception);
+            $problem = $this->record->transmissions()->where('provider', 'super_pdp')->latest()->value('last_error');
+            Notification::make()->title('Traitement à réessayer')->body($problem ?: 'La facture peut avoir été finalisée, mais la plateforme n’a pas confirmé le traitement. Consultez le journal avant toute nouvelle tentative.')->danger()->send();
+        }
     }
 }

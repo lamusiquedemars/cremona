@@ -7,7 +7,10 @@
     <div class="mt-4 inline-flex w-fit rounded-lg bg-gray-100 p-1 dark:bg-white/10" role="tablist" aria-label="Type d’élément à traiter">
         @php($types = ['all' => 'Tout', 'request' => 'Demandes', 'conversation' => 'Messages', 'task' => 'Tâches'])
         @if ($this->includesAppointments())
-            @php($types = ['all' => 'Tout', 'request' => 'Demandes', 'conversation' => 'Messages', 'appointment' => 'Rendez-vous', 'task' => 'Tâches'])
+            @php($types['appointment'] = 'Rendez-vous')
+        @endif
+        @if ($this->includesQuotes())
+            @php($types['quote'] = 'Devis')
         @endif
         @foreach ($types as $key => $label)
             <button type="button" wire:click="selectType('{{ $key }}')" role="tab" aria-selected="{{ $type === $key ? 'true' : 'false' }}"
@@ -34,6 +37,9 @@
                         </div>
                         <h3 class="mt-2 break-words text-sm font-semibold text-gray-950 dark:text-white">{{ $this->itemTitle($item) }}</h3>
                         <p class="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{{ $item->summary }}</p>
+                        @if ($item->item_type === 'quote')
+                            <span class="mt-3 inline-flex items-center gap-1 rounded-md bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-400/15 dark:text-primary-200">Envoyer le devis <span aria-hidden="true">→</span></span>
+                        @endif
                     </div>
                     <p class="shrink-0 text-xs text-gray-500 dark:text-gray-400">{{ $this->itemDateLabel($item) }} {{ \Illuminate\Support\Carbon::parse($item->sort_at)->format('d/m/Y à H:i') }}</p>
                 </div>

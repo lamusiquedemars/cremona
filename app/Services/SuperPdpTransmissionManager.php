@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\InvoiceTransmission;
-use App\Models\OrganizationIntegration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use LogicException;
@@ -45,7 +44,10 @@ class SuperPdpTransmissionManager
         return DB::transaction(function () use ($invoice, $transmission, $remote): InvoiceTransmission {
             $transmission->update([
                 'status' => 'submitted', 'submitted_at' => now(),
-                'metadata' => array_merge($transmission->metadata ?? [], ['message' => 'Facture remise à Super PDP. Les statuts de traitement restent à suivre.', 'super_pdp_invoice_id' => data_get($remote, 'id')]),
+                'metadata' => array_merge($transmission->metadata ?? [], [
+                    'message' => app(ElectronicInvoiceFlow::class)->submissionMessage($invoice),
+                    'super_pdp_invoice_id' => data_get($remote, 'id'),
+                ]),
             ]);
             $invoice->forceFill(['sent_at' => now()])->saveQuietly();
 
@@ -153,22 +155,11 @@ class SuperPdpTransmissionManager
     /** @return array{client_id: string, client_secret: string} */
     private function credentials(Invoice $invoice): array
     {
-        $integration = OrganizationIntegration::withoutGlobalScopes()->where('organization_id', $invoice->organization_id)
-            ->where('provider', 'super_pdp')->where('name', 'production')->where('status', 'active')->first();
-        $credentials = $integration?->credentials ?? [];
-        if (! is_string($credentials['client_id'] ?? null) || ! is_string($credentials['client_secret'] ?? null)) {
-            throw new LogicException('Connectez Super PDP en production avant toute transmission.');
-        }
-
-        return $credentials;
+        return app(SuperPdpConnectionResolver::class)->credentials($invoice);
     }
 
     private function processingRule(Invoice $invoice): string
     {
-        if ($invoice->company_id === null) {
-            return 'B2C';
-        }
-
-        return strtoupper((string) data_get($invoice->recipient_snapshot, 'country_code')) === 'FR' ? 'B2B' : 'B2BInt';
+        return app(ElectronicInvoiceFlow::class)->processingRule($invoice);
     }
 }
