@@ -4,6 +4,7 @@ namespace App\Filament\Resources\People\Pages;
 
 use App\Filament\Pages\BusinessEditClientRecord;
 use App\Filament\Resources\People\PersonResource;
+use App\Filament\RelationManagers\ClientSearchesRelationManager;
 
 class EditPerson extends BusinessEditClientRecord
 {
@@ -11,6 +12,6 @@ class EditPerson extends BusinessEditClientRecord
 
     public function getRelationManagers(): array
     {
-        return [];
+        return [ClientSearchesRelationManager::class];
     }
 }
