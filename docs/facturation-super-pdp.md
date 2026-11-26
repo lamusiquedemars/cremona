@@ -162,10 +162,10 @@ SIREN ou SIRET est connu. Les contrôles techniques ne sont plus des étapes à
 effectuer séparément par l’utilisateur.
 
 Si la plateforme ne confirme pas le contrôle ou la remise, la facture reste
-émise et son numéro est conservé. L’action devient **Reprendre le traitement
-e-reporting** en B2C ou **Reprendre la transmission** en B2B : elle ne crée ni
-nouveau numéro ni nouvelle facture. Le journal conserve un motif lisible de la
-reprise à effectuer. Le client de la facture est affiché dès le brouillon à
+émise et son numéro est conservé. L’action normale disparaît alors : seule une
+action d’exception **Réessayer maintenant** apparaît avec le motif conservé
+dans le journal. Elle ne crée ni nouveau numéro ni nouvelle facture. Le client
+de la facture est affiché dès le brouillon à
 partir de la fiche liée ; l’instantané réglementaire le remplace après émission.
 
 Une remise réussie reçoit un identifiant externe stable, afin d’éviter les

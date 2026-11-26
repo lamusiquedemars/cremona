@@ -125,7 +125,7 @@ class SuperPdpTransmissionSafetyTest extends TestCase
             $this->assertTrue($result['b2c']);
             $this->assertSame('submitted', $result['transmission']->status);
             $this->assertStringContainsString('e-reporting', $result['transmission']->metadata['message']);
-            $this->assertSame('Reprendre le traitement e-reporting', app(ElectronicInvoiceFlow::class)->actionLabel($invoice->fresh()));
+            $this->assertSame('Finaliser la facture', app(ElectronicInvoiceFlow::class)->actionLabel($invoice->fresh()));
         });
     }
 
