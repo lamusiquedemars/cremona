@@ -158,6 +158,28 @@ class CrmFilamentTest extends TestCase
         });
     }
 
+    public function test_editing_a_person_exposes_the_object_searches_panel(): void
+    {
+        $organization = $this->organizationWithCrm();
+        $collaborator = User::factory()->create();
+        $collaborator->organizations()->attach($organization, [
+            'role' => OrganizationRole::Collaborator->value,
+        ]);
+
+        $person = app(OrganizationContext::class)->run($organization, fn (): Person => Person::query()->create([
+            'first_name' => 'Camille',
+            'last_name' => 'Martin',
+            'display_name' => 'Camille Martin',
+        ]));
+
+        $this->actingAs($collaborator);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($organization, isQuiet: true);
+
+        Livewire::test(EditPerson::class, ['record' => $person->getRouteKey()])
+            ->assertSee('Recherches d’objets');
+    }
+
     public function test_the_clients_directory_combines_people_and_companies_without_exposing_two_menu_entries(): void
     {
         $organization = $this->organizationWithCrm();
