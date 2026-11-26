@@ -153,7 +153,7 @@ une catégorie fiscale : Cremona la déduit de la fiche client.
 
 | Destinataire | Action visible | Traitement effectué | Ce que reçoit le client |
 | --- | --- | --- | --- |
-| Particulier (B2C) | **Finaliser la facture** | Numérotation, PDF, contrôle CII puis remise des données à Super PDP pour l’e-reporting B2C. Cette remise n’est pas un acheminement vers le particulier. | Le PDF est remis par le canal choisi par l’entreprise : e-mail, impression ou remise directe. |
+| Particulier (B2C) | **Finaliser la facture**, puis au besoin **Envoyer une copie au client** | Numérotation, PDF, contrôle CII puis remise des données à Super PDP pour l’e-reporting B2C. Cette remise n’est pas un acheminement vers le particulier. | L’action e-mail joint le PDF, préremplit l’adresse connue sans modifier la fiche client et archive l’adresse, la date et l’utilisateur ayant réalisé l’envoi. Impression et remise directe restent possibles. |
 | Entreprise établie en France (B2B) | **Finaliser et transmettre** | Numérotation, PDF, contrôle CII puis remise à Super PDP. L’annuaire dirige ensuite vers la plateforme de réception du client à partir de son SIREN/SIRET. | Sa plateforme agréée ; une copie PDF par e-mail reste facultative et non réglementaire. |
 
 Avant de donner un numéro définitif à un brouillon, Cremona vérifie que la

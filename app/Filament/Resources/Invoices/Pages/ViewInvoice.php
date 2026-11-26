@@ -7,6 +7,7 @@ use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Models\InvoicePayment;
 use App\Services\ElectronicInvoiceFinalizationManager;
 use App\Services\ElectronicInvoiceFlow;
+use App\Services\InvoiceCustomerCopyManager;
 use App\Services\SuperPdpTransmissionManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -68,6 +69,23 @@ class ViewInvoice extends ViewRecord
                 ->visible(fn (): bool => $this->record->pdfPrivateDocument !== null)
                 ->url(fn (): string => route('private-documents.download', $this->record->pdfPrivateDocument?->public_id))
                 ->openUrlInNewTab(),
+            Action::make('sendCustomerCopy')
+                ->label('Envoyer une copie au client')->icon(Heroicon::OutlinedEnvelope)->color('gray')
+                ->visible(fn (ElectronicInvoiceFlow $flow): bool => $this->record->issued_at !== null && $this->record->pdfPrivateDocument !== null && $flow->isB2c($this->record))
+                ->schema([
+                    TextInput::make('recipient_email')
+                        ->label('Adresse e-mail du client')->email()
+                        ->default(fn (): ?string => data_get($this->record->recipient_snapshot, 'email'))
+                        ->required(),
+                ])
+                ->action(function (array $data, InvoiceCustomerCopyManager $manager): void {
+                    try {
+                        $delivery = $manager->sendByEmail($this->record, $data['recipient_email'], auth()->user());
+                        Notification::make()->title('Copie de facture envoyée')->body('Envoyée à '.$delivery->recipient_email.'.')->success()->send();
+                    } catch (LogicException $exception) {
+                        Notification::make()->title('Envoi impossible')->body($exception->getMessage())->danger()->send();
+                    }
+                }),
             Action::make('synchronizeSuperPdp')
                 ->label('Actualiser les statuts Super PDP')->icon(Heroicon::OutlinedArrowPath)->color('gray')
                 ->visible(fn (): bool => $this->record->transmissions()->where('provider', 'super_pdp')->whereIn('status', ['submitted', 'sent', 'rejected', 'refused', 'invalid'])->exists())

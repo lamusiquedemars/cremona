@@ -46,16 +46,63 @@ class Invoice extends Model
         ];
     }
 
-    public function person(): BelongsTo { return $this->belongsTo(Person::class); }
-    public function company(): BelongsTo { return $this->belongsTo(Company::class); }
-    public function quote(): BelongsTo { return $this->belongsTo(Quote::class); }
-    public function workshopOrder(): BelongsTo { return $this->belongsTo(WorkshopOrder::class); }
-    public function rental(): BelongsTo { return $this->belongsTo(Rental::class); }
-    public function creditNoteFor(): BelongsTo { return $this->belongsTo(self::class, 'credit_note_for_invoice_id'); }
-    public function pdfPrivateDocument(): BelongsTo { return $this->belongsTo(PrivateDocument::class, 'pdf_private_document_id'); }
-    public function lines(): HasMany { return $this->hasMany(InvoiceLine::class)->orderBy('position'); }
-    public function payments(): HasMany { return $this->hasMany(InvoicePayment::class)->orderByDesc('paid_on')->orderByDesc('id'); }
-    public function transmissions(): HasMany { return $this->hasMany(InvoiceTransmission::class)->latest(); }
+    public function person(): BelongsTo
+    {
+        return $this->belongsTo(Person::class);
+    }
 
-    public function getRouteKeyName(): string { return 'public_id'; }
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function quote(): BelongsTo
+    {
+        return $this->belongsTo(Quote::class);
+    }
+
+    public function workshopOrder(): BelongsTo
+    {
+        return $this->belongsTo(WorkshopOrder::class);
+    }
+
+    public function rental(): BelongsTo
+    {
+        return $this->belongsTo(Rental::class);
+    }
+
+    public function creditNoteFor(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'credit_note_for_invoice_id');
+    }
+
+    public function pdfPrivateDocument(): BelongsTo
+    {
+        return $this->belongsTo(PrivateDocument::class, 'pdf_private_document_id');
+    }
+
+    public function lines(): HasMany
+    {
+        return $this->hasMany(InvoiceLine::class)->orderBy('position');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(InvoicePayment::class)->orderByDesc('paid_on')->orderByDesc('id');
+    }
+
+    public function customerDeliveries(): HasMany
+    {
+        return $this->hasMany(InvoiceCustomerDelivery::class)->latest('sent_at');
+    }
+
+    public function transmissions(): HasMany
+    {
+        return $this->hasMany(InvoiceTransmission::class)->latest();
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
+    }
 }
