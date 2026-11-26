@@ -59,9 +59,11 @@ class ViewInvoice extends ViewRecord
                             ->{$result['submitted'] ? 'success' : 'warning'}()->send();
                     } catch (LogicException $exception) {
                         Notification::make()->title('Finalisation impossible')->body($exception->getMessage())->danger()->send();
-                    } catch (Throwable) {
+                    } catch (Throwable $exception) {
                         $this->record->refresh();
-                        Notification::make()->title('Transmission à vérifier')->body('La facture peut avoir été finalisée. Vérifiez le journal avant toute nouvelle tentative.')->danger()->send();
+                        report($exception);
+                        $problem = $this->record->transmissions()->where('provider', 'super_pdp')->latest()->value('last_error');
+                        Notification::make()->title('Traitement à reprendre')->body($problem ?: 'La facture peut avoir été finalisée, mais la plateforme n’a pas confirmé le traitement. Consultez le journal avant toute nouvelle tentative.')->danger()->send();
                     }
                 }),
             Action::make('downloadPdf')

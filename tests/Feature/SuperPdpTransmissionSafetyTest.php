@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\OrganizationIntegration;
 use App\Models\PrivateDocument;
 use App\Services\ElectronicInvoiceFinalizationManager;
+use App\Services\ElectronicInvoiceFlow;
 use App\Services\En16931InvoiceFactory;
 use App\Services\InvoiceElectronicDocumentManager;
 use App\Services\SuperPdpClient;
@@ -124,6 +125,30 @@ class SuperPdpTransmissionSafetyTest extends TestCase
             $this->assertTrue($result['b2c']);
             $this->assertSame('submitted', $result['transmission']->status);
             $this->assertStringContainsString('e-reporting', $result['transmission']->metadata['message']);
+            $this->assertSame('Reprendre le traitement e-reporting', app(ElectronicInvoiceFlow::class)->actionLabel($invoice->fresh()));
+        });
+    }
+
+    public function test_a_validation_failure_is_explained_without_reissuing_the_invoice(): void
+    {
+        $organization = Organization::factory()->create();
+        app(OrganizationContext::class)->run($organization, function (): void {
+            $invoice = $this->invoiceWithIntegration();
+            $invoice->forceFill(['status' => 'issued', 'issued_at' => now()])->saveQuietly();
+            $this->mock(En16931InvoiceFactory::class)->shouldReceive('make')->once()->andReturn([]);
+            $this->mock(SuperPdpClient::class)->shouldReceive('convertEn16931ToCii')->once()->andThrow(new RuntimeException('timeout'));
+
+            try {
+                app(ElectronicInvoiceFinalizationManager::class)->finalizeAndTransmit($invoice);
+                $this->fail('Une indisponibilité de plateforme doit être signalée.');
+            } catch (RuntimeException $exception) {
+                $this->assertSame('timeout', $exception->getMessage());
+            }
+
+            $transmission = $invoice->transmissions()->firstOrFail()->fresh();
+            $this->assertSame('validation_failed', $transmission->status);
+            $this->assertStringContainsString('numéro sont conservés', $transmission->last_error);
+            $this->assertSame('issued', $invoice->fresh()->status->value);
         });
     }
 

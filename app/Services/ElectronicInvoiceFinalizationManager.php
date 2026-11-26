@@ -40,7 +40,13 @@ class ElectronicInvoiceFinalizationManager
         }
 
         if ($transmission->status !== 'validated') {
-            $validation = app(InvoiceElectronicDocumentManager::class)->generateAndValidate($invoice);
+            try {
+                $validation = app(InvoiceElectronicDocumentManager::class)->generateAndValidate($invoice);
+            } catch (\Throwable $exception) {
+                $this->recordValidationFailure($transmission);
+
+                throw $exception;
+            }
             if (! $validation['valid']) {
                 $transmission = $invoice->transmissions()->where('provider', 'super_pdp')->latest()->firstOrFail();
 
@@ -53,5 +59,20 @@ class ElectronicInvoiceFinalizationManager
             'submitted' => true,
             'b2c' => $flow->isB2c($invoice),
         ];
+    }
+
+    private function recordValidationFailure(InvoiceTransmission $transmission): void
+    {
+        if (! in_array($transmission->status, ['awaiting_configuration', 'ready_to_transmit', 'validated', 'validation_failed'], true)) {
+            return;
+        }
+
+        $transmission->update([
+            'status' => 'validation_failed',
+            'last_error' => 'La plateforme n’a pas pu contrôler le document électronique. Reprenez le traitement plus tard ; la facture et son numéro sont conservés.',
+            'metadata' => array_merge($transmission->metadata ?? [], [
+                'message' => 'Contrôle électronique à reprendre. La facture n’a pas été remise à la plateforme.',
+            ]),
+        ]);
     }
 }

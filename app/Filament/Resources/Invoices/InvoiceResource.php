@@ -103,7 +103,8 @@ class InvoiceResource extends Resource
             Section::make('Facture')->columnSpan(2)->schema([
                 TextEntry::make('reference')->label('Numéro')->placeholder('Brouillon'),
                 TextEntry::make('title')->label('Objet')->weight('semibold')->size('lg'),
-                TextEntry::make('recipient_snapshot.name')->label('Client')->placeholder('À renseigner'),
+                TextEntry::make('recipient_snapshot.name')->label('Client')->placeholder('À renseigner')
+                    ->state(fn (Invoice $record): ?string => data_get($record->recipient_snapshot, 'name') ?? $record->person?->display_name ?? $record->company?->legal_name ?? $record->company?->name),
                 TextEntry::make('issued_on')->label('Émise le')->date('d/m/Y')->placeholder('—'),
                 RepeatableEntry::make('lines')->label('Détail')->schema([
                     TextEntry::make('description')->label('Description'), TextEntry::make('quantity')->label('Qté'), TextEntry::make('unit_amount')->label('HT')->money('EUR'), TextEntry::make('tax_rate')->label('TVA')->suffix(' %'), TextEntry::make('total_amount')->label('TTC')->money('EUR'),

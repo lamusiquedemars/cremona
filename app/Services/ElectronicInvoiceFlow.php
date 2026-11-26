@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Company;
 use App\Models\Invoice;
 
@@ -23,11 +24,19 @@ class ElectronicInvoiceFlow
 
     public function actionLabel(Invoice $invoice): string
     {
+        if ($invoice->status !== InvoiceStatus::Draft) {
+            return $this->isB2c($invoice) ? 'Reprendre le traitement e-reporting' : 'Reprendre la transmission';
+        }
+
         return $this->isB2c($invoice) ? 'Finaliser la facture' : 'Finaliser et transmettre';
     }
 
     public function confirmationDescription(Invoice $invoice): string
     {
+        if ($invoice->status !== InvoiceStatus::Draft) {
+            return 'La facture est déjà finalisée et son numéro est définitif. Cette action reprend uniquement le traitement technique en attente ; elle ne créera pas de nouvelle facture ni de nouveau numéro.';
+        }
+
         return $this->isB2c($invoice)
             ? 'La facture recevra son numéro définitif. Ses données de transaction seront ensuite confiées à la plateforme pour l’e-reporting ; le PDF reste à remettre au client par le canal de votre choix.'
             : 'La facture recevra son numéro définitif, puis sera contrôlée et remise au circuit de facturation électronique. Elle ne pourra plus être modifiée après sa finalisation.';
