@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\Organization;
 use App\Models\OrganizationIntegration;
@@ -32,7 +33,9 @@ class SuperPdpTransmissionSafetyTest extends TestCase
             $transmission = $invoice->transmissions()->firstOrFail();
             $document = $this->validatedDocument($invoice);
             $transmission->update(['status' => 'validated', 'electronic_private_document_id' => $document->id]);
-            $this->mock(SuperPdpClient::class)->shouldReceive('submitCii')->once()->andReturn(['id' => 123]);
+            $this->mock(SuperPdpClient::class)->shouldReceive('submitCii')->once()
+                ->withArgs(fn (string $id, string $secret, string $content, string $externalId, string $rule): bool => $rule === 'B2C')
+                ->andReturn(['id' => 123]);
 
             $result = app(SuperPdpTransmissionManager::class)->submit($invoice);
 
@@ -117,8 +120,37 @@ class SuperPdpTransmissionSafetyTest extends TestCase
 
             $result = app(ElectronicInvoiceFinalizationManager::class)->finalizeAndTransmit($invoice);
 
-            $this->assertTrue($result['transmitted']);
+            $this->assertTrue($result['submitted']);
+            $this->assertTrue($result['b2c']);
             $this->assertSame('submitted', $result['transmission']->status);
+            $this->assertStringContainsString('e-reporting', $result['transmission']->metadata['message']);
+        });
+    }
+
+    public function test_business_invoice_is_routed_as_b2b(): void
+    {
+        Storage::fake('local');
+        $organization = Organization::factory()->create();
+        app(OrganizationContext::class)->run($organization, function (): void {
+            OrganizationIntegration::query()->create([
+                'provider' => 'super_pdp', 'name' => 'production', 'status' => 'active',
+                'credentials' => ['client_id' => 'test', 'client_secret' => 'test'],
+            ]);
+            $company = Company::query()->create([
+                'name' => 'Client professionnel', 'country_code' => 'FR', 'registration_number' => '123456789',
+            ]);
+            $invoice = Invoice::query()->create(['title' => 'Facture B2B', 'company_id' => $company->id]);
+            $invoice->forceFill(['status' => 'issued', 'recipient_snapshot' => ['country_code' => 'FR', 'registration_number' => '123456789']])->saveQuietly();
+            $invoice->transmissions()->create(['provider' => 'super_pdp', 'status' => 'validated']);
+            $document = $this->validatedDocument($invoice);
+            $invoice->transmissions()->firstOrFail()->update(['electronic_private_document_id' => $document->id]);
+            $this->mock(SuperPdpClient::class)->shouldReceive('submitCii')->once()
+                ->withArgs(fn (string $id, string $secret, string $content, string $externalId, string $rule): bool => $rule === 'B2B')
+                ->andReturn(['id' => 456]);
+
+            $transmission = app(SuperPdpTransmissionManager::class)->submit($invoice);
+
+            $this->assertStringContainsString('routage', $transmission->metadata['message']);
         });
     }
 

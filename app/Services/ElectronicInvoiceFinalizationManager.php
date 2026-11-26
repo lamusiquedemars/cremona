@@ -10,7 +10,7 @@ use LogicException;
 
 class ElectronicInvoiceFinalizationManager
 {
-    /** @return array{transmission: InvoiceTransmission, transmitted: bool} */
+    /** @return array{transmission: InvoiceTransmission, submitted: bool, b2c: bool} */
     public function finalizeAndTransmit(Invoice $invoice): array
     {
         // Check the connection before giving a draft its irreversible number.
@@ -28,8 +28,9 @@ class ElectronicInvoiceFinalizationManager
             throw new LogicException('Cette facture ne comporte pas de circuit de facturation électronique.');
         }
 
+        $flow = app(ElectronicInvoiceFlow::class);
         if (in_array($transmission->status, ['submitted', 'sent'], true)) {
-            return ['transmission' => $transmission, 'transmitted' => true];
+            return ['transmission' => $transmission, 'submitted' => true, 'b2c' => $flow->isB2c($invoice)];
         }
         if ($transmission->status === 'submission_unknown') {
             throw new LogicException('Le résultat de transmission est inconnu. Vérifiez d’abord la transmission existante.');
@@ -43,13 +44,14 @@ class ElectronicInvoiceFinalizationManager
             if (! $validation['valid']) {
                 $transmission = $invoice->transmissions()->where('provider', 'super_pdp')->latest()->firstOrFail();
 
-                return ['transmission' => $transmission, 'transmitted' => false];
+                return ['transmission' => $transmission, 'submitted' => false, 'b2c' => $flow->isB2c($invoice)];
             }
         }
 
         return [
             'transmission' => app(SuperPdpTransmissionManager::class)->submit($invoice),
-            'transmitted' => true,
+            'submitted' => true,
+            'b2c' => $flow->isB2c($invoice),
         ];
     }
 }

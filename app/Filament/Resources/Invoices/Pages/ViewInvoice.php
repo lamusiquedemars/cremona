@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Models\InvoicePayment;
 use App\Services\ElectronicInvoiceFinalizationManager;
+use App\Services\ElectronicInvoiceFlow;
 use App\Services\SuperPdpTransmissionManager;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -43,18 +44,18 @@ class ViewInvoice extends ViewRecord
     {
         return [
             Action::make('finalizeAndTransmit')
-                ->label('Finaliser et transmettre')->icon(Heroicon::OutlinedPaperAirplane)->color('primary')
+                ->label(fn (ElectronicInvoiceFlow $flow): string => $flow->actionLabel($this->record))->icon(Heroicon::OutlinedPaperAirplane)->color('primary')
                 ->visible(fn (): bool => $this->record->status === InvoiceStatus::Draft || $this->record->transmissions()->where('provider', 'super_pdp')->whereIn('status', ['awaiting_configuration', 'ready_to_transmit', 'validated', 'validation_failed'])->exists())
                 ->requiresConfirmation()
-                ->modalDescription('La facture recevra son numéro définitif, puis sera contrôlée et remise au circuit de facturation électronique. Elle ne pourra plus être modifiée après sa finalisation.')
+                ->modalDescription(fn (ElectronicInvoiceFlow $flow): string => $flow->confirmationDescription($this->record))
                 ->action(function (ElectronicInvoiceFinalizationManager $manager): void {
                     try {
                         $result = $manager->finalizeAndTransmit($this->record);
                         $this->record->refresh();
                         Notification::make()
-                            ->title($result['transmitted'] ? 'Facture finalisée et transmise' : 'Facture finalisée, document à corriger')
-                            ->body($result['transmitted'] ? 'La remise est enregistrée. Les accusés de traitement seront synchronisés automatiquement.' : 'La facture n’a pas été transmise. Consultez le journal de transmission pour corriger le document.')
-                            ->{$result['transmitted'] ? 'success' : 'warning'}()->send();
+                            ->title($result['submitted'] ? ($result['b2c'] ? 'Facture finalisée' : 'Facture finalisée et transmise') : 'Facture finalisée, document à corriger')
+                            ->body($result['submitted'] ? ($result['b2c'] ? 'Les données B2C sont prises en charge pour l’e-reporting. Remettez le PDF au client par le canal approprié.' : 'La remise est enregistrée. Les accusés de traitement seront synchronisés automatiquement.') : 'La facture n’a pas été remise à la plateforme. Consultez le journal de transmission pour corriger le document.')
+                            ->{$result['submitted'] ? 'success' : 'warning'}()->send();
                     } catch (LogicException $exception) {
                         Notification::make()->title('Finalisation impossible')->body($exception->getMessage())->danger()->send();
                     } catch (Throwable) {

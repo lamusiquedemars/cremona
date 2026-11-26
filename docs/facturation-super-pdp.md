@@ -148,19 +148,27 @@ Le connecteur **Super PDP production** est configuré par organisation avec des
 identifiants serveur chiffrés. Une facture émise est immuable, reçoit son
 numéro définitif, son PDF privé et une ligne de transmission réglementaire.
 
-Le parcours utilisateur est unique : **Finaliser et transmettre**. Avant de
-donner un numéro définitif à un brouillon, Cremona vérifie que la connexion est
-disponible et, pour un client professionnel, que son SIREN ou SIRET est connu.
-L’action finalise alors la facture, génère et contrôle le document EN 16931/CII,
-puis le remet au circuit de facturation électronique. Les contrôles techniques
-ne sont plus des étapes à effectuer séparément par l’utilisateur.
+Le parcours dépend du destinataire, sans demander à l’utilisateur de choisir
+une catégorie fiscale : Cremona la déduit de la fiche client.
+
+| Destinataire | Action visible | Traitement effectué | Ce que reçoit le client |
+| --- | --- | --- | --- |
+| Particulier (B2C) | **Finaliser la facture** | Numérotation, PDF, contrôle CII puis remise des données à Super PDP pour l’e-reporting B2C. Cette remise n’est pas un acheminement vers le particulier. | Le PDF est remis par le canal choisi par l’entreprise : e-mail, impression ou remise directe. |
+| Entreprise établie en France (B2B) | **Finaliser et transmettre** | Numérotation, PDF, contrôle CII puis remise à Super PDP. L’annuaire dirige ensuite vers la plateforme de réception du client à partir de son SIREN/SIRET. | Sa plateforme agréée ; une copie PDF par e-mail reste facultative et non réglementaire. |
+
+Avant de donner un numéro définitif à un brouillon, Cremona vérifie que la
+connexion est disponible et, pour un client professionnel français, que son
+SIREN ou SIRET est connu. Les contrôles techniques ne sont plus des étapes à
+effectuer séparément par l’utilisateur.
 
 Une remise réussie reçoit un identifiant externe stable, afin d’éviter les
 doublons. Les événements de traitement sont relevés automatiquement toutes les
 quinze minutes ; **Actualiser les statuts Super PDP** reste disponible comme
 contrôle manuel. Les statuts de transmission sont distincts du règlement :
 **en transmission**, **transmise** ou **à corriger**, puis le règlement fait
-évoluer la facture vers **partiellement réglée** ou **réglée**.
+évoluer la facture vers **partiellement réglée** ou **réglée**. Pour une vente
+B2C, « transmise » signifie que la plateforme a accusé le traitement
+e-reporting ; cela ne signifie jamais que le particulier a reçu le PDF.
 
 ### Préparation par Ivo avant la première facture réelle
 
